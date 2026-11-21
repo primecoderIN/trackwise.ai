@@ -15,6 +15,8 @@ export type CreatedAccessToken = Schemas["CreatedAccessToken"]
 export type NewAccessToken = Schemas["NewAccessToken"]
 /** How many days a token may work: one of the lifetimes the server offers. */
 export type TokenLifetime = NonNullable<NewAccessToken["lifetime_days"]>
+/** The body of POST /account/welcome: records welcome completion and the accepted terms version. */
+export type WelcomeAcceptance = Schemas["WelcomeAcceptance"]
 
 /** The person's live sessions, most recently used first. Throws ApiError if it fails. */
 export function listSessions(signal?: AbortSignal): Promise<Session[]> {
@@ -44,4 +46,9 @@ export function createAccessToken(token: NewAccessToken): Promise<CreatedAccessT
 /** Revokes a token (it stops working at once). Throws ApiError if it fails. */
 export function revokeAccessToken(id: number): Promise<void> {
   return unwrapEmpty(api.DELETE("/api/v1/account/tokens/{token_id}", { params: { path: { token_id: id } } }))
+}
+
+/** Records that the signed-in person finished the first-run welcome flow and accepted the terms. */
+export function completeWelcome(body: WelcomeAcceptance): Promise<void> {
+  return unwrapEmpty(api.POST("/api/v1/account/welcome", { body }))
 }

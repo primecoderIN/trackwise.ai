@@ -1,11 +1,11 @@
 ---
 name: categorization
-description: Chooses the right SpendWise category for an expense from its merchant or what was bought (Swiggy or Zomato is Food, Ola, Uber or the metro is Transport, and so on). Use when recording or changing an expense and the user didn't name the category, or when they ask which category something belongs in.
+description: Chooses the right trackwise.ai category for an expense from its merchant or what was bought (Swiggy or Zomato is Food, Ola, Uber or the metro is Transport, and so on). Use when recording or changing an expense and the user didn't name the category, or when they ask which category something belongs in.
 ---
 
 # Choosing an expense's category
 
-SpendWise has exactly these categories: Food, Transport, Shopping, Bills, Entertainment, Health, Travel, Other. Use
+trackwise.ai has exactly these categories: Food, Transport, Shopping, Bills, Entertainment, Health, Travel, Other. Use
 one of these names, spelled exactly so. Never invent a category.
 
 ## Steps

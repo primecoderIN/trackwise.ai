@@ -44,7 +44,7 @@ RATE_LIMITED_DETAIL = "Too many MCP requests; wait and try again."
 WWW_AUTHENTICATE = "WWW-Authenticate"  # tells a client which scheme to use (RFC 9110 §11.6.1)
 UNAUTHORIZED_DETAIL = (
     f"Send a personal access token as '{AUTHORIZATION_HEADER}: {BEARER_SCHEME} <token>' "
-    "(create one in SpendWise's Settings)."
+    "(create one in trackwise.ai's Settings)."
 )
 MAX_MCP_BODY_BYTES = 256 * 1024
 LOCAL_HOSTS = ("localhost", "127.0.0.1")

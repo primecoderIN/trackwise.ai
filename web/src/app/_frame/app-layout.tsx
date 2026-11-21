@@ -1,21 +1,18 @@
-// The frame around every page: the sidebar, the top bar (sidebar toggle, app name, Assistant button, language and theme
-// menus), the page area, and the assistant's chat panel. Part of the app composition (app/_frame/). The signed-in
-// pages' layout ((client)/(app)/layout.tsx) draws the current page inside it. The page area and the chat panel each get
-// their own error boundary, so a crash in one leaves the other working.
+// The frame around every signed-in page: the grouped sidebar (with user menu, language and theme in its footer), the
+// top bar (sidebar toggle, current page title, command-palette button, Assistant button), the page area, the command
+// palette (Ctrl/⌘ K), the first-run welcome dialog, and the assistant's chat panel (Phases 28 and 29).
 
-import { MessageSquare } from "lucide-react"
+import { MessageSquare, Search } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { Suspense, useState, type ReactNode } from "react"
 
 import { ChatPanel } from "@/features/assistant"
-import { UserMenu } from "@/features/auth"
 import { ErrorBoundary } from "@/shared/components/error-boundary"
+import { NavProgressBar } from "@/shared/components/nav-progress-bar"
 import { SectionError } from "@/shared/components/section-error"
-import { useIsMobile } from "@/shared/hooks/use-mobile"
 import { APP_NAME } from "@/shared/config/app"
-import { LanguageMenu } from "@/shared/i18n"
+import { useIsMobile } from "@/shared/hooks/use-mobile"
 import { messageOf } from "@/shared/lib/errors"
-import { ModeToggle } from "@/shared/theme"
 import { Button } from "@/shared/ui/button"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/shared/ui/resizable"
 import { Separator } from "@/shared/ui/separator"
@@ -24,12 +21,10 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/shared/ui/sideb
 
 import { useTexts } from "../_i18n"
 import { AppSidebar } from "./app-sidebar"
+import { CommandPalette } from "./command-palette"
+import { currentPageFor } from "./pages"
+import { WelcomeDialog } from "./welcome-dialog"
 
-// The page that matches the URL (`children`, from the route file). If it crashes while drawing, only the
-// page area shows the error; the sidebar, the top bar and the assistant keep working. A new address starts afresh:
-// the boundary is keyed by the address, and a new key gives a new boundary with no error in it.
-// Pages are loaded on first use (each feature's index.ts makes them lazy), so the page area waits in a Suspense
-// with an empty fallback: the area stays blank for the moment a page's code takes to arrive.
 function Page({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const { t } = useTexts()
@@ -44,47 +39,53 @@ function Page({ children }: { children: ReactNode }) {
 }
 
 interface TopBarProps {
-  // The chat panel is open: the Assistant button shows as pressed.
   chatOpen: boolean
-  // The Assistant button was pressed: open the chat if it's closed, close it if it's open.
   onToggleChat: () => void
+  onOpenPalette: () => void
 }
 
-// The bar across the top: the sidebar toggle, the app's name, the Assistant button, the language and theme menus, and
-// the account menu (who is signed in, Sign out).
-function TopBar({ chatOpen, onToggleChat }: TopBarProps) {
+function TopBar({ chatOpen, onToggleChat, onOpenPalette }: TopBarProps) {
+  const pathname = usePathname()
   const { t } = useTexts()
+  const currentPage = currentPageFor(pathname)
+  const pageTitle = currentPage ? t(`pages.${currentPage.name}`) : APP_NAME
+  const PageIcon = currentPage?.icon
+
   return (
-    <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
+    <header className="relative flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur">
       <SidebarTrigger />
       <Separator orientation="vertical" className="mx-1 h-4" />
-      <span className="font-medium">{APP_NAME}</span>
-      <div className="ml-auto flex items-center gap-1">
-        <Button variant={chatOpen ? "secondary" : "ghost"} size="sm" onClick={onToggleChat} aria-pressed={chatOpen}>
+      <div className="flex min-w-0 items-center gap-2">
+        {PageIcon && <PageIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />}
+        <span className="truncate font-semibold tracking-tight">{pageTitle}</span>
+      </div>
+      <div className="ml-auto flex items-center gap-2">
+        <Button variant="outline" size="sm" onClick={onOpenPalette} className="gap-2 text-muted-foreground">
+          <Search className="size-3.5" />
+          <span className="hidden sm:inline">{t("palette.open")}</span>
+          <kbd className="hidden rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground md:inline-block">
+            {t("palette.shortcut")}
+          </kbd>
+        </Button>
+        <Button variant={chatOpen ? "default" : "secondary"} size="sm" onClick={onToggleChat} aria-pressed={chatOpen}>
           <MessageSquare /> {t("assistant.open")}
         </Button>
-        <LanguageMenu />
-        <ModeToggle />
-        <UserMenu />
       </div>
+      <NavProgressBar />
     </header>
   )
 }
 
 /**
- * The frame around every page: sidebar on the left, a top bar, the current page, and the
- * assistant's chat panel on the right (a Sheet that slides in, on small screens).
- * On wider windows the chat is a resizable panel beside the page, there only while it's open. The top bar's
- * Assistant button opens and closes it; the panel's own close button closes it.
+ * The frame around every signed-in page: sidebar on the left, a top bar with the current page's title and command
+ * palette trigger, the current page, the welcome flow dialog, and the assistant's chat panel on the right.
  */
 export function AppLayout({ children }: { children: ReactNode }) {
-  // The chat starts closed. Only its panel closes: the conversation itself lives in AssistantProvider (providers.tsx).
   const [chatOpen, setChatOpen] = useState(false)
+  const [paletteOpen, setPaletteOpen] = useState(false)
   const isMobile = useIsMobile()
   const { t } = useTexts()
 
-  // The chat has its own safety net: if it crashes, the pages keep working (and vice versa).
-  // Built once here, then placed in whichever container suits the window (the Sheet or the side panel).
   const panel = (
     <ErrorBoundary
       fallback={(error, reset) => (
@@ -95,15 +96,17 @@ export function AppLayout({ children }: { children: ReactNode }) {
     </ErrorBoundary>
   )
 
-  // h-svh + overflow-hidden on the inset: the page and the chat scroll separately, inside the window. The Sheet
-  // gets a title for screen readers only (the panel shows its own visible header). The resizable panels' ids let
-  // the group add and remove the chat panel without remounting the page; their sizes are strings, which mean
-  // percentages (plain numbers would mean pixels).
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset className="h-svh overflow-hidden">
-        <TopBar chatOpen={chatOpen} onToggleChat={() => setChatOpen((open) => !open)} />
+        <TopBar
+          chatOpen={chatOpen}
+          onToggleChat={() => setChatOpen((open) => !open)}
+          onOpenPalette={() => setPaletteOpen(true)}
+        />
+        <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} onOpenChat={() => setChatOpen(true)} />
+        <WelcomeDialog onOpenChat={() => setChatOpen(true)} />
 
         {isMobile ? (
           <>

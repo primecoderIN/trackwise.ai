@@ -19,9 +19,12 @@ export function NotFoundPage() {
           <h1 className="text-xl font-semibold">{t("notFound.title")}</h1>
           <CardDescription>{t("notFound.description")}</CardDescription>
         </CardHeader>
-        <CardContent>
-          <Button asChild variant="outline">
+        <CardContent className="flex flex-wrap gap-2">
+          <Button asChild>
             <Link href={ROUTES.dashboard}>{t("notFound.backHome")}</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href={ROUTES.landing}>{t("notFound.backLanding")}</Link>
           </Button>
         </CardContent>
       </Card>

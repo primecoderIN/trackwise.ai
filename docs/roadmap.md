@@ -13,8 +13,8 @@ down. Phase numbers below are provisional.
 
 | Phase | Feature | Why now | Size |
 |---|---|---|---|
-| 28 | [The app frame and the missing pages](#28-the-app-frame-and-the-missing-pages) | The app looks like an internal tool: a thin menu, no page headers or empty states, features reachable only through the chat | Medium |
-| 29 | [The public site, SEO foundations and first run](#29-the-public-site-seo-foundations-and-first-run) | A visitor sees only a sign-in page; nothing says what SpendWise is, and search engines have nothing to index | Medium-large |
+| 28 | [The app frame and the missing pages](#28-the-app-frame-and-the-missing-pages) (**Done** — D219) | The app looks like an internal tool: a thin menu, no page headers or empty states, features reachable only through the chat | Medium |
+| 29 | [The public site, SEO foundations and first run](#29-the-public-site-seo-foundations-and-first-run) (**Done** — D220) | A visitor sees only a sign-in page; nothing says what SpendWise is, and search engines have nothing to index | Medium-large |
 | 30 | [Real exchange rates](#30-real-exchange-rates) | Foreign expenses are stored at made-up rates today: the one place the app keeps untrue numbers | Small |
 | 31 | [Recurring expenses and the subscription finder](#31-recurring-expenses-and-the-subscription-finder) | Rent and subscriptions recorded once; forgotten subscriptions found in the history | Medium-large |
 | 32 | [Proactive alerts and the weekly digest](#32-proactive-alerts-and-the-weekly-digest) | The app speaks first: unusual spends, renewals due, budgets at risk | Medium |

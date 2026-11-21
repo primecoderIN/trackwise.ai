@@ -3,13 +3,18 @@
 // waiting for "are you sure?"), loads the list through useExpenses, and lays out its parts: the Add dialog, the filters
 // bar, the table, and the delete dialog. Its texts come from the feature's i18n namespace.
 
+import { ReceiptText } from "lucide-react"
+import { useSearchParams } from "next/navigation"
 import { useState } from "react"
 
 import { LIMITS } from "@/shared/api/contracts.gen"
+import { EmptyState } from "@/shared/components/empty-state"
+import { PageHeader } from "@/shared/components/page-header"
 import { RefreshNotice } from "@/shared/components/refresh-notice"
 import { SectionError } from "@/shared/components/section-error"
 import { useDebouncedValue } from "@/shared/hooks/use-debounced-value"
 import { messageOf } from "@/shared/lib/errors"
+import { Card, CardContent } from "@/shared/ui/card"
 
 import type { Expense, ExpenseFilters } from "../api"
 import { useTexts } from "../i18n"
@@ -34,14 +39,19 @@ const NO_EXPENSES: Expense[] = []
  */
 export function ExpensesPage() {
   const { t } = useTexts()
+  const searchParams = useSearchParams()
+  const addParam = searchParams.get("add")
+  const [addOpen, setAddOpen] = useState(() => addParam === "1")
+  const [lastAddParam, setLastAddParam] = useState(addParam)
+  if (addParam !== lastAddParam) {
+    setLastAddParam(addParam)
+    if (addParam === "1") setAddOpen(true)
+  }
   const [filters, setFilters] = useState<ExpenseFilters>({})
   const [offset, setOffset] = useState(0)
   // The expenses waiting for "are you sure?"; null means the confirmation dialog is closed.
   const [pendingDelete, setPendingDelete] = useState<Expense[] | null>(null)
   const debouncedFilters = useDebouncedValue(filters, FILTER_DEBOUNCE_MS)
-  // TanStack Query loads (and caches) the list, cancels outdated requests, and reloads it whenever
-  // something changes expenses: this page's dialogs, or the assistant. The filters bar shows each change at
-  // once; the query only sees the filters once they've stopped changing.
   const expenses = useExpenses({ ...debouncedFilters, limit: LIMITS.listDefault, offset })
 
   function handleFiltersChange(nextFilters: ExpenseFilters) {
@@ -55,18 +65,18 @@ export function ExpensesPage() {
     if (lastPageOffset !== offset) setOffset(lastPageOffset)
   }
 
-  // An error card only if nothing could be loaded; if a reload failed, keep the rows and say so above them.
-  // setPendingDelete goes to the table as it is: React keeps it the same between renders, so the table
-  // doesn't rebuild its columns every time this page re-renders.
+  const hasActiveFilters = Boolean(
+    filters.search || filters.category_id || filters.start_date || filters.end_date || filters.merchant,
+  )
+  const isFirstTimeEmpty = Boolean(expenses.data && expenses.data.total === 0 && !hasActiveFilters && offset === 0)
+
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h1 className="text-2xl font-semibold">{t("page.title")}</h1>
-          <p className="text-sm text-muted-foreground">{t("page.description")}</p>
-        </div>
-        <AddExpenseDialog />
-      </div>
+      <PageHeader
+        title={t("page.title")}
+        description={t("page.description")}
+        actions={<AddExpenseDialog open={addOpen} onOpenChange={setAddOpen} />}
+      />
 
       <FiltersBar filters={filters} onChange={handleFiltersChange} />
 
@@ -84,6 +94,17 @@ export function ExpensesPage() {
           onRetry={() => expenses.refetch()}
           retrying={expenses.isFetching}
         />
+      ) : isFirstTimeEmpty ? (
+        <Card>
+          <CardContent className="p-6">
+            <EmptyState
+              icon={ReceiptText}
+              title={t("table.emptyTitle")}
+              message={t("table.emptyDescription")}
+              action={{ label: t("add.open"), onClick: () => setAddOpen(true) }}
+            />
+          </CardContent>
+        </Card>
       ) : (
         <ExpensesTable
           expenses={expenses.data?.items ?? NO_EXPENSES}

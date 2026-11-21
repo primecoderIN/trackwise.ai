@@ -20,6 +20,8 @@ from app.modules.accounts.models import CurrentUser, SignedInUser
 from app.modules.accounts.queries.find_users_by_email import FindUsersByEmail
 from app.modules.accounts.values import (
     CALLBACK_PATH,
+    CURRENT_TERMS_VERSION,
+    DASHBOARD_PAGE,
     DEFAULT_TOKEN_LIFETIME,
     LOGIN_ATTEMPT_TTL,
     MAX_ACCESS_TOKENS,
@@ -34,6 +36,8 @@ from app.modules.accounts.values import (
 
 __all__ = [
     "CALLBACK_PATH",
+    "CURRENT_TERMS_VERSION",
+    "DASHBOARD_PAGE",
     "DEFAULT_TOKEN_LIFETIME",
     "LOGIN_ATTEMPT_TTL",
     "MAX_ACCESS_TOKENS",

@@ -1,6 +1,7 @@
 // A component of the dashboard feature: the "By category" card, a bar chart of this month's spending per category
 // (shadcn charts over Recharts). Used by the Dashboard page.
 
+import { BarChart3 } from "lucide-react"
 import { Bar, BarChart, XAxis, YAxis } from "recharts"
 
 import { EmptyState } from "@/shared/components/empty-state"
@@ -35,7 +36,11 @@ export function CategoryChart({ summary }: { summary: MonthlySummary }) {
       </CardHeader>
       <CardContent>
         {rows.length === 0 ? (
-          <EmptyState message={t("byCategory.empty")} action={{ label: t("addExpense"), to: ROUTES.expenses }} />
+          <EmptyState
+            icon={BarChart3}
+            message={t("byCategory.empty")}
+            action={{ label: t("addExpense"), to: ROUTES.expenses }}
+          />
         ) : (
           <ChartContainer
             config={config}

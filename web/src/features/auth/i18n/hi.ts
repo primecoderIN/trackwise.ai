@@ -14,6 +14,13 @@ const hi: Translation<typeof en> = {
     signIn: "साइन इन करें",
     loadingOptions: "साइन इन के तरीके लोड हो रहे हैं…",
     optionsFailed: "साइन इन के तरीके लोड नहीं हो सके",
+    home: "मुखपृष्ठ",
+    features: "विशेषताएँ",
+    security: "सुरक्षा",
+    faq: "सामान्य प्रश्न",
+    privacy: "गोपनीयता",
+    terms: "शर्तें",
+    contact: "संपर्क",
   },
   failures: {
     cancelled: "साइन इन रद्द कर दिया गया।",

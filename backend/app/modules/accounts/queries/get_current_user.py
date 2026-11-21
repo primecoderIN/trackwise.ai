@@ -6,6 +6,7 @@ module.py registers the handler.
 
 from sqlmodel import select
 
+from app.core.clock import as_utc
 from app.core.cqrs import Context, Query
 from app.core.errors import AuthenticationError
 from app.modules.accounts.models import CurrentUser
@@ -25,4 +26,12 @@ def get_current_user(ctx: Context, query: GetCurrentUser) -> CurrentUser:
     user = ctx.session.exec(select(AppUser).where(AppUser.id == query.user_id)).first()
     if user is None:
         raise AuthenticationError(f"user {query.user_id} doesn't exist")
-    return CurrentUser.model_validate(user)
+    return CurrentUser(
+        id=user.id,  # pyright: ignore[reportArgumentType]
+        name=user.name,
+        email=user.email,
+        avatar_url=user.avatar_url,
+        welcomed_at=as_utc(user.welcomed_at) if user.welcomed_at is not None else None,
+        terms_version=user.terms_version,
+        terms_accepted_at=as_utc(user.terms_accepted_at) if user.terms_accepted_at is not None else None,
+    )

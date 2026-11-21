@@ -62,6 +62,8 @@ const hi: Translation<typeof en> = {
   table: {
     loading: "लोड हो रहा है…",
     noMatches: "इन फ़िल्टर से मेल खाता कोई खर्च नहीं है।",
+    emptyTitle: "अभी कोई खर्च दर्ज नहीं है",
+    emptyDescription: "अपना पहला खर्च यहाँ जोड़ें या चैट पैनल में सहायक से कहें।",
     sortBy: "{{column}} के अनुसार क्रम से लगाएँ",
     selectAll: "सभी चुनें",
     selectRow: "#{{id}} चुनें",

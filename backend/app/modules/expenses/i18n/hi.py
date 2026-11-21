@@ -11,7 +11,7 @@ HI: dict[ExpenseText, TextValue] = {
     ExpenseText.AMOUNT_NOT_POSITIVE: "राशि 0 से ज़्यादा होनी चाहिए",
     ExpenseText.CATEGORY_MISSING: "श्रेणी {category_id} मौजूद नहीं है",
     ExpenseText.NOT_FOUND: "खर्च {expense_id} नहीं मिला",
-    ExpenseText.UNSUPPORTED_CURRENCY: "SpendWise अभी {currency} को INR में नहीं बदल सकता। राशि INR में लिखें।",
+    ExpenseText.UNSUPPORTED_CURRENCY: "trackwise.ai अभी {currency} को INR में नहीं बदल सकता। राशि INR में लिखें।",
     ExpenseText.RATES_UNAVAILABLE: (
         "मुद्रा बदलने की सुविधा अभी उपलब्ध नहीं है, इसलिए {currency} में राशि सहेजी नहीं जा सकती। "
         "थोड़ी देर में फिर से कोशिश करें, या राशि INR में लिखें।"

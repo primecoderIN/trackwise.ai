@@ -6,9 +6,25 @@ import { AUTH } from "@/shared/api/contracts.gen"
 
 /** Each page's path. A new page gets its address here, then its route file under app/ and its menu entry. */
 export const ROUTES = {
-  dashboard: "/",
+  landing: "/",
+  landingHi: "/hi",
+  features: "/features",
+  featuresHi: "/hi/features",
+  security: "/security",
+  securityHi: "/hi/security",
+  faq: "/faq",
+  faqHi: "/hi/faq",
+  privacy: "/privacy-policy",
+  privacyHi: "/hi/privacy-policy",
+  terms: "/terms-of-service",
+  termsHi: "/hi/terms-of-service",
+  contact: "/contact",
+  contactHi: "/hi/contact",
+  dashboard: AUTH.dashboardPage,
   expenses: "/expenses",
   budgets: "/budgets",
+  categories: "/categories",
+  reports: "/reports",
   settings: "/settings",
   // The server sends people here when a sign-in fails and after signing out, so the path comes from the contract.
   signIn: AUTH.signInPage,

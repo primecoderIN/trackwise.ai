@@ -19,6 +19,7 @@ from app.modules.accounts.application.config import SignInConfig
 from app.modules.accounts.application.sessions import SessionGate
 from app.modules.accounts.application.sign_in import SignInFlow
 from app.modules.accounts.application.sign_out import SignOutFlow
+from app.modules.accounts.commands.complete_welcome import CompleteWelcome, complete_welcome
 from app.modules.accounts.commands.create_access_token import CreateAccessToken, create_access_token
 from app.modules.accounts.commands.end_session import EndSession, end_session
 from app.modules.accounts.commands.renew_session import RenewSession, renew_session
@@ -53,6 +54,7 @@ def register_handlers(bus: MessageBus) -> None:
     bus.register(CreateAccessToken, create_access_token)
     bus.register(RevokeAccessToken, revoke_access_token)
     bus.register(TouchAccessToken, touch_access_token)
+    bus.register(CompleteWelcome, complete_welcome)
     bus.register(GetSession, get_session)
     bus.register(GetCurrentUser, get_current_user)
     bus.register(GetSignOut, get_sign_out)

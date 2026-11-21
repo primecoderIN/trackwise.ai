@@ -6,6 +6,7 @@
 import { useCategories } from "@/features/categories"
 import { useExpenses } from "@/features/expenses"
 import { DEFAULT_CURRENCY, LIMITS } from "@/shared/api/contracts.gen"
+import { PageHeader } from "@/shared/components/page-header"
 import { RefreshNotice } from "@/shared/components/refresh-notice"
 import { SectionError } from "@/shared/components/section-error"
 import { messageOf } from "@/shared/lib/errors"
@@ -40,10 +41,7 @@ export function DashboardPage() {
   const { failed, retrying, retry } = queryGroupStatus([summary, trend, recent, categories])
 
   const header = (
-    <div>
-      <h1 className="text-2xl font-semibold">{t("page.title")}</h1>
-      <p className="text-sm text-muted-foreground">{t("page.description", { currency: DEFAULT_CURRENCY })}</p>
-    </div>
+    <PageHeader title={t("page.title")} description={t("page.description", { currency: DEFAULT_CURRENCY })} />
   )
 
   // Nothing to show yet: a skeleton while loading, or the error if loading failed. Showing ₹0 when the

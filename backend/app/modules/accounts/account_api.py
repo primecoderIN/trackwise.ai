@@ -12,10 +12,17 @@ from fastapi import APIRouter, Request, Response
 from app.core.cqrs import MessageBus
 from app.core.identity import IdentityProvider
 from app.modules.accounts.application.access_tokens import AccessTokens
+from app.modules.accounts.commands.complete_welcome import CompleteWelcome
 from app.modules.accounts.commands.revoke_access_token import RevokeAccessToken
 from app.modules.accounts.commands.sign_out_other_sessions import SignOutOtherSessions
 from app.modules.accounts.commands.sign_out_session import SignOutSession
-from app.modules.accounts.models import AccessTokenRead, CreatedAccessToken, NewAccessToken, SessionRead
+from app.modules.accounts.models import (
+    AccessTokenRead,
+    CreatedAccessToken,
+    NewAccessToken,
+    SessionRead,
+    WelcomeAcceptance,
+)
 from app.modules.accounts.queries.list_access_tokens import ListAccessTokens
 from app.modules.accounts.queries.list_sessions import ListSessions
 from app.web.auth import CurrentUserDep
@@ -71,5 +78,11 @@ def create_account_router(bus: MessageBus, identity: IdentityProvider, tokens: A
     @router.delete("/tokens/{token_id}", status_code=204)
     def revoke_token(token_id: IdPath, principal: CurrentUserDep) -> None:
         bus.execute(RevokeAccessToken(owner_id=principal.user_id, token_id=token_id))
+
+    # POST /api/v1/account/welcome: record that the signed-in person completed the first-run welcome flow and accepted
+    # the current terms version (Phase 29). Stored on the account, never in browser storage (D192).
+    @router.post("/welcome", status_code=204)
+    def complete_welcome(body: WelcomeAcceptance, principal: CurrentUserDep) -> None:
+        bus.execute(CompleteWelcome(owner_id=principal.user_id, terms_version=body.terms_version))
 
     return router

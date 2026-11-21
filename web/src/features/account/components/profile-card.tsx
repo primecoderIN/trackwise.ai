@@ -3,6 +3,7 @@
 // can be edited: the profile is the identity provider's, refreshed at each sign-in.
 
 import { UserAvatar, useSignedInUser } from "@/features/auth"
+import { formatDate } from "@/shared/lib/format"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 
 import { useTexts } from "../i18n"
@@ -20,12 +21,22 @@ export function ProfileCard() {
         <CardTitle>{t("profile.title")}</CardTitle>
         <CardDescription>{t("profile.description")}</CardDescription>
       </CardHeader>
-      <CardContent className="flex items-center gap-4">
-        <UserAvatar name={name} picture={user.avatar_url} size="large" />
-        <div className="min-w-0">
-          <p className="truncate font-medium">{name}</p>
-          <p className="truncate text-sm text-muted-foreground">{user.email ?? t("profile.noEmail")}</p>
+      <CardContent className="flex flex-col gap-3">
+        <div className="flex items-center gap-4">
+          <UserAvatar name={name} picture={user.avatar_url} size="large" />
+          <div className="min-w-0">
+            <p className="truncate font-medium">{name}</p>
+            <p className="truncate text-sm text-muted-foreground">{user.email ?? t("profile.noEmail")}</p>
+          </div>
         </div>
+        {user.terms_version && user.terms_accepted_at && (
+          <p className="text-xs text-muted-foreground">
+            {t("profile.termsAccepted", {
+              version: user.terms_version,
+              date: formatDate(user.terms_accepted_at),
+            })}
+          </p>
+        )}
       </CardContent>
     </Card>
   )

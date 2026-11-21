@@ -9,8 +9,10 @@ import { MutationCache, QueryCache, QueryClient, type QueryKey } from "@tanstack
 import { accountKeys } from "@/features/account"
 import { authKeys, isSignedOut } from "@/features/auth"
 import { budgetKeys } from "@/features/budgets"
+import { categoryKeys } from "@/features/categories"
 import { dashboardKeys } from "@/features/dashboard"
 import { expenseKeys } from "@/features/expenses"
+import { reportKeys } from "@/features/reports"
 import { ApiError, setUnauthorizedHandler } from "@/shared/api/http"
 import { DATA_SCOPES, type DataScope } from "@/shared/config/data-scopes"
 import { reportUnexpected } from "@/shared/lib/errors"
@@ -34,10 +36,11 @@ function isClientError(error: unknown): boolean {
  * Each key is a prefix: expenseKeys.all matches every expense list, whatever its filters.
  */
 export const STALE_AFTER: Readonly<Record<DataScope, readonly QueryKey[]>> = {
-  [DATA_SCOPES.expenses]: [expenseKeys.all, dashboardKeys.all, budgetKeys.all],
+  [DATA_SCOPES.expenses]: [expenseKeys.all, dashboardKeys.all, budgetKeys.all, categoryKeys.all, reportKeys.all],
   [DATA_SCOPES.budgets]: [budgetKeys.all],
   [DATA_SCOPES.sessions]: [accountKeys.sessions],
   [DATA_SCOPES.accessTokens]: [accountKeys.tokens],
+  [DATA_SCOPES.account]: [authKeys.user],
 }
 
 /**

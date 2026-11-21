@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "SpendWise API",
+    "title": "trackwise.ai API",
     "version": "1.0.0"
   },
   "paths": {
@@ -1442,6 +1442,40 @@
             }
           }
         ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/account/welcome": {
+      "post": {
+        "tags": [
+          "account"
+        ],
+        "summary": "Complete Welcome",
+        "operationId": "complete_welcome_api_v1_account_welcome_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WelcomeAcceptance"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "204": {
             "description": "Successful Response"
@@ -3723,6 +3757,41 @@
             ],
             "title": "Avatar Url"
           },
+          "welcomed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Welcomed At"
+          },
+          "terms_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Terms Version"
+          },
+          "terms_accepted_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Terms Accepted At"
+          },
           "logout_url": {
             "type": "string",
             "title": "Logout Url"
@@ -4372,6 +4441,20 @@
         ],
         "title": "VideoPart",
         "description": "A video part."
+      },
+      "WelcomeAcceptance": {
+        "properties": {
+          "terms_version": {
+            "type": "string",
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Terms Version",
+            "default": "2026-11"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "WelcomeAcceptance"
       }
     }
   }

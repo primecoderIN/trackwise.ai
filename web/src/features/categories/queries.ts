@@ -4,15 +4,16 @@
 import { useQuery } from "@tanstack/react-query"
 import { useCallback, useMemo } from "react"
 
-import { listCategories } from "./api"
+import { getCategoryMonthlySummary, listCategories } from "./api"
 import { useTexts } from "./i18n"
 
 /**
- * TanStack Query keys: what a cached answer is filed under. Invalidating `all` (as a change to categories would)
- * reloads every list of them.
+ * TanStack Query keys: what a cached answer is filed under. Invalidating `all` (as a change to categories or expenses
+ * would) reloads every list of them.
  */
 export const categoryKeys = {
   all: ["categories"] as const,
+  summary: (month: string) => ["categories", "summary", month] as const,
 }
 
 /**
@@ -24,6 +25,14 @@ export function useCategories() {
     queryKey: categoryKeys.all,
     // `signal` cancels the request if nothing needs the answer any more (e.g. the page was left).
     queryFn: ({ signal }) => listCategories(signal),
+  })
+}
+
+/** One month's spending per category, for the Categories page. */
+export function useCategoryMonthlySummary(month: string) {
+  return useQuery({
+    queryKey: categoryKeys.summary(month),
+    queryFn: ({ signal }) => getCategoryMonthlySummary(month, signal),
   })
 }
 

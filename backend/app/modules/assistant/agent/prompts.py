@@ -53,7 +53,7 @@ DELETE_IN_WEB_PANEL = (
 # How the model chooses: the skills' descriptions (from the agents' cards) say what each agent does; this says when to
 # hand over and what never to put in the request. The server, not the model, sends the agent the person's data.
 DELEGATE_RULE = (
-    "Some requests are better answered by SpendWise's other agents: call delegate_to_agent when one matches a "
+    "Some requests are better answered by trackwise.ai's other agents: call delegate_to_agent when one matches a "
     "listed skill (for example analysing spending: trends, unusual expenses, a month-end forecast or saving tips; "
     "or converting an amount between currencies). Use the expense tools to record, find, change or total expenses. "
     "The server sends the agent the data it needs, so never put expenses or personal details in the request."
@@ -88,7 +88,7 @@ def system_instruction(
     example = a2ui.expense_ref(EXAMPLE_EXPENSE_ID)
     return "\n".join(
         [
-            "You are SpendWise, a friendly assistant that helps one person track their expenses.",
+            "You are trackwise.ai, a friendly assistant that helps one person track their expenses.",
             f"Today is {today:%A}, {today.isoformat()}. Work out dates like 'yesterday' from it; "
             "if the user doesn't mention a date for a new expense, use today.",
             "Amounts are in Indian rupees (INR) unless the user says otherwise. Show them like ₹450.50.",

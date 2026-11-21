@@ -46,7 +46,7 @@ EN: dict[ReportText, TextValue] = {
     ReportText.UNAVAILABLE: "The report couldn't be made right now. Try again in a moment.",
     ReportText.TOO_MANY_EXPENSES: "This month has too many expenses for a report (more than {limit}).",
     # Markdown: {month} is "November 2026" (format_month); amounts are formatted money ("₹4,300.50").
-    ReportText.TITLE: "SpendWise report: {month}",
+    ReportText.TITLE: "trackwise.ai report: {month}",
     ReportText.TOTAL: Plural(one="{total} spent, in {count} expense.", other="{total} spent, in {count} expenses."),
     ReportText.NOTHING_SPENT: "No expenses were recorded this month.",
     ReportText.COMPARED_HEADING: "Compared with {previous_month}",

@@ -5,13 +5,29 @@
 const en = {
   page: {
     title: "Settings",
-    description: "Your account, where you're signed in, and access for other apps.",
+    description: "Your profile, display preferences, signed-in browsers, and developer access.",
+  },
+  sections: {
+    label: "Settings sections",
+    profile: "Profile",
+    preferences: "Preferences",
+    security: "Security",
+    developer: "Developer",
   },
   profile: {
     title: "Profile",
     description: "Your name, email and picture come from the account you sign in with.",
     you: "Your account",
     noEmail: "No email address",
+    termsAccepted: "Terms & Privacy ({{version}}) accepted on {{date}}",
+  },
+  preferences: {
+    title: "Preferences",
+    description: "Choose the language and theme used across trackwise.ai on this browser.",
+    languageTitle: "Language",
+    languageDescription: "Menus, pages, error messages and assistant replies appear in this language.",
+    themeTitle: "Theme",
+    themeDescription: "Switch between light and dark mode, or follow your device.",
   },
   sessions: {
     title: "Where you're signed in",

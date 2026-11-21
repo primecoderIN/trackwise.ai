@@ -26,6 +26,8 @@ from app.infrastructure.config import API_PREFIX, PROJECT_DIR, Settings  # noqa:
 from app.infrastructure.db import create_db_engine  # noqa: E402
 from app.main import create_app  # noqa: E402
 from app.modules.accounts import (  # noqa: E402
+    CURRENT_TERMS_VERSION,
+    DASHBOARD_PAGE,
     DEFAULT_TOKEN_LIFETIME,
     MAX_ACCESS_TOKENS,
     MAX_TOKEN_NAME_LENGTH,
@@ -90,25 +92,26 @@ def _camel(name: str) -> str:
 
 
 def _auth_contract() -> dict[str, object]:
-    """Signing in (Phase 22): the header every API call carries, the sign-in page's path (the server sends people
-    there), the query parameters the sign-in routes and that page read, and the reasons a sign-in fails."""
+    """Signing in (Phase 22): the header every API call carries, the sign-in and dashboard pages' paths (the server
+    sends people there), the query parameters the sign-in routes and that page read, and the reasons a sign-in fails."""
     return {
         "csrfHeader": CSRF_HEADER,
         "csrfValue": CSRF_VALUE,
         "signInPage": SIGN_IN_PAGE,
+        "dashboardPage": DASHBOARD_PAGE,
         "params": {_camel(param.name): param.value for param in SignInParam},
         "failures": {_camel(failure.name): failure.value for failure in SignInFailure},
     }
 
 
 def _account_contract() -> dict[str, object]:
-    """Personal access tokens (Phase 23), for the Settings page's form: how long a name may be, how many tokens a
-    person may have, and the lifetimes on offer, in days (the server refuses any other)."""
+    """Personal access tokens (Phase 23) and terms acceptance (Phase 29), for the Settings page and welcome flow."""
     return {
         "tokenNameLength": MAX_TOKEN_NAME_LENGTH,
         "maxTokens": MAX_ACCESS_TOKENS,
         "tokenLifetimeDays": [lifetime.value for lifetime in TokenLifetime],
         "defaultTokenLifetimeDays": DEFAULT_TOKEN_LIFETIME.value,
+        "currentTermsVersion": CURRENT_TERMS_VERSION,
     }
 
 

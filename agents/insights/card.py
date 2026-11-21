@@ -11,7 +11,7 @@ from agent_kit.card import CardSpec
 from agent_kit.card import build_card as build_card_from_spec
 from insights.contract import JSON_MEDIA_TYPE, SKILL_ID, TEXT_MEDIA_TYPE
 
-AGENT_NAME = "SpendWise insights agent"
+AGENT_NAME = "trackwise.ai insights agent"
 AGENT_DESCRIPTION = "Analyses a month of spending: trends, unusual spends, a month-end forecast and saving tips."
 # The card's version: it changes with the skill's contract (contract.py).
 AGENT_VERSION = "1.0.0"

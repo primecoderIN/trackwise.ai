@@ -486,6 +486,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/account/welcome": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Complete Welcome */
+        post: operations["complete_welcome_api_v1_account_welcome_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1319,8 +1336,22 @@ export interface components {
             email: string | null;
             /** Avatar Url */
             avatar_url: string | null;
+            /** Welcomed At */
+            welcomed_at?: string | null;
+            /** Terms Version */
+            terms_version?: string | null;
+            /** Terms Accepted At */
+            terms_accepted_at?: string | null;
             /** Logout Url */
             logout_url: string;
+        };
+        /** WelcomeAcceptance */
+        WelcomeAcceptance: {
+            /**
+             * Terms Version
+             * @default 2026-11
+             */
+            terms_version?: string;
         };
         /**
          * SystemMessage
@@ -2534,6 +2565,37 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    complete_welcome_api_v1_account_welcome_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WelcomeAcceptance"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             204: {

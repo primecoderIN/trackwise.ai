@@ -3,7 +3,7 @@
 // purpose: the server's metadata (app/_seo/seo.ts) reads it too.
 
 /** The app's name, written once. */
-export const APP_NAME = "SpendWise"
+export const APP_NAME = "trackwise.ai"
 
 /** What the app is, in one sentence: the pages' description for search engines and link previews. */
 export const APP_DESCRIPTION =

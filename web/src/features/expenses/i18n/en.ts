@@ -64,6 +64,8 @@ const en = {
   table: {
     loading: "Loading…",
     noMatches: "No expenses match these filters.",
+    emptyTitle: "No expenses recorded yet",
+    emptyDescription: "Add your first expense here or ask the assistant in the chat panel.",
     sortBy: "Sort by {{column}}",
     selectAll: "Select all",
     selectRow: "Select #{{id}}",

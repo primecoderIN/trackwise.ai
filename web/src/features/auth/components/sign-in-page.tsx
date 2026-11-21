@@ -3,12 +3,14 @@
 // page does the signing in (Google, GitHub); this page only sends people there.
 
 import { Wallet } from "lucide-react"
+import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect } from "react"
 
 import { AUTH } from "@/shared/api/contracts.gen"
 import { SectionError } from "@/shared/components/section-error"
 import { APP_NAME } from "@/shared/config/app"
+import { ROUTES } from "@/shared/config/routes"
 import { LanguageMenu } from "@/shared/i18n"
 import { messageOf } from "@/shared/lib/errors"
 import { ModeToggle } from "@/shared/theme"
@@ -47,7 +49,7 @@ export function SignInPage() {
   }
 
   return (
-    <main className="relative flex min-h-svh items-center justify-center p-4">
+    <main className="relative flex min-h-svh items-center justify-center overflow-hidden bg-gradient-to-b from-primary/5 via-background to-background p-4">
       <div className="absolute top-4 right-4 flex items-center gap-1">
         <LanguageMenu />
         <ModeToggle />
@@ -62,10 +64,12 @@ export function SignInPage() {
           />
         </div>
       ) : (
-        <Card className="w-full max-w-sm">
+        <Card className="w-full max-w-md shadow-sm">
           <CardHeader className="items-center text-center">
-            <Wallet aria-hidden className="mx-auto size-8" />
-            <h1 className="text-xl font-semibold">{t("signIn.title", { app: APP_NAME })}</h1>
+            <span className="mb-1 flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs">
+              <Wallet aria-hidden className="size-5" />
+            </span>
+            <h1 className="text-xl font-semibold tracking-tight">{t("signIn.title", { app: APP_NAME })}</h1>
             <CardDescription>{t("signIn.description")}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4">
@@ -75,6 +79,32 @@ export function SignInPage() {
               </p>
             )}
             <SignInOptions options={options.data} returnTo={returnTo} />
+            <nav
+              aria-label="Public site and legal links"
+              className="flex flex-wrap justify-center gap-x-3 gap-y-1.5 border-t pt-3 text-xs text-muted-foreground"
+            >
+              <Link href={ROUTES.landing} className="hover:text-foreground">
+                {t("signIn.home")}
+              </Link>
+              <Link href={ROUTES.features} className="hover:text-foreground">
+                {t("signIn.features")}
+              </Link>
+              <Link href={ROUTES.security} className="hover:text-foreground">
+                {t("signIn.security")}
+              </Link>
+              <Link href={ROUTES.faq} className="hover:text-foreground">
+                {t("signIn.faq")}
+              </Link>
+              <Link href={ROUTES.privacy} className="hover:text-foreground">
+                {t("signIn.privacy")}
+              </Link>
+              <Link href={ROUTES.terms} className="hover:text-foreground">
+                {t("signIn.terms")}
+              </Link>
+              <Link href={ROUTES.contact} className="hover:text-foreground">
+                {t("signIn.contact")}
+              </Link>
+            </nav>
           </CardContent>
         </Card>
       )}

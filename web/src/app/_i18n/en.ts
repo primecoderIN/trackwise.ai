@@ -4,18 +4,57 @@
 /** The app frame's texts, in English. {{name}} marks a value filled in when the text is shown. */
 const en = {
   menu: "Menu",
+  groups: {
+    overview: "Overview",
+    money: "Money",
+    insights: "Insights",
+    account: "Settings",
+  },
   pages: {
     dashboard: "Dashboard",
     expenses: "Expenses",
     budgets: "Budgets",
+    categories: "Categories",
+    reports: "Reports",
     settings: "Settings",
     // Only the browser tab's title (the sign-in page has its own heading).
     signIn: "Sign in",
+  },
+  palette: {
+    open: "Search or jump to…",
+    shortcut: "Ctrl+K",
+    title: "Command palette",
+    description: "Jump to any page or run an action.",
+    placeholder: "Type a page or action…",
+    empty: "No matching pages or actions.",
+    pagesGroup: "Pages",
+    actionsGroup: "Quick actions",
+    newExpense: "Add a new expense",
+    openAssistant: "Open the assistant",
+  },
+  welcome: {
+    title: "Welcome to {{app}}",
+    description: "Set up your account in a minute, or skip and start right away.",
+    stepLanguage: "1. Choose your language",
+    stepBudget: "2. Optional monthly budget (in {{currency}})",
+    budgetPlaceholder: "e.g. 25000",
+    budgetHint: "Leave blank if you'd rather set budgets later.",
+    stepAssistant: "3. Try the assistant",
+    assistantHint: "Choose a starter prompt to try in the assistant after setup, or pick none:",
+    prompt1: "I spent 250 on lunch at Swiggy today via UPI",
+    prompt2: "How much did I spend this month?",
+    termsLabel: "I agree to the Terms of Service and Privacy Policy ({{version}}).",
+    viewTerms: "Terms",
+    viewPrivacy: "Privacy",
+    skip: "Accept & skip setup",
+    finish: "Finish setup",
+    saving: "Saving…",
   },
   notFound: {
     title: "Page not found",
     description: "There's no page at this address.",
     backHome: "Go to Dashboard",
+    backLanding: "Home page",
   },
   assistant: {
     open: "Assistant",
@@ -26,6 +65,7 @@ const en = {
     app: "{{app}} hit a problem",
     page: "This page hit a problem",
     assistant: "The assistant hit a problem",
+    backHome: "Go to Dashboard",
   },
 }
 

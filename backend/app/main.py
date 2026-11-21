@@ -62,7 +62,9 @@ def create_app(services: Services | None = None) -> FastAPI:
         rate_limiter=built.mcp_quota,
     )
 
-    app = FastAPI(title="SpendWise API", version=API_VERSION, lifespan=_lifespan(built, close_on_exit=services is None))
+    app = FastAPI(
+        title="trackwise.ai API", version=API_VERSION, lifespan=_lifespan(built, close_on_exit=services is None)
+    )
     # Shared services for routes (web/dependencies.py, web/auth.py): one bus and one clock for the whole app, the
     # session check (the accounts module's) and how the cookies are written.
     app.state.bus = built.bus

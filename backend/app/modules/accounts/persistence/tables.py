@@ -19,6 +19,7 @@ from app.modules.accounts.values import (
     MAX_NAME_LENGTH,
     MAX_STATE_LENGTH,
     MAX_SUBJECT_LENGTH,
+    MAX_TERMS_VERSION_LENGTH,
     MAX_TOKEN_NAME_LENGTH,
     MAX_URL_LENGTH,
     MAX_USER_AGENT_LENGTH,
@@ -43,6 +44,10 @@ class AppUser(SQLModel, table=True):
     avatar_url: str | None = Field(default=None, max_length=MAX_URL_LENGTH)
     # SpendWise's own off switch: a person switched off can't sign in, and their sessions stop working.
     is_active: bool = True
+    # When the person finished (or skipped) the first-run welcome flow, and which terms version they accepted.
+    welcomed_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
+    terms_version: str | None = Field(default=None, max_length=MAX_TERMS_VERSION_LENGTH)
+    terms_accepted_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
     created_at: datetime = Field(sa_type=DateTime(timezone=True))
     updated_at: datetime = Field(sa_type=DateTime(timezone=True))
 

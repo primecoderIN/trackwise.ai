@@ -44,10 +44,18 @@ const EXAMPLE_AMOUNT = "450.50"
  * the backend's reason shows as a toast and the dialog stays open with what you typed. Cancel keeps the draft
  * for next time. The list reloads by itself, because the mutation declares that it changed expenses.
  */
-export function AddExpenseDialog() {
+export function AddExpenseDialog({
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+}: {
+  open?: boolean
+  onOpenChange?: (next: boolean) => void
+} = {}) {
   const { t } = useTexts()
   // Whether the dialog is open; the draft lives in useExpenseDraft, so closing the dialog keeps it.
-  const [open, setOpen] = useState(false)
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+  const open = controlledOpen ?? uncontrolledOpen
+  const setOpen = controlledOnOpenChange ?? setUncontrolledOpen
   const { draft, setField, reset } = useExpenseDraft(blankDraft)
   const create = useCreateExpense()
 

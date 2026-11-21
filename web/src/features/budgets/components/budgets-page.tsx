@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useState } from "react"
 
 import { DEFAULT_CURRENCY } from "@/shared/api/contracts.gen"
+import { PageHeader } from "@/shared/components/page-header"
 import { RefreshNotice } from "@/shared/components/refresh-notice"
 import { SectionError } from "@/shared/components/section-error"
 import { messageOf } from "@/shared/lib/errors"
@@ -33,35 +34,35 @@ export function BudgetsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <h1 className="text-2xl font-semibold">{t("page.title")}</h1>
-          <p className="text-sm text-muted-foreground">{t("page.description", { currency: DEFAULT_CURRENCY })}</p>
-        </div>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={t("page.previousMonth")}
-            onClick={step(-1)}
-            disabled={month <= MIN_MONTH}
-          >
-            <ChevronLeft />
-          </Button>
-          <span aria-live="polite" className="min-w-32 text-center text-sm font-medium">
-            {formatMonth(month)}
-          </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={t("page.nextMonth")}
-            onClick={step(1)}
-            disabled={month >= MAX_MONTH}
-          >
-            <ChevronRight />
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title={t("page.title")}
+        description={t("page.description", { currency: DEFAULT_CURRENCY })}
+        actions={
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={t("page.previousMonth")}
+              onClick={step(-1)}
+              disabled={month <= MIN_MONTH}
+            >
+              <ChevronLeft />
+            </Button>
+            <span aria-live="polite" className="min-w-32 text-center text-sm font-medium">
+              {formatMonth(month)}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={t("page.nextMonth")}
+              onClick={step(1)}
+              disabled={month >= MAX_MONTH}
+            >
+              <ChevronRight />
+            </Button>
+          </div>
+        }
+      />
       {status.data ? (
         <>
           {status.isError && (

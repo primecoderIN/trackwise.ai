@@ -1,6 +1,8 @@
 // A component of the budgets feature: the "By category" card: one row per category, with its limit's bar or what
 // was spent, and its own Set or Change limit button. Used by the Budgets page.
 
+import { PiggyBank } from "lucide-react"
+
 import { EmptyState } from "@/shared/components/empty-state"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 
@@ -21,7 +23,7 @@ export function CategoryBudgets({ status }: { status: BudgetStatus }) {
       </CardHeader>
       <CardContent>
         {status.categories.length === 0 ? (
-          <EmptyState message={t("categories.empty")} />
+          <EmptyState icon={PiggyBank} message={t("categories.empty")} />
         ) : (
           <ul className="divide-y">
             {status.categories.map((line) => (

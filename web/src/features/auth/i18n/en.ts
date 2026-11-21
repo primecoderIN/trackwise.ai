@@ -11,6 +11,13 @@ const en = {
     signIn: "Sign in",
     loadingOptions: "Loading the ways to sign in…",
     optionsFailed: "Couldn't load the ways to sign in",
+    home: "Home",
+    features: "Features",
+    security: "Security",
+    faq: "FAQ",
+    privacy: "Privacy",
+    terms: "Terms",
+    contact: "Contact",
   },
   // Why the last sign-in didn't complete: the server's ?error= codes (the contract's AUTH.failures), and a text for
   // a code this app doesn't know.

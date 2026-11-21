@@ -1,6 +1,7 @@
 // A component of the dashboard feature: the "Monthly trend" card, a line chart of the last few months' spending
 // (shadcn charts over Recharts). Used by the Dashboard page.
 
+import { TrendingUp } from "lucide-react"
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
 
 import { EmptyState } from "@/shared/components/empty-state"
@@ -41,7 +42,11 @@ export function TrendChart({ trend }: { trend: MonthlyTrend }) {
       </CardHeader>
       <CardContent>
         {nothingSpent ? (
-          <EmptyState message={t("trend.empty", { count })} action={{ label: t("addExpense"), to: ROUTES.expenses }} />
+          <EmptyState
+            icon={TrendingUp}
+            message={t("trend.empty", { count })}
+            action={{ label: t("addExpense"), to: ROUTES.expenses }}
+          />
         ) : (
           <ChartContainer config={config} className="aspect-auto h-64 w-full">
             <LineChart data={rows} margin={{ left: 4, right: 12, top: 8 }} accessibilityLayer>

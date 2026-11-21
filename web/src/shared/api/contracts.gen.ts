@@ -118,6 +118,7 @@ export const AUTH = {
   "csrfHeader": "X-CSRF",
   "csrfValue": "1",
   "signInPage": "/sign-in",
+  "dashboardPage": "/dashboard",
   "params": {
     "option": "option",
     "returnTo": "return_to",
@@ -141,7 +142,8 @@ export const ACCOUNT = {
     90,
     365
   ],
-  "defaultTokenLifetimeDays": 90
+  "defaultTokenLifetimeDays": 90,
+  "currentTermsVersion": "2026-11"
 } as const
 
 export const AGUI = {

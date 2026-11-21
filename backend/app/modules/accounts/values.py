@@ -69,9 +69,15 @@ DEFAULT_TOKEN_LIFETIME = TokenLifetime.QUARTER
 # PUBLIC_URL and the prefix in front, that's the redirect URI registered at the provider.
 AUTH_PATH = "/auth"
 CALLBACK_PATH = f"{AUTH_PATH}/callback"
-# The web app's sign-in page. The callback sends people there when sign-in fails (with ?error=), and signing out
-# ends there. Shared with the web app through the generated contract, so its router uses the same path.
+# The web app's sign-in page and signed-in dashboard page. The callback sends people to SIGN_IN_PAGE when sign-in
+# fails (with ?error=), and to DASHBOARD_PAGE when no return_to was asked for. Shared with the web app through the
+# generated contract, so its router uses the same paths.
 SIGN_IN_PAGE = "/sign-in"
+DASHBOARD_PAGE = "/dashboard"
+# The current version of SpendWise's Terms of Service and Privacy Policy (Phase 29), recorded when a person finishes
+# the first-run welcome flow.
+CURRENT_TERMS_VERSION = "2026-11"
+MAX_TERMS_VERSION_LENGTH = 32
 
 
 # Why a sign-in didn't complete: the callback sends people to SIGN_IN_PAGE?error=<value>, and the web app shows the

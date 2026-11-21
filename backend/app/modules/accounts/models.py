@@ -10,10 +10,17 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.clock import UtcDateTime
-from app.modules.accounts.values import DEFAULT_TOKEN_LIFETIME, MAX_TOKEN_NAME_LENGTH, TokenLifetime
+from app.modules.accounts.values import (
+    CURRENT_TERMS_VERSION,
+    DEFAULT_TOKEN_LIFETIME,
+    MAX_TERMS_VERSION_LENGTH,
+    MAX_TOKEN_NAME_LENGTH,
+    TokenLifetime,
+)
 
 
-# Who is signed in: what the web app shows (name, email, picture). GetCurrentUser returns it.
+# Who is signed in: what the web app shows (name, email, picture, and whether the first-run welcome and terms have
+# been completed). GetCurrentUser returns it.
 class CurrentUser(BaseModel):
     model_config = ConfigDict(frozen=True, from_attributes=True)
 
@@ -21,6 +28,16 @@ class CurrentUser(BaseModel):
     name: str | None
     email: str | None
     avatar_url: str | None
+    welcomed_at: UtcDateTime | None = None
+    terms_version: str | None = None
+    terms_accepted_at: UtcDateTime | None = None
+
+
+# The body of POST /account/welcome: records that the person finished the welcome flow and accepted the terms.
+class WelcomeAcceptance(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid", str_strip_whitespace=True)
+
+    terms_version: str = Field(default=CURRENT_TERMS_VERSION, min_length=1, max_length=MAX_TERMS_VERSION_LENGTH)
 
 
 # GET /auth/user's answer: the person, and the link that signs this browser out (it carries the session's handle).

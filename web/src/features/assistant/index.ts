@@ -3,4 +3,5 @@
 // main bundle. The panel's texts load with its code (lazy-chat-panel.tsx).
 
 export { LazyChatPanel as ChatPanel } from "./components/lazy-chat-panel"
+export { useAssistant } from "./model/assistant-context"
 export { AssistantProvider } from "./model/assistant-provider"

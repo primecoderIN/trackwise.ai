@@ -12,7 +12,7 @@ import { budgetsTexts } from "./i18n"
 
 export type { BudgetStatus } from "./api"
 export { BudgetMeter } from "./components/budget-meter"
-export { budgetKeys, useBudgetStatus } from "./queries"
+export { budgetKeys, useBudgetStatus, useSetBudget } from "./queries"
 
 /**
  * The Budgets page, loaded only when it's first shown: its code is a separate file in the build, and its texts load

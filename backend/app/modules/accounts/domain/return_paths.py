@@ -7,10 +7,10 @@ app's own origin is kept; anything else becomes the start page. Used by the sign
 
 from urllib.parse import urlsplit
 
-from app.modules.accounts.values import MAX_URL_LENGTH, SIGN_IN_PAGE
+from app.modules.accounts.values import DASHBOARD_PAGE, MAX_URL_LENGTH, SIGN_IN_PAGE
 
-# Where a sign-in ends when no (acceptable) page was given: the web app's start page.
-HOME = "/"
+# Where a sign-in ends when no (acceptable) page was given: the web app's signed-in Dashboard.
+HOME = DASHBOARD_PAGE
 # Paths in the app that a finished sign-in must never send a browser to: the sign-in page itself (a loop),
 # or backend API / MCP endpoints.
 BLOCKED_PREFIXES = (SIGN_IN_PAGE, "/api", "/mcp")

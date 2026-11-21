@@ -7,6 +7,7 @@ import { useMutation, useQuery } from "@tanstack/react-query"
 import { DATA_SCOPES } from "@/shared/config/data-scopes"
 
 import {
+  completeWelcome,
   createAccessToken,
   listAccessTokens,
   listSessions,
@@ -28,6 +29,7 @@ export const accountKeys = {
 // What each mutation declares it changed; the app's refresh rule (app/_shell/query-client.ts) reloads the list.
 const CHANGES_SESSIONS = { changes: DATA_SCOPES.sessions } as const
 const CHANGES_TOKENS = { changes: DATA_SCOPES.accessTokens } as const
+const CHANGES_ACCOUNT = { changes: DATA_SCOPES.account } as const
 
 /** The person's live sessions (the browsers they're signed in on). */
 export function useSessions() {
@@ -60,4 +62,9 @@ export function useCreateAccessToken() {
 /** Revokes a token: `mutate(tokenId)`. */
 export function useRevokeAccessToken() {
   return useMutation({ mutationFn: revokeAccessToken, meta: CHANGES_TOKENS })
+}
+
+/** Records welcome completion and terms acceptance on the person's account. */
+export function useCompleteWelcome() {
+  return useMutation({ mutationFn: completeWelcome, meta: CHANGES_ACCOUNT })
 }

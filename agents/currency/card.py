@@ -11,7 +11,7 @@ from agent_kit.card import CardSpec
 from agent_kit.card import build_card as build_card_from_spec
 from currency.contract import JSON_MEDIA_TYPE, SKILL_ID, TEXT_MEDIA_TYPE
 
-AGENT_NAME = "SpendWise currency agent"
+AGENT_NAME = "trackwise.ai currency agent"
 AGENT_DESCRIPTION = "Converts amounts between currencies at the day's exchange rate."
 # The card's version: it changes with the skill's contract (contract.py).
 AGENT_VERSION = "1.0.0"

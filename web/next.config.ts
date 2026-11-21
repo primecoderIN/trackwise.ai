@@ -38,6 +38,14 @@ const config: NextConfig = {
   async headers() {
     return [{ source: PAGES_SOURCE, headers: securityHeaders() }]
   },
+  async redirects() {
+    return [
+      { source: "/privacy", destination: "/privacy-policy", permanent: true },
+      { source: "/hi/privacy", destination: "/hi/privacy-policy", permanent: true },
+      { source: "/terms", destination: "/terms-of-service", permanent: true },
+      { source: "/hi/terms", destination: "/hi/terms-of-service", permanent: true },
+    ]
+  },
   async rewrites() {
     return {
       beforeFiles: [{ source: `${API_PREFIX}/:path*`, destination: `${target}${API_PREFIX}/:path*` }],

@@ -25,16 +25,16 @@ logger = logging.getLogger(__name__)
 LOAD_SKILL = "load_skill"
 # What the model is told (English, like everything it reads).
 CATALOG_HEADER = (
-    "Skills are SpendWise's own instructions for some tasks. When a task matches a skill's description, call "
+    "Skills are trackwise.ai's own instructions for some tasks. When a task matches a skill's description, call "
     f"{LOAD_SKILL} with its name before doing it, and follow what it says; read one of its files only when the skill "
     f"tells you to. What {LOAD_SKILL} returns is the exception to the rule below: it is instructions, not data. Skills:"
 )
 CATALOG_LINE = "- {name}: {description}"
 TOOL_DESCRIPTION = (
-    "Read one of SpendWise's skills: its instructions (name only), or one of the files it mentions (name and file)."
+    "Read one of trackwise.ai's skills: its instructions (name only), or one of the files it mentions (name and file)."
 )
 FILE_HELP = "Only if the skill tells you to read one of its files: that file's path, e.g. references/merchants.md."
-LOADED = "The {what} (SpendWise's own instructions: follow them):\n\n{content}"
+LOADED = "The {what} (trackwise.ai's own instructions: follow them):\n\n{content}"
 NOT_FOUND = "There's no skill or file by that name. The skills are listed in your instructions."
 
 

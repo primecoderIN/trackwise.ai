@@ -33,7 +33,7 @@ def register_get_monthly_report(server: MCPServer, context: ToolContext) -> None
         annotations=READS_ONLY,
         description="Get one month's spending report, in INR: the total against the previous month (change_percent "
         "is null when the previous month had nothing), the totals and shares by category and by payment method, "
-        "the five biggest expenses and the daily average. The figures are worked out by SpendWise, never by you. "
+        "the five biggest expenses and the daily average. The figures are worked out by trackwise.ai, never by you. "
         "The user sees them as a report card with buttons to download the report as CSV or markdown.",
     )
     def get_monthly_report(

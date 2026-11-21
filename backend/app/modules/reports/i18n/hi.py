@@ -6,7 +6,7 @@ from app.modules.reports.i18n.en import ReportText
 HI: dict[ReportText, TextValue] = {
     ReportText.UNAVAILABLE: "रिपोर्ट अभी नहीं बन सकी। थोड़ी देर बाद फिर कोशिश करें।",
     ReportText.TOO_MANY_EXPENSES: "इस महीने रिपोर्ट के लिए बहुत ज़्यादा खर्च हैं ({limit} से ज़्यादा)।",
-    ReportText.TITLE: "SpendWise रिपोर्ट: {month}",
+    ReportText.TITLE: "trackwise.ai रिपोर्ट: {month}",
     ReportText.TOTAL: Plural(one="{count} खर्च में {total} खर्च हुए।", other="{count} खर्चों में {total} खर्च हुए।"),
     ReportText.NOTHING_SPENT: "इस महीने कोई खर्च दर्ज नहीं हुआ।",
     ReportText.COMPARED_HEADING: "{previous_month} से तुलना",

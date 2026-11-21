@@ -32,7 +32,9 @@ EN: dict[ExpenseText, TextValue] = {
         "Expense {expense_id} has changed since it was shown (version {current}, not {expected}); nothing was deleted."
     ),
     # Saving an amount in another currency (D204): the currency agent has no rate for {currency} (a code, e.g. "XYZ").
-    ExpenseText.UNSUPPORTED_CURRENCY: "SpendWise can't convert {currency} to INR yet. Enter the amount in INR instead.",
+    ExpenseText.UNSUPPORTED_CURRENCY: (
+        "trackwise.ai can't convert {currency} to INR yet. Enter the amount in INR instead."
+    ),
     # The currency agent can't be asked (or answered something unusable); why goes to the server log (D180).
     ExpenseText.RATES_UNAVAILABLE: (
         "Currency conversion isn't available right now, so an amount in {currency} can't be saved. "

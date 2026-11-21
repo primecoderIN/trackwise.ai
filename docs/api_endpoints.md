@@ -191,6 +191,12 @@ itself: **the only time it's sent** (`Cache-Control: no-store`).
 
 Revokes the token: it stops working at once. **204**.
 
+### `POST /api/v1/account/welcome`
+
+Records that the signed-in person completed (or skipped) the first-run welcome flow and accepted the current Terms of
+Service and Privacy Policy version (`{"terms_version": "2026-11"}`). Stored on the account (`welcomed_at`,
+`terms_version`, `terms_accepted_at`), never in browser storage (D192, D220). **204**.
+
 ## Categories
 
 ### `GET /api/v1/categories`

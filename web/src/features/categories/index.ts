@@ -8,7 +8,23 @@
 // - categoriesTexts: the feature's texts (the dropdown, "Unknown"). A page that draws CategorySelect or uses
 //   useCategoryName loads them with its own (loadNamespaces in its lazy loader).
 
+import { loadNamespaces } from "@/shared/i18n"
+import { lazyWithRetry } from "@/shared/lib/lazy-with-retry"
+
+import { categoriesTexts } from "./i18n"
+
 export type { Category } from "./api"
 export { ANY_CATEGORY, CategorySelect } from "./category-select"
 export { categoriesTexts } from "./i18n"
 export { categoryKeys, useCategories, useCategoryName } from "./queries"
+
+/**
+ * The Categories page, loaded on first use together with its texts.
+ */
+export const CategoriesPage = lazyWithRetry(async () => {
+  const [{ CategoriesPage: page }] = await Promise.all([
+    import("./components/categories-page"),
+    loadNamespaces(categoriesTexts),
+  ])
+  return { default: page }
+})

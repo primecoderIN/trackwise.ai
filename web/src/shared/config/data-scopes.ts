@@ -11,9 +11,10 @@ export const DATA_SCOPES = {
   expenses: "expenses",
   // The person's monthly budgets (the Budgets page).
   budgets: "budgets",
-  // The signed-in person's own account (the Settings page): where they're signed in, and their access tokens.
+  // The signed-in person's own account (the Settings page and welcome state).
   sessions: "sessions",
   accessTokens: "accessTokens",
+  account: "account",
 } as const
 
 /** One of DATA_SCOPES' values: what a mutation's `meta.changes` holds. */

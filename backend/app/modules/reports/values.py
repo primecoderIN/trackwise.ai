@@ -30,6 +30,6 @@ class ReportFormat(StrEnum):
     MARKDOWN = "md"
 
 
-# How each download is sent: its media type (UTF-8 text) and the start of its file name ("spendwise-2026-11.csv").
+# How each download is sent: its media type (UTF-8 text) and the start of its file name ("trackwise-2026-11.csv").
 MEDIA_TYPES = {ReportFormat.CSV: "text/csv; charset=utf-8", ReportFormat.MARKDOWN: "text/markdown; charset=utf-8"}
-FILE_NAME_PREFIX = "spendwise"
+FILE_NAME_PREFIX = "trackwise"

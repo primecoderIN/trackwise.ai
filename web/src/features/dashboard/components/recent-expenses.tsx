@@ -1,6 +1,7 @@
 // A component of the dashboard feature: the "Recent expenses" card. Used by the Dashboard page, which loads the
 // newest few through the expenses feature's useExpenses.
 
+import { ReceiptText } from "lucide-react"
 import Link from "next/link"
 
 import { useCategoryName } from "@/features/categories"
@@ -36,7 +37,11 @@ export function RecentExpenses({ expenses }: { expenses: Expense[] }) {
       </CardHeader>
       <CardContent>
         {expenses.length === 0 ? (
-          <EmptyState message={t("recent.empty")} action={{ label: t("addExpense"), to: ROUTES.expenses }} />
+          <EmptyState
+            icon={ReceiptText}
+            message={t("recent.empty")}
+            action={{ label: t("addExpense"), to: ROUTES.expenses }}
+          />
         ) : (
           <ul className="divide-y">
             {expenses.map((expense) => (

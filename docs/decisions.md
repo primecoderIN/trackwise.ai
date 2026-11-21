@@ -2996,3 +2996,57 @@ is natural. It's still a soft, model-judged guard.
 - **Why:** eliminate edge-case crashes (Jan/Feb lookbacks, Dec 2099 / Jan 1900 boundaries, idle Neon disconnects, double
   submissions) and keep every surface and contract consistent.
 - **Revisit when:** adding server-side sorting or cursor pagination to `GET /expenses`.
+
+---
+
+## The app frame, missing pages, public site and first run (Phases 28 and 29)
+
+### D219. Grouped sidebar menu, shared `PageHeader`, zero-dependency command palette and tabbed Settings (Phase 28)
+- **What:**
+  - **The frame (`app/_frame/`):** `PAGES` and `MENU_GROUPS` (`pages.tsx`) group the signed-in menu into `Overview`
+    (Dashboard), `Money` (Expenses, Budgets, Categories), `Insights` (Reports) and `Settings` (Settings). The top bar
+    shows the current page's title (`currentPageFor`) instead of repeating `SpendWise`, plus a search button (`Ctrl+K`)
+    and the Assistant toggle; `UserMenu`, `LanguageMenu` and `ModeToggle` move into `SidebarFooter`.
+  - **Command palette (`command-palette.tsx`):** `Ctrl/⌘ + K` opens a keyboard-navigable palette built on the existing
+    Radix `Dialog` (`shared/ui/dialog.tsx`) with zero new npm dependencies, jumping to any page, opening `AddExpenseDialog`
+    (`/expenses?add=1`), or opening the assistant.
+  - **Shared `PageHeader` and `EmptyState` (`shared/components/`):** every signed-in page starts with `<PageHeader>`,
+    and `<EmptyState>` supports an icon, an optional title, and either a link (`{ label, to }`) or button action
+    (`{ label, onClick }`).
+  - **Error boundaries:** added Next.js 16 `app/error.tsx`, `app/global-error.tsx` and `app/(client)/(app)/error.tsx`
+    using the `retry` prop (`error.md` in `node_modules/next/dist/docs`).
+  - **Missing pages:** added the `reports` feature (`features/reports/`, `/reports`) showing the month's total, comparison
+    with the previous month, daily average, category and payment breakdowns, biggest expenses and CSV/Markdown downloads;
+    added `CategoriesPage` (`features/categories/components/categories-page.tsx`, `/categories`) showing every shared
+    category with its icon and monthly spend; organized `/settings` into `Profile`, `Preferences`, `Security` and
+    `Developer` tabs on one page.
+- **Why:** make every feature reachable from the visual UI (not only through the chat) and give every page a consistent
+  product frame without adding third-party dependencies.
+- **Revisit when:** adding Recurring and Import pages to the `Money` group (Phases 31 and 33) or custom categories (Phase 35).
+
+### D220. Server-rendered bilingual public site, `/dashboard` address, and account-stored first-run welcome (Phase 29)
+- **What:**
+  - **Addresses:** `/` is now the server-rendered public landing page (`app/(public)/page.tsx`); the signed-in Dashboard
+    lives at `/dashboard` (`ROUTES.dashboard`, `accounts.values.DASHBOARD_PAGE`, `return_paths.HOME`). A signed-in
+    visitor at `/` sees the landing page with an "Open Dashboard" CTA (`PublicSessionAction`).
+  - **Bilingual server-rendered multi-page public site (`app/(public)/` and `app/_public/`, branded `trackwise.ai`):**
+    `/`, `/features`, `/security`, `/faq`, `/privacy-policy`, `/terms-of-service`, `/contact` and their Hindi counterparts
+    `/hi`, `/hi/features`, `/hi/security`, `/hi/faq`, `/hi/privacy-policy`, `/hi/terms-of-service`, `/hi/contact`
+    (with permanent 308 redirects from `/privacy`, `/terms`, `/hi/privacy` and `/hi/terms`) are rendered on the server
+    outside `(client)/`, with `publicPage` metadata, `hreflang` alternates (`en`, `hi`, `x-default`),
+    `opengraph-image.tsx` (`next/og`), JSON-LD structured data (`Organization`, `WebSite`, `SoftwareApplication` on `/`;
+    categorized `FAQPage` on `/faq`), Zoho Expense-style multi-page product hierarchy using a wide `PUBLIC_CONTAINER`
+    (`max-w-[1520px]`) 12-column split hero with an auto-playing interactive bilingual product walkthrough video
+    player (`WalkthroughPlayer` / `WalkthroughStageCanvas`) plus bespoke feature previews, a shared `NavProgressBar`
+    horizontal route-transition loader beneath public and signed-in navbars, comprehensive feature and FAQ coverage
+    across all built capabilities, DPDP Act 2023 privacy and grievance sections, and full coverage in `robots.ts` and
+    `sitemap.ts`.
+  - **First-run welcome and terms acceptance (`CompleteWelcome`, `POST /api/v1/account/welcome`, migration `0012`):**
+    `app_user` stores `welcomed_at`, `terms_version` and `terms_accepted_at` (exposed on `GET /api/v1/auth/user`).
+    `WelcomeDialog` (`app/_frame/welcome-dialog.tsx`) runs once per person after their first sign-in (or when
+    `CURRENT_TERMS_VERSION` advances), offering language selection, an optional first overall monthly budget, a starter
+    assistant prompt, and terms acceptance—stored on the server, never in browser storage (D192).
+- **Why:** search engines need real server-rendered HTML in both languages, visitors need clear product and privacy
+  information before signing in, and onboarding state must follow the person across browsers without leaking into
+  `localStorage`.
+- **Revisit when:** adding public feature/calculator content pages (Phase 38) or a public pricing page (Phase 39).

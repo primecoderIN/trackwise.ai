@@ -8,6 +8,8 @@
 export { SettingsPage } from "@/features/account"
 export { SignInPage } from "@/features/auth"
 export { BudgetsPage } from "@/features/budgets"
+export { CategoriesPage } from "@/features/categories"
 export { DashboardPage } from "@/features/dashboard"
 export { ExpensesPage } from "@/features/expenses"
+export { ReportsPage } from "@/features/reports"
 export { NotFoundPage } from "./placeholder-pages"

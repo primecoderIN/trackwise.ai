@@ -9,13 +9,29 @@ import type en from "./en"
 const hi: Translation<typeof en> = {
   page: {
     title: "सेटिंग्स",
-    description: "आपका खाता, आप कहाँ साइन इन हैं, और दूसरे ऐप्स के लिए पहुँच।",
+    description: "आपकी प्रोफ़ाइल, प्रदर्शन प्राथमिकताएँ, साइन-इन ब्राउज़र और डेवलपर पहुँच।",
+  },
+  sections: {
+    label: "सेटिंग्स के भाग",
+    profile: "प्रोफ़ाइल",
+    preferences: "प्राथमिकताएँ",
+    security: "सुरक्षा",
+    developer: "डेवलपर",
   },
   profile: {
     title: "प्रोफ़ाइल",
     description: "आपका नाम, ईमेल और तस्वीर उस खाते से आते हैं जिससे आप साइन इन करते हैं।",
     you: "आपका खाता",
     noEmail: "कोई ईमेल पता नहीं",
+    termsAccepted: "शर्तें और गोपनीयता ({{version}}) {{date}} को स्वीकार की गईं",
+  },
+  preferences: {
+    title: "प्राथमिकताएँ",
+    description: "इस ब्राउज़र पर trackwise.ai में इस्तेमाल होने वाली भाषा और थीम चुनें।",
+    languageTitle: "भाषा",
+    languageDescription: "मेन्यू, पेज, त्रुटि संदेश और सहायक के जवाब इसी भाषा में दिखेंगे।",
+    themeTitle: "थीम",
+    themeDescription: "लाइट और डार्क मोड के बीच बदलें, या अपने डिवाइस का अनुसरण करें।",
   },
   sessions: {
     title: "आप कहाँ साइन इन हैं",

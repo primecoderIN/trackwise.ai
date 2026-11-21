@@ -11,7 +11,7 @@ from agent_kit.card import CardSpec
 from agent_kit.card import build_card as build_card_from_spec
 from receipt.contract import JSON_MEDIA_TYPE, SKILL_ID, ReceiptMediaType
 
-AGENT_NAME = "SpendWise receipt agent"
+AGENT_NAME = "trackwise.ai receipt agent"
 AGENT_DESCRIPTION = "Reads a shop receipt (a photo or a PDF) into structured data for an expense."
 # The card's version: it changes with the skill's contract (contract.py).
 AGENT_VERSION = "1.0.0"
