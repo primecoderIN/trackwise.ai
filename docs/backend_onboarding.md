@@ -23,8 +23,9 @@ the "how".
 - **Swagger UI** at http://127.0.0.1:8000/docs: try every route; it shows each request and response model.
 - **Logs:** our own loggers (`app.*`) print at INFO. To see message text and tool arguments too, set the level to
   `logging.DEBUG` in `setup_logging()` (`infrastructure/logging.py`) while debugging; don't commit that.
-- **A scratch database:** point `DATABASE_URL` at a copy to experiment without touching your data:
-  `$env:DATABASE_URL = "sqlite:///C:/temp/try.db"` (then run the migrations against it).
+- **A scratch database:** use a separate Neon development database or branch, set `DATABASE_URL` to its connection
+  string, and run migrations there. `DATABASE_URL` must be PostgreSQL; for isolated SQLite checks, pass
+  `create_db_engine("sqlite://")` directly rather than changing the app setting.
 
 ## Python features you'll see
 

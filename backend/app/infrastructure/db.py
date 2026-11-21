@@ -1,11 +1,10 @@
-"""Database engines and the sessions the bus opens (infrastructure).
+"""PostgreSQL application engine, explicit SQLite check engines, and bus sessions (infrastructure).
 
-create_db_engine() builds an engine for any SQLAlchemy URL; on SQLite it also sets the engine up so
-transactions behave as they do on Postgres: schema changes can be rolled back (atomic migrations) and
-SAVEPOINTs work (a command sent from inside another). session_factory() turns an engine into what the bus
-(core/cqrs.py) opens one session with per outermost message.
+create_db_engine() builds an engine for a SQLAlchemy URL. The running app requires Neon/PostgreSQL via DATABASE_URL;
+SQLite-specific transaction handling remains for isolated checks that explicitly supply a SQLite engine.
+session_factory() turns an engine into what the bus (core/cqrs.py) opens one session with per outermost message.
 
-default_engine() is the engine for the database in DATABASE_URL, built on the first call and kept: the
+default_engine() is the required PostgreSQL engine from DATABASE_URL, built on the first call and kept: the
 composition root (bootstrap.build) uses it unless it's given another engine, and the migrations' env.py runs on it
 unless handed a connection. Importing this file builds nothing.
 """
@@ -79,5 +78,5 @@ def session_factory(engine: Engine) -> SessionFactory:
 
 @cache
 def default_engine() -> Engine:
-    """The engine for the database in DATABASE_URL, built on the first call and kept for the process."""
-    return create_db_engine(get_settings().database_url)
+    """The required Neon/PostgreSQL engine from DATABASE_URL, built on first use and kept for the process."""
+    return create_db_engine(get_settings().require_database_url())

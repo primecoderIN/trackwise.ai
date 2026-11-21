@@ -1,10 +1,10 @@
 # 💸 SpendWise
 
 <div align="center">
-  <img src="https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white" alt="Python 3.14" />
+  <img src="https://img.shields.io/badge/Python-3.15-3776AB?logo=python&logoColor=white" alt="Python 3.15" />
   <img src="https://img.shields.io/badge/FastAPI-0.162-009688?logo=fastapi&logoColor=white" alt="FastAPI" />
   <img src="https://img.shields.io/badge/SQLAlchemy-2.1_+_Alembic-D71F00?logo=sqlalchemy&logoColor=white" alt="SQLAlchemy and Alembic" />
-  <img src="https://img.shields.io/badge/SQLite-local_file-003B57?logo=sqlite&logoColor=white" alt="SQLite" />
+  <img src="https://img.shields.io/badge/Neon-PostgreSQL-00E699" alt="Neon PostgreSQL" />
   <img src="https://img.shields.io/badge/Google_Gemini-Interactions_API-8E75B2?logo=googlegemini&logoColor=white" alt="Google Gemini" />
   <img src="https://img.shields.io/badge/MCP-Python_SDK_2.3-000000?logo=anthropic&logoColor=white" alt="Model Context Protocol" />
   <img src="https://img.shields.io/badge/AG--UI-1.0-6E56CF" alt="AG-UI" />
@@ -75,7 +75,7 @@ flowchart TD
         INFRA["config · db · migrations · logging"]
     end
 
-    DB[("SQLite<br/>Alembic migrations")]
+    DB[("Neon PostgreSQL<br/>Alembic migrations")]
     GEM["Google Gemini API"]
     EXT["MCP clients<br/>Inspector, Claude Desktop"]
 
@@ -126,7 +126,7 @@ flowchart TD
   through `index.ts`; `shared/` knows no feature; `app/` composes them. Lint rules enforce it.
 - **One contract, generated:** REST types (OpenAPI → `schema.gen.ts`) and protocol names, labels and limits
   (`contracts.gen.ts`) come from the backend. No magic strings, nothing copied by hand.
-- **Correct by construction:** money as integer paise with `Decimal`, Alembic migrations (atomic on SQLite too),
+- **Correct by construction:** money as integer paise with `Decimal`, Alembic migrations on PostgreSQL,
   RFC 9457 problem details for every error, a `Clock` instead of `date.today()`, and user data logged only at DEBUG.
 
 ---
@@ -168,14 +168,20 @@ Copy-Item .env.example .env     # once, then paste your Gemini API key into .env
 ```
 
 > [!IMPORTANT]
+> **A Neon PostgreSQL URL is required.** Set `DATABASE_URL` in `.env` to your Neon connection string, using the
+> `postgresql+psycopg://` scheme. The app does not create a local SQLite database.
+>
 > **A Gemini API key is needed for the assistant.** Get one at https://aistudio.google.com/apikey and put it after
 > `GEMINI_API_KEY=` in `.env`. Everything else (the Dashboard, the Expenses page, the REST API, MCP) works without it.
 
-### 2. Add sample data (optional, safe to run more than once)
+### 2. Add default categories
 
 ```powershell
 .\.venv\Scripts\python.exe backend\seed.py
 ```
+
+On a fresh Neon database this creates the default categories. After signing in, add demo expenses with
+`.\.venv\Scripts\python.exe backend\seed.py --sample-for <your-email>`.
 
 ### 3. Start the web app
 
@@ -185,8 +191,8 @@ npm install      # first time, and after package.json changes
 npm run dev      # then open http://localhost:5173
 ```
 
-Requirements: Python 3.11+ (developed on 3.14) and Node.js 20+ (developed on 24). Full setup, macOS/Linux commands
-and MCP clients: [docs/getting_started.md](docs/getting_started.md).
+Requirements: Python 3.11+ (Python CI checks on 3.14 and 3.15; developed on 3.14) and Node.js 20+ (developed on 24).
+Full setup, macOS/Linux commands and MCP clients: [docs/getting_started.md](docs/getting_started.md).
 
 ---
 
@@ -274,8 +280,8 @@ spendwise/
 
 ### Database and generated files
 
-- `backend/spendwise.db` is your local data (git-ignored). Its tables are created and changed only by **migrations**;
-  `.\run.ps1` and `seed.py` run them. To start from scratch, delete the file and run `seed.py`.
+- The app requires a Neon PostgreSQL connection URL in `DATABASE_URL`; it does not create a local SQLite database.
+  `.\run.ps1` applies migrations, and `backend\seed.py` creates the default categories in a fresh database.
 - `web/src/shared/api/*.gen.ts` and `web/openapi.json` are generated from the backend: after changing an API, run
   `.\.venv\Scripts\python.exe backend\scripts\export_contracts.py`, then `npm run gen:api` in `web/`, and commit them.
 - `__pycache__/` and `web/dist/` are build output: git-ignored and safe to delete.

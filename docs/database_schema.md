@@ -1,7 +1,8 @@
 # Database Schema
 
-SpendWise keeps everything in one database: a SQLite file, `backend/spendwise.db`, by default (`DATABASE_URL` can
-point elsewhere, e.g. Postgres). Each table belongs to **exactly one module**, and only that module reads or writes it.
+SpendWise uses one Neon PostgreSQL database configured by the required `DATABASE_URL`. Each table belongs to
+**exactly one module**, and only that module reads or writes it. SQLite is retained only for explicitly created,
+isolated checks; the app does not create a local database file.
 
 ## Tables at a glance
 
@@ -370,9 +371,9 @@ Commands (from the project folder):
 
 Read every generated migration before running it: autogenerate is a draft, not a decision.
 
-## Moving to Postgres later
+## Neon PostgreSQL
 
-Set `DATABASE_URL=postgresql+psycopg://…` and run the migrations. What already fits: timestamps with time zone,
-`EXTRACT(year/month …)` in the trend query (standard SQL, not SQLite's `strftime`), JSON columns, batch mode (a no-op
-outside SQLite). What to revisit then: the SQLite-specific connection settings in `infrastructure/db.py` (they apply
-only to SQLite), and indexes for the JSON columns if they're ever queried.
+Set `DATABASE_URL` to the Neon connection string using the `postgresql+psycopg://` scheme. `.\run.ps1` applies
+Alembic migrations to that database. A new Neon database has no categories; run `backend\seed.py` after migrating.
+Existing local SQLite data is not copied. SQLite-specific connection setup in `infrastructure/db.py` is used only
+when a check explicitly supplies an SQLite engine.

@@ -28,7 +28,7 @@ target_metadata = metadata()
 def run_migrations_offline() -> None:
     """Write the SQL out instead of running it (alembic upgrade head --sql), e.g. for review."""
     context.configure(
-        url=get_settings().database_url,
+        url=get_settings().require_database_url(),
         target_metadata=target_metadata,
         literal_binds=True,
         # SQLite can't change most of a table in place; "batch" mode copies it into a new one instead.

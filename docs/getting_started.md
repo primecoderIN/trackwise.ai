@@ -1,15 +1,16 @@
 # Getting Started
 
-From an empty machine to the app running with sample data. Commands are for Windows PowerShell; macOS/Linux
+From an empty machine to the app running with default categories. Commands are for Windows PowerShell; macOS/Linux
 equivalents are noted where they differ.
 
 ## 1. Prerequisites
 
 | Tool | Version | Check | Get it |
 |---|---|---|---|
-| Python | 3.11 or newer (developed on 3.14) | `py -3 --version` | https://www.python.org/downloads/ |
+| Python | 3.11+ (Python CI: 3.14, 3.15; developed on 3.14) | `py -3 --version` | https://www.python.org/downloads/ |
 | Node.js | 20 or newer (developed on 24) | `node --version` | https://nodejs.org/ |
 | Git | any recent | `git --version` | https://git-scm.com/ |
+| Neon PostgreSQL | a Neon project and database | | https://neon.tech/ |
 | A Gemini API key | free tier is enough | | https://aistudio.google.com/apikey (only for the assistant) |
 
 Optional: **uv** (for `mcp dev`, the MCP Inspector launcher).
@@ -27,17 +28,21 @@ Open `.env` and set at least:
 ```ini
 GEMINI_API_KEY=<your key>
 GEMINI_MODEL=gemini-3.5-flash-lite
+DATABASE_URL=postgresql+psycopg://<user>:<password>@<host>/<database>?sslmode=require
 OIDC_ISSUER=<your identity provider>
 OIDC_CLIENT_ID=<the client id>
 OIDC_CLIENT_SECRET=<the client secret>
 SESSION_ENCRYPTION_KEYS=["<a Fernet key>"]
 ```
 
+Set `DATABASE_URL` to the connection string from your Neon Console, using the `postgresql+psycopg://` scheme.
+The app applies migrations to that database and does not create or use a local SQLite database. Keep the URL private.
+
 The `OIDC_*` settings and the key are for signing in (Phase 22): set up the provider first with
 [identity_provider.md](identity_provider.md). Without them the app starts, but nobody can sign in and every API
 route answers 401.
 
-`.env` is git-ignored: your secrets never get committed. Every other setting has a working default; see
+`.env` is git-ignored: your secrets never get committed. Most other settings have a working default; see
 [configuration.md](configuration.md).
 
 ## 3. Start the backend
@@ -50,8 +55,7 @@ What it does, in order:
 
 1. **Creates `.venv`** the first time (`py -3 -m venv .venv`).
 2. **Installs `requirements.txt`** whenever that file changed since the last install.
-3. **Runs the database migrations** (`alembic upgrade head`): creates `backend\spendwise.db` and its tables the first
-   time, and brings an existing database up to date later. Your data is kept.
+3. **Runs the database migrations** (`alembic upgrade head`) against the required Neon database.
 4. **Starts the server** with auto-reload on http://127.0.0.1:8000.
 
 Extra arguments go to uvicorn, e.g. `.\run.ps1 --port 8001`. If PowerShell refuses to run the script, allow local
@@ -83,14 +87,14 @@ cd web; npm ci; cd ..
 
 ## 4. Add sample data (optional)
 
-In a second terminal:
+In a second terminal, after the migrations complete:
 
 ```powershell
 .\.venv\Scripts\python.exe backend\seed.py
 ```
 
-It creates 8 categories (Food, Transport, Shopping, Bills, Entertainment, Health, Travel, Other) and 10 expenses dated
-over the last three weeks, all in one transaction. Run it again and it says "Already seeded; nothing to do."
+It creates the 8 default categories (Food, Transport, Shopping, Bills, Entertainment, Health, Travel, Other). To add
+sample expenses, first sign in and run `.\.venv\Scripts\python.exe backend\seed.py --sample-for <your-email>`.
 
 ## 5. Start the web app
 
@@ -141,7 +145,7 @@ needs neither: it calls the MCP server in-process, for whoever is signed in.
 | Task | How |
 |---|---|
 | Stop the server | `Ctrl+C` in its terminal |
-| Start from an empty database | stop the server, delete `backend\spendwise.db`, run `seed.py` (it migrates first) |
+| Initialize a fresh database | Create a new Neon database, set its URL in `DATABASE_URL`, run `.\run.ps1`, then run `seed.py` for categories |
 | After pulling new code | `.\run.ps1` (installs changed requirements, runs new migrations); `npm install` in `web/` |
 | After changing a backend API | `.\.venv\Scripts\python.exe backend\scripts\export_contracts.py`, then `npm run gen:api` in `web/` |
 | Change a table | edit its `persistence/tables.py`, then generate and run a migration ([backend_onboarding.md](backend_onboarding.md#recipe-add-or-change-a-table)) |

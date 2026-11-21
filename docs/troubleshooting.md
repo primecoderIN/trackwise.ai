@@ -42,10 +42,10 @@ the project folder (the repo root, where `run.ps1` is) unless noted.
 - **Cause:** a venv stores absolute paths.
 - **Fix:** delete `.venv` and run `.\run.ps1`, which recreates it.
 
-### Can't delete or move `.venv` or `spendwise.db`: "Access is denied" / "being used by another process"
+### Can't delete or move `.venv`: "Access is denied" / "being used by another process"
 - **Cause:** a Python process still has the files open, usually the dev server. With `--reload`, uvicorn runs
   a separate worker process whose command line only mentions `multiprocessing`, so it's easy to miss, and it
-  can keep running after its parent is killed.
+  can keep running after its parent is stopped.
 - **Fix:** stop the server with Ctrl+C in its terminal. If files are still locked, list Python processes with
   `Get-CimInstance Win32_Process -Filter "Name='python.exe'" | Select ProcessId, CommandLine` and stop the
   leftover one with `Stop-Process -Id <id>`.
@@ -464,10 +464,9 @@ is in the backend terminal (D180).
   unknown category, come with a clear message instead.
 
 ### `/chat` replies "Sorry, I can't reach the expense tools right now"
-- **Cause:** the tools run in-process, so a call failed or took over 15 seconds (often a locked SQLite database while
-  another process writes). `MCP_URL` no longer exists (Phase 23).
-- **Fix:** the server's terminal logs why ("expense tools unreachable"). Try again; if it repeats, look for another
-  process holding the database (the stdio server, a script).
+- **Cause:** the tools run in-process, so a call failed or took over 15 seconds. `MCP_URL` no longer exists (Phase 23).
+- **Fix:** the server's terminal logs why ("expense tools unreachable"). Try again; if it repeats, check the backend
+  log and confirm the configured Neon database is reachable.
 
 ### Every MCP tool call says "This MCP connection isn't signed in"
 - **Cause:** the stdio server has no working token: `SPENDWISE_TOKEN` is missing from the environment the MCP client
@@ -491,8 +490,9 @@ is in the backend terminal (D180).
 ### My expenses and conversations are gone after updating
 - **Cause:** migration 0007 (Phase 23) deletes the rows made before sign-in existed: they belonged to nobody, so they
   could never be shown again (the owner's choice, D190). Categories are kept.
-- **Fix:** if you kept a copy of `backend\spendwise.db` from before, the old rows are still in it. To start with sample
-  data instead, sign in once, then run `.\.venv\Scripts\python.exe backend\seed.py --sample-for you@example.com`.
+- **Fix:** check that `DATABASE_URL` still points to the Neon database where the data was saved. Switching to a new
+  Neon database does not copy data from the old database or from a former local SQLite file. To add sample data,
+  sign in once, then run `.\.venv\Scripts\python.exe backend\seed.py --sample-for you@example.com`.
 
 ### `seed.py --sample-for` says "No one has signed in as ... yet"
 - **Cause:** expenses belong to a person, and SpendWise knows people only once they've signed in.
@@ -513,10 +513,10 @@ is in the backend terminal (D180).
 
 ## Database
 
-### I want fresh sample data
-1. Stop the server.
-2. Delete `backend\spendwise.db`.
-3. Run `.\.venv\Scripts\python.exe backend\seed.py` (it runs the migrations, which create empty tables, then fills them).
+### I want a fresh database
+Create a separate Neon database (or branch), set its connection URL in `DATABASE_URL`, start `.\run.ps1` to apply
+migrations, then run `.\.venv\Scripts\python.exe backend\seed.py` to add the default categories. This does not delete
+or alter data in another Neon database.
 
 ### The server won't start: "The database is at migration …, but the code needs …"
 - **Cause:** the code expects newer tables than the database has (D148). `.\run.ps1` runs the migrations first, but

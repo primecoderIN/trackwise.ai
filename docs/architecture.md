@@ -72,8 +72,8 @@ backend/
     infrastructure/      what talks to the outside world; imports only core/; only the composition root and the
                          entry points import it
       config.py          get_settings() (from .env, read on first use); API_PREFIX, API_VERSION, MCP_PATH
-      db.py              create_db_engine(url) (SQLite made transactional: DDL, savepoints; in-memory databases
-                         share one connection), session_factory(), default_engine() (built on first use)
+      db.py              create_db_engine(url) (Neon/PostgreSQL for the app; explicit SQLite engines for isolated
+                         checks), session_factory(), default_engine() (requires DATABASE_URL, built on first use)
       migrations.py      run / check the Alembic migrations from code
       logging.py         console logging for our own loggers ("app.*")
       files.py           LocalFileStore: the FileStore port as a folder (UPLOADS_DIR), files named by random keys
@@ -421,11 +421,10 @@ before and after the change (D173; the folder restructure was checked the same w
 
 Known limits, to address when the load calls for it (D174):
 
-- **Threads and connections:** sync routes and open `/agent` streams share anyio's default pool of 40 worker threads,
-  and the SQLite engine's connection pool is 5 + 10 overflow. Size them together if many streams run at once.
-- **SQLite writers:** transactions start with a deferred `BEGIN`, so two commands that read and then write at the
-  same moment can fail with "database is locked". `BEGIN IMMEDIATE` for writing units of work plus WAL mode, or
-  Postgres (already supported through `DATABASE_URL`), removes that.
+- **Threads and connections:** sync routes and open `/agent` streams share anyio's default pool of 40 worker threads
+  and PostgreSQL connections use SQLAlchemy's pool. Size them together if many streams run at once.
+- **SQLite checks:** SQLite's deferred `BEGIN` can make concurrent read-then-write checks fail with "database is
+  locked". This does not affect the Neon/PostgreSQL database used by the running app.
 - **Long threads:** `GET /threads/{id}` returns a whole thread, unpaged; the model's history is capped by turns, not size.
 
 ## Agent Skills (`skills/`)

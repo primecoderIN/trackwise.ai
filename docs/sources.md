@@ -916,6 +916,17 @@ Read 2026-11-20.
 **Used in:** `backend/app/modules/assistant/a2ui/models/actions.py` (`FunctionCall`, `ClientFunction`),
 `web/src/features/assistant/a2ui/buttons/functions/`, `backend/app/modules/reports/documents/spreadsheet.py`, D209.
 
+## Neon PostgreSQL application database
+
+- **Neon connection strings:** https://neon.com/docs/connect/connect-from-any-app. Use the URL from the Neon Console;
+  for SQLAlchemy with Psycopg 3, use the `postgresql+psycopg://` scheme.
+- **SQLAlchemy PostgreSQL dialect:** https://docs.sqlalchemy.org/en/21/dialects/postgresql.html#psycopg. This documents
+  the Psycopg 3 dialect URL and connection options.
+- **Psycopg installation:** https://www.psycopg.org/psycopg3/docs/basic/install.html. The project pins the binary
+  extra so local development and deployment do not need a separate system libpq installation.
+
+**Used in:** `backend/app/infrastructure/config.py`, `backend/app/infrastructure/db.py`, and D215.
+
 ---
 
 ## 36. Type checkers and Pydantic, Ruff, Prettier (the code review of 2026-11-21)
@@ -954,3 +965,12 @@ installed version:
 ```
 
 After upgrading a pinned package, re-check the facts above that cite it.
+
+## Python 3.15 support (2026-11-21)
+
+**Web:** https://docs.python.org/3.15/whatsnew/3.15.html
+
+Python 3.15 is a stable release. Its porting notes say the import system no longer sets or uses a module's
+`__cached__` attribute; code needing the cached path should use `module.__spec__.cached`. The `__loader__` and
+`__package__` module attributes are deprecated. The application source has no references to these attributes, so
+no source migration was needed. The pinned backend dependencies also installed successfully on CPython 3.15.

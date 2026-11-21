@@ -43,8 +43,8 @@ or over HTTP at `/mcp/` with a bearer token ([api_endpoints.md](api_endpoints.md
 
 | Layer | Technology | Why |
 |---|---|---|
-| Backend framework | **FastAPI** 0.162 (Python 3.14) | Typed request/response models, OpenAPI for free, native Server-Sent Events |
-| Data | **SQLModel** / **SQLAlchemy** 2.1 on **SQLite**, **Alembic** 1.20 migrations | A local file today; `DATABASE_URL` can point at Postgres later |
+| Backend framework | **FastAPI** 0.162 (Python 3.11+; Python CI: 3.14/3.15) | Typed APIs, OpenAPI, native SSE |
+| Data | **SQLModel** / **SQLAlchemy** 2.1 on **Neon PostgreSQL**, **Alembic** 1.20 migrations | A required `DATABASE_URL`; no local database file |
 | Architecture | Modular monolith, **CQRS-lite** with a message bus and unit of work | Clear boundaries without the cost of microservices ([architecture.md](architecture.md)) |
 | AI model | **Google Gemini** (Interactions API, streaming, function calling), behind a provider-neutral port | Free tier for development; replaceable ([gemini.md](gemini.md)) |
 | Agent tools | **MCP** (Model Context Protocol), Python SDK 2.3 | One set of tools for the assistant and any other AI client |

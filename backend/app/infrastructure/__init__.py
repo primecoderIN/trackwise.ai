@@ -1,7 +1,7 @@
 """Infrastructure: the code that talks to something outside the process (settings, database, logs, the model).
 
 - config.py: settings from .env, and the fixed API_PREFIX, API_VERSION and MCP_PATH;
-- db.py: database engines (SQLite made transactional), session factories, and the default engine;
+- db.py: the required PostgreSQL app engine, explicit SQLite check engines, and session factories;
 - migrations.py: run or check the Alembic migrations from code;
 - logging.py: console logging for our own loggers;
 - llm/: adapters for the core/llm port (gemini.py for the SDK calls, gemini_wire.py for Gemini's wire format).

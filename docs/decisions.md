@@ -108,6 +108,7 @@ add a new entry and mark the old one **Superseded by D<n>**.
 ### D17. SQLite file `backend/spendwise.db` by default
 - **Why:** zero setup for learning. `DATABASE_URL` switches to another database (e.g. Postgres) without code changes.
 - **Detail:** `check_same_thread=False` is set for SQLite only, because FastAPI runs routes on worker threads.
+- **Superseded by D215:** the app now requires Neon PostgreSQL and no longer creates a local SQLite database.
 
 ### D18. Tables created at startup with `create_all`; no migrations yet
 - **Consequence:** `create_all` creates missing tables but **never changes existing ones**. After changing
@@ -129,6 +130,8 @@ add a new entry and mark the old one **Superseded by D<n>**.
 - **How:** it stops if any category exists. To start over, stop the server, delete `backend/spendwise.db`,
   restart the server, then run the seed.
 - **Rule:** it uses only the modules' public interfaces, like any other caller.
+- **Updated by D215:** use a separate Neon database or branch for a fresh start; do not delete the database the app
+  is currently configured to use.
 
 ### D23. `/hello` removed
 - **Why:** it was a Phase 1 demo with no home in a business module.
@@ -1479,6 +1482,8 @@ is natural. It's still a soft, model-judged guard.
   - Remote MCP opens a session per call (D74).
   - Details: [architecture.md](architecture.md#scalability).
 - **Revisit:** when more than one person or process uses one database, start with the SQLite writer limit.
+- **Updated by D215:** the app now uses Neon PostgreSQL; SQLite writer limits apply only to explicitly created check
+  engines.
 
 ---
 
@@ -2914,3 +2919,23 @@ is natural. It's still a soft, model-judged guard.
   over seven turns, the REST answers and the markdown report were compared (identical); the MCP tools' definitions,
   the OpenAPI document, the A2UI schemas, the agents' cards and the 126 assistant texts in two languages too
   (identical); every suite; `check.py` passes (9 steps); a planted violation was caught by `check_rules.py`.
+
+### D214. Add Python 3.15 support without raising the minimum
+- **What:** keep Python 3.11 as the declared minimum and add Python 3.15 alongside 3.14 in the Python CI checks.
+  Versions 3.11–3.13 remain declared compatible but are not currently CI-tested.
+- **Why:** support the newer interpreter without dropping existing users or adopting syntax that older versions cannot
+  parse. Ruff and Pyright stay targeted at Python 3.14.
+- **How it was verified:** the pinned backend dependencies installed on CPython 3.15, and the Python compile, Ruff,
+  Pyright and architecture checks passed there. The complete check reaches the Next.js build and fails because
+  Recharts cannot resolve `react-is`; this pre-existing frontend issue is unrelated to Python 3.15.
+- **Revisit when:** changing the minimum or adding another Python version to the CI matrix.
+
+### D215. Require Neon PostgreSQL for the application database
+- **What:** require a PostgreSQL `DATABASE_URL` for the running app and migrations, use the pinned Psycopg 3 driver,
+  and remove the local `backend/spendwise.db` file. SQLite remains available only through explicitly supplied
+  isolated engines for checks.
+- **Why:** use Neon as the project's shared database rather than persisting application data in a machine-local file.
+  Starting with a new Neon database is intentional; no local SQLite data is copied.
+- **How:** migrations continue to manage schema changes. `backend/seed.py` creates the default categories on a new
+  database. The connection URL is a secret and must be configured privately.
+- **Revisit when:** changing database hosting or adding a supported application database.

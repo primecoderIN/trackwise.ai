@@ -14,7 +14,7 @@ sequenceDiagram
     participant Bus as MessageBus
     participant Cmd as create_expense<br/>(expenses/commands/create_expense.py)
     participant Cat as categories module
-    participant DB as SQLite
+    participant DB as Neon PostgreSQL
 
     You->>Dialog: amount, merchant, category, date, paid with
     Dialog->>Query: useCreateExpense().mutate(toNewExpense(draft))

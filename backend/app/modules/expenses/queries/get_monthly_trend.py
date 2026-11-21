@@ -54,8 +54,8 @@ def get_monthly_trend(ctx: Context, query: GetMonthlyTrend) -> MonthlyTrend:
     last = YearMonth.of(query.until)
     first = last.shift(-(query.months - 1))
     # SQLAlchemy's extract() is written once and rendered for each database: CAST(STRFTIME(...)) on
-    # SQLite, which has no EXTRACT, and the standard EXTRACT(year/month ...) on Postgres. So this works on
-    # SQLite today and Postgres later.
+    # SQLite, which has no EXTRACT, and the standard EXTRACT(year/month ...) on Postgres. This works with the
+    # app's PostgreSQL database and explicitly supplied SQLite check engines.
     year_of = extract("year", col(Expense.spent_on))
     month_of = extract("month", col(Expense.spent_on))
     statement = (

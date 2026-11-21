@@ -21,9 +21,10 @@ Keep it current: add a row when a dependency, protocol or service is added, and 
 | Pydantic | commands, queries, validation | https://docs.pydantic.dev/latest/ |
 | pydantic-settings | settings from `.env` | https://docs.pydantic.dev/latest/concepts/pydantic_settings/ |
 | SQLModel | table classes | https://sqlmodel.tiangolo.com/ |
-| SQLAlchemy | sessions, statements, indexes | https://docs.sqlalchemy.org/ (✓ [SQLite dialect](https://docs.sqlalchemy.org/en/20/dialects/sqlite.html)) |
+| SQLAlchemy | sessions, statements, indexes | https://docs.sqlalchemy.org/ (✓ [PostgreSQL dialect](https://docs.sqlalchemy.org/en/21/dialects/postgresql.html)) |
 | Alembic | database migrations | https://alembic.sqlalchemy.org/ ✓ |
-| SQLite | the database | https://www.sqlite.org/docs.html |
+| Neon PostgreSQL | the app database | https://neon.com/docs/ |
+| SQLite | isolated in-memory checks only | https://www.sqlite.org/docs.html |
 | google-genai | the Gemini SDK | https://googleapis.github.io/python-genai/ |
 | MCP Python SDK (`mcp`) | the MCP server and in-process client | https://github.com/modelcontextprotocol/python-sdk |
 | ag-ui-protocol | AG-UI events, server side | https://docs.ag-ui.com/ ✓ |

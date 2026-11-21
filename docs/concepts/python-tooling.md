@@ -23,8 +23,8 @@ another, and nobody knows which packages a project really needs.
 project's copies until you run `deactivate`. You can skip activation by calling `.venv\Scripts\python.exe`
 directly, which is what `run.ps1` does.
 
-**Why it isn't committed:** it contains machine-specific files (Windows paths, a Python 3.14 binary) and is
-large. Commit the recipe (`requirements.txt`), not the cooked meal.
+**Why it isn't committed:** it contains machine-specific files (Windows paths and the Python binary used to create it)
+and is large. Commit the recipe (`requirements.txt`), not the cooked meal.
 
 ## `.env` vs `.venv`
 
@@ -42,7 +42,7 @@ Similar names, different jobs:
 it into bytecode (low-level instructions for the Python interpreter), then runs that. Compiling takes time
 on every import, so Python saves the result as `__pycache__\<name>.cpython-314.pyc` and reuses it next time.
 
-- **`cpython-314`** means "made by CPython 3.14". Another Python version makes its own file.
+- **`cpython-314`** means "made by CPython 3.14"; Python 3.15 writes `cpython-315`. Each version makes its own file.
 - **It refreshes itself.** The `.pyc` records the source file's modification time and size; if `main.py`
   changes, the next import recompiles it.
 - **Only imported modules** are cached, not a script you run directly.

@@ -16,6 +16,8 @@ from urllib.parse import urlsplit
 
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy import make_url
+from sqlalchemy.exc import ArgumentError
 
 from app.infrastructure.identity.options import OidcLoginOption
 
@@ -31,6 +33,10 @@ API_PREFIX = "/api/v1"
 API_VERSION = "1.0.0"
 # Where MCP clients reach the MCP server over HTTP (each request with a personal access token, D191).
 MCP_PATH = "/mcp"
+# SQLAlchemy's backend name for PostgreSQL, including driver-qualified connection URLs.
+POSTGRESQL_BACKEND = "postgresql"
+# The PostgreSQL driver pinned for the app's Neon connections.
+POSTGRESQL_DRIVER = "psycopg"
 
 
 # Every setting that can differ between machines. pydantic-settings fills each field from the environment
@@ -53,8 +59,8 @@ class Settings(BaseSettings):
     # server process.
     model_requests_per_minute: int = Field(default=10, ge=1)
     model_requests_per_day: int = Field(default=300, ge=1)
-    # A local SQLite file by default; point DATABASE_URL at Postgres later without code changes.
-    database_url: str = f"sqlite:///{(BACKEND_DIR / 'spendwise.db').as_posix()}"
+    # The Neon/PostgreSQL connection string is required at runtime and must never appear in logs.
+    database_url: SecretStr | None = None
     # The folder uploaded files (receipts) are kept in, by random names. Git-ignored: it's your data, like the
     # database.
     uploads_dir: Path = BACKEND_DIR / "uploads"
@@ -107,6 +113,21 @@ class Settings(BaseSettings):
             "SESSION_ENCRYPTION_KEYS": self.session_encryption_keys or None,
         }
         return [name for name, value in needed.items() if value is None]
+
+    def require_database_url(self) -> str:
+        """Return a PostgreSQL connection URL, or fail without exposing its credentials."""
+        if self.database_url is None:
+            raise RuntimeError("Set DATABASE_URL to your Neon PostgreSQL connection string.")
+        url = self.database_url.get_secret_value()
+        try:
+            parsed = make_url(url)
+        except ArgumentError:
+            raise RuntimeError("DATABASE_URL must be a valid PostgreSQL connection URL.") from None
+        if parsed.get_backend_name() != POSTGRESQL_BACKEND or parsed.get_driver_name() != POSTGRESQL_DRIVER:
+            raise RuntimeError(
+                "DATABASE_URL must use PostgreSQL with Psycopg (postgresql+psycopg://); SQLite is not supported."
+            )
+        return url
 
 
 @cache

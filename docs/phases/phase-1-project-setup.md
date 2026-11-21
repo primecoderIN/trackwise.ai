@@ -1,6 +1,9 @@
 # Phase 1: Project setup
 
 > **Later changes:**
+> **Python support (D214):** the declared minimum remains 3.11. Python checks run in CI on 3.14 and 3.15;
+> versions 3.11–3.13 remain declared compatible but are not in the current CI matrix.
+> **Database (D215):** the app requires Neon PostgreSQL via `DATABASE_URL`; local SQLite is no longer an app database.
 > **Refactor (after Phase 18):** `. un.ps1` now runs the database migrations before starting, and the REST API is
 > under `/api/v1`. See [refactor-architecture.md](refactor-architecture.md).
 

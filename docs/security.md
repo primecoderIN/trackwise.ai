@@ -10,7 +10,7 @@ What protects SpendWise today, why, and what's still missing before it could run
 
 | Measure | How |
 |---|---|
-| Kept out of code and git | `GEMINI_API_KEY`, `OIDC_CLIENT_SECRET` and `SESSION_ENCRYPTION_KEYS` live in `.env`, which is git-ignored; `.env.example` holds only names. Personal access tokens are shown once and stored only as their SHA-256 |
+| Kept out of code and git | `DATABASE_URL`, `GEMINI_API_KEY`, `OIDC_CLIENT_SECRET` and `SESSION_ENCRYPTION_KEYS` live in `.env`, which is git-ignored; `.env.example` holds no real values. Personal access tokens are shown once and stored only as their SHA-256 |
 | Never printed | settings hold them as `SecretStr` (masked when printed); the key is passed to the Gemini client explicitly and nowhere else |
 | Never in the browser | the web app has no secrets; anything in a `NEXT_PUBLIC_` variable would ship to every visitor, so none is used; the Next.js server's own settings (`API_PROXY_TARGET`, `PUBLIC_URL`) aren't secrets either |
 | Checked before commits | each commit is checked so that the key's value doesn't appear in the staged changes, and no `.env` or `*.db` is staged |
@@ -247,5 +247,5 @@ Every backend and web dependency is pinned to an exact version (`requirements.tx
 | **The mock exchange rates** | the currency agent's rates are made up (D203): an amount in another currency is stored at a rate that isn't real | a real rate provider (an exchange-rate API) behind `currency/rates.RateProvider` before relying on the INR amounts |
 | **The agents speak plain HTTP** (`multi-server` branch only) | its requests carry the key and a receipt; on one machine they never leave it, but across machines anyone on the path could read them | TLS (or mTLS) between the backend and the agent before they run on different machines, and a key that can be rotated without a restart |
 | **Uploaded files are never deleted** | receipts accumulate in `UPLOADS_DIR` | a retention rule, or deleting a receipt once its expense is saved |
-| **SQLite file** | one machine, file permissions only | Postgres with a least-privilege database user |
+| **Database credentials** | a leaked `DATABASE_URL` grants database access | keep the Neon URL in secret settings, rotate its password if exposed, and use a least-privilege database role |
 | **No audit trail** | can't tell who changed what | record changes (who, when, before/after) once users exist |
