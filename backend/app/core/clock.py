@@ -15,8 +15,9 @@ from pydantic import AfterValidator
 
 
 def as_utc(moment: datetime) -> datetime:
-    """`moment` as an aware UTC time. SQLite gives stored times back without their zone; they were stored in UTC."""
-    return moment if moment.tzinfo is not None else moment.replace(tzinfo=UTC)
+    """`moment` as an aware UTC time. SQLite gives stored times back without their zone; they were stored in UTC.
+    Non-UTC aware timestamps (e.g. from another session time zone) are converted to UTC."""
+    return moment.astimezone(UTC) if moment.tzinfo is not None else moment.replace(tzinfo=UTC)
 
 
 # A moment read back from the database, always aware UTC, so its JSON carries the zone ("+00:00") and a browser
@@ -45,7 +46,7 @@ class SystemClock:
 
     def today(self) -> date:
         """Today's date on the server."""
-        # The server's local date. Per-user time zones need users first (the planned auth phase).
+        # The server's local date; per-user time zones are not stored yet.
         return date.today()
 
     def now(self) -> datetime:

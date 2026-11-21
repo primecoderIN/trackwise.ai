@@ -128,11 +128,20 @@ class MessageBus:
         """Run a query and return its result. Nothing is ever committed for a query.
 
         Inside a unit of work (a handler asking another module, say), it reads through that session, so it
-        sees the transaction's changes so far. Otherwise it opens a read-only scope of its own, in which any
-        command is refused. Raises LookupError if nothing handles the query, and whatever the handler raises.
+        sees the transaction's changes so far, while still refusing any command sent by the query handler.
+        Otherwise it opens a read-only scope of its own. Raises LookupError if nothing handles the query, and
+        whatever the handler raises.
         """
-        if self._current.get() is not None:
-            return self._handle(query)  # inside a unit of work: read through its session
+        current = self._current.get()
+        if current is not None:
+            if not current.writable:
+                return self._handle(query)
+            # Inside a command: share its session so uncommitted writes are visible, but enforce read-only.
+            token = self._current.set(_UnitOfWork(current.session, writable=False))
+            try:
+                return self._handle(query)
+            finally:
+                self._current.reset(token)
         with self._scope(writable=False):
             return self._handle(query)
 
@@ -140,12 +149,16 @@ class MessageBus:
     def unit_of_work(self) -> Iterator[None]:
         """Run several commands as one transaction: all of them are saved, or none (e.g. the seed script).
 
-        Each command sent inside the `with` block runs in a SAVEPOINT of this transaction. It's committed when
-        the block ends normally, and rolled back if an exception leaves it. execute() uses it too, for a
-        command sent on its own.
+        Each command sent inside the `with` block runs in a SAVEPOINT of this transaction. A nested unit_of_work()
+        runs in its own SAVEPOINT so it remains all-or-nothing even if the outer block catches an error. Raises
+        RuntimeError when entered inside a read-only query.
         """
-        if self._current.get() is not None:
-            yield  # already inside one: the outermost commits
+        current = self._current.get()
+        if current is not None:
+            if not current.writable:
+                raise RuntimeError("unit_of_work can't run inside a query")
+            with current.session.begin_nested():
+                yield
             return
         with self._scope(writable=True) as session:
             yield
@@ -179,6 +192,7 @@ class MessageBus:
         if handler is None:
             raise LookupError(f"No handler registered for {type(message).__name__}")
         current = self._current.get()
-        assert current is not None  # every caller opens a scope first
+        if current is None:
+            raise RuntimeError("No active unit of work for message handling")
         logger.debug("handling %s", type(message).__name__)
         return handler(Context(current.session, self, self._clock), message)

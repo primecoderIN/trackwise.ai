@@ -15,10 +15,13 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from enum import StrEnum
 
-from app.core.clock import Clock
+from app.core.clock import Clock, as_utc
 
 ONE_MINUTE = timedelta(minutes=1)
 ONE_DAY = timedelta(days=1)
+# Prune expired day buckets once the map grows past this many distinct keys, keeping memory bounded.
+_PRUNE_THRESHOLD = 500
+RateKey = int | str
 
 
 class Window(StrEnum):
@@ -47,32 +50,36 @@ class _Usage:
 
 
 class RateLimiter:
-    """Counts uses per key (a person's user id) against a minute's and a day's allowance. Safe across threads."""
+    """Counts uses per key (a person's user id or client IP) against a minute's and a day's allowance. Thread-safe."""
 
     def __init__(self, clock: Clock, per_minute: int, per_day: int) -> None:
         """Allow `per_minute` uses in any one minute and `per_day` in any one day (UTC), by `clock`'s time."""
         self._clock = clock
         self._per_minute = per_minute
         self._per_day = per_day
-        self._usage: dict[int, _Usage] = {}
-        # Routes run in worker threads: two requests from one person must not both read the same count.
+        self._usage: dict[RateKey, _Usage] = {}
+        # Routes run in worker threads: two requests for one key must not both read the same count.
         self._lock = threading.Lock()
 
-    def take(self, key: int) -> Refusal | None:
+    def take(self, key: RateKey) -> Refusal | None:
         """Count one use for `key` and return None; or, if an allowance is spent, count nothing and return why."""
-        now = self._clock.now()
-        minute = now.replace(second=0, microsecond=0)
         with self._lock:
+            # Read the clock inside the lock so two threads straddling a window edge can't reorder and reset counts.
+            now = as_utc(self._clock.now())
+            today = now.date()
+            minute = now.replace(second=0, microsecond=0)
+            if len(self._usage) > _PRUNE_THRESHOLD:
+                self._usage = {k: u for k, u in self._usage.items() if u.day >= today}
             usage = self._usage.get(key)
-            if usage is None or usage.day != now.date():
-                usage = _Usage(minute=minute, in_minute=0, day=now.date(), in_day=0)
-            elif usage.minute != minute:
+            if usage is None or usage.day < today:
+                usage = _Usage(minute=minute, in_minute=0, day=today, in_day=0)
+            elif usage.minute < minute:
                 usage = _Usage(minute=minute, in_minute=0, day=usage.day, in_day=usage.in_day)
             if usage.in_day >= self._per_day:
                 midnight = datetime.combine(usage.day, datetime.min.time(), now.tzinfo) + ONE_DAY
                 return Refusal(Window.DAY, _seconds_until(now, midnight))
             if usage.in_minute >= self._per_minute:
-                return Refusal(Window.MINUTE, _seconds_until(now, minute + ONE_MINUTE))
+                return Refusal(Window.MINUTE, _seconds_until(now, usage.minute + ONE_MINUTE))
             usage.in_minute += 1
             usage.in_day += 1
             self._usage[key] = usage

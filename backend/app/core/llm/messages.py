@@ -42,18 +42,16 @@ class AssistantText(_Message):
     text: str
 
 
+# The model asks for a tool to run.
 class ToolCall(_Message):
-    """The model asks for a tool to run."""
-
     kind: Literal[MessageKind.TOOL_CALL] = MessageKind.TOOL_CALL
     call_id: str
     name: str
     arguments: dict[str, Any]
 
 
+# What a tool returned, sent back to the model.
 class ToolResult(_Message):
-    """What a tool returned, sent back to the model."""
-
     kind: Literal[MessageKind.TOOL_RESULT] = MessageKind.TOOL_RESULT
     call_id: str
     name: str
@@ -61,13 +59,10 @@ class ToolResult(_Message):
     is_error: bool = False
 
 
+# The model's private reasoning, kept only so it can be handed back to the same provider.
+# Providers need it to carry on a line of thought after a tool call (Gemini's thought signature,
+# for example). Its content is the provider's own, so it's opaque here and other providers skip it.
 class Reasoning(_Message):
-    """The model's private reasoning, kept only so it can be handed back to the same provider.
-
-    Providers need it to carry on a line of thought after a tool call (Gemini's thought signature,
-    for example). Its content is the provider's own, so it's opaque here and other providers skip it.
-    """
-
     kind: Literal[MessageKind.REASONING] = MessageKind.REASONING
     provider: str
     opaque: dict[str, Any]
@@ -78,19 +73,17 @@ Message = Annotated[UserText | AssistantText | ToolCall | ToolResult | Reasoning
 messages_adapter: TypeAdapter[list[Message]] = TypeAdapter(list[Message])
 
 
+# A tool the model may call: its name, what it does, and its arguments as JSON Schema.
 class ToolSpec(BaseModel):
-    """A tool the model may call: its name, what it does, and its arguments as JSON Schema."""
-
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, extra="forbid")
 
     name: str
     description: str
     parameters: dict[str, Any]
 
 
+# How hard the model thinks before answering: deeper is slower and uses more of the quota.
 class ReasoningEffort(StrEnum):
-    """How hard the model thinks before answering: deeper is slower and uses more of the quota."""
-
     MINIMAL = "minimal"
     LOW = "low"
     MEDIUM = "medium"
@@ -99,5 +92,7 @@ class ReasoningEffort(StrEnum):
 
 # Tokens one model call used (None when the provider didn't say), for the log.
 class Usage(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
     input_tokens: int | None = None
     output_tokens: int | None = None

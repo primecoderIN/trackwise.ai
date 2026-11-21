@@ -6,6 +6,7 @@ replies). The web app speaks the same languages: export_contracts.py writes LANG
 web's own table (web/src/shared/i18n/languages.ts) is typed against them, so the two can't drift apart.
 """
 
+import math
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -46,6 +47,12 @@ if set(LANGUAGES) != set(Language):
     raise RuntimeError("every Language needs its LanguageInfo in LANGUAGES")
 
 
+def _exact(tag: str) -> Language | None:
+    """The app's language matching `tag` verbatim (ignoring case), or None."""
+    wanted = tag.strip().lower()
+    return {language.value.lower(): language for language in Language}.get(wanted)
+
+
 def _match(tag: str) -> Language | None:
     """The app's language for one language tag: an exact match first ("pt-BR"), then its base language ("hi-IN" ->
     "hi"), ignoring letter case."""
@@ -55,14 +62,17 @@ def _match(tag: str) -> Language | None:
 
 
 def _quality(parameters: list[str]) -> float:
-    """An Accept-Language entry's weight (its q parameter, 0 to 1; 1 if absent or unreadable)."""
+    """An Accept-Language entry's weight (its q parameter, 0 to 1; 1 if absent, non-finite or unreadable)."""
     for parameter in parameters:
         name, _, value = parameter.partition("=")
         if name.strip().lower() == "q":
             try:
-                return max(0.0, min(1.0, float(value)))
+                parsed = float(value)
             except ValueError:
                 return 1.0
+            if not math.isfinite(parsed):
+                return 1.0
+            return max(0.0, min(1.0, parsed))
     return 1.0
 
 
@@ -84,7 +94,8 @@ def parse_accept_language(header: str | None) -> Language:
             continue
         if weight > 0:
             entries.append((-weight, position, tag))
-        elif (language := _match(tag)) is not None:
+        elif (language := _exact(tag)) is not None:
+            # Only refuse a configured language when its own tag is given q=0 (e.g. en-GB;q=0 must not block en-US).
             refused.add(language)
     for _, _, tag in sorted(entries):
         if tag.strip() == ANY_LANGUAGE:

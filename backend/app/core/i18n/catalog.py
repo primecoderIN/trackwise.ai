@@ -58,9 +58,16 @@ _CATALOGS: dict[type[StrEnum], Mapping[Language, LanguageTexts]] = {}
 
 
 def _placeholders(value: TextValue) -> set[str]:
-    """The {names} a template (or every form of a Plural) fills in."""
+    """The {names} a template (or every form of a Plural) fills in. Raises ValueError on empty `{}` placeholders."""
     templates = value.forms() if isinstance(value, Plural) else [value]
-    return {name for template in templates for _, name, _, _ in Formatter().parse(template) if name}
+    names: set[str] = set()
+    for template in templates:
+        for _, name, _, _ in Formatter().parse(template):
+            if name == "":
+                raise ValueError(f"positional '{{}}' placeholder isn't allowed in catalog template: {template!r}")
+            if name is not None:
+                names.add(name)
+    return names
 
 
 def define_catalog[K: StrEnum](keys: type[K], texts: Mapping[Language, Mapping[K, TextValue]]) -> None:
@@ -101,7 +108,7 @@ def text(language: Language, key: StrEnum, /, **values: object) -> str:
 def _count(values: Mapping[str, object]) -> int:
     """The `count` value a Plural is picked by. Raises ValueError if it's missing or isn't a whole number."""
     count = values.get("count")
-    if not isinstance(count, int):
+    if isinstance(count, bool) or not isinstance(count, int):
         raise ValueError(f"a plural text needs an int `count`, got {count!r}")
     return count
 

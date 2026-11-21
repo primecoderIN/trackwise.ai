@@ -27,9 +27,11 @@ CURRENCY_SYMBOLS = {"INR": "₹"}
 
 
 def rupees_to_paise(rupees: Decimal | int | str) -> int:
-    """'450.50' -> 45050."""
+    """'450.50' -> 45050. Amounts in every currency are stored scaled by 100 (two decimal places)."""
     # Decimal, never float: floats can't hold most decimal fractions exactly (0.1 + 0.2 != 0.3).
     paise = Decimal(str(rupees)) * PAISE_PER_RUPEE
+    if not paise.is_finite():
+        raise ValueError(f"{rupees} is not a finite amount")
     # Refuse fractions of a paisa rather than silently rounding money away.
     if paise != paise.to_integral_value():
         raise ValueError(f"{rupees} rupees has more than 2 decimal places")
@@ -51,4 +53,6 @@ def format_money(amount: Decimal, currency: str, language: Language = DEFAULT_LA
 def convert_minor(amount_minor: int, rate: Decimal) -> int:
     """An amount in minor units (cents, paise...) times `rate`, in the other currency's minor units: 400 cents at
     84.5 -> 33800 paise. Rounded half up to a whole minor unit, the one place a conversion rounds (D204)."""
+    if not rate.is_finite():
+        raise ValueError(f"{rate} is not a finite exchange rate")
     return int((Decimal(amount_minor) * rate).quantize(Decimal(1), rounding=ROUND_HALF_UP))
