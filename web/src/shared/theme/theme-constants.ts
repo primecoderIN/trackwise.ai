@@ -20,7 +20,8 @@ export const PREFERS_DARK_QUERY = "(prefers-color-scheme: dark)"
  * above, so it can never disagree with the React code that takes over once the app starts.
  */
 export const THEME_BOOT_SCRIPT = `try {
-  const theme = localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)}) || ${JSON.stringify(DEFAULT_THEME)}
+  const saved = localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)})
+  const theme = ${JSON.stringify(THEMES)}.includes(saved) ? saved : ${JSON.stringify(DEFAULT_THEME)}
   const dark = theme === "dark" || (theme === "system" && matchMedia(${JSON.stringify(PREFERS_DARK_QUERY)}).matches)
   if (dark) document.documentElement.classList.add(${JSON.stringify(DARK_CLASS)})
 } catch {}`

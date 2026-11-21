@@ -61,6 +61,10 @@ def register_update_expense(server: MCPServer, context: ToolContext) -> None:
         clear_note: Annotated[bool, Field(description="true to remove the note.")] = False,
     ) -> ExpenseUpdated:
         with tool_errors():
+            if isinstance(amount, bool):
+                raise ValueError("amount must be a number")
+            if note.strip() and clear_note:
+                raise ValueError("pass either note or clear_note=True, not both")
             # Only the caller's own expense can change; another person's is "not found" (caller.py, D191).
             owner = current_caller()
             sent = {

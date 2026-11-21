@@ -2,6 +2,8 @@
 // (components/). Used by user-menu.tsx and, through the feature's index, the Settings page's profile; the name is
 // always shown or announced next to it, so the picture is decorative.
 
+import { useState } from "react"
+
 import { cn } from "@/shared/lib/utils"
 
 import { initials, safePicture } from "../user-display"
@@ -23,11 +25,18 @@ interface UserAvatarProps {
  * hidden from screen readers: the menu's label already says whose account it is.
  */
 export function UserAvatar({ name, picture, size = "small" }: UserAvatarProps) {
+  const [failedSrc, setFailedSrc] = useState<string | null>(null)
   const src = safePicture(picture)
-  if (src) {
+  if (src && failedSrc !== src) {
     // A plain <img>: the picture is on the provider's host, which next/image would need configuring for.
     return (
-      <img src={src} alt="" referrerPolicy="no-referrer" className={cn("rounded-full object-cover", SIZES[size])} />
+      <img
+        src={src}
+        alt=""
+        referrerPolicy="no-referrer"
+        onError={() => setFailedSrc(src)}
+        className={cn("shrink-0 rounded-full object-cover", SIZES[size])}
+      />
     )
   }
   return (

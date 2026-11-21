@@ -13,7 +13,7 @@ names, resource addresses, the typed results) and how to set the caller (acting_
 loads no server code. The composition root builds the server through module.py.
 """
 
-from app.modules.mcp.caller import CallerLookup, act_for_process, acting_for
+from app.modules.mcp.caller import CallerLookup, act_for_process, act_for_request, acting_for
 from app.modules.mcp.contracts import (
     CLEAR_NOTE_ARGUMENT,
     CONFIRM_ARGUMENT,
@@ -48,5 +48,6 @@ __all__ = [
     "ResourceUri",
     "ToolName",
     "act_for_process",
+    "act_for_request",
     "acting_for",
 ]

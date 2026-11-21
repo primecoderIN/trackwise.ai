@@ -11,6 +11,7 @@ from datetime import timedelta
 
 from app.core.clock import Clock, as_utc
 from app.core.cqrs import MessageBus
+from app.core.identity import IdentityProvider
 from app.modules.accounts.commands.create_access_token import CreateAccessToken
 from app.modules.accounts.commands.touch_access_token import TouchAccessToken
 from app.modules.accounts.domain.keys import hash_key, new_access_token
@@ -27,10 +28,11 @@ from app.modules.accounts.values import (
 
 @dataclass(frozen=True)
 class AccessTokens:
-    """Makes and resolves personal access tokens. Needs the bus and the clock (expiry, last use)."""
+    """Makes and resolves personal access tokens. Needs the bus, the clock (expiry, last use) and the provider."""
 
     bus: MessageBus
     clock: Clock
+    identity: IdentityProvider | None = None
 
     def create(self, owner_id: int, request: NewAccessToken) -> CreatedAccessToken:
         """A new token for `owner_id`, named and lasting as asked: its details and the token itself, which is never
@@ -50,10 +52,12 @@ class AccessTokens:
         return CreatedAccessToken(**made.model_dump(), token=token)
 
     def resolve(self, token: str) -> int | None:
-        """The user id `token` acts for, or None if it doesn't work (malformed, unknown, revoked, expired, or its
-        owner switched off). Notes the token's use, at most once per TOKEN_TOUCH_AFTER."""
+        """The user id `token` acts for, or None if it doesn't work (sign-in unconfigured, malformed, unknown, revoked,
+        expired, or its owner switched off). Notes the token's use, at most once per TOKEN_TOUCH_AFTER."""
+        if self.identity is not None and self.identity.issuer is None:
+            return None
         # Anything that can't be a token isn't looked up at all.
-        if len(token) != ACCESS_TOKEN_LENGTH or not token.startswith(ACCESS_TOKEN_PREFIX):
+        if not token or len(token) != ACCESS_TOKEN_LENGTH or not token.startswith(ACCESS_TOKEN_PREFIX):
             return None
         owner = self.bus.ask(FindTokenOwner(token_hash=hash_key(token)))
         if owner is None:

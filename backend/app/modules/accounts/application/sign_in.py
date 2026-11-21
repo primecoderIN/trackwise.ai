@@ -22,12 +22,14 @@ from app.modules.accounts.domain.keys import hash_key, new_handle, new_key, new_
 from app.modules.accounts.domain.return_paths import safe_return_path
 from app.modules.accounts.domain.rules import AccountDisabledError, may_sign_in, profile_of
 from app.modules.accounts.models import LoginAttemptView, LoginOptionRead
-from app.modules.accounts.values import MAX_USER_AGENT_LENGTH, SignInFailure
+from app.modules.accounts.values import MAX_STATE_LENGTH, MAX_USER_AGENT_LENGTH, SignInFailure
 
 logger = logging.getLogger(__name__)
 
 # OAuth 2.0's error code when the person cancelled or the provider refused them (RFC 6749, 4.1.2.1).
 ACCESS_DENIED = "access_denied"
+# Upper bound on an authorization code accepted from the callback query string.
+MAX_AUTH_CODE_LENGTH = 2048
 
 
 class SignInFailedError(Exception):
@@ -108,13 +110,17 @@ class SignInFlow:
         if attempt is None:
             raise SignInFailedError(SignInFailure.EXPIRED)
         # The state ties the answer to the request this browser made: a mismatch is someone else's answer.
-        if not state or not hmac.compare_digest(state.encode(), attempt.state.encode()):
+        if (
+            not state
+            or len(state) > MAX_STATE_LENGTH * 2
+            or not hmac.compare_digest(state.encode(), attempt.state.encode())
+        ):
             raise SignInFailedError(SignInFailure.REJECTED)
         if error:
             # %r: the value comes from the URL, so a line break in it can't fake another log line.
             logger.info("sign-in ended at the provider: %r", error)
             raise SignInFailedError(SignInFailure.CANCELLED if error == ACCESS_DENIED else SignInFailure.UNAVAILABLE)
-        if not code:
+        if not code or len(code) > MAX_AUTH_CODE_LENGTH:
             raise SignInFailedError(SignInFailure.REJECTED)
         login = self._verified(code, attempt)
         if not may_sign_in(login.roles, self.config.required_role):

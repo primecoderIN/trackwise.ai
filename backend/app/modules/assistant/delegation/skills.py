@@ -12,7 +12,7 @@ Each answer is outside data: it's validated against the assistant's own view of 
 """
 
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date
 from typing import Any, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -126,8 +126,14 @@ class InsightsSkill:
     def parts(self, request: DelegationRequest) -> list[Part]:
         """One InsightsRequest: today, the month (if named), the request as the question, and the expenses."""
         anchor = request.month or YearMonth.of(request.today)
-        start = anchor.shift(-(INSIGHTS_MONTHS - 1)).first_day()
-        end = min(anchor.shift(1).first_day() - timedelta(days=1), request.today)
+        start_month = anchor
+        for _ in range(INSIGHTS_MONTHS - 1):
+            prev = start_month.previous()
+            if prev is None:
+                break
+            start_month = prev
+        start = start_month.first_day()
+        end = min(anchor.last_day(), request.today)
         data = {
             "today": request.today.isoformat(),
             "month": None if request.month is None else str(request.month),

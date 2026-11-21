@@ -91,6 +91,7 @@ export function A2uiButton({ node, ctx, renderChild }: A2uiRendererProps) {
   const click = useButtonClick(node, ctx)
   return (
     <Button
+      type="button"
       variant={pick(BUTTON_VARIANT, node.variant) ?? BUTTON_VARIANT.default}
       size="sm"
       className="self-start"

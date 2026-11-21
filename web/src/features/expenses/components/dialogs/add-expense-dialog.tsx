@@ -51,9 +51,18 @@ export function AddExpenseDialog() {
   const { draft, setField, reset } = useExpenseDraft(blankDraft)
   const create = useCreateExpense()
 
+  function handleOpenChange(next: boolean) {
+    if (!next && create.isPending) return
+    if (next && draft.amount === "" && draft.merchant === "" && draft.note === "") {
+      setField("spent_on", todayIso())
+    }
+    setOpen(next)
+  }
+
   // Save (the button, or Enter in a text box): send the draft as a new expense.
   function handleSubmit(event: FormEvent) {
     event.preventDefault() // stop the browser's default form submit, which would reload the page
+    if (create.isPending || !isComplete(draft)) return
     create.mutate(toNewExpense(draft), {
       onSuccess: (saved) => {
         toast.success(t("add.added"))
@@ -68,7 +77,7 @@ export function AddExpenseDialog() {
 
   // Save shows "Saving…" and waits while the request runs; Cancel only closes the dialog (the draft stays).
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button>
           <Plus /> {t("add.open")}
@@ -79,7 +88,7 @@ export function AddExpenseDialog() {
           <DialogHeader>
             <DialogTitle>{t("add.title")}</DialogTitle>
             <DialogDescription>
-              {t("add.description", { currency: DEFAULT_CURRENCY, example: EXAMPLE_AMOUNT })}
+              {t("add.description", { currency: draft.currency || DEFAULT_CURRENCY, example: EXAMPLE_AMOUNT })}
             </DialogDescription>
           </DialogHeader>
 
@@ -87,7 +96,7 @@ export function AddExpenseDialog() {
 
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="outline">
+              <Button type="button" variant="outline" disabled={create.isPending}>
                 {t("actions.cancel")}
               </Button>
             </DialogClose>
@@ -101,13 +110,13 @@ export function AddExpenseDialog() {
   )
 }
 
-// The form's fields, between its header and its buttons. Amount and date share a row, as do category and payment
-// method; each control's id ties it to its label.
+// The form's fields, between its header and its buttons. Amount, currency and date share a row, as do category and
+// payment method; each control's id ties it to its label.
 function AddExpenseFields({ draft, setField }: Pick<ExpenseDraftState, "draft" | "setField">) {
   const { t } = useTexts()
   return (
     <>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-[1fr_5.5rem_1fr] gap-3">
         <LabeledField id="add-amount" label={t("fields.amount")}>
           <Input
             id="add-amount"
@@ -115,6 +124,16 @@ function AddExpenseFields({ draft, setField }: Pick<ExpenseDraftState, "draft" |
             placeholder={EXAMPLE_AMOUNT}
             value={draft.amount}
             onChange={(event) => setField("amount", event.target.value)}
+          />
+        </LabeledField>
+        <LabeledField id="add-currency" label={t("fields.currency")}>
+          <Input
+            id="add-currency"
+            maxLength={3}
+            className="uppercase"
+            placeholder={DEFAULT_CURRENCY}
+            value={draft.currency}
+            onChange={(event) => setField("currency", event.target.value.toUpperCase())}
           />
         </LabeledField>
         <LabeledField id="add-date" label={t("fields.date")}>
@@ -130,6 +149,7 @@ function AddExpenseFields({ draft, setField }: Pick<ExpenseDraftState, "draft" |
       <LabeledField id="add-merchant" label={t("fields.merchant")}>
         <Input
           id="add-merchant"
+          maxLength={100}
           placeholder={t("add.merchantExample")}
           value={draft.merchant}
           onChange={(event) => setField("merchant", event.target.value)}
@@ -156,6 +176,7 @@ function AddExpenseFields({ draft, setField }: Pick<ExpenseDraftState, "draft" |
       <LabeledField id="add-note" label={t("fields.noteOptional")}>
         <Input
           id="add-note"
+          maxLength={500}
           placeholder={t("add.noteExample")}
           value={draft.note}
           onChange={(event) => setField("note", event.target.value)}

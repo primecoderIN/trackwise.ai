@@ -18,10 +18,12 @@ from typing import get_args
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BACKEND_DIR))
 
+from app import bootstrap  # noqa: E402
 from app.core.i18n import Language  # noqa: E402
 from app.core.money import DEFAULT_CURRENCY  # noqa: E402
 from app.core.months import YearMonth  # noqa: E402
-from app.infrastructure.config import API_PREFIX, PROJECT_DIR  # noqa: E402
+from app.infrastructure.config import API_PREFIX, PROJECT_DIR, Settings  # noqa: E402
+from app.infrastructure.db import create_db_engine  # noqa: E402
 from app.main import create_app  # noqa: E402
 from app.modules.accounts import (  # noqa: E402
     DEFAULT_TOKEN_LIFETIME,
@@ -52,12 +54,16 @@ from app.modules.assistant.api.protocol import (  # noqa: E402
 from app.modules.assistant.api.schemas import MAX_MESSAGE_LENGTH  # noqa: E402
 from app.modules.budgets import FULL_PERCENT, NEAR_LIMIT_PERCENT, BudgetState  # noqa: E402
 from app.modules.conversations import THREAD_ID_MAX_LENGTH  # noqa: E402
-from app.modules.expenses import PaymentMethod, payment_method_label  # noqa: E402
-from app.modules.expenses.values import (  # noqa: E402
+from app.modules.expenses import (  # noqa: E402
     DEFAULT_LIST_LIMIT,
     DEFAULT_TREND_MONTHS,
     MAX_LIST_LIMIT,
+    MAX_MERCHANT_LENGTH,
+    MAX_NOTE_LENGTH,
+    MAX_SEARCH_LENGTH,
     MAX_TREND_MONTHS,
+    PaymentMethod,
+    payment_method_label,
 )
 from app.modules.receipts import MAX_RECEIPT_BYTES, ReceiptMediaType  # noqa: E402
 from app.modules.reports import ReportFormat  # noqa: E402
@@ -127,6 +133,9 @@ def _limits() -> dict[str, int]:
         "messageLength": MAX_MESSAGE_LENGTH,
         "threadIdLength": THREAD_ID_MAX_LENGTH,
         "userMessageLength": MAX_USER_MESSAGE_LENGTH,
+        "merchantLength": MAX_MERCHANT_LENGTH,
+        "noteLength": MAX_NOTE_LENGTH,
+        "searchLength": MAX_SEARCH_LENGTH,
         "listDefault": DEFAULT_LIST_LIMIT,
         "listMax": MAX_LIST_LIMIT,
         "trendMonthsDefault": DEFAULT_TREND_MONTHS,
@@ -150,7 +159,7 @@ def _a2ui_contract() -> dict[str, object]:
     return {
         "version": A2UI_VERSION,
         "rootId": ROOT_ID,
-        "catalogs": {"basic": Catalog.BASIC.value, "insights": Catalog.INSIGHTS.value},
+        "catalogs": {_camel(catalog.name): catalog.value for catalog in Catalog},
         "components": _component_names(),
         "insights": {
             "chartTypes": {kind.name.lower(): kind.value for kind in ChartType},
@@ -158,12 +167,8 @@ def _a2ui_contract() -> dict[str, object]:
             "maxChartPoints": MAX_CHART_POINTS,
             "maxUnitLength": MAX_UNIT_LENGTH,
         },
-        "actions": {
-            "saveExpense": ActionName.SAVE_EXPENSE.value,
-            "approveDelete": ActionName.APPROVE_DELETE.value,
-            "cancelDelete": ActionName.CANCEL_DELETE.value,
-        },
-        "functions": {"downloadReport": ClientFunction.DOWNLOAD_REPORT.value},
+        "actions": {_camel(action.name): action.value for action in ActionName},
+        "functions": {_camel(fn.name): fn.value for fn in ClientFunction},
     }
 
 
@@ -171,7 +176,7 @@ def _agui_contract() -> dict[str, object]:
     """AG-UI: the custom event's name, the forwarded action's key, the shared state's key, the receipt provider and
     the metadata keys on tool events."""
     return {
-        "customEvents": {"a2ui": CustomEventName.A2UI.value},
+        "customEvents": {_camel(event.name): event.value for event in CustomEventName},
         "forwardedA2uiAction": FORWARDED_A2UI_ACTION,
         "stateDataVersion": STATE_DATA_VERSION,
         "receiptProvider": RECEIPT_PROVIDER,
@@ -206,8 +211,15 @@ def _contracts() -> dict[str, object]:
 def main() -> None:
     """Write web/openapi.json and contracts.gen.ts from the backend's current code."""
     openapi = WEB_DIR / "openapi.json"
-    # Built here, not imported: app.main builds nothing at import (uvicorn calls create_app itself).
-    document = create_app().openapi()
+    # Built with an isolated in-memory engine and empty settings, so exporting contracts never needs .env or Neon.
+    services = bootstrap.build(
+        engine=create_db_engine("sqlite://"),
+        settings=Settings(_env_file=None),  # pyright: ignore[reportCallIssue]
+    )
+    try:
+        document = create_app(services).openapi()
+    finally:
+        services.close()
     openapi.write_text(json.dumps(document, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     target = WEB_DIR / "src" / "shared" / "api" / "contracts.gen.ts"
     target.parent.mkdir(parents=True, exist_ok=True)

@@ -22,6 +22,6 @@ def thread_rows(ctx: Context, owner_id: int, thread_id: str, from_turn: int = 1)
             ConversationMessage.thread_id == thread_id,
             ConversationMessage.turn >= from_turn,
         )
-        .order_by(col(ConversationMessage.id))
+        .order_by(col(ConversationMessage.turn).asc(), col(ConversationMessage.id).asc())
     )
     return list(ctx.session.exec(statement))

@@ -44,7 +44,10 @@ export function RecentExpenses({ expenses }: { expenses: Expense[] }) {
                 <div className="min-w-0">
                   <p className="truncate font-medium">{expense.merchant}</p>
                   <p className="text-sm text-muted-foreground">
-                    {categoryName(expense.category_id)} · {formatDate(expense.spent_on)}
+                    {t("recent.categoryAndDate", {
+                      category: categoryName(expense.category_id),
+                      date: formatDate(expense.spent_on),
+                    })}
                   </p>
                 </div>
                 <span className="shrink-0 font-medium tabular-nums">

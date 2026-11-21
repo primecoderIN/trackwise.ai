@@ -17,13 +17,14 @@ doc before working in an area, and check [decisions.md](docs/decisions.md) befor
 1. **Commit only when the owner says "commit". Push only when asked.** Never rewrite history that has been pushed.
 2. **Don't write automated tests** or add test tooling (pytest, vitest, fixtures), even if a task or prompt asks for
    them: the owner adds tests. Make code testable instead (section 5).
-3. **Secrets stay secret.** Never read, print, log or commit `.env` values (`GEMINI_API_KEY`, `OIDC_CLIENT_SECRET`,
-   `SESSION_ENCRYPTION_KEYS`) or a personal access token. Never
-   stage `.env`, `*.db`, `.venv/`, `node_modules/`, `dist/` or `__pycache__/`. Before each commit, confirm the
+3. **Secrets stay secret.** Never read, print, log or commit `.env` values (`DATABASE_URL`, `GEMINI_API_KEY`,
+   `OIDC_CLIENT_SECRET`, `SESSION_ENCRYPTION_KEYS`) or a personal access token. Never
+   stage `.env`, `*.db`, `.venv/`, `node_modules/`, `web/.next/` or `__pycache__/`. Before each commit, confirm the
    staged diff doesn't contain the key ([git.md](docs/git.md#before-every-commit)).
 4. **No live model calls without permission.** Calling Gemini spends the owner's quota. Verify with a fake model
    plugged in through the seams (section 7) unless the owner explicitly allows a live call.
-5. **Never experiment on the owner's database** (`backend/spendwise.db`). Copy it and point `DATABASE_URL` at the copy.
+5. **Never experiment on the owner's database** (the Neon PostgreSQL database in `DATABASE_URL`). Run checks and
+   migration verifications against an in-memory or temporary SQLite database (`DATABASE_URL=sqlite:///...`).
 6. **Stop only the processes you started.** Never kill every python or node process.
 7. **Ask first** before changing a settled decision, deleting data, or doing anything hard to undo.
 8. **Review before you hand over.** End every feature or fix with a review of your own diff (correctness, these
@@ -89,10 +90,10 @@ modules need it. Recipes: [backend_onboarding.md](docs/backend_onboarding.md).
   the backend's process (D207; the `multi-server` branch runs them as services). An agent knows no person: the owner
   is checked in the monolith before anything is sent, and the agent refuses requests without its key (D197).
 
-**Composition root.** `bootstrap.build(clock, llm, tools, engine, files, identity, sealer, agents, skills)` creates
-everything replaceable (a module that needs another's work without depending on it defines a port the other implements,
-plugged in here: expenses' `SaveWatcher`, implemented by budgets, D212); `main.create_app(services)` serves it; nothing
-is built at import (uvicorn runs with `--factory`).
+**Composition root.** `bootstrap.build(clock, llm, tools, engine, files, identity, sealer, agents, skills, settings)`
+creates everything replaceable (a module that needs another's work without depending on it defines a port the other
+implements, plugged in here: expenses' `SaveWatcher`, implemented by budgets, D212); `main.create_app(services)` serves
+it; nothing is built at import (uvicorn runs with `--factory`).
 
 **Ports and adapters.** The model sits behind `core/llm` ports: depend on the narrowest one you call
 (`StructuredOutputModel` or `ToolCallingModel`). Only `bootstrap.py` imports the Gemini adapter
@@ -322,12 +323,14 @@ and `npm ci` in `web/`):
 # app's tsc, oxlint, Prettier and build. The same script runs in CI (.github/workflows/ci.yml).
 .\.venv\Scripts\python.exe backend\scripts\check.py
 
-# Migrations, on a COPY of the database
-Copy-Item backend\spendwise.db $env:TEMP\spendwise-check.db
+# Migrations, on an isolated temporary SQLite database (never on the live Neon database)
 $env:DATABASE_URL = "sqlite:///$($env:TEMP -replace '\\','/')/spendwise-check.db"
+.\.venv\Scripts\python.exe -m alembic -c backend\alembic.ini upgrade head
+.\.venv\Scripts\python.exe -m alembic -c backend\alembic.ini downgrade base
 .\.venv\Scripts\python.exe -m alembic -c backend\alembic.ini upgrade head
 .\.venv\Scripts\python.exe -m alembic -c backend\alembic.ini check     # "No new upgrade operations detected."
 Remove-Item Env:DATABASE_URL
+Remove-Item "$env:TEMP\spendwise-check.db*" -ErrorAction SilentlyContinue
 
 # After any change to an API, limit, label or protocol name: regenerate the web app's contract
 .\.venv\Scripts\python.exe backend\scripts\export_contracts.py; cd web; npm run gen:api; cd ..

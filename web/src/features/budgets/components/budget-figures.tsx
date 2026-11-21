@@ -24,11 +24,7 @@ export function BudgetFigures({ line, currency, name, elapsedPercent }: BudgetFi
   const { t } = useTexts()
   const spent = formatMoney(line.spent, currency)
   if (line.limit == null || line.remaining == null || line.used_percent == null || line.state == null) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        {t("line.spent", { amount: spent })} · {t("line.noLimit")}
-      </p>
-    )
+    return <p className="text-sm text-muted-foreground">{t("line.spentNoLimit", { amount: spent })}</p>
   }
   const over = line.remaining.startsWith(MINUS)
   const rest = formatMoney(over ? line.remaining.slice(MINUS.length) : line.remaining, currency)

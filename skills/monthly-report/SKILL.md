@@ -10,8 +10,8 @@ description: Builds a person's monthly spending report (totals against the month
 1. Work out the month (YYYY-MM). "This month" is today's month; "last month" the one before. If the user gave no
    month and it isn't clear, ask which one.
 2. Call `get_monthly_report` with that month. The server works the figures out (`scripts/compute_report.py`, run on
-   the user's own expenses) and shows them as a report card with "Download CSV" and "Download report (.md)" buttons.
-   Never work the figures out yourself, and never repeat every number: the card shows them.
+   the user's own expenses) and, in the web app, shows them as a report card with "Download CSV" and "Download report
+   (.md)" buttons. Never work the figures out yourself, and never repeat every number when the card is shown.
 3. Reply in two or three short sentences, in the user's language, then stop.
 
 ## What the reply says
@@ -19,7 +19,8 @@ description: Builds a person's monthly spending report (totals against the month
 - **First:** the month's total, and how it compares with the month before (up or down, by how much, in percent if
   the tool gives it).
 - **Then:** the biggest category and its share, and the single biggest expense if it stands out.
-- **Last:** that the full report can be downloaded from the card as CSV or markdown.
+- **Last:** that the full report can be downloaded from the card as CSV or markdown (or, in text-only chat where no card
+  is shown, include the category and payment-method summary directly in plain text).
 
 ## Tone
 

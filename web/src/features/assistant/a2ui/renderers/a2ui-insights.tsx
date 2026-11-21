@@ -14,7 +14,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 
 import { useTexts } from "../../i18n"
 import { Unsupported } from "./a2ui-unsupported"
-import { formatValue, readPoints, readUnit, type ChartPoint } from "./insight-data"
+import { formatValue, positivePoints, readPoints, readUnit, type ChartPoint } from "./insight-data"
 import type { A2uiRendererProps } from "../renderer-types"
 
 // The chart config: a FIXED key and colour. shadcn's ChartContainer writes the config's keys and colours into a
@@ -41,12 +41,27 @@ interface ChartKindProps {
   config: ChartConfig
 }
 
+function renderTooltipRow(value: unknown, name: unknown, format: (v: unknown) => string, config: ChartConfig) {
+  const key = typeof name === "string" ? name : ""
+  const itemConfig = Object.hasOwn(config, key) ? config[key] : undefined
+  const label = itemConfig?.label ?? String(name ?? "")
+  return (
+    <div className="flex flex-1 items-center justify-between gap-2 leading-none">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-mono font-medium text-foreground tabular-nums">{format(value)}</span>
+    </div>
+  )
+}
+
 function BarInsight({ points, format, config }: ChartKindProps) {
   return (
     <ChartContainer config={config} className="aspect-auto h-40 w-full">
       <BarChart data={points} accessibilityLayer>
-        <XAxis dataKey="label" tickLine={false} axisLine={false} interval={0} fontSize={10} />
-        <ChartTooltip cursor={false} content={<ChartTooltipContent formatter={format} />} />
+        <XAxis dataKey="label" tickLine={false} axisLine={false} interval="preserveStartEnd" fontSize={10} />
+        <ChartTooltip
+          cursor={false}
+          content={<ChartTooltipContent formatter={(value, name) => renderTooltipRow(value, name, format, config)} />}
+        />
         <Bar dataKey="value" fill="var(--color-value)" radius={4} />
       </BarChart>
     </ChartContainer>
@@ -57,8 +72,10 @@ function LineInsight({ points, format, config }: ChartKindProps) {
   return (
     <ChartContainer config={config} className="aspect-auto h-40 w-full">
       <LineChart data={points} margin={{ left: 8, right: 8, top: 8 }} accessibilityLayer>
-        <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={10} />
-        <ChartTooltip content={<ChartTooltipContent formatter={format} />} />
+        <XAxis dataKey="label" tickLine={false} axisLine={false} interval="preserveStartEnd" fontSize={10} />
+        <ChartTooltip
+          content={<ChartTooltipContent formatter={(value, name) => renderTooltipRow(value, name, format, config)} />}
+        />
         <Line dataKey="value" type="monotone" stroke="var(--color-value)" strokeWidth={2} dot={false} />
       </LineChart>
     </ChartContainer>
@@ -72,6 +89,14 @@ function DonutInsight({ points, format, config }: ChartKindProps) {
     <div className="flex items-center gap-3">
       <ChartContainer config={config} className="aspect-square h-28 shrink-0">
         <PieChart>
+          <ChartTooltip
+            content={
+              <ChartTooltipContent
+                hideLabel
+                formatter={(value, name) => renderTooltipRow(value, name, format, config)}
+              />
+            }
+          />
           <Pie data={points} dataKey="value" nameKey="label" innerRadius="55%" strokeWidth={2}>
             {points.map((point, index) => (
               <Cell key={`${index}-${point.label}`} fill={sliceColor(index)} />
@@ -108,7 +133,8 @@ export function A2uiChart({ node }: A2uiRendererProps) {
   const { t } = useTexts()
   // The same config until the language changes, so the chart doesn't rebuild its styles on every render.
   const config = useMemo(() => chartConfig(t("cards.chartValue")), [t])
-  const points = readPoints(node.data)
+  const rawPoints = readPoints(node.data)
+  const points = node.chartType === CHART.donut ? positivePoints(rawPoints) : rawPoints
   if (points.length === 0) return <Unsupported reason="chartWithoutData" />
   const ChartKind = pick(CHART_KINDS, node.chartType)
   if (!ChartKind) return <Unsupported reason="chartKind" />

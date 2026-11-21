@@ -4,8 +4,13 @@
 // PATCH body (only what changed). Used by add-expense-dialog.tsx and edit-row.tsx; use-expense-draft.ts holds a
 // draft in React state for both.
 
+import { DEFAULT_CURRENCY } from "@/shared/api/contracts.gen"
+import { parseIsoDate } from "@/shared/lib/format"
+
 import type { Expense, ExpenseChanges, NewExpense, PaymentMethod } from "./api"
 import { DEFAULT_PAYMENT_METHOD } from "./payment-methods"
+
+const CURRENCY_CODE = /^[A-Za-z]{3}$/
 
 /**
  * Everything as text, the way inputs hold it ("" = not filled in yet). The category id is text too, because
@@ -13,6 +18,7 @@ import { DEFAULT_PAYMENT_METHOD } from "./payment-methods"
  */
 export interface ExpenseDraft {
   amount: string
+  currency: string
   merchant: string
   category_id: string
   spent_on: string
@@ -20,10 +26,11 @@ export interface ExpenseDraft {
   note: string
 }
 
-/** A blank draft for the Add dialog: dated `today` ("YYYY-MM-DD"), with the default payment method. */
+/** A blank draft for the Add dialog: dated `today` ("YYYY-MM-DD"), in DEFAULT_CURRENCY, with the default payment method. */
 export function emptyDraft(today: string): ExpenseDraft {
   return {
     amount: "",
+    currency: DEFAULT_CURRENCY,
     merchant: "",
     category_id: "",
     spent_on: today,
@@ -36,6 +43,7 @@ export function emptyDraft(today: string): ExpenseDraft {
 export function draftOf(expense: Expense): ExpenseDraft {
   return {
     amount: expense.amount,
+    currency: expense.currency,
     merchant: expense.merchant,
     category_id: String(expense.category_id),
     spent_on: expense.spent_on,
@@ -45,18 +53,25 @@ export function draftOf(expense: Expense): ExpenseDraft {
 }
 
 /**
- * True when amount, merchant, category and date are filled in (the note is optional). Only "is it filled in?"
- * here. The real rules (amount > 0, at most 2 decimals...) are checked by the backend, so they're written once
+ * True when amount, 3-letter currency, merchant, category and a valid date are filled in (the note is optional).
+ * The detailed rules (amount > 0, at most 2 decimals...) are checked by the backend, so they're written once
  * and apply to every way in (REST, chat, MCP).
  */
 export function isComplete(draft: ExpenseDraft): boolean {
-  return draft.amount.trim() !== "" && draft.merchant.trim() !== "" && draft.category_id !== "" && draft.spent_on !== ""
+  return (
+    draft.amount.trim() !== "" &&
+    CURRENCY_CODE.test(draft.currency.trim()) &&
+    draft.merchant.trim() !== "" &&
+    draft.category_id !== "" &&
+    parseIsoDate(draft.spent_on) !== undefined
+  )
 }
 
-/** The draft as a POST body: text trimmed, the category id as a number, and an empty note sent as null. */
+/** The draft as a POST body: text trimmed, currency upper-cased, category id as a number, empty note sent as null. */
 export function toNewExpense(draft: ExpenseDraft): NewExpense {
   return {
     amount: draft.amount.trim(),
+    currency: draft.currency.trim().toUpperCase(),
     category_id: Number(draft.category_id),
     merchant: draft.merchant.trim(),
     spent_on: draft.spent_on,
@@ -78,6 +93,7 @@ export function changesBetween(expense: Expense, draft: ExpenseDraft): ExpenseCh
   if (next.merchant !== expense.merchant) changes.merchant = next.merchant
   if (next.category_id !== expense.category_id) changes.category_id = next.category_id
   if (next.amount !== expense.amount) changes.amount = next.amount
+  if (next.currency !== expense.currency) changes.currency = next.currency
   if (next.payment_method !== expense.payment_method) changes.payment_method = next.payment_method
   if (next.note !== expense.note) changes.note = next.note
   return changes

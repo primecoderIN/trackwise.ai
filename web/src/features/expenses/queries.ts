@@ -7,6 +7,7 @@
 import { keepPreviousData, useIsMutating, useMutation, useMutationState, useQuery } from "@tanstack/react-query"
 
 import { DATA_SCOPES } from "@/shared/config/data-scopes"
+import { reportUnexpected } from "@/shared/lib/errors"
 import { isObject } from "@/shared/lib/guards"
 
 import {
@@ -113,6 +114,7 @@ export function useDeleteExpenses() {
     mutationFn: async (ids: number[]): Promise<DeleteOutcome> => {
       const results = await Promise.allSettled(ids.map((id) => deleteExpense(id)))
       const failures = results.flatMap((result) => (result.status === "rejected" ? [result.reason] : []))
+      for (const failure of failures) reportUnexpected(failure)
       return { deleted: ids.length - failures.length, failures }
     },
     meta: CHANGES_EXPENSES,

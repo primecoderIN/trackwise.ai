@@ -7,6 +7,7 @@ import { EventType, type Event as AgentEvent, type RunAgentInput, type UserMessa
 import { EventSchemas } from "@ag-ui/core/schemas"
 
 import { A2UI, AGUI } from "@/shared/api/contracts.gen"
+import * as http from "@/shared/api/http"
 import { ApiError, apiHeaders, unreachableError } from "@/shared/api/http"
 import type { paths } from "@/shared/api/schema.gen"
 import { i18n } from "@/shared/i18n"
@@ -33,6 +34,9 @@ const AGENT_PATH = "/api/v1/agent" satisfies keyof paths
 const USER_ROLE = "user"
 // AG-UI's text content part (a receipt travels as a media part: receipts.ts).
 const TEXT_PART = "text"
+const EVENT_STREAM_TYPE = "text/event-stream"
+const UNAUTHORIZED_STATUS = 401
+const TOO_MANY_REQUESTS_STATUS = 429
 
 // The message when an event can't be read. A function, so it's written in the language on when that happens.
 function notUnderstoodMessage(): string {
@@ -119,7 +123,22 @@ async function startRun(
     throw unreachableError()
   }
   if (!response.ok || !response.body) {
-    throw ApiError.fromProblem(await response.json().catch(() => null), response.status)
+    if (
+      response.status === UNAUTHORIZED_STATUS &&
+      "notifyUnauthorized" in http &&
+      typeof http.notifyUnauthorized === "function"
+    ) {
+      http.notifyUnauthorized()
+    }
+    const retryAfter = response.status === TOO_MANY_REQUESTS_STATUS ? response.headers.get("Retry-After") : null
+    const problem = await response.json().catch(() => null)
+    const error = ApiError.fromProblem(problem, response.status)
+    if (retryAfter) Object.assign(error, { retryAfter })
+    throw error
+  }
+  const contentType = response.headers.get("Content-Type")?.toLowerCase() ?? ""
+  if (!contentType.includes(EVENT_STREAM_TYPE)) {
+    throw new UserFacingError(connectionLostMessage())
   }
   return response.body.pipeThrough(new TextDecoderStream())
 }

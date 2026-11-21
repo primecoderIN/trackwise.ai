@@ -11,6 +11,7 @@ samples need one: someone who has signed in at least once, named by their email.
 """
 
 import argparse
+import sys
 from datetime import date, timedelta
 from decimal import Decimal
 
@@ -51,13 +52,15 @@ SAMPLE_EXPENSES = [
 
 
 def seed_categories(bus: MessageBus) -> dict[str, int]:
-    """The default categories, created in one transaction if there are none yet. Returns every category's id by
-    name."""
-    if not bus.ask(categories.ListCategories()):
+    """Ensure every default category exists, creating any missing ones in one transaction. Returns every category's id
+    by name."""
+    existing = {category.name.casefold() for category in bus.ask(categories.ListCategories())}
+    missing = [(name, icon) for name, icon in DEFAULT_CATEGORIES if name.casefold() not in existing]
+    if missing:
         with bus.unit_of_work():
-            for name, icon in DEFAULT_CATEGORIES:
+            for name, icon in missing:
                 bus.execute(categories.CreateCategory(name=name, icon=icon))
-        print(f"Seeded {len(DEFAULT_CATEGORIES)} categories.")
+        print(f"Seeded {len(missing)} categories.")
     else:
         print("Categories already there.")
     return {category.name: category.id for category in bus.ask(categories.ListCategories())}
@@ -80,11 +83,12 @@ def seed_samples(bus: MessageBus, owner_id: int, category_ids: dict[str, int], t
     if bus.ask(expenses.ListExpenses(owner_id=owner_id)).total:
         print("That person already has expenses; no samples added.")
         return
+    by_key = {name.casefold(): category_id for name, category_id in category_ids.items()}
     with bus.unit_of_work():
         for days_ago, rupees, category, merchant, method, note in SAMPLE_EXPENSES:
             new = expenses.NewExpense(
                 amount=Decimal(rupees),
-                category_id=category_ids[category],
+                category_id=by_key[category.casefold()],
                 merchant=merchant,
                 note=note,
                 spent_on=today - timedelta(days=days_ago),
@@ -109,11 +113,15 @@ def main() -> None:
     # The seed may run before the server ever has, so bring the tables up to date first.
     migrations.upgrade_to_latest()
     services = bootstrap.build()
-    category_ids = seed_categories(services.bus)
-    if args.sample_for:
-        owner_id = owner_for(services.bus, args.sample_for)
-        if owner_id is not None:
+    try:
+        category_ids = seed_categories(services.bus)
+        if args.sample_for:
+            owner_id = owner_for(services.bus, args.sample_for)
+            if owner_id is None:
+                sys.exit(1)
             seed_samples(services.bus, owner_id, category_ids, services.clock.today())
+    finally:
+        services.close()
 
 
 if __name__ == "__main__":

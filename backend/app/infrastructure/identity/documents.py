@@ -10,6 +10,7 @@ import threading
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
+from urllib.parse import urlsplit
 
 import httpx2
 
@@ -18,13 +19,15 @@ from app.core.identity import IdentityError, InvalidTokenError
 
 # OpenID Connect Discovery 1.0, section 4: the metadata lives at the issuer's URL plus this path.
 DISCOVERY_PATH = "/.well-known/openid-configuration"
-# How long the metadata is trusted before it's read again.
+# How long the metadata and signing keys are trusted before they're read again.
 METADATA_TTL = timedelta(hours=1)
+KEYS_TTL = timedelta(hours=1)
 # How often an unknown key id may trigger a new fetch of the keys, so a stream of forged tokens can't make us
 # hammer the provider.
 KEYS_REFETCH_INTERVAL = timedelta(minutes=1)
 # What a JSON Web Key used for signatures says ("use"), when it says anything.
 SIGNATURE_USE = "sig"
+HTTP_SCHEMES = ("https", "http")
 
 JsonObject = dict[str, Any]
 
@@ -54,31 +57,57 @@ def fetch_json(http: httpx2.Client, method: str, url: str, **request: Any) -> Js
         raise IdentityError(f"{method} {url} answered {response.status_code}: {response.text[:300]}")
     try:
         data = response.json()
-    except ValueError as error:
+    except (ValueError, KeyError, TypeError) as error:
         raise IdentityError(f"{method} {url} didn't answer with JSON") from error
     if not isinstance(data, dict):
         raise IdentityError(f"{method} {url} didn't answer with a JSON object")
     return data
 
 
+def _require_endpoint_url(value: Any, name: str, *, require_https: bool) -> str:
+    """Validate that `value` is an http(s) URL with a host, requiring https when the issuer uses https."""
+    if not isinstance(value, str) or not value.strip():
+        raise IdentityError(f"the discovery document lacks a valid {name}")
+    parts = urlsplit(value)
+    if parts.scheme not in HTTP_SCHEMES or not parts.netloc:
+        raise IdentityError(f"the discovery document's {name} is not an http(s) URL")
+    if require_https and parts.scheme != "https":
+        raise IdentityError(f"the discovery document's {name} must use https when the issuer uses https")
+    return value
+
+
+def _optional_endpoint_url(value: Any, name: str, *, require_https: bool) -> str | None:
+    """Validate an optional discovery endpoint URL when present."""
+    if value is None:
+        return None
+    return _require_endpoint_url(value, name, require_https=require_https)
+
+
 def _parse_metadata(data: JsonObject, issuer: str) -> ProviderMetadata:
     """The metadata from a discovery document. Raises IdentityError if it's for another issuer (Discovery 1.0, 4.3:
-    it must match exactly) or lacks an endpoint the flow needs."""
+    it must match exactly) or lacks a valid endpoint the flow needs."""
     if data.get("issuer") != issuer:
         raise IdentityError(f"the discovery document is for issuer {data.get('issuer')!r}, not {issuer!r}")
-    required = ("authorization_endpoint", "token_endpoint", "jwks_uri")
-    if not all(isinstance(data.get(name), str) for name in required):
-        raise IdentityError("the discovery document lacks the authorization, token or jwks endpoint")
+    require_https = urlsplit(issuer).scheme == "https"
+    authorization_endpoint = _require_endpoint_url(
+        data.get("authorization_endpoint"), "authorization_endpoint", require_https=require_https
+    )
+    token_endpoint = _require_endpoint_url(data.get("token_endpoint"), "token_endpoint", require_https=require_https)
+    jwks_uri = _require_endpoint_url(data.get("jwks_uri"), "jwks_uri", require_https=require_https)
+    userinfo_endpoint = _optional_endpoint_url(
+        data.get("userinfo_endpoint"), "userinfo_endpoint", require_https=require_https
+    )
+    end_session_endpoint = _optional_endpoint_url(
+        data.get("end_session_endpoint"), "end_session_endpoint", require_https=require_https
+    )
     methods = data.get("token_endpoint_auth_methods_supported")
     return ProviderMetadata(
         issuer=issuer,
-        authorization_endpoint=data["authorization_endpoint"],
-        token_endpoint=data["token_endpoint"],
-        jwks_uri=data["jwks_uri"],
-        userinfo_endpoint=data.get("userinfo_endpoint") if isinstance(data.get("userinfo_endpoint"), str) else None,
-        end_session_endpoint=(
-            data.get("end_session_endpoint") if isinstance(data.get("end_session_endpoint"), str) else None
-        ),
+        authorization_endpoint=authorization_endpoint,
+        token_endpoint=token_endpoint,
+        jwks_uri=jwks_uri,
+        userinfo_endpoint=userinfo_endpoint,
+        end_session_endpoint=end_session_endpoint,
         token_auth_methods=tuple(m for m in methods if isinstance(m, str)) if isinstance(methods, list) else (),
     )
 
@@ -109,14 +138,23 @@ class ProviderDocuments:
             return self._metadata
 
     def signing_key(self, key_id: str | None) -> JsonObject:
-        """The signing key (a JSON Web Key) a token names in its header, fetching the keys again if it's unknown.
+        """The signing key (a JSON Web Key) a token names in its header, fetching the keys again if expired or unknown.
 
         Raises InvalidTokenError if the provider doesn't publish it, IdentityError if the keys can't be read.
         """
         metadata = self.metadata()
         with self._lock:
+            now = self._clock.now()
+            if self._keys_at is None or now - self._keys_at >= KEYS_TTL:
+                self._keys = self._fetch_keys(metadata.jwks_uri)
+                self._keys_at = now
             key = self._find(key_id)
             if key is None and self._may_refetch():
+                if self._metadata_at is None or now - self._metadata_at >= KEYS_REFETCH_INTERVAL:
+                    url = self._issuer.rstrip("/") + DISCOVERY_PATH
+                    self._metadata = _parse_metadata(fetch_json(self._http, "GET", url), self._issuer)
+                    self._metadata_at = now
+                    metadata = self._metadata
                 self._keys = self._fetch_keys(metadata.jwks_uri)
                 self._keys_at = self._clock.now()
                 key = self._find(key_id)

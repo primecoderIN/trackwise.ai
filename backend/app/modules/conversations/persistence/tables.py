@@ -12,6 +12,7 @@ from typing import Any
 from sqlalchemy import JSON, DateTime, Index
 from sqlmodel import Field, SQLModel
 
+from app.core.sql import BigInt
 from app.modules.conversations.values import THREAD_ID_MAX_LENGTH
 
 # The longest message kind that fits; the longest today, "assistant_text", is 14 characters.
@@ -30,11 +31,11 @@ class ConversationMessage(SQLModel, table=True):
     __table_args__ = (Index(OWNER_THREAD_TURN_INDEX, "owner_id", "thread_id", "turn"),)
 
     # None until the row is inserted; the database assigns it. Also the order of a thread's messages.
-    id: int | None = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True, sa_type=BigInt)
     # Whose conversation it is (core.ids.UserId; no foreign key: the users table is the accounts module's). A thread
     # is its owner and its id together: the browser names threads, so two people may pick the same id, and each gets
     # their own conversation (D190). Indexed through OWNER_THREAD_TURN_INDEX, which starts with it.
-    owner_id: int
+    owner_id: int = Field(sa_type=BigInt)
     # Groups one conversation (of its owner's).
     thread_id: str = Field(max_length=THREAD_ID_MAX_LENGTH)
     # 1 for the first user message in a thread, 2 for the next, ... Lets us keep only the last N turns.

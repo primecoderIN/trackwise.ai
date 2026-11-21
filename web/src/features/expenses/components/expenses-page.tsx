@@ -5,6 +5,7 @@
 
 import { useState } from "react"
 
+import { LIMITS } from "@/shared/api/contracts.gen"
 import { RefreshNotice } from "@/shared/components/refresh-notice"
 import { SectionError } from "@/shared/components/section-error"
 import { useDebouncedValue } from "@/shared/hooks/use-debounced-value"
@@ -34,12 +35,25 @@ const NO_EXPENSES: Expense[] = []
 export function ExpensesPage() {
   const { t } = useTexts()
   const [filters, setFilters] = useState<ExpenseFilters>({})
+  const [offset, setOffset] = useState(0)
   // The expenses waiting for "are you sure?"; null means the confirmation dialog is closed.
   const [pendingDelete, setPendingDelete] = useState<Expense[] | null>(null)
+  const debouncedFilters = useDebouncedValue(filters, FILTER_DEBOUNCE_MS)
   // TanStack Query loads (and caches) the list, cancels outdated requests, and reloads it whenever
   // something changes expenses: this page's dialogs, or the assistant. The filters bar shows each change at
   // once; the query only sees the filters once they've stopped changing.
-  const expenses = useExpenses(useDebouncedValue(filters, FILTER_DEBOUNCE_MS))
+  const expenses = useExpenses({ ...debouncedFilters, limit: LIMITS.listDefault, offset })
+
+  function handleFiltersChange(nextFilters: ExpenseFilters) {
+    setFilters(nextFilters)
+    setOffset(0)
+  }
+
+  // If deleting every item on the last page leaves it empty while earlier pages still have rows, step back one page.
+  if (expenses.data && offset > 0 && expenses.data.items.length === 0 && expenses.data.total > 0) {
+    const lastPageOffset = Math.max(0, Math.floor((expenses.data.total - 1) / LIMITS.listDefault) * LIMITS.listDefault)
+    if (lastPageOffset !== offset) setOffset(lastPageOffset)
+  }
 
   // An error card only if nothing could be loaded; if a reload failed, keep the rows and say so above them.
   // setPendingDelete goes to the table as it is: React keeps it the same between renders, so the table
@@ -54,7 +68,7 @@ export function ExpensesPage() {
         <AddExpenseDialog />
       </div>
 
-      <FiltersBar filters={filters} onChange={setFilters} />
+      <FiltersBar filters={filters} onChange={handleFiltersChange} />
 
       {expenses.isError && expenses.data && (
         <RefreshNotice
@@ -76,6 +90,9 @@ export function ExpensesPage() {
           total={expenses.data?.total ?? 0}
           loading={expenses.isPending}
           onDelete={setPendingDelete}
+          offset={offset}
+          pageSize={LIMITS.listDefault}
+          onOffsetChange={setOffset}
         />
       )}
 

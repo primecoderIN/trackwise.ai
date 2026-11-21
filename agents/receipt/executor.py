@@ -55,7 +55,11 @@ class ReceiptExecutor(AgentExecutor):
     async def execute(self, context: RequestContext, event_queue: EventQueue) -> None:
         """Read the request's receipt and publish the task's states and its artifact. Raises nothing for a bad
         request or a failed reading: they end the task as REJECTED or FAILED, with a reason."""
+        resuming = context.current_task is not None
         message, updater = await start_task(context, event_queue)
+        if resuming:
+            await reject(updater, WRONG_PARTS)
+            return
         try:
             file, request = _inputs(message)
         except RejectedRequest as exc:
@@ -94,8 +98,23 @@ def _inputs(message: Message) -> tuple[Part, ReadingRequest]:
         raise RejectedRequest(WRONG_TYPE)
     if not 0 < len(file.raw) <= MAX_RECEIPT_BYTES:
         raise RejectedRequest(WRONG_SIZE)
+    if _sniff_media_type(file.raw) != file.media_type:
+        raise RejectedRequest(WRONG_TYPE)
     try:
         request = ReadingRequest.model_validate(data[0])
     except ValidationError as exc:
         raise RejectedRequest(WRONG_DATA) from exc
     return file, request
+
+
+def _sniff_media_type(data: bytes) -> ReceiptMediaType | None:
+    """The receipt media type indicated by `data`'s magic bytes, or None."""
+    if data.startswith(b"\xff\xd8\xff"):
+        return ReceiptMediaType.JPEG
+    if data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return ReceiptMediaType.PNG
+    if len(data) >= 12 and data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return ReceiptMediaType.WEBP
+    if data.startswith(b"%PDF-"):
+        return ReceiptMediaType.PDF
+    return None

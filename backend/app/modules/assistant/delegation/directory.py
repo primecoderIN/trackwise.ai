@@ -12,8 +12,8 @@ the server checks again (delegator.py).
 
 import logging
 import threading
+import time
 from collections.abc import Sequence
-from datetime import datetime, timedelta
 
 from app.core.agents import AgentUnavailableError, RemoteAgents, SkillCard
 from app.core.clock import Clock
@@ -24,7 +24,8 @@ from app.modules.assistant.delegation.skills import DelegatedSkill
 
 logger = logging.getLogger(__name__)
 
-RETRY_SECONDS = 60
+RETRY_SECONDS = 60.0
+CACHE_TTL_SECONDS = 60.0
 MAX_CARD_TEXT = 600
 MAX_REQUEST_LENGTH = 500
 # The tool, as the model reads it: what to use it for, then each offered skill in the card's words.
@@ -44,33 +45,46 @@ MONTH_HELP = "Only if the user named the month to analyse: it as YYYY-MM. Leave 
 class AgentDirectory:
     """The delegable skills the agents' cards offer, read at startup and re-read for agents that were missing."""
 
-    def __init__(self, agents: RemoteAgents, skills: Sequence[DelegatedSkill], clock: Clock) -> None:
+    def __init__(self, agents: RemoteAgents, skills: Sequence[DelegatedSkill], clock: Clock | None = None) -> None:
         """Know which skills the server can hand over; nothing is read until load()."""
         self._agents = agents
         self._skills = {(skill.agent, skill.skill_id): skill for skill in skills}
         self._clock = clock
         self._cards: dict[str, list[SkillCard]] = {}
+        self._loaded_at: dict[str, float] = {}
         # When each agent's card was last tried (so a missing one is retried at most every RETRY_SECONDS).
-        self._tried: dict[str, datetime] = {}
+        self._tried: dict[str, float] = {}
         self._lock = threading.Lock()
 
     def load(self) -> None:
-        """Read the card of every agent not read yet (and not tried in the last RETRY_SECONDS)."""
-        now = self._clock.now()
+        """Read the card of every agent not read yet (or expired past CACHE_TTL_SECONDS, and not tried in the last
+        RETRY_SECONDS)."""
+        now = time.monotonic()
         for agent in sorted({agent for agent, _ in self._skills}):
             with self._lock:
+                loaded = self._loaded_at.get(agent)
+                if agent in self._cards and loaded is not None and now - loaded < CACHE_TTL_SECONDS:
+                    continue
                 last = self._tried.get(agent)
-                if agent in self._cards or (last is not None and now - last < timedelta(seconds=RETRY_SECONDS)):
+                if agent not in self._cards and last is not None and now - last < RETRY_SECONDS:
                     continue
                 self._tried[agent] = now
             try:
                 cards = self._agents.skills(agent)
             except AgentUnavailableError:
                 logger.info("agent %s not available for delegation yet", agent)
+                with self._lock:
+                    self._cards.pop(agent, None)
+                    self._loaded_at.pop(agent, None)
                 continue
             with self._lock:
                 self._cards[agent] = [card for card in cards if (agent, card.skill_id) in self._skills]
+                self._loaded_at[agent] = now
             logger.info("agent %s offers %s", agent, [card.skill_id for card in self._cards[agent]])
+
+    def preload(self) -> None:
+        """Alias for load(): read the agents' cards eagerly if desired."""
+        self.load()
 
     def offered(self) -> list[tuple[DelegatedSkill, SkillCard]]:
         """Each skill the model may be offered now, with its card (agents missing at startup are tried again)."""

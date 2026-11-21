@@ -2,7 +2,7 @@
 // (a report download, D209). Part of the assistant feature's A2UI renderer; used by A2uiButton
 // (renderers/basic-components.tsx).
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { toast } from "sonner"
 
 import { isAbort, messageOf, reportUnexpected } from "@/shared/lib/errors"
@@ -18,10 +18,13 @@ import type { A2uiComponent, A2uiRenderContext } from "../protocol"
  */
 export function useButtonClick(node: A2uiComponent, ctx: A2uiRenderContext): (() => void) | null {
   const [running, setRunning] = useState(false)
+  const clicking = useRef(false)
   const run = readFunctionCall(node.action)
   if (run) {
     if (running) return null
     return () => {
+      if (clicking.current) return
+      clicking.current = true
       setRunning(true)
       run()
         .catch((error: unknown) => {
@@ -29,11 +32,24 @@ export function useButtonClick(node: A2uiComponent, ctx: A2uiRenderContext): (()
           reportUnexpected(error)
           toast.error(messageOf(error))
         })
-        .finally(() => setRunning(false))
+        .finally(() => {
+          clicking.current = false
+          setRunning(false)
+        })
     }
   }
   const event = readAction(node.action)
   if (event === null || ctx.onAction === undefined || ctx.locked) return null
   // The time is taken at the click; buildAction itself stays pure.
-  return () => ctx.onAction?.(buildAction(event, ctx.surface, node.id, new Date()))
+  return () => {
+    if (clicking.current) return
+    clicking.current = true
+    try {
+      ctx.onAction?.(buildAction(event, ctx.surface, node.id, new Date()))
+    } finally {
+      queueMicrotask(() => {
+        clicking.current = false
+      })
+    }
+  }
 }

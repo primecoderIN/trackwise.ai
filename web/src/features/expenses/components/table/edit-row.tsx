@@ -12,7 +12,7 @@ import { Input } from "@/shared/ui/input"
 import { TableCell, TableRow } from "@/shared/ui/table"
 
 import type { Expense, ExpenseChanges } from "../../api"
-import { changesBetween, draftOf } from "../../expense-form"
+import { changesBetween, draftOf, isComplete } from "../../expense-form"
 import { useTexts } from "../../i18n"
 import { useExpenseDraft, type ExpenseDraftState } from "../../use-expense-draft"
 import { PaymentMethodSelect } from "../fields/payment-method-select"
@@ -46,9 +46,11 @@ export function EditRow({ expense: current, saving, onSave, onCancel }: EditRowP
   // so Cancel can simply throw the draft away.
   const { draft, setField } = useExpenseDraft(() => draftOf(current))
 
+  const complete = isComplete(draft)
+
   function save() {
     // Enter can fire again (or repeat while held) before the first save finishes: send it once.
-    if (!saving) onSave(changesBetween(expense, draft))
+    if (!saving && complete) onSave(changesBetween(expense, draft))
   }
 
   // Enter saves and Escape cancels, but only while typing in a text box (dropdowns use those keys themselves).
@@ -57,7 +59,7 @@ export function EditRow({ expense: current, saving, onSave, onCancel }: EditRowP
     // While an input method (e.g. for Hindi or Japanese) is composing, Enter picks the suggested text.
     if (event.nativeEvent.isComposing) return
     if (event.key === "Enter") save()
-    if (event.key === "Escape") onCancel()
+    if (event.key === "Escape" && !saving) onCancel()
   }
 
   // The first cell stays empty: it's the select column, and a row being edited has no checkbox. The id can't be
@@ -69,7 +71,12 @@ export function EditRow({ expense: current, saving, onSave, onCancel }: EditRowP
       <EditFieldCells draft={draft} setField={setField} id={expense.id} />
       <TableCell>
         <div className="flex justify-end gap-1">
-          <Button size="icon-sm" aria-label={t("edit.save", { id: expense.id })} onClick={save} disabled={saving}>
+          <Button
+            size="icon-sm"
+            aria-label={t("edit.save", { id: expense.id })}
+            onClick={save}
+            disabled={saving || !complete}
+          >
             <Check />
           </Button>
           <Button
@@ -111,6 +118,7 @@ function EditFieldCells({ draft, setField, id }: EditFieldCellsProps) {
       <TableCell>
         <Input
           aria-label={t("edit.merchant", { id })}
+          maxLength={100}
           className="h-8 min-w-32"
           value={draft.merchant}
           onChange={(e) => setField("merchant", e.target.value)}
@@ -127,13 +135,22 @@ function EditFieldCells({ draft, setField, id }: EditFieldCellsProps) {
         />
       </TableCell>
       <TableCell>
-        <Input
-          aria-label={t("edit.amount", { id })}
-          className="ml-auto h-8 w-24 text-right"
-          inputMode="decimal"
-          value={draft.amount}
-          onChange={(e) => setField("amount", e.target.value)}
-        />
+        <div className="flex items-center justify-end gap-1">
+          <Input
+            aria-label={t("edit.currency", { id })}
+            maxLength={3}
+            className="h-8 w-14 text-center uppercase"
+            value={draft.currency}
+            onChange={(e) => setField("currency", e.target.value.toUpperCase())}
+          />
+          <Input
+            aria-label={t("edit.amount", { id })}
+            className="h-8 w-24 text-right"
+            inputMode="decimal"
+            value={draft.amount}
+            onChange={(e) => setField("amount", e.target.value)}
+          />
+        </div>
       </TableCell>
       <TableCell>
         <PaymentMethodSelect
@@ -146,6 +163,7 @@ function EditFieldCells({ draft, setField, id }: EditFieldCellsProps) {
       <TableCell>
         <Input
           aria-label={t("edit.note", { id })}
+          maxLength={500}
           className="h-8 min-w-32"
           value={draft.note}
           onChange={(e) => setField("note", e.target.value)}

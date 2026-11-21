@@ -12,13 +12,15 @@ PaymentMethod and ExpenseId. Each method's label, in every language, is in i18n/
 uses both, and scripts/export_contracts.py reads the labels and limits for the web app.
 """
 
+from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated
 
-from pydantic import Field
+from pydantic import AfterValidator, Field
 
 from app.core.ids import RecordId
+from app.core.months import MAX_DATE, MIN_DATE
 
 # Text limits. The merchant and note limits are also the table's column lengths (persistence/tables.py).
 MAX_MERCHANT_LENGTH = 100
@@ -52,3 +54,18 @@ Version = Annotated[int, Field(ge=1)]
 Amount = Annotated[Decimal, Field(max_digits=12, decimal_places=2, examples=["450.50"])]
 Merchant = Annotated[str, Field(min_length=1, max_length=MAX_MERCHANT_LENGTH)]
 Note = Annotated[str, Field(max_length=MAX_NOTE_LENGTH)]
+
+
+def _check_date(value: date) -> date:
+    """Keep every expense and filter date inside YearMonth's 1900-2099 span."""
+    if not (MIN_DATE <= value <= MAX_DATE):
+        raise ValueError("date must be between 1900-01-01 and 2099-12-31")
+    return value
+
+
+def escape_like(value: str) -> str:
+    """Escape `\\`, `%` and `_` so user search terms match literally in a SQL LIKE pattern."""
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
+SpentOnDate = Annotated[date, AfterValidator(_check_date)]

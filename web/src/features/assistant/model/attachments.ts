@@ -14,9 +14,26 @@ export const MAX_RECEIPT_MB = LIMITS.receiptBytes / BYTES_PER_MB
 /** What the file picker offers: the receipt types, as its `accept` attribute wants them. */
 export const RECEIPT_ACCEPT = RECEIPT_MEDIA_TYPES.join(",")
 
+const EXTENSION_TYPES: Readonly<Record<string, (typeof RECEIPT_MEDIA_TYPES)[number]>> = {
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".webp": "image/webp",
+  ".pdf": "application/pdf",
+}
+
 /** Whether a type the browser reports is one a receipt may be (it narrows the string to that union). */
 function isReceiptType(type: string): type is (typeof RECEIPT_MEDIA_TYPES)[number] {
   return RECEIPT_MEDIA_TYPES.some((allowed) => allowed === type)
+}
+
+// Some OS file pickers omit file.type for .pdf or .webp; fall back to the file's lowercase extension.
+function mediaTypeOf(file: File): string {
+  if (file.type) return file.type
+  const dot = file.name.lastIndexOf(".")
+  if (dot === -1) return ""
+  const ext = file.name.slice(dot).toLowerCase()
+  return Object.hasOwn(EXTENSION_TYPES, ext) ? EXTENSION_TYPES[ext] : ""
 }
 
 /**
@@ -24,7 +41,8 @@ function isReceiptType(type: string): type is (typeof RECEIPT_MEDIA_TYPES)[numbe
  * name): a first check only, since the server reads the file's own bytes.
  */
 export function attachmentProblem(file: File): AttachmentProblem | undefined {
+  if (file.size <= 0) return "attachmentType"
   if (file.size > LIMITS.receiptBytes) return "attachmentTooLarge"
-  if (!isReceiptType(file.type)) return "attachmentType"
+  if (!isReceiptType(mediaTypeOf(file))) return "attachmentType"
   return undefined
 }

@@ -13,10 +13,12 @@ Never print() here: stdout carries the protocol messages, and stray text would c
 (Logging is fine; it goes to stderr.)
 """
 
+import atexit
 import logging
 import os
 
 from app import bootstrap
+from app.agents_host import AGENT_LOGGERS
 from app.infrastructure import migrations
 from app.infrastructure.logging import setup_logging
 from app.modules.mcp import act_for_process
@@ -29,13 +31,14 @@ logger = logging.getLogger(__name__)
 # `mcp dev` and `mcp run` import this file (without running __main__) and look for a global named
 # "server", so the setup happens at import: the logging, the tables brought up to date, then the same
 # server the web app uses, from the composition root, acting for the token's owner.
-setup_logging()
+setup_logging(loggers=AGENT_LOGGERS)
 migrations.upgrade_to_latest()
 services = bootstrap.build()
+atexit.register(services.close)
 server = services.mcp_server
 _token = os.environ.get(TOKEN_VARIABLE, "")
-act_for_process(lambda: services.access_tokens.resolve(_token))
-if services.access_tokens.resolve(_token) is None:
+act_for_process(lambda: services.access_tokens.resolve(_token) if _token else None)
+if not _token or services.access_tokens.resolve(_token) is None:
     # Never the token itself in the log: only that it's missing or doesn't work.
     logger.warning("%s is missing or doesn't work: every tool call will be refused until it's fixed.", TOKEN_VARIABLE)
 

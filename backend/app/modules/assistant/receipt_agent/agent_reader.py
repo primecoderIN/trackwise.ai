@@ -88,9 +88,11 @@ def _checked(extraction: ReceiptExtraction, request: ReadingRequest) -> ReceiptE
     """The agent's answer with what can't be right set to null, as if it came from the model itself: a category not
     offered, a currency that isn't a three-letter code, a total that isn't positive."""
     currency = (extraction.currency or "").strip().upper()
+    by_fold = {name.casefold(): name for name in request.categories}
+    category = by_fold.get(extraction.category.strip().casefold()) if extraction.category else None
     return extraction.model_copy(
         update={
-            "category": extraction.category if extraction.category in request.categories else None,
+            "category": category,
             "currency": currency if re.fullmatch(CURRENCY_PATTERN, currency) else None,
             "total": extraction.total if extraction.total is not None and extraction.total > 0 else None,
         }

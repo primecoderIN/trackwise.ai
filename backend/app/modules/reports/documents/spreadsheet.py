@@ -51,7 +51,7 @@ def expenses_csv(rows: list[expenses.ExpenseRead], names: dict[int, str], langua
                 row.spent_on.isoformat(),
                 _as_text(row.merchant),
                 _as_text(names.get(row.category_id, categories.UNKNOWN_CATEGORY)),
-                expenses.payment_method_label(row.payment_method, language),
+                _as_text(expenses.payment_method_label(row.payment_method, language)),
                 str(row.amount),
                 row.currency,
                 inr,

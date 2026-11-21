@@ -37,7 +37,11 @@ export function CategoryChart({ summary }: { summary: MonthlySummary }) {
         {rows.length === 0 ? (
           <EmptyState message={t("byCategory.empty")} action={{ label: t("addExpense"), to: ROUTES.expenses }} />
         ) : (
-          <ChartContainer config={config} className="aspect-auto h-64 w-full">
+          <ChartContainer
+            config={config}
+            className="aspect-auto w-full"
+            style={{ height: `${Math.max(256, rows.length * 36)}px` }}
+          >
             <BarChart data={rows} layout="vertical" margin={{ left: 8, right: 8 }} accessibilityLayer>
               <XAxis type="number" hide />
               <YAxis dataKey="name" type="category" width={CATEGORY_AXIS_WIDTH} tickLine={false} axisLine={false} />

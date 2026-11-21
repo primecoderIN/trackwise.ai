@@ -71,7 +71,7 @@ client; the `multi-server` branch runs each as its own service.)
 py -3 -m venv .venv                                   # macOS/Linux: python3 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe -m alembic -c backend\alembic.ini upgrade head
-.\.venv\Scripts\python.exe -m uvicorn app.main:create_app --factory --app-dir backend --reload --reload-dir backend
+.\.venv\Scripts\python.exe -m uvicorn app.main:create_app --factory --app-dir backend --reload --reload-dir backend --reload-dir agents --reload-dir skills
 ```
 
 (On macOS/Linux the venv's Python is `.venv/bin/python`.) `--app-dir backend` is needed because the code imports
@@ -82,7 +82,7 @@ itself as `app.…`, and the `app` package lives inside `backend/`.
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt   # Ruff and Pyright, pinned
 cd web; npm ci; cd ..
-.\.venv\Scripts\python.exe backend\scripts\check.py                 # --python for the backend's checks only
+.\.venv\Scripts\python.exe backend\scripts\check.py                 # --python or --web for one half only
 ```
 
 ## 4. Add sample data (optional)

@@ -10,6 +10,20 @@ function locale(): string {
   return currentLanguageInfo().locale
 }
 
+// Whole-number formatters, one per locale, made on first use.
+const countFormats = new Map<string, Intl.NumberFormat>()
+
+/** 1250 -> "1,250" (in the current language's locale and digit grouping). */
+export function formatCount(value: number): string {
+  const current = locale()
+  let format = countFormats.get(current)
+  if (!format) {
+    format = new Intl.NumberFormat(current, { maximumFractionDigits: 0 })
+    countFormats.set(current, format)
+  }
+  return format.format(value)
+}
+
 // Always two decimals, with the locale's digit grouping. One formatter per locale, made on first use: building a
 // formatter is the slow part.
 const amountFormats = new Map<string, Intl.NumberFormat>()
@@ -53,8 +67,12 @@ export function formatMoney(amount: number | string, currency: string): string {
   const cacheKey = `${current}|${currency}`
   let format = moneyFormats.get(cacheKey)
   if (!format) {
-    format = new Intl.NumberFormat(current, { style: "currency", currency })
-    moneyFormats.set(cacheKey, format)
+    try {
+      format = new Intl.NumberFormat(current, { style: "currency", currency })
+      moneyFormats.set(cacheKey, format)
+    } catch {
+      return `${currency} ${formatAmount(amount)}`
+    }
   }
   return format.format(Number(amount))
 }
@@ -68,8 +86,12 @@ export function formatCompactMoney(amount: number, currency: string): string {
   const cacheKey = `${current}|${currency}`
   let format = compactFormats.get(cacheKey)
   if (!format) {
-    format = new Intl.NumberFormat(current, { style: "currency", currency, notation: "compact" })
-    compactFormats.set(cacheKey, format)
+    try {
+      format = new Intl.NumberFormat(current, { style: "currency", currency, notation: "compact" })
+      compactFormats.set(cacheKey, format)
+    } catch {
+      return `${currency} ${formatAmount(amount)}`
+    }
   }
   return format.format(amount)
 }
@@ -81,7 +103,15 @@ export function formatCompactMoney(amount: number, currency: string): string {
  */
 export function parseIsoDate(value: unknown): Date | undefined {
   const match = typeof value === "string" ? /^(\d{4})-(\d{2})-(\d{2})/.exec(value) : null
-  return match ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])) : undefined
+  if (!match) return undefined
+  const year = Number(match[1])
+  const month = Number(match[2])
+  const day = Number(match[3])
+  const parsed = new Date(year, month - 1, day)
+  if (parsed.getFullYear() !== year || parsed.getMonth() !== month - 1 || parsed.getDate() !== day) {
+    return undefined
+  }
+  return parsed
 }
 
 /** A Date -> "2026-11-13", by its local calendar day (the reverse of parseIsoDate). */
@@ -112,8 +142,9 @@ export function formatDateTime(value: string): string {
   })
 }
 
-/** "2026-11" -> "November 2026" (long) or "Nov" (short, for chart axes). */
+/** "2026-11" -> "November 2026" (long) or "Nov" (short, for chart axes); invalid text -> "". */
 export function formatMonth(isoMonth: string, style: "long" | "short" = "long"): string {
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(isoMonth)) return ""
   const [year, month] = isoMonth.split("-").map(Number)
   const options: Intl.DateTimeFormatOptions = style === "long" ? { month: "long", year: "numeric" } : { month: "short" }
   return new Date(year, month - 1, 1).toLocaleDateString(locale(), options)

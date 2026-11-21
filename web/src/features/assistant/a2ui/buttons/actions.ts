@@ -22,6 +22,13 @@ export function readAction(action: unknown): A2uiButtonEvent | null {
   return { name, context: isObject(context) ? context : {}, userMessage }
 }
 
+// Only JSON primitives or string[] (ChoicePicker values) belong in an outgoing action's context map.
+function isContextValue(value: unknown): value is string | number | boolean | null | string[] {
+  if (value === null || typeof value === "string" || typeof value === "boolean") return true
+  if (typeof value === "number") return Number.isFinite(value)
+  return Array.isArray(value) && value.every((item) => typeof item === "string")
+}
+
 /**
  * The A2UI `action` message for a click on `sourceComponentId`, at `now` (passed in, so this stays pure).
  * Each binding is read from the surface's data model as it is now, so the agent gets what's in the form
@@ -33,10 +40,13 @@ export function buildAction(
   sourceComponentId: string,
   now: Date,
 ): A2uiAction {
+  const entries: [string, unknown][] = []
+  for (const [key, value] of Object.entries(event.context)) {
+    const resolved = resolve(value, surface.data)
+    if (isContextValue(resolved)) entries.push([key, resolved])
+  }
   // Object.fromEntries defines own properties, so a context key like "__proto__" stays a plain key.
-  const context = Object.fromEntries(
-    Object.entries(event.context).map(([key, value]) => [key, resolve(value, surface.data)]),
-  )
+  const context = Object.fromEntries(entries)
   return {
     name: event.name,
     surfaceId: surface.id,

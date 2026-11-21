@@ -22,8 +22,11 @@ export function useBudgetEditor(scope: BudgetScope, currentLimit: string | null)
   const save = useSetBudget()
   const remove = useRemoveBudget()
 
-  // Each time it opens, start from the limit as it is now.
+  const busy = save.isPending || remove.isPending
+
+  // Each time it opens, start from the limit as it is now; don't close while a save or remove is in flight.
   function onOpenChange(next: boolean) {
+    if (!next && busy) return
     if (next) setLimit(currentLimit ?? "")
     setOpen(next)
   }
@@ -37,10 +40,12 @@ export function useBudgetEditor(scope: BudgetScope, currentLimit: string | null)
   // Save (the button, or Enter): the limit as typed; the server checks it (above 0, at most 2 decimals).
   function onSubmit(event: FormEvent) {
     event.preventDefault() // no page reload
+    if (busy || !limit.trim()) return
     save.mutate({ scope, limit: limit.trim() }, { onSuccess: done("dialog.saved"), onError: failed })
   }
 
   function onRemove() {
+    if (busy) return
     remove.mutate(scope, { onSuccess: done("dialog.removed"), onError: failed })
   }
 

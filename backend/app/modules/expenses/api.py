@@ -13,9 +13,10 @@ Expenses and Dashboard pages call these routes. A route's docstring would become
 notes about the routes are `#` comments.
 """
 
-from typing import Annotated
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Query, Request, Response
+from fastapi import APIRouter, Depends, Query, Request, Response
+from fastapi.exceptions import RequestValidationError
 
 from app.core.months import YearMonth
 from app.modules.expenses.application.record_expense import ExpenseRecorder
@@ -57,8 +58,8 @@ def create_router(recorder: ExpenseRecorder, watcher: SaveWatcher) -> APIRouter:
     ) -> SavedExpense:
         owner = principal.user_id
         expense_id, notices = watcher.watch(owner, body.spent_on, lambda: recorder.create(owner, body), language)
-        # 201 Created says where the new resource lives (url_for includes the /api/v1 prefix).
-        response.headers["Location"] = str(request.url_for(get_expense.__name__, expense_id=expense_id))
+        # 201 Created says where the new resource lives (url_for.path includes the /api/v1 prefix).
+        response.headers["Location"] = request.url_for(get_expense.__name__, expense_id=expense_id).path
         saved = bus.ask(GetExpense(owner_id=owner, expense_id=expense_id))
         return SavedExpense(**dict(saved), notices=notices)
 
@@ -100,9 +101,26 @@ def delete_expense(expense_id: IdPath, principal: CurrentUserDep, bus: BusDep) -
     bus.execute(DeleteExpense(owner_id=principal.user_id, expense_id=expense_id))
 
 
+def _only_query(*allowed: str) -> Any:
+    """Route dependency refusing any query parameter not in `allowed` with a 422 validation problem."""
+    allowed_set = frozenset(allowed)
+
+    def check(request: Request) -> None:
+        unexpected = [name for name in request.query_params if name not in allowed_set]
+        if unexpected:
+            raise RequestValidationError(
+                [
+                    {"type": "extra_forbidden", "loc": ("query", name), "msg": "Extra inputs are not permitted"}
+                    for name in unexpected
+                ]
+            )
+
+    return Depends(check)
+
+
 # GET /api/v1/summary?month=2026-11: one month's total of the signed-in person's expenses and per-category totals,
 # added up in the database, in INR: every expense counts through its INR amount, whatever its currency (D204).
-@_reads.get("/summary")
+@_reads.get("/summary", dependencies=[_only_query("month")])
 def monthly_summary(
     principal: CurrentUserDep,
     bus: BusDep,
@@ -113,7 +131,7 @@ def monthly_summary(
 
 # GET /api/v1/summary/trend?months=6: the Dashboard chart's monthly totals, oldest first, with 0 for a
 # month without spending; in INR, like the summary.
-@_reads.get("/summary/trend")
+@_reads.get("/summary/trend", dependencies=[_only_query("months")])
 def monthly_trend(
     principal: CurrentUserDep,
     bus: BusDep,

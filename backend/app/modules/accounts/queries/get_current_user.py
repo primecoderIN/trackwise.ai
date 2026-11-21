@@ -4,6 +4,8 @@ A slice of the accounts module's read side. GET /auth/user asks it for the perso
 module.py registers the handler.
 """
 
+from sqlmodel import select
+
 from app.core.cqrs import Context, Query
 from app.core.errors import AuthenticationError
 from app.modules.accounts.models import CurrentUser
@@ -20,7 +22,7 @@ class GetCurrentUser(Query[CurrentUser]):
 
 def get_current_user(ctx: Context, query: GetCurrentUser) -> CurrentUser:
     """The user's profile as last refreshed at sign-in."""
-    user = ctx.session.get(AppUser, query.user_id)
+    user = ctx.session.exec(select(AppUser).where(AppUser.id == query.user_id)).first()
     if user is None:
         raise AuthenticationError(f"user {query.user_id} doesn't exist")
     return CurrentUser.model_validate(user)

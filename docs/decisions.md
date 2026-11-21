@@ -2939,3 +2939,60 @@ is natural. It's still a soft, model-judged guard.
 - **How:** migrations continue to manage schema changes. `backend/seed.py` creates the default categories on a new
   database. The connection URL is a secret and must be configured privately.
 - **Revisit when:** changing database hosting or adding a supported application database.
+
+---
+
+## Comprehensive architecture & security review fixes (post-Phase 27)
+
+### D216. 64-bit `BigInteger` IDs and minor-unit amounts in PostgreSQL, and a case-folded `category.name_key`
+- **What:** migration `0011_bigint_and_category_key` and every module's `persistence/tables.py` widen all primary keys,
+  user/category/owner id columns, and minor-unit money columns (`amount_minor`, `base_amount_minor`, `limit_minor`) from
+  `Integer` (32-bit `INT4` in PostgreSQL) to `BigInteger` (64-bit `BIGINT` in PostgreSQL, `INTEGER` in SQLite).
+  `category` also gains `name_key` (`VARCHAR(50) NOT NULL`, unique index `ix_category_name_key`), populated with
+  `name.strip().casefold()`.
+- **Why:** `core/ids.py` accepts positive integers up to $2^{63}-1$ and money in paise can exceed $2^{31}-1$
+  (₹21,474,836.47); in PostgreSQL, a 32-bit `INT4` column raises `NumericValueOutOfRange` above $2^{31}-1$. Adding
+  `category.name_key` enforces case-insensitive uniqueness atomically in the database under concurrent writes, matching
+  the handler's rule.
+- **Revisit when:** switching primary keys to UUIDs or adding user-defined categories per person.
+
+### D217. Hardened security boundaries across A2A, OIDC, MCP, uploads and rate limits
+- **What:**
+  - **A2A card verification (`infrastructure/a2a/agents.py`):** Agent Cards are fetched without the bearer key using a
+    short timeout, the matching JSON-RPC `AgentInterface` URL is verified against the configured endpoint, and the
+    returned card is pinned to that single verified interface before the authenticated RPC client is used.
+  - **Return-path segment checks:** both `accounts/domain/return_paths.py` and `web/src/features/auth/sign-in-urls.ts`
+    check `/sign-in`, `/api` and `/mcp` on path-segment boundaries (`path == prefix` or `path.startswith(prefix + "/")`)
+    and reject backslashes, `//` and control characters.
+  - **Streaming body limits:** `BodySizeLimitMiddleware` (`web/body_limit.py`), `AgentGate` (`agent_kit/http.py`) and
+    `AccessTokenAuth` (`mcp/http.py`) count streamed request body bytes as chunks arrive, rejecting oversized bodies
+    with 413 before buffering or spooling to disk.
+  - **Fail-closed tokens and quotas:** `AccessTokens.resolve` refuses personal access tokens when OIDC sign-in is
+    unconfigured (`identity.issuer is None`); `POST /agent` exempts Approve/Cancel decisions from `MODEL_QUOTA` so a
+    person can always answer a delete card; `REPORTS_QUOTA`, `RECEIPTS_QUOTA`, `AUTH_QUOTA` (per IP) and `/mcp/` rate
+    limiting + `Origin` checks guard non-model endpoints; Scan 9 (`check_rules.py`) covers `accounts` and allows zero
+    `session.get(` exemptions.
+- **Why:** close SSRF/credential-leak vectors, open-redirect prefix edge cases, unspooled multipart DoS, and quota bypasses.
+- **Revisit when:** moving rate limits to a shared store (Redis) for multi-worker deployments.
+
+### D218. Resilience and consistency across CQRS, Neon pooling, Gemini, skills, delegation and the web app
+- **What:**
+  - **Core & infrastructure:** `as_utc()` converts non-UTC aware datetimes to UTC; `bus.ask()` inside a writable UoW
+    temporarily sets `writable=False` so a query called from a command cannot execute a command; `YearMonth` provides
+    boundary-safe `last_day()`, `next_month_first_day()` and `previous()`; Neon engines enable `pool_pre_ping=True` and
+    `pool_recycle=300`; `GeminiModel` passes `automatic_continuation=False` and `timeout`, drops `503` from SDK
+    auto-retries (avoiding unbounded `Retry-After` sleeps), and requires a terminal `COMPLETED` stream event; skill
+    scripts run with an allow-listed environment (no inherited backend secrets) and byte-bounded pipes.
+  - **Modules & agents:** `AppendTurn` assigns monotonically increasing turn numbers under concurrent writes;
+    `ExpenseRecorder.update` only calls the currency agent when `amount`, `currency` or `spent_on` actually changes (or
+    `base_amount_minor` is missing); receipt files are deleted only after `AppendTurn` commits; `/chat` supports Agent
+    Skills and A2A delegation (including multi-turn `INPUT_REQUIRED` resumption); `Services.close()` cleans up hosted
+    agents, loops, clients and the database pool.
+  - **Web app:** `notifyUnauthorized()` invalidates `authKeys.user` on any 401 (including `/agent` SSE streams);
+    `AssistantProvider` sits inside `AuthGate` and aborts active streams on unmount or reset; synchronous ref locks
+    guard `useAgentRun.run`, `submitForm` and `useButtonClick`; submitted A2UI forms unlock only on deterministic
+    pre-execution 4xx errors; `drawnSize` memoizes `{ count, height }` across DAG nodes; `AddExpenseDialog` and
+    `EditRow` support currency editing, and `ExpensesPage` supports pagination.
+- **Why:** eliminate edge-case crashes (Jan/Feb lookbacks, Dec 2099 / Jan 1900 boundaries, idle Neon disconnects, double
+  submissions) and keep every surface and contract consistent.
+- **Revisit when:** adding server-side sorting or cursor pagination to `GET /expenses`.

@@ -19,6 +19,7 @@ from app.modules.reports.models import MonthlyReport
 from app.modules.reports.values import MEDIA_TYPES, ReportFormat
 from app.web.auth import CurrentUserDep
 from app.web.dependencies import LanguageDep
+from app.web.rate_limits import REPORTS_QUOTA
 
 TAG = "reports"
 MonthPath = Annotated[str, Path(pattern=YearMonth.PATTERN, examples=["2026-11"])]
@@ -35,13 +36,18 @@ def create_router(reports: MonthlyReports) -> APIRouter:
     # GET /api/v1/reports/monthly/{month}: the month's figures (the monthly-report skill's script works them out, in
     # INR): the total against the month before, by category, by payment method, the biggest expenses, the daily
     # average. 502 if the report can't be made right now.
-    @router.get("/reports/monthly/{month}")
+    @router.get("/reports/monthly/{month}", dependencies=[REPORTS_QUOTA])
     def get_monthly_report(month: MonthPath, principal: CurrentUserDep) -> MonthlyReport:
         return reports.figures(principal.user_id, YearMonth.parse(month))
 
     # GET /api/v1/reports/monthly/{month}/{format}: the month's report as a file to save, in the request's language:
     # "csv" (every expense of the month) or "md" (the report in markdown). Sent as an attachment, with its name.
-    @router.get("/reports/monthly/{month}/{format}", response_class=Response, responses={200: _FILE_CONTENT})
+    @router.get(
+        "/reports/monthly/{month}/{format}",
+        response_class=Response,
+        responses={200: _FILE_CONTENT},
+        dependencies=[REPORTS_QUOTA],
+    )
     def download_monthly_report(
         month: MonthPath, format: ReportFormat, principal: CurrentUserDep, language: LanguageDep
     ) -> Response:

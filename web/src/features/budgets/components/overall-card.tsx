@@ -32,7 +32,11 @@ export function OverallCard({ status }: { status: BudgetStatus }) {
           line={overall}
           currency={status.currency}
           name={name}
-          elapsedPercent={status.month_elapsed_percent}
+          elapsedPercent={
+            Number(status.month_elapsed_percent) > 0 && Number(status.month_elapsed_percent) < 100
+              ? status.month_elapsed_percent
+              : undefined
+          }
         />
         {overall.limit == null && <p className="text-sm text-muted-foreground">{t("overall.noLimit")}</p>}
       </CardContent>

@@ -8,9 +8,10 @@ every module's tables for the migrations.
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import JSON, DateTime
+from sqlalchemy import JSON, Column, DateTime
 from sqlmodel import Field, SQLModel
 
+from app.core.sql import BigInt
 from app.modules.assistant.approvals.models import APPROVAL_ID_LENGTH
 from app.modules.conversations import THREAD_ID_MAX_LENGTH
 
@@ -28,7 +29,7 @@ class PendingApproval(SQLModel, table=True):
     approval_id: str = Field(primary_key=True, max_length=APPROVAL_ID_LENGTH)
     # Whose card it is (core.ids.UserId; no foreign key: the users table is the accounts module's). Only they can
     # answer it, and the cap on remembered cards counts each person's alone (D190).
-    owner_id: int = Field(index=True)
+    owner_id: int = Field(sa_column=Column(BigInt, nullable=False, index=True))
     # The conversation it belongs to: a card can only be answered in its own thread (of its owner's).
     thread_id: str = Field(index=True, max_length=THREAD_ID_MAX_LENGTH)
     # The expense exactly as the card showed it (ExpenseSnapshot, in approvals/models.py). Approve deletes only

@@ -6,6 +6,7 @@ handlers (commands/), with the session from the handler's Context.
 """
 
 from sqlalchemy import ColumnElement, delete
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, col, select
 
 from app.core.sql import rows_affected
@@ -24,9 +25,24 @@ def find(session: Session, owner_id: int, category_id: int | None) -> Budget | N
 
 
 def save(session: Session, budget: Budget) -> int:
-    """Stage a new or changed budget and return its id (flushed, so a new row has one)."""
-    session.add(budget)
-    session.flush()
+    """Stage a new or changed budget and return its id (flushed, so a new row has one).
+
+    If a concurrent request inserted a row for the same (owner_id, category_id) scope first, the savepoint rolls back
+    and updates that row instead.
+    """
+    try:
+        with session.begin_nested():
+            session.add(budget)
+            session.flush()
+    except IntegrityError:
+        existing = find(session, budget.owner_id, budget.category_id)
+        if existing is None:
+            raise
+        existing.limit_minor = budget.limit_minor
+        existing.updated_at = budget.updated_at
+        session.add(existing)
+        session.flush()
+        budget = existing
     assert budget.id is not None
     return budget.id
 

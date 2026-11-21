@@ -7,13 +7,17 @@
 import type { ReactNode } from "react"
 
 import { AppLayout } from "@/app/_frame/app-layout"
+import { refreshAfterAssistant } from "@/app/_shell/query-client"
+import { AssistantProvider } from "@/features/assistant"
 import { AuthGate } from "@/features/auth"
 
 /** The page in the app's frame, for a signed-in person; anyone else is sent to the sign-in page. */
 export default function SignedInLayout({ children }: { children: ReactNode }) {
   return (
     <AuthGate>
-      <AppLayout>{children}</AppLayout>
+      <AssistantProvider onDataChanged={refreshAfterAssistant}>
+        <AppLayout>{children}</AppLayout>
+      </AssistantProvider>
     </AuthGate>
   )
 }

@@ -7,7 +7,7 @@ person: a session or token id that isn't theirs is a 404, like one that doesn't 
 would become its OpenAPI text, so notes are `#` comments.
 """
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Request, Response
 
 from app.core.cqrs import MessageBus
 from app.core.identity import IdentityProvider
@@ -59,9 +59,13 @@ def create_account_router(bus: MessageBus, identity: IdentityProvider, tokens: A
     # POST /api/v1/account/tokens: make a token for MCP clients. 201 with the token itself, the only time it's sent
     # (and never cached); 422 past the most tokens allowed.
     @router.post("/tokens", status_code=201)
-    def create_token(body: NewAccessToken, principal: CurrentUserDep, response: Response) -> CreatedAccessToken:
+    def create_token(
+        body: NewAccessToken, principal: CurrentUserDep, request: Request, response: Response
+    ) -> CreatedAccessToken:
         response.headers[CACHE_CONTROL] = NO_STORE
-        return tokens.create(principal.user_id, body)
+        created = tokens.create(principal.user_id, body)
+        response.headers["Location"] = f"{request.url.path.rstrip('/')}/{created.id}"
+        return created
 
     # DELETE /api/v1/account/tokens/{token_id}: revoke a token (it stops working at once). 404 if it isn't theirs.
     @router.delete("/tokens/{token_id}", status_code=204)

@@ -6,6 +6,8 @@ checked here against the app's injected clock, because PyJWT reads the system cl
 an InvalidTokenError: the token isn't trusted, whatever else it says.
 """
 
+import base64
+import hashlib
 import hmac
 from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta
@@ -22,8 +24,25 @@ from app.core.identity import InvalidTokenError
 ALLOWED_ALGORITHMS = frozenset(
     {"RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512", "EdDSA"}
 )
+# Hash function paired with each JWS algorithm for OIDC at_hash checks (OpenID Connect Core 1.0, 3.1.3.8).
+_ALG_HASH = {
+    "RS256": hashlib.sha256,
+    "PS256": hashlib.sha256,
+    "ES256": hashlib.sha256,
+    "RS384": hashlib.sha384,
+    "PS384": hashlib.sha384,
+    "ES384": hashlib.sha384,
+    "RS512": hashlib.sha512,
+    "PS512": hashlib.sha512,
+    "ES512": hashlib.sha512,
+    "EdDSA": hashlib.sha512,
+}
 # How far apart our clock and the provider's may be before a token's times count against it.
 CLOCK_SKEW = timedelta(seconds=60)
+# Maximum allowed lifetime (exp - iat) or age for a logout token (24 hours).
+MAX_LOGOUT_TOKEN_AGE_SECONDS = 86_400
+# Allowed typ header values for a logout token when the provider sends a typ header (Back-Channel Logout 1.0, 2.4).
+LOGOUT_TOKEN_TYPES = frozenset({"logout+jwt", "jwt"})
 # The claims each token must carry (OpenID Connect Core 1.0, 2; Back-Channel Logout 1.0, 2.4).
 ID_TOKEN_CLAIMS = ("iss", "sub", "aud", "exp", "iat")
 LOGOUT_TOKEN_CLAIMS = ("iss", "aud", "iat", "jti", "events")
@@ -76,13 +95,37 @@ def check_times(claims: Claims, now: datetime) -> None:
             raise InvalidTokenError(f"the token's '{name}' is in the future")
 
 
+def _check_at_hash(token: str, claims: Claims, access_token: str | None) -> None:
+    """Verify the ID token's `at_hash` claim when an `access_token` is present (OpenID Connect Core 1.0, 3.1.3.8)."""
+    at_hash = claims.get("at_hash")
+    if at_hash is None or access_token is None:
+        return
+    if not isinstance(at_hash, str):
+        raise InvalidTokenError("the token's at_hash isn't a string")
+    algorithm = str(jwt.get_unverified_header(token).get("alg", ""))
+    hasher = _ALG_HASH.get(algorithm)
+    if hasher is None:
+        raise InvalidTokenError(f"unsupported algorithm for at_hash: {algorithm!r}")
+    digest = hasher(access_token.encode("ascii")).digest()
+    expected = base64.urlsafe_b64encode(digest[: len(digest) // 2]).rstrip(b"=").decode("ascii")
+    if not hmac.compare_digest(at_hash.encode("ascii", errors="ignore"), expected.encode("ascii")):
+        raise InvalidTokenError("the token's at_hash doesn't match the access token")
+
+
 def verify_id_token(
-    token: str, signing_key: KeyLookup, issuer: str, client_id: str, nonce: str, now: datetime
+    token: str,
+    signing_key: KeyLookup,
+    issuer: str,
+    client_id: str,
+    nonce: str,
+    now: datetime,
+    access_token: str | None = None,
 ) -> Claims:
     """The ID token's claims, once it passes every check OpenID Connect Core 1.0 (3.1.3.7) asks of a client.
 
     Signature, issuer, audience (this client among them), times, `azp` (this client, if there are several audiences
-    or it's present at all), and the nonce this sign-in sent, which ties the token to it. Raises InvalidTokenError.
+    or it's present at all), the nonce this sign-in sent, and `at_hash` when an access token is present.
+    Raises InvalidTokenError.
     """
     claims = decode_signed(token, signing_key, issuer, client_id, ID_TOKEN_CLAIMS)
     check_times(claims, now)
@@ -95,6 +138,7 @@ def verify_id_token(
     sent = claims.get("nonce")
     if not isinstance(sent, str) or not hmac.compare_digest(sent.encode(), nonce.encode()):
         raise InvalidTokenError("the token's nonce isn't this sign-in's")
+    _check_at_hash(token, claims, access_token)
     return claims
 
 
@@ -105,13 +149,26 @@ def verify_logout_token(token: str, signing_key: KeyLookup, issuer: str, client_
     (which would make it usable as an ID token). Raises InvalidTokenError.
     """
     claims = decode_signed(token, signing_key, issuer, client_id, LOGOUT_TOKEN_CLAIMS)
+    typ = jwt.get_unverified_header(token).get("typ")
+    if typ is not None:
+        normalized_typ = str(typ).strip().lower().removeprefix("application/")
+        if normalized_typ not in LOGOUT_TOKEN_TYPES:
+            raise InvalidTokenError(f"logout token has unexpected typ {typ!r}")
     check_times(claims, now)
+    iat = claims["iat"]
+    exp = claims.get("exp")
+    if exp is not None and (exp < iat or exp - iat > MAX_LOGOUT_TOKEN_AGE_SECONDS):
+        raise InvalidTokenError("the logout token's lifetime is invalid")
+    if now.timestamp() - iat > MAX_LOGOUT_TOKEN_AGE_SECONDS + CLOCK_SKEW.total_seconds():
+        raise InvalidTokenError("the logout token is too old")
     events = claims["events"]
     if not isinstance(events, dict) or not isinstance(events.get(BACKCHANNEL_LOGOUT_EVENT), dict):
         raise InvalidTokenError("the token doesn't announce a back-channel logout")
     if "nonce" in claims:
         raise InvalidTokenError("a logout token must not carry a nonce")
-    if not isinstance(claims.get("sub"), str) and not isinstance(claims.get("sid"), str):
+    has_sub = isinstance(claims.get("sub"), str) and bool(claims["sub"].strip())
+    has_sid = isinstance(claims.get("sid"), str) and bool(claims["sid"].strip())
+    if not has_sub and not has_sid:
         raise InvalidTokenError("the logout token names neither a user (sub) nor a session (sid)")
     return claims
 

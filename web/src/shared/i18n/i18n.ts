@@ -155,8 +155,11 @@ async function switchTo(language: Language): Promise<boolean> {
 export async function loadNamespaces(...namespaces: AnyNamespace[]): Promise<void> {
   await started
   for (const namespace of namespaces) inUse.add(namespace)
-  const languages = new Set([currentLanguage(), switchingTo ?? currentLanguage()])
-  await Promise.all([...languages].map((language) => loadTexts(namespaces, language)))
+  const active = currentLanguage()
+  await loadTexts(namespaces, active)
+  if (switchingTo && switchingTo !== active) {
+    await loadTexts(namespaces, switchingTo).catch(() => undefined)
+  }
 }
 
 /** The language on now (DEFAULT_LANGUAGE before initI18n has run). */

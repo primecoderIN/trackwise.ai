@@ -15,7 +15,7 @@ web/problems.py. module.create_router builds the router at startup, and main.py 
 from collections.abc import Iterator
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 
 from app.modules.assistant.api import agui_stream
@@ -25,10 +25,21 @@ from app.modules.assistant.application.assistant import Assistant
 from app.modules.assistant.application.expense_parser import ExpenseParser, ParseResponse
 from app.web.auth import CurrentUserDep
 from app.web.dependencies import ClockDep, LanguageDep
-from app.web.rate_limits import MODEL_QUOTA
+from app.web.rate_limits import MODEL_QUOTA, consume_model_quota
 
 # The tag that groups this module's routes under one heading in /docs.
 TAG = "assistant"
+
+
+def _checked_agent_request(
+    http_request: Request,
+    request: Annotated[AgentRequest, Depends(read_request)],
+    principal: CurrentUserDep,
+) -> AgentRequest:
+    """Validate the AG-UI request and charge MODEL_QUOTA before streaming, unless it's an Approve/Cancel decision."""
+    if request.decision is None:
+        consume_model_quota(http_request, principal)
+    return request
 
 
 def create_router(assistant: Assistant, parser: ExpenseParser) -> APIRouter:
@@ -64,9 +75,9 @@ def create_router(assistant: Assistant, parser: ExpenseParser) -> APIRouter:
     # browser can show it while the model is still writing. The run is checked first
     # (agui_request.read_request): a bad body or thread id is a normal 422; anything that goes wrong once
     # streaming has begun is a RUN_ERROR event.
-    @router.post("/agent", response_class=EventSourceResponse, dependencies=[MODEL_QUOTA])
+    @router.post("/agent", response_class=EventSourceResponse)
     def agent_run(
-        request: Annotated[AgentRequest, Depends(read_request)],
+        request: Annotated[AgentRequest, Depends(_checked_agent_request)],
         principal: CurrentUserDep,
         clock: ClockDep,
         language: LanguageDep,

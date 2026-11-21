@@ -20,6 +20,18 @@ const ASK_AGAIN = "ask-again"
  * that message once itself, when `known` turns true (this page has its first answer). Does nothing in a browser
  * without BroadcastChannel: there, a tab catches up at its next 401 or when its answer goes stale.
  */
+/** Tell other open tabs of this browser to re-check who is signed in. */
+export function broadcastSessionChange(): void {
+  if (typeof BroadcastChannel === "undefined") return
+  try {
+    const channel = new BroadcastChannel(SESSION_CHANNEL)
+    channel.postMessage(ASK_AGAIN)
+    channel.close()
+  } catch {
+    // Ignore if BroadcastChannel is unavailable.
+  }
+}
+
 export function useSessionSync(known: boolean): void {
   const client = useQueryClient()
   useEffect(() => {

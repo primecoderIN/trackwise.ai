@@ -38,7 +38,7 @@ export function CategorySelect({ value, onChange, id, className, ariaLabel, anyL
   const placeholder = isError ? t("select.loadFailed") : isPending ? t("select.loading") : t("select.choose")
 
   return (
-    <Select value={value} onValueChange={onChange} disabled={isError}>
+    <Select value={value} onValueChange={onChange} disabled={isError && !anyLabel}>
       <SelectTrigger id={id} className={className} aria-label={ariaLabel}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>

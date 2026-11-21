@@ -32,10 +32,30 @@ export function apiHeaders(): Record<string, string> {
   return { ...languageHeaders(), [AUTH.csrfHeader]: AUTH.csrfValue }
 }
 
+// Called whenever an API call (other than GET /auth/user itself) answers 401: app/_shell/query-client.ts registers
+// it to invalidate the signed-in user query so AuthGate sends the browser to /sign-in.
+let onUnauthorized: (() => void) | undefined
+
+/** Register the app's handler for unexpected 401 answers (expired or revoked session). */
+export function setUnauthorizedHandler(handler: () => void): void {
+  onUnauthorized = handler
+}
+
+/** Notify the app that an API or stream call answered 401 Unauthorized. */
+export function notifyUnauthorized(): void {
+  onUnauthorized?.()
+}
+
 api.use({
   onRequest({ request }) {
     for (const [name, value] of Object.entries(apiHeaders())) request.headers.set(name, value)
     return request
+  },
+  onResponse({ request, response }) {
+    if (response.status === 401 && !new URL(request.url, "http://localhost").pathname.endsWith("/auth/user")) {
+      notifyUnauthorized()
+    }
+    return response
   },
 })
 
@@ -85,7 +105,7 @@ export class ApiError extends UserFacingError {
    * a plain "Request failed (status)".
    */
   static fromProblem(body: unknown, status: number): ApiError {
-    if (isObject(body) && typeof body.detail === "string") {
+    if (isObject(body) && typeof body.detail === "string" && body.detail.trim() !== "") {
       return new ApiError(body.detail, status, typeof body.type === "string" ? body.type : undefined)
     }
     if (status >= SERVER_ERROR) return unreachableError()
@@ -141,8 +161,8 @@ export interface DownloadedFile {
   name: string | null
 }
 
-// The file name in a Content-Disposition header: attachment; filename="spendwise-2026-11.csv".
-const ATTACHMENT_NAME = /filename="([^"\\/]+)"/
+// The file name in a Content-Disposition header: attachment; filename="spendwise-2026-11.csv" (quoted, unquoted or RFC 5987).
+const ATTACHMENT_NAME = /filename\*?=(?:UTF-8''|"?)([^";\r\n\\/]+)"?/i
 
 /**
  * Awaits a call made with `parseAs: "blob"` that answers with a file, and returns its bytes and the name the server

@@ -3,10 +3,13 @@
 // budgets feature's useBudgetStatus), so the rest of the Dashboard never waits for it. Used by the Dashboard page.
 
 import Link from "next/link"
+import { useTranslation } from "react-i18next"
 
 import { BudgetMeter, useBudgetStatus, type BudgetStatus } from "@/features/budgets"
 import { BUDGETS } from "@/shared/api/contracts.gen"
+import { RefreshNotice } from "@/shared/components/refresh-notice"
 import { ROUTES } from "@/shared/config/routes"
+import { messageOf } from "@/shared/lib/errors"
 import { currentMonth, formatMoney } from "@/shared/lib/format"
 import { Button } from "@/shared/ui/button"
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
@@ -14,10 +17,12 @@ import { Skeleton } from "@/shared/ui/skeleton"
 
 import { useTexts } from "../i18n"
 
-/** The card: a skeleton while loading, a short note if it failed, otherwise the summary. */
-export function BudgetCard() {
+/** The card: a skeleton while loading, a short note with retry if it failed, otherwise the summary. */
+export function BudgetCard({ month = currentMonth() }: { month?: string }) {
   const { t } = useTexts()
-  const status = useBudgetStatus(currentMonth())
+  const { t: tCommon } = useTranslation()
+  const status = useBudgetStatus(month)
+  const retry = () => void status.refetch()
   return (
     <Card>
       <CardHeader>
@@ -30,10 +35,18 @@ export function BudgetCard() {
         </CardAction>
       </CardHeader>
       <CardContent className="grid gap-2 text-sm">
+        {status.isError && status.data && (
+          <RefreshNotice message={messageOf(status.error)} onRetry={retry} retrying={status.isFetching} />
+        )}
         {status.data ? (
           <BudgetSummary status={status.data} />
         ) : status.isError ? (
-          <p className="text-muted-foreground">{t("budget.loadFailed")}</p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-muted-foreground">{t("budget.loadFailed")}</p>
+            <Button variant="outline" size="sm" onClick={retry} disabled={status.isFetching}>
+              {tCommon(status.isFetching ? "retry.tryingAgain" : "retry.retry")}
+            </Button>
+          </div>
         ) : (
           <Skeleton className="h-10" />
         )}
@@ -49,6 +62,10 @@ function BudgetSummary({ status }: { status: BudgetStatus }) {
   const money = (amount: string) => formatMoney(amount, currency)
   const budgeted = status.categories.filter((line) => line.state != null)
   const attention = budgeted.filter((line) => line.state !== BUDGETS.states.on_track).length
+  const elapsed =
+    Number(status.month_elapsed_percent) > 0 && Number(status.month_elapsed_percent) < 100
+      ? status.month_elapsed_percent
+      : undefined
   return (
     <>
       {overall.limit != null && overall.used_percent != null && overall.state != null ? (
@@ -57,7 +74,8 @@ function BudgetSummary({ status }: { status: BudgetStatus }) {
             usedPercent={overall.used_percent}
             state={overall.state}
             label={t("budget.meter", { percent: overall.used_percent })}
-            elapsedPercent={status.month_elapsed_percent}
+            elapsedPercent={elapsed}
+            elapsedLabel={elapsed ? t("budget.today", { percent: elapsed }) : undefined}
           />
           <p className="tabular-nums">
             {t("budget.spentOf", { spent: money(overall.spent), limit: money(overall.limit) })}

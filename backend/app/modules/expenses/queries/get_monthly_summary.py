@@ -56,7 +56,7 @@ def get_monthly_summary(ctx: Context, query: GetMonthlySummary) -> MonthlySummar
     """
     statement = (
         select(Expense.category_id, func.count(col(Expense.id)), func.sum(Expense.base_amount_minor))
-        .where(*in_month_range(query.owner_id, query.month.first_day(), query.month.shift(1).first_day()))
+        .where(*in_month_range(query.owner_id, query.month.first_day(), query.month.next_month_first_day()))
         .group_by(col(Expense.category_id))
     )
     # Names come from the categories module, through its query: its table isn't ours to read.

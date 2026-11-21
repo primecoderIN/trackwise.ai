@@ -55,7 +55,7 @@ the backend is the client, and the browser never sees a token (D185, D186: the b
 | Sign-in half configured | Fail closed: while a setting is missing, nobody can sign in and every protected route answers 401 |
 | Flooding the sign-in with attempts | Attempts expire after 10 minutes and at most 500 are kept (the oldest go first) |
 | A page still showing data after the session ended | The web app keeps nothing of the session; any 401 makes it ask who is signed in and go to the sign-in page. Signing out is a navigation, so the page and its cached data are unloaded (D189) |
-| The provider's picture used against the page | It's shown only from an `http(s)` address, as an `<img>` (no script runs), with `referrerPolicy="no-referrer"`, so its host isn't told which page asked |
+| The provider's picture used against the page | It's shown only from an `https:` address, as an `<img>` (no script runs), with `referrerPolicy="no-referrer"`, so its host isn't told which page asked |
 
 Who may sign in at all is the provider's decision (with ZITADEL, a role in the project); `OIDC_REQUIRED_ROLE` lets
 SpendWise check a role too. The OpenID Connect and OAuth facts these rely on: [sources.md](sources.md#27-openid-connect-and-zitadel-phase-22).
@@ -94,12 +94,14 @@ every door is in the phase note ([phases/phase-23-per-person-data.md](phases/pha
 | every backend answer (`web/security_headers.py`) | nosniff, `DENY`, `same-origin`; over https, HSTS |
 | the API and MCP's answers | also **`Cache-Control: no-store`** (a person's data never sits in a cache that could hand it to someone else) and `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'` |
 
-## Rate limits (D194)
+## Rate limits (D194, D217)
 
 The routes that call the model (`/agent`, which also reads attached receipts, `/chat`, `/parse`) spend Gemini quota,
 so each person may make 10 such requests a minute and 300 a day (`MODEL_REQUESTS_PER_MINUTE`,
-`MODEL_REQUESTS_PER_DAY`). One more is a 429 problem with `Retry-After`, and never reaches the model. Counted per person, so one person can't use up
-another's allowance.
+`MODEL_REQUESTS_PER_DAY`); clicking **Approve** or **Cancel** on a delete card uses no model and does not consume
+`MODEL_QUOTA`. Report routes (`REPORTS_QUOTA`), receipt uploads (`RECEIPTS_QUOTA`), MCP over HTTP (`mcp_quota`), and
+the sign-in routes (`AUTH_QUOTA`, keyed per client IP) also have per-minute and per-day allowances. One more is a 429
+problem with `Retry-After`.
 
 ## MCP
 
@@ -144,7 +146,7 @@ behaving:
 |---|---|
 | A file that isn't what it claims (a script named `.png`) | The type is read from the file's first bytes (its signature), never from its name or `Content-Type`; only JPEG, PNG, WEBP and PDF are kept |
 | A name like `../../app.py` reaching the disk | Files are stored under random keys (a UUID's hex digits) the server makes; a key that isn't one of those is refused before it becomes a path. The user's file name is never used |
-| A huge upload | At most 5 MB is accepted: the route reads at most one byte past the limit. FastAPI (Starlette) has already spooled the upload to a temporary file by then, with no size limit of its own, so a request-size limit belongs at the proxy (below) |
+| A huge upload | `BodySizeLimitMiddleware` enforces request body byte limits on the stream before multipart spooling (a little over 5 MB for `POST /receipts`, 2 MB for other API routes), and the route itself reads at most one byte past 5 MB |
 | A file left without its row (or a row without its file) | The upload deletes the file again if the row can't be added; a row whose file has gone answers 404 "upload it again" |
 | The storage key reaching a client | Only the module sees it: the API's `ReceiptRead` has no such field (D180) |
 | A chat run smuggling a file, a URL to fetch, or another service's file handle | A run may carry only a handle to a receipt uploaded here (`provider: "spendwise-receipts"`, a valid id); inline bytes, URLs, audio or video and other providers' handles are refused with a 422, so the server never fetches anything a client names (D183) |
@@ -227,7 +229,8 @@ Every AG-UI event is validated with `@ag-ui/core`'s schemas before it's used.
   text and tool arguments are financial data and appear only at DEBUG.
 - Gemini is called with `store=False`, so Google doesn't keep the conversation for later retrieval. On the free tier,
   Google's data-use terms still apply to what's sent ([gemini.md](gemini.md)).
-- The database is a local file, git-ignored.
+- The application database is Neon PostgreSQL (`DATABASE_URL`, held as a `SecretStr` in settings); any local `.db`
+  file used for isolated checks is git-ignored.
 - Sign-in logs say what happened (signed in: session 12; refused: the required role is missing) and the provider's
   own error words, never a token, a key, a cookie or an email.
 

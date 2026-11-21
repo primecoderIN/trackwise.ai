@@ -1,7 +1,7 @@
 """Console logging for SpendWise's own messages, such as the assistant's steps and tool calls (infrastructure).
 
-Called once by each entry point before it starts working: main.create_app (the web app), mcp_stdio.py and the
-receipt agent (agents/receipt/server.py, which adds its own "receipt" loggers).
+Called once by each entry point before it starts working: main.create_app (the web app), mcp_stdio.py and the A2A
+agents (receipt, insights, currency, agent_kit).
 """
 
 import logging

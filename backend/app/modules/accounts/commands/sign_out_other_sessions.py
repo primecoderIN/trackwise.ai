@@ -29,6 +29,6 @@ def sign_out_other_sessions(ctx: Context, command: SignOutOtherSessions) -> None
             col(UserSession.id) != command.keep_session_id,
             col(UserSession.revoked_at).is_(None),
         )
-        .values(revoked_at=ctx.clock.now())
+        .values(revoked_at=ctx.clock.now(), sealed_id_token=None)
     )
     ctx.session.execute(statement)

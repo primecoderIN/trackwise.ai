@@ -58,19 +58,20 @@ class ReadingRequest(BaseModel):
     payment_methods: list[Choice] = Field(max_length=MAX_CHOICES)
 
 
-# One line of the receipt. Its docstring and descriptions are part of the schema the model reads.
+# One line of the receipt: what was bought, and what that line cost. Its field descriptions are part of the schema
+# the model reads.
 class LineItem(BaseModel):
-    """One line of the receipt: what was bought, and what that line cost."""
+    model_config = ConfigDict(extra="forbid", frozen=True)
 
     description: str = Field(description="The item as printed, e.g. 'Paneer tikka x2'.")
     amount: DecimalText = Field(description='The line\'s price as a plain number string, e.g. "240.00", or null.')
 
 
 # The answer, as the model fills it and as the artifact carries it. Its JSON schema is sent to the model, so the
-# docstring and the field descriptions are instructions it reads. Every field is required, but most may be null:
-# null is how the model says "the receipt doesn't show it", instead of inventing something.
+# field descriptions are instructions it reads. Every field is required, but most may be null: null is how the model
+# says "the receipt doesn't show it", instead of inventing something.
 class ReceiptExtraction(BaseModel):
-    """What one shop receipt says. Use null for anything the receipt does not show; never guess."""
+    model_config = ConfigDict(extra="forbid", frozen=True)
 
     merchant: str | None = Field(description="The shop or company name printed on the receipt, or null.")
     spent_on: date | None = Field(description="The purchase date printed on the receipt, or null.")
@@ -95,4 +96,5 @@ class ReceiptExtraction(BaseModel):
 # The fields whose allowed values come with each request.
 CATEGORY_FIELD = "category"
 PAYMENT_METHOD_FIELD = "payment_method"
-assert {CATEGORY_FIELD, PAYMENT_METHOD_FIELD} <= set(ReceiptExtraction.model_fields)
+if not ({CATEGORY_FIELD, PAYMENT_METHOD_FIELD} <= set(ReceiptExtraction.model_fields)):
+    raise RuntimeError("ReceiptExtraction is missing dynamic choice fields")

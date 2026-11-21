@@ -7,7 +7,8 @@ import { cn } from "@/shared/lib/utils"
 
 import { A2uiSurfaceView } from "../a2ui/a2ui-surface"
 import type { A2uiRenderContext } from "../a2ui/protocol"
-import { MESSAGE_ROLES, type ChatMessage, type MessageStatus } from "../model/chat-types"
+import { useTexts } from "../i18n"
+import { MESSAGE_ROLES, MESSAGE_STATUSES, type ChatMessage, type MessageStatus } from "../model/chat-types"
 import { AttachedFile } from "./attached-file"
 import { ToolChip } from "./tool-chip"
 
@@ -47,7 +48,9 @@ export const ChatMessageBubble = memo(function ChatMessageBubble({
   onFormChange,
   onFormSubmit,
 }: ChatMessageBubbleProps) {
+  const { t } = useTexts()
   const isUser = message.role === MESSAGE_ROLES.user
+  const displayText = message.text || (message.status === MESSAGE_STATUSES.failed ? t("stream.connectionLost") : "")
 
   // The chips' row is a polite live region, so screen readers announce them as they change ("Expense saved").
   // An assistant reply can be chips only for a moment, before its text arrives, so the text box waits for text.
@@ -78,14 +81,14 @@ export const ChatMessageBubble = memo(function ChatMessageBubble({
 
       {message.attachment && <AttachedFile name={message.attachment} />}
 
-      {message.text && (
+      {displayText && (
         <div
           className={cn(
             "max-w-[85%] rounded-lg px-3 py-2 text-sm wrap-break-word whitespace-pre-wrap",
             bubbleStyle(message),
           )}
         >
-          {message.text}
+          {displayText}
         </div>
       )}
     </div>

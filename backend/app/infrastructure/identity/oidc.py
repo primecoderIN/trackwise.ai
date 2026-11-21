@@ -11,7 +11,7 @@ import base64
 import hashlib
 from collections.abc import Sequence
 from typing import Any
-from urllib.parse import urlencode, urlsplit
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import httpx2
 
@@ -36,9 +36,11 @@ def pkce_challenge(verifier: str) -> str:
 
 
 def with_query(url: str, params: dict[str, str]) -> str:
-    """`url` with `params` added to its query string (it may already have one)."""
-    separator = "&" if urlsplit(url).query else "?"
-    return url + separator + urlencode(params)
+    """`url` with `params` added to its query string (preserving any existing query parameters and fragment)."""
+    parts = urlsplit(url)
+    existing = parse_qsl(parts.query, keep_blank_values=True)
+    query = urlencode([*existing, *params.items()])
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, query, parts.fragment))
 
 
 def _text(value: Any) -> str | None:
@@ -116,10 +118,18 @@ class OidcIdentityProvider:
         metadata = self._documents.metadata()
         tokens = exchange_code(self._http, metadata, self._credentials, code, redirect_uri, code_verifier)
         id_token = tokens["id_token"]
+        raw_access_token = tokens.get("access_token")
+        access_token = raw_access_token if isinstance(raw_access_token, str) else None
         claims = verify_id_token(
-            id_token, self._documents.signing_key, self._issuer, self._credentials.client_id, nonce, self._clock.now()
+            id_token,
+            self._documents.signing_key,
+            self._issuer,
+            self._credentials.client_id,
+            nonce,
+            self._clock.now(),
+            access_token=access_token,
         )
-        profile = profile_claims(self._http, metadata, claims, tokens.get("access_token"), self._role_claim)
+        profile = profile_claims(self._http, metadata, claims, access_token, self._role_claim)
         return VerifiedLogin(
             issuer=self._issuer,
             subject=claims["sub"],

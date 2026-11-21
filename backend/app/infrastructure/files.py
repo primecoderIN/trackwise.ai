@@ -5,6 +5,7 @@ by random keys, never by anything a user sent, and a key that isn't one of ours 
 so a request can't read or write outside the folder.
 """
 
+import os
 import re
 import uuid
 from pathlib import Path
@@ -27,12 +28,18 @@ class LocalFileStore:
         return self._root / key
 
     def save(self, data: bytes) -> str:
-        """Write `data` to a new file named by a random key, and return the key."""
+        """Atomically write `data` to a new file named by a random key, and return the key."""
         self._root.mkdir(parents=True, exist_ok=True)
         key = uuid.uuid4().hex
-        # "xb": fail rather than overwrite, should a key ever repeat.
-        with open(self._path(key), "xb") as file:
-            file.write(data)
+        target = self._path(key)
+        staging = self._root / f".tmp-{key}"
+        try:
+            with open(staging, "xb") as file:
+                file.write(data)
+            os.replace(staging, target)
+        except BaseException:
+            staging.unlink(missing_ok=True)
+            raise
         return key
 
     def read(self, key: str) -> bytes:
@@ -40,5 +47,7 @@ class LocalFileStore:
         return self._path(key).read_bytes()
 
     def delete(self, key: str) -> None:
-        """Remove the file, if it's there."""
-        self._path(key).unlink(missing_ok=True)
+        """Remove the file, if it's there (a malformed or missing key is a no-op, per FileStore)."""
+        if not KEY_PATTERN.fullmatch(key):
+            return
+        (self._root / key).unlink(missing_ok=True)

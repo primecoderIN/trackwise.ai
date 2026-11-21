@@ -110,7 +110,8 @@ export function A2uiChoicePicker({ node, ctx }: InputProps) {
   const options = Array.isArray(node.options) ? node.options.filter(isOption) : []
   // A ChoicePicker's value is a list of strings even for a single choice (the spec's rule): ["Food"].
   const current = resolve(node.value, ctx.surface.data)
-  const selected = Array.isArray(current) && typeof current[0] === "string" ? current[0] : ""
+  const rawSelected = Array.isArray(current) && typeof current[0] === "string" ? current[0] : ""
+  const selected = options.some((option) => option.value === rawSelected) ? rawSelected : ""
 
   return (
     <Field id={id} label={textOf(node.label, ctx.surface.data)}>
@@ -165,7 +166,14 @@ function DatePicker({ node, ctx }: InputProps) {
     <Field id={id} label={textOf(node.label, ctx.surface.data)}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button id={id} variant="outline" size="sm" className="justify-start font-normal" disabled={!editable}>
+          <Button
+            type="button"
+            id={id}
+            variant="outline"
+            size="sm"
+            className="justify-start font-normal"
+            disabled={!editable}
+          >
             <CalendarIcon />
             {day ? formatDate(day) : t("cards.pickDate")}
           </Button>

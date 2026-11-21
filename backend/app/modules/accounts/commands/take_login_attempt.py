@@ -5,9 +5,11 @@ provider sends the browser back; module.py registers the handler.
 """
 
 from pydantic import Field
-from sqlmodel import select
+from sqlalchemy import delete
+from sqlmodel import col, select
 
 from app.core.cqrs import Command, Context
+from app.core.sql import rows_affected
 from app.modules.accounts.models import LoginAttemptView
 from app.modules.accounts.persistence.repository import forget_old_attempts
 from app.modules.accounts.persistence.tables import LoginAttempt
@@ -26,11 +28,12 @@ class TakeLoginAttempt(Command[LoginAttemptView | None]):
 
 
 def take_login_attempt(ctx: Context, command: TakeLoginAttempt) -> LoginAttemptView | None:
-    """Return the attempt and delete it, in the same transaction. Expired attempts are forgotten first."""
+    """Return the attempt and delete it atomically in the same transaction. Expired attempts are forgotten first."""
     forget_old_attempts(ctx)
     attempt = ctx.session.exec(select(LoginAttempt).where(LoginAttempt.key_hash == command.key_hash)).first()
-    if attempt is None:
+    if attempt is None or attempt.id is None:
         return None
     view = LoginAttemptView.model_validate(attempt)
-    ctx.session.delete(attempt)
+    if rows_affected(ctx.session, delete(LoginAttempt).where(col(LoginAttempt.id) == attempt.id)) != 1:
+        return None
     return view

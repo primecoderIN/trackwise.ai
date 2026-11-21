@@ -28,16 +28,25 @@ export function CreateTokenDialog() {
   const [token, setToken] = useState<string | null>(null)
   const create = useCreateAccessToken()
 
-  function handleOpenChange(next: boolean) {
-    setOpen(next)
-    if (next) return
+  function close() {
+    setOpen(false)
     setDraft(BLANK_TOKEN)
     setToken(null)
     create.reset()
   }
 
+  function handleOpenChange(next: boolean) {
+    if (next) {
+      setOpen(true)
+      return
+    }
+    if (token !== null || create.isPending) return
+    close()
+  }
+
   function handleSubmit(event: FormEvent) {
     event.preventDefault() // stop the browser's default form submit, which would reload the page
+    if (create.isPending || !draft.name.trim()) return
     create.mutate(
       { ...draft, name: draft.name.trim() },
       // e.g. "You can have at most 10 access tokens", straight from the backend's rules. The dialog stays open.
@@ -52,9 +61,14 @@ export function CreateTokenDialog() {
           <Plus /> {t("tokens.create")}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md" onInteractOutside={(event) => token && event.preventDefault()}>
+      <DialogContent
+        className="sm:max-w-md"
+        showCloseButton={!token && !create.isPending}
+        onInteractOutside={(event) => (token !== null || create.isPending) && event.preventDefault()}
+        onEscapeKeyDown={(event) => (token !== null || create.isPending) && event.preventDefault()}
+      >
         {token ? (
-          <TokenCreated token={token} onDone={() => handleOpenChange(false)} />
+          <TokenCreated token={token} onDone={close} />
         ) : (
           <TokenFields draft={draft} onChange={setDraft} onSubmit={handleSubmit} creating={create.isPending} />
         )}

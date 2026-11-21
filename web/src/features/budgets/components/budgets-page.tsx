@@ -15,7 +15,7 @@ import { Button } from "@/shared/ui/button"
 import { Skeleton } from "@/shared/ui/skeleton"
 
 import { useTexts } from "../i18n"
-import { shiftMonth } from "../month"
+import { MAX_MONTH, MIN_MONTH, shiftMonth } from "../month"
 import { useBudgetStatus } from "../queries"
 import { CategoryBudgets } from "./category-budgets"
 import { OverallCard } from "./overall-card"
@@ -29,7 +29,7 @@ export function BudgetsPage() {
   const [month, setMonth] = useState(currentMonth)
   const status = useBudgetStatus(month)
   const retry = () => void status.refetch()
-  const step = (offset: number) => () => setMonth(shiftMonth(month, offset))
+  const step = (offset: number) => () => setMonth((current) => shiftMonth(current, offset))
 
   return (
     <div className="flex flex-col gap-4">
@@ -39,13 +39,25 @@ export function BudgetsPage() {
           <p className="text-sm text-muted-foreground">{t("page.description", { currency: DEFAULT_CURRENCY })}</p>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" aria-label={t("page.previousMonth")} onClick={step(-1)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={t("page.previousMonth")}
+            onClick={step(-1)}
+            disabled={month <= MIN_MONTH}
+          >
             <ChevronLeft />
           </Button>
           <span aria-live="polite" className="min-w-32 text-center text-sm font-medium">
             {formatMonth(month)}
           </span>
-          <Button variant="ghost" size="icon" aria-label={t("page.nextMonth")} onClick={step(1)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={t("page.nextMonth")}
+            onClick={step(1)}
+            disabled={month >= MAX_MONTH}
+          >
             <ChevronRight />
           </Button>
         </div>

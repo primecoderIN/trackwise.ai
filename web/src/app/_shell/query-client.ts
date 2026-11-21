@@ -11,7 +11,7 @@ import { authKeys, isSignedOut } from "@/features/auth"
 import { budgetKeys } from "@/features/budgets"
 import { dashboardKeys } from "@/features/dashboard"
 import { expenseKeys } from "@/features/expenses"
-import { ApiError } from "@/shared/api/http"
+import { ApiError, setUnauthorizedHandler } from "@/shared/api/http"
 import { DATA_SCOPES, type DataScope } from "@/shared/config/data-scopes"
 import { reportUnexpected } from "@/shared/lib/errors"
 
@@ -89,3 +89,13 @@ export const queryClient: QueryClient = new QueryClient({
     },
   },
 })
+
+// Any 401 from openapi-fetch or the assistant stream re-checks who is signed in, so AuthGate redirects immediately.
+setUnauthorizedHandler(() => {
+  void queryClient.invalidateQueries({ queryKey: authKeys.user })
+})
+
+/** When the assistant changes expenses, invalidate every expense-dependent query. */
+export function refreshAfterAssistant(): void {
+  refreshAfter(queryClient, DATA_SCOPES.expenses)
+}

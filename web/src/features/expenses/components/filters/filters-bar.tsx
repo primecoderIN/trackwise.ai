@@ -43,6 +43,7 @@ export function FiltersBar({ filters, onChange }: FiltersBarProps) {
           <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             id="filter-search"
+            maxLength={100}
             placeholder={t("filters.searchPlaceholder")}
             className="w-56 pl-8"
             value={filters.search ?? ""}
@@ -68,7 +69,11 @@ export function FiltersBar({ filters, onChange }: FiltersBarProps) {
           className="w-40"
           value={filters.start_date ?? ""}
           max={filters.end_date ?? undefined}
-          onChange={(event) => set({ start_date: event.target.value || undefined })}
+          onChange={(event) => {
+            const nextStart = event.target.value || undefined
+            const end = filters.end_date && nextStart && nextStart > filters.end_date ? undefined : filters.end_date
+            set({ start_date: nextStart, end_date: end })
+          }}
         />
       </LabeledField>
 
@@ -79,7 +84,11 @@ export function FiltersBar({ filters, onChange }: FiltersBarProps) {
           className="w-40"
           value={filters.end_date ?? ""}
           min={filters.start_date ?? undefined}
-          onChange={(event) => set({ end_date: event.target.value || undefined })}
+          onChange={(event) => {
+            const nextEnd = event.target.value || undefined
+            const start = filters.start_date && nextEnd && nextEnd < filters.start_date ? undefined : filters.start_date
+            set({ start_date: start, end_date: nextEnd })
+          }}
         />
       </LabeledField>
 

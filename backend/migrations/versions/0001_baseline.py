@@ -12,7 +12,7 @@ Create Date: 2026-11-13
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from alembic import op
+from alembic import context, op
 
 revision: str = "0001"
 down_revision: str | Sequence[str] | None = None
@@ -21,7 +21,9 @@ depends_on: str | Sequence[str] | None = None
 
 
 def _existing() -> set[str]:
-    """The names of the tables the database already has."""
+    """The names of the tables the database already has (empty in offline --sql mode)."""
+    if context.is_offline_mode():
+        return set()
     return set(sa.inspect(op.get_bind()).get_table_names())
 
 

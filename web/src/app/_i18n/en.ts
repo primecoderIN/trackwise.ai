@@ -15,6 +15,7 @@ const en = {
   notFound: {
     title: "Page not found",
     description: "There's no page at this address.",
+    backHome: "Go to Dashboard",
   },
   assistant: {
     open: "Assistant",

@@ -7,7 +7,6 @@ handler applies the business rules (domain/rules.py, domain/base_amount.py) to w
 loads through persistence/repository.py. The bus commits; the handler never does.
 """
 
-from datetime import date
 from typing import Self
 
 from pydantic import BaseModel, ConfigDict, model_validator
@@ -20,7 +19,7 @@ from app.modules.expenses.conversion.port import ExchangeRate
 from app.modules.expenses.domain.base_amount import base_amount_fields
 from app.modules.expenses.domain.rules import require_category_exists, require_positive_amount
 from app.modules.expenses.persistence import repository
-from app.modules.expenses.values import Amount, ExpenseId, Merchant, Note, PaymentMethod
+from app.modules.expenses.values import Amount, ExpenseId, Merchant, Note, PaymentMethod, SpentOnDate
 
 # The stored fields that decide the base amount: changing any of them converts the expense again (D204). The
 # handler sees the table's names, so the amount is amount_minor.
@@ -39,7 +38,7 @@ class ExpenseChanges(BaseModel):
     currency: CurrencyCode | None = None
     category_id: CategoryId | None = None
     merchant: Merchant | None = None
-    spent_on: date | None = None
+    spent_on: SpentOnDate | None = None
     payment_method: PaymentMethod | None = None
     # The one field that can be cleared: send "note": null to remove it.
     note: Note | None = None
@@ -86,10 +85,13 @@ def update_expense(ctx: Context, command: UpdateExpense) -> None:
         changes["amount_minor"] = rupees_to_paise(amount)
     if "category_id" in changes:
         require_category_exists(ctx, changes["category_id"])
+    reconvert = expense.base_amount_minor is None
     for field, value in changes.items():
+        if field in CONVERTED_BY and getattr(expense, field) != value:
+            reconvert = True
         setattr(expense, field, value)
-    # A new amount, currency or date means a new base amount (D204): worked out from what the expense is now.
-    if CONVERTED_BY.intersection(changes):
+    # A new amount, currency or date (or a legacy row without an INR amount) gets a new base amount (D204).
+    if reconvert:
         conversion = base_amount_fields(expense.amount_minor, expense.currency, expense.spent_on, command.rate)
         for field, value in conversion.items():
             setattr(expense, field, value)

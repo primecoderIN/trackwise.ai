@@ -2,7 +2,7 @@
 // 100 · 2 selected") and "Delete selected" while any row is ticked. Its texts (with each language's plural forms)
 // come from the feature's i18n namespace. Used by expenses-table.tsx.
 
-import { Trash2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react"
 
 import { Button } from "@/shared/ui/button"
 
@@ -16,6 +16,12 @@ interface ExpensesToolbarProps {
   total: number
   /** How many of them are loaded into the table (the API sends at most a page). */
   shown: number
+  /** The index of the first shown row (0-based, for paging). */
+  offset?: number
+  /** How many rows fit on one page. */
+  pageSize?: number
+  /** Called with the new offset when Previous or Next page is clicked. */
+  onOffsetChange?: (nextOffset: number) => void
   /** How many rows are ticked. */
   selected: number
   /** A delete is running: "Delete selected" waits, so the same rows can't be sent twice. */
@@ -25,26 +31,67 @@ interface ExpensesToolbarProps {
 }
 
 /**
- * The count line above the expenses table. It says how many match, adds "showing the newest N" when the table
- * holds fewer than that, and "N selected" while rows are ticked; "Delete selected" shows only then.
+ * The count line above the expenses table. It says how many match, adds "showing the newest N" (or "showing A–B" when
+ * paged) when the table holds fewer than that, and "N selected" while rows are ticked; "Delete selected" shows only
+ * then, and Previous / Next buttons appear when there is more than one page.
  */
-export function ExpensesToolbar({ total, shown, selected, deleting, onDeleteSelected }: ExpensesToolbarProps) {
+export function ExpensesToolbar({
+  total,
+  shown,
+  offset = 0,
+  pageSize = shown,
+  onOffsetChange,
+  selected,
+  deleting,
+  onDeleteSelected,
+}: ExpensesToolbarProps) {
   const { t } = useTexts()
+  const showingText =
+    offset > 0 && shown > 0
+      ? t("toolbar.showingRange", { from: offset + 1, to: offset + shown })
+      : total > shown
+        ? t("toolbar.showingNewest", { shown })
+        : null
   // Each part is a whole phrase of its own, so it reads right in every language whichever parts are shown.
   const parts = [
     t("toolbar.count", { count: total }),
-    total > shown ? t("toolbar.showingNewest", { shown }) : null,
+    showingText,
     selected > 0 ? t("toolbar.selected", { count: selected }) : null,
   ]
+  const hasPaging = onOffsetChange !== undefined && pageSize > 0 && (total > pageSize || offset > 0)
 
   return (
-    <div className="flex min-h-8 items-center justify-between gap-2 text-sm text-muted-foreground">
+    <div className="flex min-h-8 flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
       <span>{parts.filter((part) => part !== null).join(PART_SEPARATOR)}</span>
-      {selected > 0 && (
-        <Button size="sm" variant="destructive" disabled={deleting} onClick={onDeleteSelected}>
-          <Trash2 /> {t("toolbar.deleteSelected")}
-        </Button>
-      )}
+      <div className="flex items-center gap-2">
+        {selected > 0 && (
+          <Button size="sm" variant="destructive" disabled={deleting} onClick={onDeleteSelected}>
+            <Trash2 /> {t("toolbar.deleteSelected")}
+          </Button>
+        )}
+        {hasPaging && (
+          <div className="flex items-center gap-1">
+            <Button
+              size="icon-sm"
+              variant="outline"
+              aria-label={t("toolbar.previousPage")}
+              disabled={offset <= 0}
+              onClick={() => onOffsetChange(Math.max(0, offset - pageSize))}
+            >
+              <ChevronLeft />
+            </Button>
+            <Button
+              size="icon-sm"
+              variant="outline"
+              aria-label={t("toolbar.nextPage")}
+              disabled={offset + shown >= total}
+              onClick={() => onOffsetChange(offset + pageSize)}
+            >
+              <ChevronRight />
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

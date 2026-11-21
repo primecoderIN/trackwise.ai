@@ -27,6 +27,7 @@ CENTS = Decimal("0.01")
 ONE_DECIMAL = Decimal("0.1")
 BIGGEST = 5
 CURRENCY = "INR"
+MAX_STDIN_BYTES = 10 * 1024 * 1024
 
 
 def money(value: Decimal) -> str:
@@ -92,5 +93,23 @@ def compute(data: dict) -> dict:
     }
 
 
+def main() -> int:
+    """Read bounded JSON input from stdin, write the report figures to stdout, and never echo user data on failure."""
+    raw = sys.stdin.buffer.read(MAX_STDIN_BYTES + 1)
+    if len(raw) > MAX_STDIN_BYTES:
+        sys.stderr.write("compute_report: input exceeds maximum allowed size\n")
+        return 1
+    try:
+        payload = json.loads(raw.decode("utf-8"))
+        if not isinstance(payload, dict):
+            raise ValueError("input must be a JSON object")
+        result = compute(payload)
+    except Exception as exc:
+        sys.stderr.write(f"compute_report: invalid input ({type(exc).__name__})\n")
+        return 1
+    json.dump(result, sys.stdout)
+    return 0
+
+
 if __name__ == "__main__":
-    json.dump(compute(json.load(sys.stdin)), sys.stdout)
+    raise SystemExit(main())

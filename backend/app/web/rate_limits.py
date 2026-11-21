@@ -1,24 +1,29 @@
-"""The rate limit on the routes that call the language model (web layer, D194): POST /agent, /chat, /parse and
-/receipts/{id}/extraction each spend model quota, so each person gets a minute's and a day's allowance.
+"""Rate limits on expensive and unauthenticated routes (web layer, D194).
 
-Used by those routes' HTTP adapters (assistant/api/routes.py, receipts/api.py) as a dependency, after the session
-check: the count is the signed-in person's. The limiter itself (core/rate_limit.py) is built by the composition root
-from the settings and put on `app.state` by main.py. A refusal is a 429 problem with Retry-After, in the request's
-language.
+- Model-backed routes (`POST /agent`, `/chat`, `/parse`): per-person minute and day allowances (`model_quota`).
+  `/agent` consumes quota via `consume_model_quota` only after input validation and only when a run will call a model
+  (Approve/Cancel clicks never burn quota or get blocked by 429).
+- Expensive non-model routes (`GET /reports/monthly/*` spawns a child Python process; `POST /receipts` writes files):
+  per-person allowances (`reports_quota`, `receipts_quota`).
+- Unauthenticated sign-in routes (`GET /auth/login`, `POST /auth/backchannel-logout`): per-client-IP allowance
+  (`auth_quota`) so anonymous floods cannot evict in-flight login attempts or starve JWKS refreshes.
+
+The limiters (core/rate_limit.py) are built by the composition root and attached to `app.state` by main.py. A refusal
+is a 429 problem with Retry-After, in the request's language.
 """
 
 from fastapi import Depends, Request
 
 from app.core.errors import TooManyRequestsError
 from app.core.i18n import translatable
+from app.core.identity import Principal
 from app.core.rate_limit import RateLimiter, Window
 from app.web.auth import CurrentUserDep
 from app.web.i18n import WebText
 
 
-def require_model_quota(request: Request, principal: CurrentUserDep) -> None:
-    """Count one model-backed request for the signed-in person. Raises TooManyRequestsError (429, with how long to
-    wait) if their minute's or day's allowance is spent; nothing is counted then."""
+def consume_model_quota(request: Request, principal: Principal) -> None:
+    """Count one model-backed request for `principal`. Raises TooManyRequestsError (429) when spent."""
     limiter: RateLimiter = request.app.state.model_quota
     refusal = limiter.take(principal.user_id)
     if refusal is None:
@@ -27,5 +32,43 @@ def require_model_quota(request: Request, principal: CurrentUserDep) -> None:
     raise TooManyRequestsError(translatable(reason), refusal.retry_after_seconds)
 
 
-# For a route's `dependencies=[MODEL_QUOTA]`: the route runs only if the person's allowance isn't spent.
+def require_model_quota(request: Request, principal: CurrentUserDep) -> None:
+    """Route dependency for `/parse` and `/chat`: counts one model request for the signed-in person."""
+    consume_model_quota(request, principal)
+
+
+def _enforce_user_limit(limiter: RateLimiter | None, user_id: int) -> None:
+    """Count one request for `user_id` against `limiter`, raising 429 with Retry-After if exceeded."""
+    if limiter is None:
+        return
+    refusal = limiter.take(user_id)
+    if refusal is not None:
+        raise TooManyRequestsError(translatable(WebText.RATE_LIMITED), refusal.retry_after_seconds)
+
+
+def require_report_quota(request: Request, principal: CurrentUserDep) -> None:
+    """Per-person rate limit on monthly report generation (which spawns a Python child process)."""
+    _enforce_user_limit(getattr(request.app.state, "report_quota", None), principal.user_id)
+
+
+def require_receipt_quota(request: Request, principal: CurrentUserDep) -> None:
+    """Per-person rate limit on receipt file uploads."""
+    _enforce_user_limit(getattr(request.app.state, "receipt_quota", None), principal.user_id)
+
+
+def require_auth_quota(request: Request) -> None:
+    """Per-client-IP rate limit on unauthenticated auth endpoints (/auth/login, /auth/backchannel-logout)."""
+    limiter: RateLimiter | None = getattr(request.app.state, "auth_quota", None)
+    if limiter is None:
+        return
+    client_key = request.client.host if request.client and request.client.host else "unknown"
+    refusal = limiter.take(client_key)
+    if refusal is not None:
+        raise TooManyRequestsError(translatable(WebText.RATE_LIMITED), refusal.retry_after_seconds)
+
+
+# Route dependencies: `dependencies=[MODEL_QUOTA]` / `REPORTS_QUOTA` / `RECEIPTS_QUOTA` / `AUTH_QUOTA`.
 MODEL_QUOTA = Depends(require_model_quota)
+REPORTS_QUOTA = Depends(require_report_quota)
+RECEIPTS_QUOTA = Depends(require_receipt_quota)
+AUTH_QUOTA = Depends(require_auth_quota)

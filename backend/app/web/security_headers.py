@@ -26,11 +26,19 @@ ALWAYS = (
     ("X-Frame-Options", "DENY"),
     ("Referrer-Policy", "same-origin"),
 )
-# On responses that carry a person's data: nothing in them may run, and (below) no cache may keep them.
-NOTHING_RUNS = ("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'")
+# On responses that carry a person's data: nothing in them may run, no other origin may embed them, and no cache keeps them.
+PRIVATE_HEADERS = (
+    ("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'"),
+    ("Cross-Origin-Resource-Policy", "same-origin"),
+)
 CACHE_CONTROL = "Cache-Control"
 NO_STORE = "no-store"
 RESPONSE_START = "http.response.start"
+
+
+def _matches_prefix(path: str, prefixes: tuple[str, ...]) -> bool:
+    """Whether `path` equals one of `prefixes` or lives under it (boundary-safe, so /api/v10 doesn't match /api/v1)."""
+    return any(path == prefix or path.startswith(prefix + "/") for prefix in prefixes)
 
 
 def _never_stored(headers: MutableHeaders) -> None:
@@ -50,7 +58,7 @@ class SecurityHeadersMiddleware:
         """Wrap `app`. `data_prefixes` are the paths whose answers are a person's data (the API's and MCP's); `https`
         says the app is served over HTTPS (PUBLIC_URL), so HSTS is sent."""
         self._app = app
-        self._data_prefixes = data_prefixes
+        self._data_prefixes = tuple(prefix.rstrip("/") for prefix in data_prefixes)
         self._always = (*ALWAYS, HSTS) if https else ALWAYS
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
@@ -58,7 +66,7 @@ class SecurityHeadersMiddleware:
         if scope["type"] != "http":
             await self._app(scope, receive, send)
             return
-        private = scope.get("path", "").startswith(self._data_prefixes)
+        private = _matches_prefix(scope.get("path", ""), self._data_prefixes)
 
         async def send_with_headers(message: Message) -> None:
             """Forward each message; the one that starts the response gets the headers first."""
@@ -67,7 +75,8 @@ class SecurityHeadersMiddleware:
                 for name, value in self._always:
                     headers.setdefault(name, value)
                 if private:
-                    headers.setdefault(*NOTHING_RUNS)
+                    for name, value in PRIVATE_HEADERS:
+                        headers.setdefault(name, value)
                     _never_stored(headers)
             await send(message)
 

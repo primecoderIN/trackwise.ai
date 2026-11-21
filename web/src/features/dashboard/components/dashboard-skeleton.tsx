@@ -24,6 +24,15 @@ export function DashboardSkeleton() {
           </Card>
         ))}
       </div>
+      <Card>
+        <CardHeader className="gap-2">
+          <Skeleton className="h-5 w-24" />
+          <Skeleton className="h-4 w-48" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-10 w-full" />
+        </CardContent>
+      </Card>
       <div className="grid gap-4 lg:grid-cols-2">
         {[0, 1].map((i) => (
           <Card key={i}>

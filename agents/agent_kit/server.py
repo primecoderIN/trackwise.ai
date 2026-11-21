@@ -5,7 +5,10 @@ request limit; this wires the SDK's request handler (with the kit's task store),
 and the gate in front of them, the same way for every agent (D202). serve() runs it on the kit's host.
 """
 
+import inspect
 import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 import uvicorn
 from a2a.server.agent_execution import AgentExecutor
@@ -38,9 +41,24 @@ def build_agent_app(card: AgentCard, executor: AgentExecutor, key: SecretStr, ma
         open_paths=frozenset({AGENT_CARD_WELL_KNOWN_PATH}),
         max_request_bytes=max_request_bytes,
     )
-    return Starlette(
-        routes=[*create_agent_card_routes(card), *create_jsonrpc_routes(handler, RPC_PATH)], middleware=[gate]
+
+    @asynccontextmanager
+    async def lifespan(app: Starlette) -> AsyncIterator[None]:
+        """Clean up the A2A request handler when the standalone server stops."""
+        try:
+            yield
+        finally:
+            close = getattr(handler, "aclose", None)
+            if inspect.iscoroutinefunction(close):
+                await close()
+
+    app = Starlette(
+        routes=[*create_agent_card_routes(card), *create_jsonrpc_routes(handler, RPC_PATH)],
+        middleware=[gate],
+        lifespan=lifespan,
     )
+    app.state.a2a_handler = handler
+    return app
 
 
 def start_logging(agent_logger: str, level: int = logging.INFO) -> None:

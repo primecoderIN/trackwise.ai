@@ -3,7 +3,7 @@
 // ?error= code. Part of the auth
 // feature; used by the session check and the sign-in page. Every name comes from the generated contract (AUTH).
 
-import { AUTH } from "@/shared/api/contracts.gen"
+import { API_PREFIX, AUTH } from "@/shared/api/contracts.gen"
 import type { paths } from "@/shared/api/schema.gen"
 import { ROUTES } from "@/shared/config/routes"
 
@@ -11,6 +11,16 @@ import type { FailureText } from "./i18n"
 
 // Checked against the API's paths, like every other call (a typo is a compile error).
 const LOGIN_PATH = "/api/v1/auth/login" satisfies keyof paths
+// Paths afterSignIn never sends a person back to (sign-in itself, the API, or the MCP endpoint).
+const BLOCKED_RETURN_PREFIXES = [ROUTES.signIn, API_PREFIX, "/mcp"] as const
+
+function hasControlChars(text: string): boolean {
+  for (let i = 0; i < text.length; i++) {
+    const code = text.charCodeAt(i)
+    if (code < 32 || code === 127) return true
+  }
+  return false
+}
 // The text for an ?error= code this app doesn't know (a newer server's).
 const UNKNOWN_FAILURE: FailureText = "unknown"
 // The contract's failure keys (cancelled, expired, ...). Object.keys can't type them, but they're the keys of a
@@ -47,22 +57,31 @@ export function currentPath(location: Pick<Location, "pathname" | "search" | "ha
  * scheme like javascript:, is refused.
  */
 export function ownSitePath(url: string, origin: string): string | null {
+  if (!url || url.startsWith("//") || url.includes("\\") || hasControlChars(url)) return null
+  if (!url.startsWith("/") && !url.startsWith(origin)) return null
   try {
     const target = new URL(url, origin)
-    return target.origin === origin ? `${target.pathname}${target.search}` : null
+    if (target.origin !== origin || !target.pathname.startsWith("/") || target.pathname.startsWith("//")) return null
+    return `${target.pathname}${target.search}${target.hash}`
   } catch {
     return null
   }
 }
 
+function isBlockedReturnPath(pathname: string): boolean {
+  return BLOCKED_RETURN_PREFIXES.some((blocked) => pathname === blocked || pathname.startsWith(`${blocked}/`))
+}
+
 /**
  * Where the sign-in page sends someone who is already signed in: the page they were heading for (`returnTo`, from the
- * address), if it's on this site and isn't the sign-in page itself; otherwise the start page. `returnTo` is whatever
- * the address says, so it's never followed as it is: only its path on this site is used.
+ * address), if it's on this site and isn't the sign-in page, the API or MCP; otherwise the start page. `returnTo` is
+ * whatever the address says, so it's never followed as it is: only its path on this site is used.
  */
 export function afterSignIn(returnTo: string | null, origin: string): string {
   const path = returnTo ? ownSitePath(returnTo, origin) : null
-  return path && !path.startsWith(ROUTES.signIn) ? path : ROUTES.dashboard
+  if (!path) return ROUTES.dashboard
+  const pathname = new URL(path, origin).pathname
+  return isBlockedReturnPath(pathname) ? ROUTES.dashboard : path
 }
 
 /**

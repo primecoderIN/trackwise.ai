@@ -3,7 +3,7 @@
 // into the conversation. The transport (`runAgent`) is passed in, so the hook can be driven without a network.
 
 import { EventType } from "@ag-ui/core"
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import { newId } from "@/shared/lib/ids"
 
@@ -32,15 +32,18 @@ export function useAgentRun(runAgentFn: RunAgent) {
 
   const run = useCallback(
     async (prompt: AgentPrompt, handlers: RunHandlers): Promise<boolean> => {
+      if (controller.current) return false
+      const abort = new AbortController()
+      controller.current = abort
       setSending(true)
       // With AG-UI the client names the thread; the server starts it when the first message arrives.
       threadId.current ??= newId()
-      const abort = new AbortController()
-      controller.current = abort
       const onEvent = (event: AgentEvent) => {
         // A tool changed expenses: remember the new version, so the next run sends it.
         if (event.type === EventType.STATE_SNAPSHOT) {
-          dataVersion.current = dataVersionOf(event.snapshot) ?? dataVersion.current
+          const nextVersion = dataVersionOf(event.snapshot)
+          if (nextVersion === undefined || nextVersion <= dataVersion.current) return
+          dataVersion.current = nextVersion
         }
         handlers.onEvent(event)
       }
@@ -51,12 +54,17 @@ export function useAgentRun(runAgentFn: RunAgent) {
         handlers.onFailed(error)
         return false
       } finally {
-        controller.current = null
-        setSending(false)
+        if (controller.current === abort) {
+          controller.current = null
+          setSending(false)
+        }
       }
     },
     [runAgentFn],
   )
+
+  // Abort any in-flight stream if the provider unmounts (e.g. on sign-out).
+  useEffect(() => () => controller.current?.abort(), [])
 
   // Stop the run in progress: the connection closes, and what already arrived stays.
   const stop = useCallback(() => {

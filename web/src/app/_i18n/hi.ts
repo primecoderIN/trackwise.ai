@@ -18,6 +18,7 @@ const hi: Translation<typeof en> = {
   notFound: {
     title: "पेज नहीं मिला",
     description: "इस पते पर कोई पेज नहीं है।",
+    backHome: "डैशबोर्ड पर जाएँ",
   },
   assistant: {
     open: "सहायक",

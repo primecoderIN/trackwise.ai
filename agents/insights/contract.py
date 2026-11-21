@@ -11,11 +11,12 @@ and payment method; never a note, an id or anything about the person. Amounts tr
 """
 
 from datetime import date
+from decimal import Decimal
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 
-from app.core.months import YearMonth
+from app.core.months import MAX_DATE, MIN_DATE, YearMonth
 
 SKILL_ID = "analyze_spending"
 ARTIFACT_NAME = "insights"
@@ -44,6 +45,22 @@ class ExpenseRow(BaseModel):
     merchant: Text
     payment_method: Text
 
+    @field_validator("spent_on")
+    @classmethod
+    def _supported_date(cls, value: date) -> date:
+        """Keep expense dates within SpendWise's supported calendar range (1900-2099)."""
+        if not (MIN_DATE <= value <= MAX_DATE):
+            raise ValueError("spent_on must be between 1900-01-01 and 2099-12-31")
+        return value
+
+    @field_validator("amount")
+    @classmethod
+    def _positive_amount(cls, value: str) -> str:
+        """Require a positive amount (> 0)."""
+        if Decimal(value) <= 0:
+            raise ValueError("amount must be greater than zero")
+        return value
+
 
 # The request's data part. Unknown fields are refused, so a client can't believe it sent something that's ignored.
 class InsightsRequest(BaseModel):
@@ -57,6 +74,14 @@ class InsightsRequest(BaseModel):
     question: Annotated[str, StringConstraints(max_length=MAX_QUESTION_LENGTH)] | None = None
     expenses: list[ExpenseRow] = Field(max_length=MAX_EXPENSES)
 
+    @field_validator("today")
+    @classmethod
+    def _supported_today(cls, value: date) -> date:
+        """Keep `today` within SpendWise's supported calendar range (1900-2099)."""
+        if not (MIN_DATE <= value <= MAX_DATE):
+            raise ValueError("today must be between 1900-01-01 and 2099-12-31")
+        return value
+
 
 # A resumption's data part: the month the person chose.
 class MonthReply(BaseModel):
@@ -67,6 +92,8 @@ class MonthReply(BaseModel):
 
 # One category's spending this month against the month before.
 class CategoryTrend(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
     category: str
     this_month: str
     previous_month: str
@@ -76,6 +103,8 @@ class CategoryTrend(BaseModel):
 
 # One expense well above what the category usually costs.
 class UnusualSpend(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
     spent_on: date
     merchant: str
     category: str
@@ -87,6 +116,8 @@ class UnusualSpend(BaseModel):
 
 # Where the month is heading: the spending so far, spread over the days gone, carried to the month's end.
 class Forecast(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
     spent_so_far: str
     days_elapsed: int
     days_in_month: int
@@ -97,6 +128,8 @@ class Forecast(BaseModel):
 # The `insights` artifact's data. Every number is worked out by code, from the expenses sent; only `tips` is written by
 # the model, from those numbers.
 class Insights(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
     month: str
     currency: str
     total: str

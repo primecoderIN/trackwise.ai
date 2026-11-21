@@ -7,9 +7,10 @@ module's tables for the migrations (migration 0009).
 
 from datetime import datetime
 
-from sqlalchemy import DateTime
+from sqlalchemy import Column, DateTime
 from sqlmodel import Field, SQLModel
 
+from app.core.sql import BigInt
 from app.modules.assistant.delegation.models import AGENT_NAME_LENGTH, SKILL_ID_LENGTH, TASK_ID_LENGTH
 from app.modules.conversations import THREAD_ID_MAX_LENGTH
 
@@ -24,7 +25,7 @@ class PendingDelegation(SQLModel, table=True):
 
     # Whose conversation it is (core.ids.UserId, no foreign key), and which: together, the key. Only the person's
     # next message in that conversation answers it (D190, D206).
-    owner_id: int = Field(primary_key=True)
+    owner_id: int = Field(sa_column=Column(BigInt, primary_key=True))
     thread_id: str = Field(primary_key=True, max_length=THREAD_ID_MAX_LENGTH)
     # Which agent and skill (the app's names), and the task to resume (the agent's ids).
     agent: str = Field(max_length=AGENT_NAME_LENGTH)

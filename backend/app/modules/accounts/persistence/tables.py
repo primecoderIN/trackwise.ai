@@ -10,6 +10,7 @@ from datetime import datetime
 from sqlalchemy import DateTime, Text, UniqueConstraint
 from sqlmodel import Field, SQLModel
 
+from app.core.sql import BigInt
 from app.modules.accounts.values import (
     HANDLE_LENGTH,
     KEY_HASH_LENGTH,
@@ -34,7 +35,7 @@ class AppUser(SQLModel, table=True):
     __tablename__ = "app_user"  # pyright: ignore[reportAssignmentType]  (SQLModel declares it as declared_attr)
 
     # SpendWise's own id for the person: what everything else points at, whatever provider they sign in with.
-    id: int | None = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, sa_type=BigInt, primary_key=True)
     # The profile as the provider last said, refreshed at each sign-in. Shown, never used to find the person.
     name: str | None = Field(default=None, max_length=MAX_NAME_LENGTH)
     email: str | None = Field(default=None, max_length=MAX_EMAIL_LENGTH)
@@ -53,8 +54,8 @@ class UserIdentity(SQLModel, table=True):
     # One person per identity: the same provider account can never become two users.
     __table_args__ = (UniqueConstraint("issuer", "subject"),)
 
-    id: int | None = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="app_user.id", index=True)
+    id: int | None = Field(default=None, sa_type=BigInt, primary_key=True)
+    user_id: int = Field(sa_type=BigInt, foreign_key="app_user.id", index=True)
     issuer: str = Field(max_length=MAX_ISSUER_LENGTH)
     subject: str = Field(max_length=MAX_SUBJECT_LENGTH)
     # The email the provider gave when this identity was first seen: a record, never a way to match people.
@@ -67,12 +68,12 @@ class UserSession(SQLModel, table=True):
 
     __tablename__ = "user_session"  # pyright: ignore[reportAssignmentType]  (SQLModel declares it as declared_attr)
 
-    id: int | None = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, sa_type=BigInt, primary_key=True)
     # SHA-256 of the cookie's key: a copy of the database can't be turned back into a working cookie.
     key_hash: str = Field(max_length=KEY_HASH_LENGTH, unique=True)
     # A random public name for the session: the sign-out link carries it, so another site can't sign anyone out.
     handle: str = Field(max_length=HANDLE_LENGTH, unique=True)
-    user_id: int = Field(foreign_key="app_user.id", index=True)
+    user_id: int = Field(sa_type=BigInt, foreign_key="app_user.id", index=True)
     # The provider it was signed in with: after a switch of provider, its sessions are no longer accepted.
     issuer: str = Field(max_length=MAX_ISSUER_LENGTH)
     # The provider's own session (OIDC `sid`), to end this one when the provider says that one ended.
@@ -97,7 +98,7 @@ class LoginAttempt(SQLModel, table=True):
 
     __tablename__ = "login_attempt"  # pyright: ignore[reportAssignmentType]  (SQLModel declares it as declared_attr)
 
-    id: int | None = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, sa_type=BigInt, primary_key=True)
     # SHA-256 of the short-lived login cookie's key: the attempt only completes in the browser that started it.
     key_hash: str = Field(max_length=KEY_HASH_LENGTH, unique=True)
     state: str = Field(max_length=MAX_STATE_LENGTH)
@@ -113,8 +114,8 @@ class AccessToken(SQLModel, table=True):
 
     __tablename__ = "access_token"  # pyright: ignore[reportAssignmentType]  (SQLModel declares it as declared_attr)
 
-    id: int | None = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="app_user.id", index=True)
+    id: int | None = Field(default=None, sa_type=BigInt, primary_key=True)
+    user_id: int = Field(sa_type=BigInt, foreign_key="app_user.id", index=True)
     # What its owner called it ("Claude Desktop"), to tell tokens apart.
     name: str = Field(max_length=MAX_TOKEN_NAME_LENGTH)
     # SHA-256 of the token: the token itself is shown once, when it's made, and never stored.

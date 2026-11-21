@@ -4,6 +4,8 @@ A vertical slice of the approvals: the command and its handler. The Assistant us
 sends it when Approve or Cancel arrives; module.py registers take_approval on the bus.
 """
 
+from sqlmodel import col, select
+
 from app.core.cqrs import Command, Context
 from app.core.ids import UserId
 from app.modules.assistant.approvals.models import ApprovalId, ExpenseSnapshot, PendingCard
@@ -36,9 +38,16 @@ def take_approval(ctx: Context, command: TakeApproval) -> PendingCard | None:
     """
     # Expired cards go first, so a card past its TTL_MINUTES is simply not found.
     forget_expired(ctx)
-    pending = ctx.session.get(PendingApproval, command.approval_id)
-    # Another person's card, or another conversation's, is treated as unknown, and left alone (D190).
-    if pending is None or pending.owner_id != command.owner_id or pending.thread_id != command.thread_id:
+    # The owner and thread in the same statement as the id: another person's card, or another conversation's, is
+    # treated as unknown and left alone (D190).
+    pending = ctx.session.exec(
+        select(PendingApproval).where(
+            col(PendingApproval.approval_id) == command.approval_id,
+            col(PendingApproval.owner_id) == command.owner_id,
+            col(PendingApproval.thread_id) == command.thread_id,
+        )
+    ).first()
+    if pending is None:
         return None
     ctx.session.delete(pending)
     return PendingCard(expense=ExpenseSnapshot.model_validate(pending.expense), created_at=pending.created_at)

@@ -5,7 +5,7 @@
 // from the feature's i18n namespace. Used by the Expenses page.
 
 import { flexRender, useTable, type Row, type RowSelectionState } from "@tanstack/react-table"
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 
 import { useCategoryName } from "@/features/categories"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table"
@@ -27,6 +27,12 @@ interface ExpensesTableProps {
   loading: boolean
   /** Asks the page to confirm and delete these expenses (one row, or all selected rows). */
   onDelete: (expenses: Expense[]) => void
+  /** The 0-based offset of the current page. */
+  offset?: number
+  /** The maximum number of rows per page. */
+  pageSize?: number
+  /** Moves to another page offset. */
+  onOffsetChange?: (nextOffset: number) => void
 }
 
 // Which rows are ticked, as { "12": true, "15": true }. Kept here (not only inside the table) so the table
@@ -49,15 +55,35 @@ function useSelectionOf(expenses: Expense[]) {
  * within the rows already loaded. The row being edited is drawn as an EditRow. While a delete runs, every
  * delete button is disabled.
  */
-export function ExpensesTable({ expenses, total, loading, onDelete }: ExpensesTableProps) {
+export function ExpensesTable({
+  expenses,
+  total,
+  loading,
+  onDelete,
+  offset,
+  pageSize,
+  onOffsetChange,
+}: ExpensesTableProps) {
   const { t } = useTexts()
   const editor = useExpenseEditor()
   // A delete is running (the confirmation dialog started it): its rows can't be deleted twice meanwhile.
   const deleting = useIsDeletingExpenses()
   const categoryName = useCategoryName()
   const [rowSelection, setRowSelection] = useSelectionOf(expenses)
-  // The same function on every render (React's state setter), so it never makes the columns rebuild.
-  const onEdit = editor.start
+  const startEdit = editor.start
+  // Opening a row for editing unticks it, so an edited row (whose checkbox is hidden) isn't bulk-deleted by mistake.
+  const onEdit = useCallback(
+    (id: number) => {
+      setRowSelection((prev) => {
+        if (!prev[String(id)]) return prev
+        const next = { ...prev }
+        delete next[String(id)]
+        return next
+      })
+      startEdit(id)
+    },
+    [setRowSelection, startEdit],
+  )
 
   // useMemo keeps the same columns between renders, rebuilding them only when their inputs change, as TanStack
   // recommends. onDelete is the page's state setter, so it's stable too; t changes only with the language, which
@@ -88,6 +114,9 @@ export function ExpensesTable({ expenses, total, loading, onDelete }: ExpensesTa
       <ExpensesToolbar
         total={total}
         shown={expenses.length}
+        offset={offset}
+        pageSize={pageSize}
+        onOffsetChange={onOffsetChange}
         selected={selected.length}
         deleting={deleting}
         onDeleteSelected={() => onDelete(selected)}

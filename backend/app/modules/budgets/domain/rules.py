@@ -4,7 +4,6 @@ The budgets module's domain rules: pure functions (no database, no clock of thei
 (queries/get_budget_status.py).
 """
 
-import calendar
 from dataclasses import dataclass
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
@@ -51,4 +50,4 @@ def month_elapsed_percent(month: YearMonth, today: date) -> Decimal:
         return Decimal(FULL_PERCENT)
     if YearMonth.of(today) < month:
         return Decimal(0)
-    return percent(today.day, calendar.monthrange(month.year, month.month)[1])
+    return percent(today.day, month.last_day().day)

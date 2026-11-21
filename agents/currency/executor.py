@@ -50,7 +50,11 @@ class CurrencyExecutor(AgentExecutor):
     async def execute(self, context: RequestContext, event_queue: EventQueue) -> None:
         """Convert the request's amount and publish the task's states and its artifact. Raises nothing for a bad
         request or a currency without a rate: they end the task REJECTED, with a reason."""
+        resuming = context.current_task is not None
         message, updater = await start_task(context, event_queue)
+        if resuming:
+            await reject(updater, WRONG_PARTS)
+            return
         try:
             request = _request_of(message)
             answer = self._convert(request)

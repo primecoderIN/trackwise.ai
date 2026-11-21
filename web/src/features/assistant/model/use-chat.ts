@@ -5,6 +5,7 @@
 import { EventType } from "@ag-ui/core"
 import { useCallback, useMemo, useRef, useState } from "react"
 
+import { ApiError } from "@/shared/api/http"
 import { reportUnexpected } from "@/shared/lib/errors"
 
 import type { A2uiAction } from "../a2ui/protocol"
@@ -13,6 +14,22 @@ import { MESSAGE_ROLES, type ChatMessage, type ChatState } from "./chat-types"
 import { mayHaveChanged, NEW_RUN, trackEvent } from "./run-progress"
 import * as transcript from "./transcript"
 import { useAgentRun } from "./use-agent-run"
+
+const CLIENT_ERROR_MIN = 400
+const CLIENT_ERROR_MAX = 500
+const REQUEST_TIMEOUT_STATUS = 408
+const TOO_MANY_REQUESTS_STATUS = 429
+
+// True only when the request was definitively rejected before any tool or side-effect could run.
+function isPreExecutionClientError(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    error.status >= CLIENT_ERROR_MIN &&
+    error.status < CLIENT_ERROR_MAX &&
+    error.status !== REQUEST_TIMEOUT_STATUS &&
+    error.status !== TOO_MANY_REQUESTS_STATUS
+  )
+}
 
 /**
  * Everything about the conversation. `onDataChanged` is called whenever the assistant may have changed
@@ -23,10 +40,11 @@ import { useAgentRun } from "./use-agent-run"
 export function useChat(onDataChanged: () => void, runAgentFn: RunAgent = runAgent): ChatState {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const nextId = useRef(0) // a counter for message ids (a ref: changing it shouldn't re-render anything)
+  const submitting = useRef<Set<string>>(new Set()) // synchronous guard against double-clicking a form button
   const { sending, run: runAgentOnce, stop, forgetThread } = useAgentRun(runAgentFn)
 
   // One run of the agent. `shown` is what appears in your bubble, with the attached file's name if there's one.
-  // Resolves to whether the run finished, and whether the server changed data during it, or might have.
+  // Resolves to whether the run finished, whether the server changed data during it, and any failure error.
   const run = useCallback(
     async (shown: string, prompt: AgentPrompt) => {
       const userId = nextId.current++
@@ -36,6 +54,7 @@ export function useChat(onDataChanged: () => void, runAgentFn: RunAgent = runAge
         transcript.appendMessage(current, { id: userId, role: MESSAGE_ROLES.user, text: shown, attachment }),
       )
       let progress = NEW_RUN
+      let failedWith: unknown
       const ok = await runAgentOnce(prompt, {
         onEvent: (event) => {
           progress = trackEvent(progress, event)
@@ -44,6 +63,7 @@ export function useChat(onDataChanged: () => void, runAgentFn: RunAgent = runAge
           setMessages((current) => transcript.applyAgentEvent(current, replyId, event))
         },
         onFailed: (error) => {
+          failedWith = error
           // The bubble shows only a generic text for a bug, so its details go to the console.
           reportUnexpected(error)
           // A tool was running when the run broke off (or Stop was pressed): its chip says "?", and the pages
@@ -58,7 +78,7 @@ export function useChat(onDataChanged: () => void, runAgentFn: RunAgent = runAge
           setMessages((current) => transcript.appendMessage(current, transcript.endedEarlyMessage(endId, error)))
         },
       })
-      return { ok, mayHaveChanged: mayHaveChanged(progress) }
+      return { ok, mayHaveChanged: mayHaveChanged(progress), error: failedWith }
     },
     [onDataChanged, runAgentOnce],
   )
@@ -77,21 +97,30 @@ export function useChat(onDataChanged: () => void, runAgentFn: RunAgent = runAge
   // Lock the card first (it decides once), then send its action as the next run.
   const submitForm = useCallback(
     async (action: A2uiAction) => {
+      if (submitting.current.has(action.surfaceId)) return
+      submitting.current.add(action.surfaceId)
       setMessages((current) => transcript.setSubmitted(current, action.surfaceId, true))
       const outcome = await run(transcript.sentText(action), { action })
-      // Unlock only if the run failed before anything could have changed. If the expense may already be saved
-      // (a tool finished, or was still running when the run broke off), sending the form again could save it twice.
-      if (!outcome.ok && !outcome.mayHaveChanged) {
-        setMessages((current) => transcript.setSubmitted(current, action.surfaceId, false))
+      // Unlock only on a deterministic pre-execution 4xx client error before anything could have changed.
+      // On network drop, 5xx, stream cut-off, or abort, keep the form locked (D137) and refresh data.
+      if (!outcome.ok) {
+        if (!outcome.mayHaveChanged && isPreExecutionClientError(outcome.error)) {
+          submitting.current.delete(action.surfaceId)
+          setMessages((current) => transcript.setSubmitted(current, action.surfaceId, false))
+        } else if (!outcome.mayHaveChanged) {
+          onDataChanged()
+        }
       }
     },
-    [run],
+    [onDataChanged, run],
   )
 
   const reset = useCallback(() => {
+    stop()
+    submitting.current.clear()
     setMessages([])
     forgetThread()
-  }, [forgetThread])
+  }, [forgetThread, stop])
 
   return useMemo(
     () => ({ messages, sending, send, stop, setFormValue, submitForm, reset }),

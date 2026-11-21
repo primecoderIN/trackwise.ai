@@ -7,8 +7,13 @@ HI: dict[WebText, TextValue] = {
     WebText.UNEXPECTED: "सर्वर पर कुछ गड़बड़ हो गई।",
     WebText.SERVICE_FAILED: "ऐप जिस सेवा पर निर्भर है, उसने ठीक से जवाब नहीं दिया। थोड़ी देर में फिर से कोशिश करें।",
     WebText.INVALID_REQUEST: "भेजे गए कुछ मान मान्य नहीं हैं।",
+    WebText.INVALID_TOKEN: "इस अनुरोध के साथ भेजा गया टोकन मान्य नहीं है।",
+    WebText.NOT_FOUND: "यह पता मौजूद नहीं है।",
+    WebText.METHOD_NOT_ALLOWED: "इस पते पर यह क्रिया अनुमत नहीं है।",
+    WebText.PAYLOAD_TOO_LARGE: "यह अनुरोध बहुत बड़ा है।",
     WebText.SIGN_IN_REQUIRED: "जारी रखने के लिए साइन इन करें।",
     WebText.NOT_FROM_APP: "यह अनुरोध ऐप से नहीं आया था, इसलिए इसे अस्वीकार कर दिया गया।",
     WebText.TOO_FAST: "आप सहायक को बहुत जल्दी-जल्दी अनुरोध भेज रहे हैं। एक मिनट रुककर फिर से कोशिश करें।",
     WebText.DAILY_LIMIT: "आप आज सहायक की सीमा तक पहुँच गए हैं। कल फिर से कोशिश करें।",
+    WebText.RATE_LIMITED: "आप अभी बहुत अधिक अनुरोध भेज रहे हैं। थोड़ी देर रुककर फिर से कोशिश करें।",
 }

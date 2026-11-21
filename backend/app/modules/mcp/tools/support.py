@@ -15,7 +15,7 @@ from mcp.types import ToolAnnotations
 from pydantic import Field, ValidationError
 from sqlalchemy.exc import OperationalError
 
-from app.core.errors import AuthenticationError, BusinessRuleError, NotFoundError
+from app.core.errors import AppError, AuthenticationError, BusinessRuleError, ExternalServiceError, NotFoundError
 from app.core.ids import RecordId
 from app.modules import expenses
 from app.modules.mcp.contracts import ToolName
@@ -75,7 +75,15 @@ def tool_errors() -> Iterator[None]:
     """
     try:
         yield
-    except (AuthenticationError, BusinessRuleError, NotFoundError, ValidationError) as exc:
+    except (
+        AppError,
+        AuthenticationError,
+        BusinessRuleError,
+        ExternalServiceError,
+        NotFoundError,
+        ValidationError,
+        ValueError,
+    ) as exc:
         raise ToolError(str(exc)) from exc
     except OperationalError as exc:
         # "Database is locked" (another process, e.g. the stdio server, is writing) is worth a retry. Any

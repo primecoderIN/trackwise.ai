@@ -189,7 +189,8 @@ backend/
    bus's sessions and the model, is passed in), and only their HTTP adapters (`api.py`, `accounts/account_api.py`,
    `assistant/api/routes.py`, `mcp/http.py`) import `web/`.
 8. **`bootstrap.py` is the composition root:** the only file that knows every module. `main.py`, `seed.py`,
-   `mcp_stdio.py` and the migrations all build from it. Nothing registers itself just by being imported.
+   `mcp_stdio.py`, `export_contracts.py` and the migrations all build from it. Nothing registers itself just by being
+   imported.
 9. **Adapters translate, use cases decide.** REST routes, the MCP server and the AG-UI adapter are adapters over the
    same commands and queries. The assistant's use cases yield plain events; `api/agui_stream.py` turns them into
    AG-UI.
@@ -387,9 +388,9 @@ taken when it comes back, and the session written only after the provider has an
 Everything a test would want to replace can be passed in, without patching modules:
 
 - `bootstrap.build(clock=..., llm=..., tools=..., engine=..., files=..., identity=..., sealer=..., agents=...,
-  skills=...)` builds the app's services around fakes, and `main.create_app(services)` serves them over HTTP (FastAPI's
-  `TestClient` works directly on it; with `base_url="https://localhost"` it keeps the Secure session cookie). A fake
-  identity provider signs a test in through the real routes; the OIDC adapter itself takes
+  skills=..., settings=...)` builds the app's services around fakes, and `main.create_app(services)` serves them over
+  HTTP (FastAPI's `TestClient` works directly on it; with `base_url="https://localhost"` it keeps the Secure session
+  cookie). A fake identity provider signs a test in through the real routes; the OIDC adapter itself takes
   `transport=httpx2.MockTransport(...)` to talk to a fake provider, so the token checks run with no network.
 - `migrations.upgrade_to_latest(engine)` migrates any engine, including an in-memory SQLite one (which shares a
   single connection, so every thread sees the same database).
@@ -649,8 +650,8 @@ source's imports (Python's `ast`) and checks:
 6. Each module package imports on its own, in a fresh interpreter (which catches import cycles).
 7. Only a module's HTTP adapters (`api.py`, `account_api.py`, `http.py`, `routes.py`) import `web/`.
 8. No identity provider's name in `backend/app` or `web/src` (D185).
-9. A person's data is never read by its id alone (`session.get(`), except in `take_approval.py`, which compares the
-   owner itself (D190).
+9. A person's data is never read by its id alone (`session.get(`): every read names the owner in the same statement
+   (D190, D217).
 10. The agents use only the backend's `core/` (plus the Gemini adapter and logging in a `server.py`); in the backend
     only `agents_host.py` imports them (D196, D207).
 11. The agents import on their own.

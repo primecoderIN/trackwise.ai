@@ -64,4 +64,4 @@ export function securityHeaders(): Header[] {
 }
 
 /** Which paths get them: every one but the API's (the backend's headers cover those). */
-export const PAGES_SOURCE = `/((?!${API_PREFIX.slice(1)}/).*)`
+export const PAGES_SOURCE = `/((?!${API_PREFIX.slice(1)}(?:/|$)).*)`

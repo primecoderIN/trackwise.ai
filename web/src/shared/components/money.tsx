@@ -36,7 +36,7 @@ export function ExpenseMoney({ amount, currency, baseAmount, rate, rateDate }: E
     date: formatDate(rateDate),
   })
   return (
-    <span className="inline-flex flex-col items-end leading-tight" title={label}>
+    <span className="inline-flex flex-col items-end leading-tight" title={label} aria-label={`${own} (${label})`}>
       <span>{own}</span>
       <span className="text-xs text-muted-foreground">{t("money.inBase", { amount: inBase })}</span>
     </span>

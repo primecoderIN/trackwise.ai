@@ -33,6 +33,10 @@ def request_limit(largest_file: int = 0) -> int:
     return int(largest_file * BASE64_GROWTH) + ENVELOPE_BYTES
 
 
+class _BodyTooLargeError(Exception):
+    """Raised when the streamed request body exceeds max_request_bytes."""
+
+
 class AgentGate:
     """Checks the key and the size of every request but those to `open_paths`, and marks every answer no-store."""
 
@@ -49,11 +53,28 @@ class AgentGate:
         if scope["type"] != "http":  # lifespan events pass through
             await self._app(scope, receive, send)
             return
-        refusal = None if scope["path"] in self._open_paths else self._refusal(Headers(scope=scope))
+        is_open = scope["path"] in self._open_paths and scope.get("method", "GET").upper() in ("GET", "HEAD")
+        refusal = None if is_open else self._refusal(Headers(scope=scope))
         if refusal is not None:
             await refusal(scope, receive, _no_store(send))
             return
-        await self._app(scope, receive, _no_store(send))
+        started = False
+        guarded_send = _no_store(send)
+
+        async def tracking_send(message: Message) -> None:
+            """Track whether the response has started before forwarding to `guarded_send`."""
+            nonlocal started
+            if message["type"] == "http.response.start":
+                started = True
+            await guarded_send(message)
+
+        try:
+            await self._app(scope, _limited_receive(receive, self._max_request_bytes), tracking_send)
+        except _BodyTooLargeError:
+            if not started:
+                too_large = TOO_LARGE.format(limit=self._max_request_bytes)
+                response = JSONResponse({"error": too_large}, HTTPStatus.REQUEST_ENTITY_TOO_LARGE)
+                await response(scope, receive, guarded_send)
 
     def _refusal(self, headers: Headers) -> JSONResponse | None:
         """The answer that refuses this request, or None if it may go on."""
@@ -67,6 +88,23 @@ class AgentGate:
             too_large = TOO_LARGE.format(limit=self._max_request_bytes)
             return JSONResponse({"error": too_large}, HTTPStatus.REQUEST_ENTITY_TOO_LARGE)
         return None
+
+
+def _limited_receive(receive: Receive, max_bytes: int) -> Receive:
+    """Wrap `receive` so a streamed body larger than `max_bytes` raises `_BodyTooLargeError`."""
+    seen = 0
+
+    async def receiving() -> Message:
+        """Read the next ASGI message and count body bytes against `max_bytes`."""
+        nonlocal seen
+        message = await receive()
+        if message["type"] == "http.request":
+            seen += len(message.get("body", b""))
+            if seen > max_bytes:
+                raise _BodyTooLargeError()
+        return message
+
+    return receiving
 
 
 def _no_store(send: Send) -> Send:

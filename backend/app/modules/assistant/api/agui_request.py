@@ -47,6 +47,7 @@ class AgentRequest:
     text: str | None = None  # a typed message (may be "" with a receipt), or a form's values written out as one
     decision: a2ui.UserAction | None = None  # Approve or Cancel on a delete card
     receipt_id: int | None = None  # a receipt attached to the message: read it and offer it as the expense form
+    is_form_submission: bool = False  # True when `text` was generated from a form's Save click
 
 
 def read_request(run: RunAgentInput) -> AgentRequest:
@@ -70,7 +71,7 @@ def read_request(run: RunAgentInput) -> AgentRequest:
         # Written out, the form's values become a message, so they must fit in one like a typed message.
         if len(text) > MAX_MESSAGE_LENGTH:
             raise BusinessRuleError(translatable(ChatText.FORM_TOO_LONG, max=MAX_MESSAGE_LENGTH))
-        return AgentRequest(thread_id, run.run_id, data_version, text=text)
+        return AgentRequest(thread_id, run.run_id, data_version, text=text, is_form_submission=True)
     text, receipt_id = _newest_user_message(run)
     return AgentRequest(thread_id, run.run_id, data_version, text=text, receipt_id=receipt_id)
 

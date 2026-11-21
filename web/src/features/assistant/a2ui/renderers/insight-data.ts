@@ -41,12 +41,35 @@ export function readUnit(unit: unknown): string {
   return typeof unit === "string" ? unit.slice(0, maxUnitLength) : ""
 }
 
+const LETTER_START = /^\p{L}/u
+
+// True when a unit is a prefix currency/symbol (like "₹" or "$"), not "%" and not starting with a letter.
+function isPrefixSymbol(unit: string): boolean {
+  return unit !== "" && unit !== "%" && !LETTER_START.test(unit)
+}
+
+/**
+ * A donut chart's slices: only positive finite values, so negative, zero or NaN values never corrupt the
+ * donut total or percentage calculation.
+ */
+export function positivePoints(points: readonly ChartPoint[]): ChartPoint[] {
+  return points.filter((point) => point.value > 0 && Number.isFinite(point.value))
+}
+
 /**
  * A value as a chart writes it. With a unit (money): grouped with two decimals, exactly like the amounts
  * the server writes in the same card ("₹2,340.00"), so a number never appears in two styles side by side.
+ * Negative values with a prefix symbol place the minus sign before the symbol ("-₹250.00").
  * Without one: up to two decimals. Both in the locale of the language on now.
  */
 export function formatValue(value: unknown, unit: string): string {
-  if (unit) return `${unit}${formatAmount(Number(value))}`
-  return Number(value).toLocaleString(currentLanguageInfo().locale, { maximumFractionDigits: 2 })
+  const numeric = Number(value)
+  if (!Number.isFinite(numeric)) return ""
+  if (unit) {
+    if (numeric < 0 && isPrefixSymbol(unit)) {
+      return `-${unit}${formatAmount(Math.abs(numeric))}`
+    }
+    return `${unit}${formatAmount(numeric)}`
+  }
+  return numeric.toLocaleString(currentLanguageInfo().locale, { maximumFractionDigits: 2 })
 }

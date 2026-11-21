@@ -20,5 +20,5 @@ class ListCategories(Query[list[CategoryRead]]):
 
 def list_categories(ctx: Context, query: ListCategories) -> list[CategoryRead]:
     """Every category, oldest first (ids grow as categories are added, so id order is creation order)."""
-    rows = ctx.session.exec(select(Category).order_by(col(Category.id)))
+    rows = ctx.session.exec(select(Category).order_by(col(Category.id).asc()))
     return [CategoryRead.model_validate(row) for row in rows]

@@ -52,25 +52,30 @@ def versus(total: Decimal, previous: Decimal, previous_month: date, language: La
 def _categories(summary: MonthSpending, language: Language) -> list[Component]:
     """The biggest category as a Stat (its total, and its share of the month's), then the donut of the categories.
 
-    Only for a month with spending: `summary.by_category` isn't empty, and comes biggest first.
+    Only for a month with positive spending: `summary.by_category` isn't empty, and comes biggest first.
     """
     t = partial(text, language)  # t(key, **values): a text in the request's language
-    top = summary.by_category[0]
+    positive = [c for c in summary.by_category if c.total > 0]
+    top = (positive or summary.by_category)[0]
     share = round(top.total / summary.total * 100) if summary.total else 0
     amount = format_money(top.total, summary.currency, language)
-    slices = [ChartPoint(label=c.category_name, value=float(c.total)) for c in summary.by_category[:DONUT_SLICES]]
-    rest = sum((c.total for c in summary.by_category[DONUT_SLICES:]), Decimal(0))
-    if rest:
-        slices.append(ChartPoint(label=t(ChatText.SUMMARY_EVERYTHING_ELSE), value=float(rest)))
-    return [
+    components: list[Component] = [
         Stat(
             id="stat_top",
             label=t(ChatText.SUMMARY_TOP_CATEGORY),
             value=top.category_name,
             change=t(ChatText.SUMMARY_TOP_SHARE, amount=amount, share=share),
-        ),
-        Chart(id="chart", chart_type=ChartType.DONUT, data=slices, unit=CURRENCY_SYMBOLS.get(summary.currency)),
+        )
     ]
+    slices = [ChartPoint(label=c.category_name, value=float(c.total)) for c in positive[:DONUT_SLICES]]
+    rest = sum((c.total for c in positive[DONUT_SLICES:]), Decimal(0))
+    if rest > 0:
+        slices.append(ChartPoint(label=t(ChatText.SUMMARY_EVERYTHING_ELSE), value=float(rest)))
+    if slices:
+        components.append(
+            Chart(id="chart", chart_type=ChartType.DONUT, data=slices, unit=CURRENCY_SYMBOLS.get(summary.currency))
+        )
+    return components
 
 
 def summary_card(summary: MonthSpending, language: Language) -> CreateSurfaceMessage:
@@ -90,7 +95,7 @@ def summary_card(summary: MonthSpending, language: Language) -> CreateSurfaceMes
             trend=trend,
         ),
     ]
-    spent = bool(summary.by_category)
+    spent = summary.total > 0 and any(c.total > 0 for c in summary.by_category)
     if spent:
         components += _categories(summary, language)
     count = summary.expense_count

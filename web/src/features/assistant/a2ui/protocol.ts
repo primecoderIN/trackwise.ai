@@ -58,14 +58,25 @@ export interface A2uiRenderContext {
   onAction?: (action: A2uiAction) => void
 }
 
+/** How many component definitions one surface may hold in total across createSurface and updateComponents. */
+export const MAX_COMPONENTS = 300
+
 function isComponent(value: unknown): value is A2uiComponent {
   return isObject(value) && typeof value.id === "string" && typeof value.component === "string"
 }
 
-function addComponents(into: Map<string, A2uiComponent>, list: unknown): Map<string, A2uiComponent> {
+function addComponents(into: Map<string, A2uiComponent>, list: unknown): Map<string, A2uiComponent> | null {
+  if (!Array.isArray(list)) return into
   const components = new Map(into) // a copy: React state is never changed in place
-  if (Array.isArray(list)) for (const item of list) if (isComponent(item)) components.set(item.id, item)
-  return components
+  let changed = false
+  for (const item of list) {
+    if (isComponent(item)) {
+      components.set(item.id, item)
+      changed = true
+      if (components.size > MAX_COMPONENTS) return null
+    }
+  }
+  return changed ? components : into
 }
 
 // ---------- the data model, addressed by JSON Pointer ("/expense/amount") ----------
@@ -135,6 +146,11 @@ function childIds(node: A2uiComponent): unknown[] {
   return [...(Array.isArray(node.children) ? node.children : []), ...(node.child !== undefined ? [node.child] : [])]
 }
 
+interface SubtreeMeasure {
+  count: number
+  height: number
+}
+
 /**
  * How many components drawing a surface would take, counting a shared child every time it appears;
  * Infinity if a component contains itself or nests deeper than `maxDepth`. The renderer refuses anything
@@ -142,27 +158,38 @@ function childIds(node: A2uiComponent): unknown[] {
  * nodes), nor a chain thousands deep (which would overflow the stack while counting) can freeze the page.
  */
 export function drawnSize(components: Map<string, A2uiComponent>, limit: number, maxDepth: number): number {
-  const sizes = new Map<string, number>()
+  const memo = new Map<string, SubtreeMeasure>()
   const open = new Set<string>()
-  const size = (id: unknown, depth: number): number => {
-    if (typeof id !== "string") return 1
+  const measure = (id: unknown, depth: number): SubtreeMeasure => {
+    if (typeof id !== "string") return { count: 1, height: 0 }
     const node = components.get(id)
-    if (!node) return 0
-    if (depth > maxDepth) return Infinity // nested too deep: stop before recursing any further
-    const known = sizes.get(id)
-    if (known !== undefined) return known
-    if (open.has(id)) return Infinity // contains itself
+    if (!node) return { count: 0, height: 0 }
+    if (depth > maxDepth) return { count: Infinity, height: Infinity } // nested too deep: stop before recursing
+    const known = memo.get(id)
+    if (known !== undefined) {
+      return depth + known.height > maxDepth ? { count: Infinity, height: Infinity } : known
+    }
+    if (open.has(id)) return { count: Infinity, height: Infinity } // contains itself
     open.add(id)
-    let total = 1
+    let count = 1
+    let height = 0
     for (const child of childIds(node)) {
-      total += size(child, depth + 1)
-      if (total > limit) break
+      const sub = measure(child, depth + 1)
+      count += sub.count
+      if (sub.count > 0 && typeof child === "string") {
+        height = Math.max(height, 1 + sub.height)
+      }
+      if (count > limit) {
+        count = Infinity
+        break
+      }
     }
     open.delete(id)
-    sizes.set(id, total)
-    return total
+    const result = { count, height }
+    if (Number.isFinite(count) && Number.isFinite(height)) memo.set(id, result)
+    return result
   }
-  return size(A2UI.rootId, 0)
+  return measure(A2UI.rootId, 0).count
 }
 
 // ---------- messages from the agent ----------
@@ -175,39 +202,56 @@ export function applyA2uiMessage(surfaces: A2uiSurface[], message: unknown): A2u
   if (!isObject(message) || message.version !== A2UI.version) return surfaces
   const { createSurface, updateComponents, updateDataModel, deleteSurface } = message
 
-  if (isObject(createSurface) && typeof createSurface.surfaceId === "string") {
+  if (isObject(createSurface) && typeof createSurface.surfaceId === "string" && createSurface.surfaceId.length > 0) {
     const id = createSurface.surfaceId
     // The spec treats creating an existing surface as an error: keep the first one.
     if (surfaces.some((surface) => surface.id === id)) return surfaces
+    const components = addComponents(new Map(), createSurface.components)
+    if (!components) return surfaces
     const data = isObject(createSurface.dataModel) ? createSurface.dataModel : {}
     const catalogId = typeof createSurface.catalogId === "string" ? createSurface.catalogId : null
-    return [...surfaces, { id, catalogId, components: addComponents(new Map(), createSurface.components), data }]
+    return [...surfaces, { id, catalogId, components, data }]
   }
   if (isObject(updateComponents) && typeof updateComponents.surfaceId === "string") {
-    return surfaces.map((surface) =>
-      surface.id === updateComponents.surfaceId
-        ? { ...surface, components: addComponents(surface.components, updateComponents.components) }
-        : surface,
-    )
+    const index = surfaces.findIndex((surface) => surface.id === updateComponents.surfaceId)
+    if (index === -1) return surfaces
+    const components = addComponents(surfaces[index].components, updateComponents.components)
+    if (!components || components === surfaces[index].components) return surfaces
+    return surfaces.map((surface, i) => (i === index ? { ...surface, components } : surface))
   }
   if (isObject(updateDataModel) && typeof updateDataModel.surfaceId === "string") {
+    const index = surfaces.findIndex((surface) => surface.id === updateDataModel.surfaceId)
+    if (index === -1) return surfaces
     const path = updateDataModel.path ?? WHOLE_MODEL
-    return surfaces.map((surface) => {
-      if (surface.id !== updateDataModel.surfaceId) return surface
-      // "/" (or no path) replaces the whole model; anything else sets one value.
-      if (path === WHOLE_MODEL) {
-        return { ...surface, data: isObject(updateDataModel.value) ? updateDataModel.value : {} }
-      }
-      return { ...surface, data: setAt(surface.data, path, updateDataModel.value) }
-    })
+    const target = surfaces[index]
+    // "/" (or no path) replaces the whole model; anything else sets one value.
+    const nextData =
+      path === WHOLE_MODEL
+        ? isObject(updateDataModel.value)
+          ? updateDataModel.value
+          : {}
+        : setAt(target.data, path, updateDataModel.value)
+    if (nextData === target.data) return surfaces
+    return surfaces.map((surface, i) => (i === index ? { ...surface, data: nextData } : surface))
   }
   if (isObject(deleteSurface) && typeof deleteSurface.surfaceId === "string") {
+    if (!surfaces.some((surface) => surface.id === deleteSurface.surfaceId)) return surfaces
     return surfaces.filter((surface) => surface.id !== deleteSurface.surfaceId)
   }
   return surfaces
 }
 
+/** The surfaceId of a valid createSurface message, or null if the message doesn't create one. */
+export function createdSurfaceId(message: unknown): string | null {
+  if (!isObject(message) || message.version !== A2UI.version) return null
+  const { createSurface } = message
+  if (!isObject(createSurface) || typeof createSurface.surfaceId !== "string" || createSurface.surfaceId.length === 0) {
+    return null
+  }
+  return createSurface.surfaceId
+}
+
 /** Whether a message creates a new card or form (it belongs to the reply it arrived with). */
 export function createsSurface(message: unknown): boolean {
-  return isObject(message) && "createSurface" in message
+  return createdSurfaceId(message) !== null
 }

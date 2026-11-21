@@ -9,7 +9,6 @@ const en = {
     loadFailed: "Couldn't load your budgets",
     previousMonth: "Previous month",
     nextMonth: "Next month",
-    elapsed: "{{percent}}% of {{month}} has gone by",
   },
   overall: {
     title: "Overall",
@@ -25,8 +24,7 @@ const en = {
     spentOf: "{{spent}} of {{limit}}",
     left: "{{amount}} left",
     over: "{{amount}} over",
-    spent: "{{amount}} spent",
-    noLimit: "No limit",
+    spentNoLimit: "{{amount}} spent · No limit",
     meter: "{{name}}: {{percent}}% of the limit used",
     today: "Today: {{percent}}% of the month",
   },

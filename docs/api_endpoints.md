@@ -41,7 +41,8 @@ Every error, from any route, has one shape and the media type `application/probl
 | 422 | `business-rule` | well-formed but against a rule: amount ≤ 0, unknown category, an expense that changed since it was shown |
 | 400 | `invalid-token` | `POST /auth/backchannel-logout` with a logout token that fails a check |
 | 401 | `unauthorized` | no live session ("Sign in to continue."), or `/mcp/` without a working personal access token |
-| 429 | `too-many-requests` | the person's allowance for the routes that call the model (`/agent`, `/chat`, `/parse`, reading a receipt) is spent: `Retry-After` says when to try again (D194) |
+| 413 | `http` | the request body exceeds the route's size limit (a little over 5 MB for `POST /receipts`, 2 MB for other API routes, 256 KB for `/mcp/`) |
+| 429 | `too-many-requests` | the caller's allowance for the route (the model-backed routes, report generation, receipt uploads, sign-in routes, or `/mcp/`) is spent: `Retry-After` says when to try again (D194, D217) |
 | 403 | `forbidden` | a request the app didn't send: no `X-CSRF: 1`, a `Sec-Fetch-Site` from another site, or a sign-out link whose `sid` isn't this session's |
 | 4xx | `http` | FastAPI's own (404 unknown URL, 405 wrong method with an `Allow` header) |
 | 500 | `internal` | a bug; the details go to the server log only |
@@ -70,7 +71,8 @@ value sent):
 
 ### `GET /health`
 
-`{"status": "ok"}` when the server is up and its database answers. Cheap: meant for monitors. Needs no session.
+`{"status": "ok"}` (200) when the server is up and its database answers, or `{"status": "unavailable"}` (503) if the
+database cannot be reached (`Cache-Control: no-store`). Cheap: meant for monitors. Needs no session.
 
 ## Signing in
 
@@ -176,8 +178,8 @@ Their personal access tokens, newest first: never the tokens themselves.
 
 ### `POST /api/v1/account/tokens`
 
-Makes a token for MCP clients. **201** with the token's details and `token` itself: **the only time it's sent**
-(`Cache-Control: no-store`).
+Makes a token for MCP clients. **201** (`Location: /api/v1/account/tokens/{id}`) with the token's details and `token`
+itself: **the only time it's sent** (`Cache-Control: no-store`).
 
 ```json
 {"name": "Desktop assistant", "lifetime_days": 90}
@@ -454,7 +456,9 @@ Reads a short note into an expense, **without saving it**. Needs the Gemini key.
 ### `POST /api/v1/chat`
 
 The agent, answering in one JSON response (no streaming, no cards or buttons). It can add, change and delete
-expenses through its tools; deletes need you to confirm in words.
+expenses through its tools, read Agent Skills (`load_skill`) and delegate to the insights and currency agents
+(`delegate_to_agent`, including multi-turn follow-up questions on the same `thread_id`); deletes need you to confirm
+in words.
 
 ```json
 {"message": "How much did I spend on food this month?", "thread_id": null}

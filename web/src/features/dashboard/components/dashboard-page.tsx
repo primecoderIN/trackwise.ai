@@ -72,7 +72,7 @@ export function DashboardPage() {
       {header}
       {failed && <RefreshNotice message={messageOf(failed.error)} onRetry={retry} retrying={retrying} />}
       <StatCards summary={summary.data} />
-      <BudgetCard />
+      <BudgetCard month={summary.data.month} />
       <div className="grid gap-4 lg:grid-cols-2">
         <CategoryChart summary={summary.data} />
         <TrendChart trend={trend.data} />

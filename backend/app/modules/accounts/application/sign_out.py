@@ -40,11 +40,18 @@ class SignOutFlow:
         id_token = self.sealer.unseal(sealed) if sealed else None
         return self.identity.end_session_url(id_token, self.config.signed_out_url) or SIGN_IN_PAGE
 
-    def back_channel(self, logout_token: str) -> None:
-        """End the sessions the provider's logout token names. Raises InvalidTokenError (the token fails a check) or
-        IdentityError (the provider's keys can't be read)."""
+    def back_channel(self, logout_token: str) -> bool:
+        """End the sessions the provider's logout token names. Returns True if any active session was revoked.
+
+        Raises InvalidTokenError (the token fails a check) or IdentityError (the provider's keys can't be read).
+        """
         notice = self.identity.read_logout_token(logout_token)
-        self.bus.execute(
+        ended = self.bus.execute(
             RevokeSessions(issuer=notice.issuer, subject=notice.subject, provider_session_id=notice.session_id)
         )
-        logger.info("back-channel logout: sessions ended for a provider %s", "session" if notice.session_id else "user")
+        scope = "session" if notice.session_id else "user"
+        if ended:
+            logger.info("back-channel logout: %d session(s) ended for a provider %s", ended, scope)
+        else:
+            logger.debug("back-channel logout: no active session matched for provider %s", scope)
+        return ended > 0

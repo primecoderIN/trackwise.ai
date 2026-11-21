@@ -11,6 +11,7 @@ from sqlalchemy import DateTime, Index
 from sqlmodel import Field, SQLModel
 
 from app.core.money import DEFAULT_CURRENCY
+from app.core.sql import BigInt
 from app.modules.expenses.values import MAX_MERCHANT_LENGTH, MAX_NOTE_LENGTH
 
 # Column lengths. An ISO 4217 currency code is three letters; the longest payment method today
@@ -31,16 +32,16 @@ class Expense(SQLModel, table=True):
     __table_args__ = (Index(OWNER_DAY_INDEX, "owner_id", "spent_on"),)
 
     # None until the row is inserted; the database assigns it (see repository.add's flush).
-    id: int | None = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True, sa_type=BigInt)
     # Whose expense it is: SpendWise's user id (core.ids.UserId), a plain id with no foreign key, since the users
     # table belongs to the accounts module. Every read and change filters on it (D190).
-    owner_id: int
+    owner_id: int = Field(sa_type=BigInt)
     # Whole paise, never a float of rupees: 450.50 rupees is stored as 45050.
-    amount_minor: int
+    amount_minor: int = Field(sa_type=BigInt)
     currency: str = Field(default=DEFAULT_CURRENCY, max_length=CURRENCY_LENGTH)
     # Just the id, with no database foreign key: the categories table belongs to another
     # module, so the link is checked through that module's queries, not by the database.
-    category_id: int = Field(index=True)
+    category_id: int = Field(index=True, sa_type=BigInt)
     merchant: str = Field(max_length=MAX_MERCHANT_LENGTH)
     note: str | None = Field(default=None, max_length=MAX_NOTE_LENGTH)
     # Indexed with the owner (OWNER_DAY_INDEX): "my expenses this month" is the most common query.
@@ -57,7 +58,7 @@ class Expense(SQLModel, table=True):
     # (exact, as text: "84.5"; "1" for INR) and the rate's date. Totals add these up across currencies. Null only for
     # an expense in another currency saved before 0008 (it's converted the next time its amount, currency or date
     # changes); domain/base_amount.py fills them in.
-    base_amount_minor: int | None = None
+    base_amount_minor: int | None = Field(default=None, sa_type=BigInt)
     exchange_rate: str | None = Field(default=None, max_length=RATE_LENGTH)
     rate_date: date | None = None
 

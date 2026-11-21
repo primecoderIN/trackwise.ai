@@ -13,7 +13,6 @@ const hi: Translation<typeof en> = {
     loadFailed: "आपके बजट लोड नहीं हो सके",
     previousMonth: "पिछला महीना",
     nextMonth: "अगला महीना",
-    elapsed: "{{month}} का {{percent}}% बीत चुका है",
   },
   overall: {
     title: "कुल",
@@ -29,8 +28,7 @@ const hi: Translation<typeof en> = {
     spentOf: "{{limit}} में से {{spent}}",
     left: "{{amount}} बाकी",
     over: "{{amount}} ज़्यादा",
-    spent: "{{amount}} खर्च हुए",
-    noLimit: "कोई सीमा नहीं",
+    spentNoLimit: "{{amount}} खर्च हुए · कोई सीमा नहीं",
     meter: "{{name}}: सीमा का {{percent}}% इस्तेमाल हुआ",
     today: "आज: महीने का {{percent}}%",
   },

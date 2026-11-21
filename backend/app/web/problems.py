@@ -21,7 +21,7 @@ from starlette.datastructures import Headers
 from starlette.exceptions import HTTPException
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from app.core.errors import AppError, AuthenticationError, ExternalServiceError, TooManyRequestsError
+from app.core.errors import AppError, AuthenticationError, ExternalServiceError, ForbiddenError, TooManyRequestsError
 from app.core.i18n import Language, text
 from app.web.dependencies import get_language, language_of
 from app.web.i18n import WebText
@@ -41,6 +41,16 @@ HTTP_SLUG = "http"
 UNAUTHORIZED_SLUG = AuthenticationError.slug
 # Tells a client when a refused (429) request is worth sending again, in seconds.
 RETRY_AFTER = "Retry-After"
+# Catalogued texts for framework HTTPExceptions so raw English strings never bypass D180/i18n.
+_HTTP_TEXTS: dict[int, WebText] = {
+    400: WebText.INVALID_REQUEST,
+    401: WebText.SIGN_IN_REQUIRED,
+    403: WebText.NOT_FROM_APP,
+    404: WebText.NOT_FOUND,
+    405: WebText.METHOD_NOT_ALLOWED,
+    413: WebText.PAYLOAD_TOO_LARGE,
+    429: WebText.RATE_LIMITED,
+}
 
 
 def problem_response(
@@ -62,14 +72,23 @@ def detail_for_people(error: AppError, language: Language) -> str:
     """The problem's detail: the error's own text in `language`, or, if it isn't written for people, a generic one.
 
     The rule (D180): a person only reads catalogued texts. A plain-string message (an outside service's own words, such
-    as Gemini's error) can carry internals, so it goes to the server log, and the client is told only what kind of
-    thing failed: a service we depend on (502), or something unexpected.
+    as Gemini's error, or an invalid token reason) can carry internals, so it goes to the server log, and the client is
+    told only a catalogued text for its kind.
     """
     detail = error.message_in(language)
     if detail is not None:
         return detail
     logger.warning("%s error, not shown to the client: %s", error.slug, error)
-    generic = WebText.SERVICE_FAILED if isinstance(error, ExternalServiceError) else WebText.UNEXPECTED
+    if isinstance(error, ExternalServiceError):
+        generic = WebText.SERVICE_FAILED
+    elif isinstance(error, AuthenticationError):
+        generic = WebText.SIGN_IN_REQUIRED
+    elif isinstance(error, ForbiddenError):
+        generic = WebText.NOT_FROM_APP
+    elif error.status == 400:
+        generic = WebText.INVALID_TOKEN
+    else:
+        generic = WebText.UNEXPECTED
     return text(language, generic)
 
 
@@ -133,23 +152,30 @@ def register_error_handlers(app: FastAPI) -> None:
 
     async def invalid_request(request: Request, exc: Exception) -> JSONResponse:
         """A 422 with every invalid value under "errors", for the client's developer; the detail is for people."""
-        assert isinstance(exc, RequestValidationError)
+        if not isinstance(exc, RequestValidationError):
+            raise TypeError(f"Expected RequestValidationError, got {type(exc).__name__}")
         errors = [
             # loc is ("body", "amount") or ("query", "month"): where the bad value was, then which one. The message
             # is Pydantic's (English), about the request itself; Pydantic's "input" (the value sent) is left out.
-            {"location": str(e["loc"][0]), "field": ".".join(str(part) for part in e["loc"][1:]), "message": e["msg"]}
+            {
+                "location": str(loc[0]) if (loc := e.get("loc")) else "request",
+                "field": ".".join(str(part) for part in loc[1:]) if loc else "",
+                "message": e["msg"],
+            }
             for e in exc.errors()
         ]
         detail = text(get_language(request), WebText.INVALID_REQUEST)
         return problem_response(422, VALIDATION_SLUG, "Invalid request", detail, request.url.path, errors=errors)
 
     async def http_error(request: Request, exc: Exception) -> JSONResponse:
-        """An HTTP error as a problem; its short message ("Method Not Allowed") is both title and detail."""
+        """An HTTP error as a problem; its title stays English while the detail is catalogued in the request language."""
         # FastAPI's own errors (404 for an unknown URL, 405 for a wrong method), in the same shape. Their
         # headers are kept: a 405 must say which methods are allowed (Allow), a 401 how to authenticate.
-        assert isinstance(exc, HTTPException)
-        detail = str(exc.detail)
-        return problem_response(exc.status_code, HTTP_SLUG, detail, detail, request.url.path, headers=exc.headers)
+        if not isinstance(exc, HTTPException):
+            raise TypeError(f"Expected HTTPException, got {type(exc).__name__}")
+        title = str(exc.detail)
+        detail = text(get_language(request), _HTTP_TEXTS.get(exc.status_code, WebText.UNEXPECTED))
+        return problem_response(exc.status_code, HTTP_SLUG, title, detail, request.url.path, headers=exc.headers)
 
     app.add_exception_handler(AppError, app_error)
     app.add_exception_handler(RequestValidationError, invalid_request)

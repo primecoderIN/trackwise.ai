@@ -65,18 +65,32 @@ def months_in(expenses: list[ExpenseRow]) -> list[YearMonth]:
 def month_in_reply(reply: str, today: date) -> YearMonth | None:
     """The month a person's reply names, or None. A name without a year is the latest such month up to today's."""
     text = reply.strip().lower()
-    if match := YEAR_MONTH.search(text):
-        return YearMonth(int(match.group(1)), int(match.group(2)))
-    current = YearMonth.of(today)
-    if any(phrase in text for phrase in THIS_MONTH):
-        return current
-    if any(phrase in text for phrase in LAST_MONTH):
-        return current.shift(-1)
-    number = next((MONTH_NAMES[word] for word in SEPARATORS.split(text) if word in MONTH_NAMES), None)
-    if number is None:
+    ym_matches = YEAR_MONTH.findall(text)
+    if len(ym_matches) > 1:
         return None
-    if year := YEAR.search(text):
-        return YearMonth(int(year.group(1)), number)
+    if len(ym_matches) == 1:
+        year_text, month_text = ym_matches[0]
+        return YearMonth(int(year_text), int(month_text))
+    current = YearMonth.of(today)
+    has_this = any(phrase in text for phrase in THIS_MONTH)
+    has_last = any(phrase in text for phrase in LAST_MONTH)
+    if has_this and has_last:
+        return None
+    if has_this:
+        return current
+    if has_last:
+        return current.previous()
+    numbers = {MONTH_NAMES[word] for word in SEPARATORS.split(text) if word in MONTH_NAMES}
+    if len(numbers) != 1:
+        return None
+    number = next(iter(numbers))
+    years = YEAR.findall(text)
+    if len(years) > 1:
+        return None
+    if len(years) == 1:
+        return YearMonth(int(years[0]), number)
     # "November" in December 2026 is November 2026; in October 2026, November 2025.
     year_now = today.year if number <= today.month else today.year - 1
+    if year_now < 1900:
+        return None
     return YearMonth(year_now, number)

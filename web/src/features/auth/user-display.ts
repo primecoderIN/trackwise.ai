@@ -1,9 +1,9 @@
 // How a signed-in person is shown, as pure functions: their initials, and their picture's address if it's safe to
 // load. Part of the auth feature; used by the user menu's avatar.
 
-// The only kinds of address a picture may have: no javascript:, data: or file: URLs reach an <img>. (The server keeps
-// only http(s) pictures already; network data is checked again here.)
-const PICTURE_PROTOCOLS: ReadonlySet<string> = new Set(["https:", "http:"])
+// The only kind of address a picture may have: https: only (matching the CSP's img-src https:, and avoiding mixed
+// content or javascript:/data: URLs).
+const PICTURE_PROTOCOLS: ReadonlySet<string> = new Set(["https:"])
 // How many words of a name make its initials: "Asha Rao" is "AR".
 const INITIALS = 2
 

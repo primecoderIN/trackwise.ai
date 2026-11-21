@@ -57,12 +57,13 @@ or over HTTP at `/mcp/` with a bearer token ([api_endpoints.md](api_endpoints.md
 
 ## How it's organised
 
-- **Backend:** one FastAPI process, split into modules by business domain (`categories`, `expenses`,
-  `conversations`, `assistant`, and the `mcp` adapter). Each module owns its tables, keeps each command or query in
-  one file with its handler, and talks to the others only through their contracts and the bus.
-  → [architecture.md](architecture.md)
-- **Web:** one React app, split into feature slices (`expenses`, `categories`, `dashboard`, `assistant`) over a
-  `shared/` layer, composed in `app/`. → [frontend_onboarding.md](frontend_onboarding.md)
+- **Backend:** one FastAPI process, split into modules by business domain (`accounts`, `categories`, `expenses`,
+  `budgets`, `conversations`, `receipts`, `reports`, `assistant`, and the `mcp` adapter), plus the hosted A2A agents
+  (`agents/receipt`, `agents/insights`, `agents/currency`) and Agent Skills (`skills/`). Each module owns its tables,
+  keeps each command or query in one file with its handler, and talks to the others only through their contracts and
+  the bus. → [architecture.md](architecture.md)
+- **Web:** one Next.js + React app, split into feature slices (`auth`, `account`, `expenses`, `budgets`, `categories`,
+  `dashboard`, `assistant`) over a `shared/` layer, composed in `app/`. → [frontend_onboarding.md](frontend_onboarding.md)
 - **The contract between them** is generated from the backend: REST types from OpenAPI, protocol names and labels from
   a script. → [api_endpoints.md](api_endpoints.md), [configuration.md](configuration.md)
 

@@ -18,23 +18,32 @@ export function connectionLostMessage(): string {
 const SSE_EVENT_END = "\n\n"
 const SSE_LINE_END = "\n"
 const SSE_DATA = "data:"
+/** The largest single SSE event buffer we will hold before refusing an unbounded stream (512 KB). */
+export const MAX_SSE_EVENT_BYTES = 512 * 1024
+
+// Normalises CRLF and bare CR to LF, leaving a trailing CR at the end of `chunk` untouched in case its LF
+// arrives at the start of the next streamed chunk.
+function normalizeNewlines(chunk: string, flush = false): string {
+  const withoutCrLf = chunk.replace(/\r\n/g, SSE_LINE_END)
+  return flush ? withoutCrLf.replace(/\r/g, SSE_LINE_END) : withoutCrLf.replace(/\r(?!$)/g, SSE_LINE_END)
+}
 
 /**
  * Splits buffered stream text into complete events (each ends with a blank line) and the unfinished tail. A
  * piece of the stream can end mid-event, so `rest` is kept and the next piece is added to it.
  */
 export function splitEvents(buffer: string): { events: string[]; rest: string } {
-  const events = buffer.split(SSE_EVENT_END)
+  const events = normalizeNewlines(buffer).split(SSE_EVENT_END)
   const rest = events.pop() ?? ""
   return { events, rest }
 }
 
 /** One SSE event block's `data:` lines, joined. Comments (FastAPI's ": ping" keep-alives) have none: "". */
 export function dataOf(block: string): string {
-  return block
+  return normalizeNewlines(block, true)
     .split(SSE_LINE_END)
     .filter((line) => line.startsWith(SSE_DATA))
-    .map((line) => line.slice(SSE_DATA.length).trimStart())
+    .map((line) => line.slice(SSE_DATA.length).replace(/^ /, ""))
     .join(SSE_LINE_END)
 }
 
@@ -61,8 +70,20 @@ export async function* sseData(stream: ReadableStream<string>): AsyncGenerator<s
   try {
     for (;;) {
       const { value, done } = await read(reader)
-      if (done) return
+      if (done) {
+        const tail = normalizeNewlines(buffer, true).trim()
+        if (tail) {
+          for (const block of tail.split(SSE_EVENT_END)) {
+            const data = dataOf(block)
+            if (data) yield data
+          }
+        }
+        return
+      }
       const { events, rest } = splitEvents(buffer + value)
+      if (rest.length > MAX_SSE_EVENT_BYTES) {
+        throw new UserFacingError(connectionLostMessage())
+      }
       buffer = rest
       for (const block of events) {
         const data = dataOf(block)

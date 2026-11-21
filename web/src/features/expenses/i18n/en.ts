@@ -19,6 +19,7 @@ const en = {
     merchant: "Merchant",
     category: "Category",
     amount: "Amount",
+    currency: "Currency",
     paidWith: "Paid with",
     note: "Note",
     noteOptional: "Note (optional)",
@@ -52,9 +53,12 @@ const en = {
     count_one: "{{count}} expense",
     count_other: "{{count}} expenses",
     showingNewest: "showing the newest {{shown}}",
+    showingRange: "showing {{from}}–{{to}}",
     selected_one: "{{count}} selected",
     selected_other: "{{count}} selected",
     deleteSelected: "Delete selected",
+    previousPage: "Previous page",
+    nextPage: "Next page",
   },
   // The table's own texts; its column titles are under "fields".
   table: {
@@ -73,6 +77,7 @@ const en = {
     merchant: "Merchant of #{{id}}",
     category: "Category of #{{id}}",
     amount: "Amount of #{{id}}",
+    currency: "Currency of #{{id}}",
     paymentMethod: "Payment method of #{{id}}",
     note: "Note of #{{id}}",
     save: "Save changes to #{{id}}",

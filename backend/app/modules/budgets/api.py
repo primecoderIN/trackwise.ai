@@ -7,9 +7,10 @@ never something the request says (D190). A route's docstring would become its Op
 comments. No try/except: errors become problem details in web/problems.py.
 """
 
-from typing import Annotated
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query, Request
+from fastapi.exceptions import RequestValidationError
 
 from app.core.months import YearMonth
 from app.modules.budgets.commands.remove_budget import RemoveBudget
@@ -21,9 +22,26 @@ from app.web.dependencies import BusDep, ClockDep, IdPath
 router = APIRouter(tags=["budgets"])
 
 
+def _only_query(*allowed: str) -> Any:
+    """Route dependency refusing any query parameter not in `allowed` with a 422 validation problem."""
+    allowed_set = frozenset(allowed)
+
+    def check(request: Request) -> None:
+        unexpected = [name for name in request.query_params if name not in allowed_set]
+        if unexpected:
+            raise RequestValidationError(
+                [
+                    {"type": "extra_forbidden", "loc": ("query", name), "msg": "Extra inputs are not permitted"}
+                    for name in unexpected
+                ]
+            )
+
+    return Depends(check)
+
+
 # GET /api/v1/budgets?month=2026-11: the month's spending (in INR) against the signed-in person's budgets: the overall
 # line and one line per category. Without `month`, the current month (the clock's).
-@router.get("/budgets")
+@router.get("/budgets", dependencies=[_only_query("month")])
 def get_budget_status(
     principal: CurrentUserDep,
     bus: BusDep,

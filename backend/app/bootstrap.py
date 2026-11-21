@@ -44,6 +44,17 @@ from app.modules.receipts import module as receipts_module
 from app.modules.reports import module as reports_module
 from app.web.auth import SessionCookies
 
+HTTPS_SCHEME = "https://"
+# Rate limits for non-model routes (per person for reports/receipts/MCP, per client IP for sign-in routes).
+REPORT_REQUESTS_PER_MINUTE = 20
+REPORT_REQUESTS_PER_DAY = 200
+RECEIPT_REQUESTS_PER_MINUTE = 15
+RECEIPT_REQUESTS_PER_DAY = 150
+AUTH_REQUESTS_PER_MINUTE = 30
+AUTH_REQUESTS_PER_DAY = 300
+MCP_REQUESTS_PER_MINUTE = 60
+MCP_REQUESTS_PER_DAY = 2000
+
 # Every module with handlers or tables. (The mcp module has neither: it's an adapter over the bus. Nor has the reports
 # module: it reads through other modules' queries.)
 MODULES = (
@@ -86,8 +97,16 @@ class Services:
     # Personal access tokens (D191): the account routes make them; MCP over HTTP and the stdio server resolve one to
     # the person it acts for.
     access_tokens: accounts_module.AccessTokens
-    # The rate limit on the routes that call the language model (D194), per person.
+    # The rate limit on the routes that call the language model (D194), per person, plus limits on report, receipt,
+    # sign-in and MCP routes.
     model_quota: RateLimiter
+    report_quota: RateLimiter
+    receipt_quota: RateLimiter
+    auth_quota: RateLimiter
+    mcp_quota: RateLimiter
+    # The web app's origin (settings.public_url) and whether it uses HTTPS.
+    public_url: str
+    https: bool
     # Sign-in (Phase 22): the identity provider (its issuer is None when sign-in isn't configured), the sealer for
     # the ID tokens sessions keep, the session check main.py puts in front of the protected routes, how the cookies
     # are written, and the addresses the provider is given.
@@ -96,6 +115,14 @@ class Services:
     sessions: accounts_module.SessionGate
     cookies: SessionCookies
     sign_in: accounts_module.SignInConfig
+
+    def close(self) -> None:
+        """Close any background loops, HTTP clients and database pools owned by these services."""
+        for resource in (self.agents, self.tools, self.llm):
+            closer = getattr(resource, "close", None)
+            if callable(closer):
+                closer()
+        self.engine.dispose()
 
 
 def build_bus(clock: Clock, engine: Engine) -> MessageBus:
@@ -119,6 +146,7 @@ def build(
     sealer: Sealer | None = None,
     agents: RemoteAgents | None = None,
     skills: SkillLibrary | None = None,
+    settings: Settings | None = None,
 ) -> Services:
     """Everything the app is made of. Each argument left out gets the real one, configured from the settings.
 
@@ -135,7 +163,7 @@ def build(
       (agents_host.py, D207), using `llm` and `clock`. A check passes a fake RemoteAgents, or its own A2AAgents.
     """
     clock = SystemClock() if clock is None else clock
-    settings = get_settings()
+    settings = get_settings() if settings is None else settings
     engine = db.default_engine() if engine is None else engine
     skills = FolderSkillLibrary(settings.skills_dir) if skills is None else skills
     bus = build_bus(clock, engine)
@@ -170,8 +198,14 @@ def build(
         budget_watch=budget_watch,
         skills=skills,
         mcp_server=mcp_server,
-        access_tokens=accounts_module.create_access_tokens(bus, clock),
+        access_tokens=accounts_module.create_access_tokens(bus, clock, identity=identity),
         model_quota=RateLimiter(clock, settings.model_requests_per_minute, settings.model_requests_per_day),
+        report_quota=RateLimiter(clock, REPORT_REQUESTS_PER_MINUTE, REPORT_REQUESTS_PER_DAY),
+        receipt_quota=RateLimiter(clock, RECEIPT_REQUESTS_PER_MINUTE, RECEIPT_REQUESTS_PER_DAY),
+        auth_quota=RateLimiter(clock, AUTH_REQUESTS_PER_MINUTE, AUTH_REQUESTS_PER_DAY),
+        mcp_quota=RateLimiter(clock, MCP_REQUESTS_PER_MINUTE, MCP_REQUESTS_PER_DAY),
+        public_url=settings.public_url,
+        https=settings.public_url.startswith(HTTPS_SCHEME),
         identity=identity,
         sealer=sealer,
         sessions=accounts_module.create_session_gate(bus, identity, clock),
@@ -253,9 +287,10 @@ def api_routers(services: Services) -> list[APIRouter]:
 def metadata() -> MetaData:
     """Every module's tables, for the migrations (backend/migrations/env.py).
 
-    Raises AssertionError if a module's table isn't registered on SQLModel's shared metadata (then the
+    Raises RuntimeError if a module's table isn't registered on SQLModel's shared metadata (then the
     migrations wouldn't see it).
     """
     tables = [table for module in MODULES for table in module.TABLES]
-    assert all(table.__table__.metadata is SQLModel.metadata for table in tables)
+    if not all(table.__table__.metadata is SQLModel.metadata for table in tables):
+        raise RuntimeError("Every module table must share SQLModel.metadata")
     return SQLModel.metadata

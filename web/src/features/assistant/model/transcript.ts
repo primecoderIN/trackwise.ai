@@ -10,7 +10,7 @@ import { AGUI } from "@/shared/api/contracts.gen"
 import { i18n } from "@/shared/i18n"
 import { isAbort, messageOf } from "@/shared/lib/errors"
 
-import { applyA2uiMessage, createsSurface, setAt, type A2uiAction, type A2uiSurface } from "../a2ui/protocol"
+import { applyA2uiMessage, createdSurfaceId, setAt, type A2uiAction, type A2uiSurface } from "../a2ui/protocol"
 import { toolDetailOf, toolLabelsOf, toolSucceeded } from "../api/agent-events"
 import type { AgentEvent } from "../api/agent-stream"
 import { connectionLostMessage } from "../api/sse"
@@ -80,13 +80,24 @@ function updateTool(
 // A2UI rides in AG-UI's CUSTOM event. A new card or form belongs to this reply; an update or delete may be for
 // a card from an earlier reply, so it's offered to every message that has cards.
 function applyA2ui(messages: ChatMessage[], replyId: number, value: unknown): ChatMessage[] {
-  if (createsSurface(value)) {
+  const newSurfaceId = createdSurfaceId(value)
+  if (newSurfaceId !== null) {
+    // Reject duplicate surfaceId across the entire conversation transcript, not just the current reply bubble.
+    if (messages.some((m) => m.surfaces?.some((surface) => surface.id === newSurfaceId))) return messages
     return updateMessage(withReply(messages, replyId), replyId, (message) => ({
       ...message,
       surfaces: applyA2uiMessage(message.surfaces ?? [], value),
     }))
   }
-  return messages.map((m) => (m.surfaces ? { ...m, surfaces: applyA2uiMessage(m.surfaces, value) } : m))
+  let changed = false
+  const nextMessages = messages.map((m) => {
+    if (!m.surfaces) return m
+    const nextSurfaces = applyA2uiMessage(m.surfaces, value)
+    if (nextSurfaces === m.surfaces) return m
+    changed = true
+    return { ...m, surfaces: nextSurfaces }
+  })
+  return changed ? nextMessages : messages
 }
 
 /**
@@ -167,6 +178,7 @@ export function endedEarlyMessage(id: number, error: unknown): ChatMessage {
     const stopped = i18n.t("transcript.stopped", { ns: assistantTexts.name })
     return { id, role: MESSAGE_ROLES.assistant, text: stopped, status: MESSAGE_STATUSES.stopped }
   }
-  const text = error instanceof Error ? messageOf(error) : connectionLostMessage()
+  const raw = error instanceof Error ? messageOf(error) : connectionLostMessage()
+  const text = raw.trim() ? raw : connectionLostMessage()
   return { id, role: MESSAGE_ROLES.assistant, text, status: MESSAGE_STATUSES.failed }
 }

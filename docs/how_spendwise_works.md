@@ -46,6 +46,7 @@ flowchart LR
     PAGE --> Q2["useMonthlyTrend(6)"]
     PAGE --> Q3["useExpenses({limit: 5})<br/>from features/expenses"]
     PAGE --> Q4["useCategories()<br/>from features/categories"]
+    PAGE --> Q5["BudgetCard: useBudgetStatus(this month)<br/>from features/budgets"]
     Q1 --> R1["GET /api/v1/summary"] --> H1["GetMonthlySummary<br/>SQL GROUP BY category"]
     Q2 --> R2["GET /api/v1/summary/trend"] --> H2["GetMonthlyTrend<br/>SQL GROUP BY year, month<br/>empty months filled with 0"]
     Q3 --> R3["GET /api/v1/expenses?limit=5"] --> H3["ListExpenses<br/>WHERE … ORDER BY … LIMIT"]
@@ -112,11 +113,13 @@ flowchart LR
     RULE["app/_shell/query-client.ts<br/>refreshAfter(STALE_AFTER)"]
     K1["invalidate ['expenses', …]"]
     K2["invalidate ['dashboard', …]"]
+    K3["invalidate ['budgets', …]"]
     UI["whatever is on screen reloads by itself<br/>(the rest reloads when you open it)"]
     M1 --> RULE
     M2 --> RULE
     RULE --> K1 --> UI
     RULE --> K2 --> UI
+    RULE --> K3 --> UI
 ```
 
 Features don't know about each other's pages: the expenses feature only says "I changed expenses", the assistant

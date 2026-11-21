@@ -6,6 +6,7 @@ sender today. To spot a duplicate it sends FindCategoryByName (queries/). The bu
 """
 
 from pydantic import ConfigDict
+from sqlalchemy.exc import IntegrityError
 
 from app.core.cqrs import Command, Context
 from app.core.errors import BusinessRuleError
@@ -40,9 +41,13 @@ def create_category(ctx: Context, command: CreateCategory) -> int:
     # The check is a query through the bus, so it runs in this command's own transaction.
     if ctx.bus.ask(FindCategoryByName(name=command.name)) is not None:
         raise BusinessRuleError(translatable(CategoryText.ALREADY_EXISTS, name=command.name))
-    category = Category(name=command.name, icon=command.icon)
-    ctx.session.add(category)
-    # flush sends the INSERT inside the transaction, so the database assigns the id now.
-    ctx.session.flush()
+    category = Category(name=command.name, name_key=command.name.casefold(), icon=command.icon)
+    try:
+        with ctx.session.begin_nested():
+            ctx.session.add(category)
+            # flush sends the INSERT inside the savepoint, so the database assigns the id (or catches a race) now.
+            ctx.session.flush()
+    except IntegrityError as exc:
+        raise BusinessRuleError(translatable(CategoryText.ALREADY_EXISTS, name=command.name)) from exc
     assert category.id is not None
     return category.id

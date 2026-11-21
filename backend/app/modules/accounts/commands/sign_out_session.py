@@ -34,7 +34,7 @@ def sign_out_session(ctx: Context, command: SignOutSession) -> None:
             col(UserSession.user_id) == command.owner_id,
             col(UserSession.revoked_at).is_(None),
         )
-        .values(revoked_at=ctx.clock.now())
+        .values(revoked_at=ctx.clock.now(), sealed_id_token=None)
     )
     if rows_affected(ctx.session, statement) == 0:
         raise NotFoundError(translatable(AccountText.SESSION_NOT_FOUND, session_id=command.session_id))

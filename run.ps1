@@ -4,7 +4,7 @@
 # Stop on errors instead of carrying on with a half-built setup.
 $ErrorActionPreference = "Stop"
 
-# Run from this script's folder so "backend.main" is found no matter where you call it from.
+# Run from this script's folder so backend/, agents/, and skills/ are found no matter where you call it from.
 # Push/Pop puts your terminal back where it was when the server stops.
 Push-Location $PSScriptRoot
 try {
@@ -15,6 +15,13 @@ try {
         Write-Host "Creating virtual environment in .venv ..."
         py -3 -m venv .venv
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    }
+
+    # Check the minimum Python version (D214) before installing or running.
+    & $python -c "import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "SpendWise requires Python 3.11 or newer."
+        exit 1
     }
 
     # pip's "already installed?" check takes a few seconds, so only run it
@@ -36,9 +43,10 @@ try {
 
     # Calling the venv's python directly means no activation is needed.
     # --app-dir backend: the code imports itself as "app.…", which lives inside backend/.
-    # --reload-dir backend: watch only our code, not the thousands of files in .venv.
+    # --reload-dir: watch our backend, hosted agents, and skills, not the thousands of files in .venv.
     # --factory: uvicorn calls create_app() to build the app, so importing app.main builds nothing by itself.
-    & $python -m uvicorn app.main:create_app --factory --app-dir backend --reload --reload-dir backend @args
+    & $python -m uvicorn app.main:create_app --factory --app-dir backend --reload --reload-dir backend --reload-dir agents --reload-dir skills @args
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
 finally {
     Pop-Location

@@ -31,10 +31,11 @@ export function useSignedInUser() {
 }
 
 /** The sign-in page's buttons. They only change with the server's settings, so they're asked once per page load. */
-export function useLoginOptions() {
+export function useLoginOptions(enabled = true) {
   return useQuery({
     queryKey: authKeys.options,
     queryFn: ({ signal }) => getLoginOptions(signal),
     staleTime: Number.POSITIVE_INFINITY,
+    enabled,
   })
 }

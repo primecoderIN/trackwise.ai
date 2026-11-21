@@ -17,9 +17,6 @@ from app.modules.expenses.commands.update_expense import ExpenseChanges, UpdateE
 from app.modules.expenses.conversion.port import ExchangeRate, ExchangeRates
 from app.modules.expenses.queries.get_expense import GetExpense
 
-# The fields of ExpenseChanges that decide the INR amount: an update touching one of them is converted again.
-CONVERTED_BY = frozenset({"amount", "currency", "spent_on"})
-
 
 @dataclass(frozen=True)
 class ExpenseRecorder:
@@ -39,16 +36,22 @@ class ExpenseRecorder:
 
     def update(self, owner_id: int, expense_id: int, changes: ExpenseChanges) -> None:
         """Apply `changes` to one of `owner_id`'s expenses, converting it again if its amount, currency or date
-        changes into (or within) another currency.
+        changes into (or within) another currency, or if a legacy row has no base amount yet.
 
         Raises NotFoundError for an expense they don't have, the rates' errors as for create, and whatever
         UpdateExpense raises.
         """
-        rate = None
-        if CONVERTED_BY.intersection(changes.model_fields_set):
-            # What the expense will be once changed: the rate is for its currency, on its date.
-            current = self.bus.ask(GetExpense(owner_id=owner_id, expense_id=expense_id))
-            rate = self._rate(changes.currency or current.currency, changes.spent_on or current.spent_on)
+        current = self.bus.ask(GetExpense(owner_id=owner_id, expense_id=expense_id))
+        amount = changes.amount if changes.amount is not None else current.amount
+        currency = changes.currency or current.currency
+        spent_on = changes.spent_on or current.spent_on
+        needs_rate = (
+            amount != current.amount
+            or currency != current.currency
+            or spent_on != current.spent_on
+            or current.base_amount_minor is None
+        )
+        rate = self._rate(currency, spent_on) if needs_rate else None
         self.bus.execute(UpdateExpense(owner_id=owner_id, expense_id=expense_id, changes=changes, rate=rate))
 
     def _rate(self, currency: str, on: date) -> ExchangeRate | None:

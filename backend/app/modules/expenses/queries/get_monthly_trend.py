@@ -52,7 +52,11 @@ def get_monthly_trend(ctx: Context, query: GetMonthlyTrend) -> MonthlyTrend:
     that had no expenses, so a chart has no gaps.
     """
     last = YearMonth.of(query.until)
-    first = last.shift(-(query.months - 1))
+    window = [last]
+    while len(window) < query.months and (earlier := window[-1].previous()) is not None:
+        window.append(earlier)
+    window.reverse()
+    first = window[0]
     # SQLAlchemy's extract() is written once and rendered for each database: CAST(STRFTIME(...)) on
     # SQLite, which has no EXTRACT, and the standard EXTRACT(year/month ...) on Postgres. This works with the
     # app's PostgreSQL database and explicitly supplied SQLite check engines.
@@ -60,15 +64,14 @@ def get_monthly_trend(ctx: Context, query: GetMonthlyTrend) -> MonthlyTrend:
     month_of = extract("month", col(Expense.spent_on))
     statement = (
         select(year_of, month_of, func.count(col(Expense.id)), func.sum(Expense.base_amount_minor))
-        .where(*in_month_range(query.owner_id, first.first_day(), last.shift(1).first_day()))
+        .where(*in_month_range(query.owner_id, first.first_day(), last.next_month_first_day()))
         .group_by(year_of, month_of)
     )
     # int(): a database may hand back the year and month as decimals (Postgres's EXTRACT does).
     found = {YearMonth(int(y), int(m)): (count, total) for y, m, count, total in ctx.session.exec(statement)}
     # One entry per month, oldest first. A month with no spending is a real 0, not a missing point.
     trend = []
-    for offset in range(query.months):
-        month = first.shift(offset)
+    for month in window:
         count, total = found.get(month, (0, 0))
         trend.append(MonthTotal(month=str(month), expense_count=count, total_minor=total or 0))
     return MonthlyTrend(currency=BASE_CURRENCY, months=trend)

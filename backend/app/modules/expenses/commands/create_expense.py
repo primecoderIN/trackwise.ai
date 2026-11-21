@@ -7,8 +7,6 @@ handler applies the business rules (domain/rules.py, domain/base_amount.py), the
 persistence/repository.py. The bus commits; the handler never does.
 """
 
-from datetime import date
-
 from pydantic import BaseModel, ConfigDict
 
 from app.core.cqrs import Command, Context
@@ -20,7 +18,7 @@ from app.modules.expenses.domain.base_amount import base_amount_fields
 from app.modules.expenses.domain.rules import require_category_exists, require_positive_amount
 from app.modules.expenses.persistence import repository
 from app.modules.expenses.persistence.tables import Expense
-from app.modules.expenses.values import Amount, Merchant, Note, PaymentMethod
+from app.modules.expenses.values import Amount, Merchant, Note, PaymentMethod, SpentOnDate
 
 
 # The new expense's fields, and the body of POST /expenses. Not a message: it has no owner, which the server adds
@@ -36,7 +34,7 @@ class NewExpense(BaseModel):
     category_id: CategoryId
     merchant: Merchant
     note: Note | None = None
-    spent_on: date
+    spent_on: SpentOnDate
     payment_method: PaymentMethod
 
 

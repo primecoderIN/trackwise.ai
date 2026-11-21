@@ -20,5 +20,9 @@ function subscribe(onChange: () => void): () => void {
  * layout drawn and then replaced), and there's no setState inside an effect.
  */
 export function useIsMobile(): boolean {
-  return useSyncExternalStore(subscribe, () => window.matchMedia(MOBILE_QUERY).matches)
+  return useSyncExternalStore(
+    subscribe,
+    () => window.matchMedia(MOBILE_QUERY).matches,
+    () => false,
+  )
 }

@@ -9,29 +9,30 @@ isolated checks; the app does not create a local database file.
 ```mermaid
 erDiagram
     category {
-        INTEGER id PK
-        VARCHAR_50 name "unique, any letter case"
+        BIGINT id PK
+        VARCHAR_50 name "unique"
+        VARCHAR_50 name_key "unique, case-folded"
         VARCHAR_50 icon
     }
     expense {
-        INTEGER id PK
-        INTEGER owner_id "the person; indexed with spent_on"
-        INTEGER amount_minor "paise"
+        BIGINT id PK
+        BIGINT owner_id "the person; indexed with spent_on"
+        BIGINT amount_minor "paise"
         VARCHAR_3 currency
-        INTEGER category_id "indexed, no foreign key"
+        BIGINT category_id "indexed, no foreign key"
         VARCHAR_100 merchant
         VARCHAR_500 note "nullable"
         DATE spent_on "indexed"
         VARCHAR_20 payment_method
         DATETIME created_at "UTC, with time zone"
         INTEGER version "starts at 1"
-        INTEGER base_amount_minor "INR paise, nullable"
+        BIGINT base_amount_minor "INR paise, nullable"
         VARCHAR_32 exchange_rate "nullable"
         DATE rate_date "nullable"
     }
     conversation_message {
-        INTEGER id PK
-        INTEGER owner_id "the person; indexed with thread_id, turn"
+        BIGINT id PK
+        BIGINT owner_id "the person; indexed with thread_id, turn"
         VARCHAR_32 thread_id
         INTEGER turn
         VARCHAR_30 kind
@@ -39,53 +40,62 @@ erDiagram
         DATETIME created_at
     }
     budget {
-        INTEGER id PK
-        INTEGER owner_id "the person; unique with category_id"
-        INTEGER category_id "nullable: null is the overall budget"
-        INTEGER limit_minor "paise, monthly"
+        BIGINT id PK
+        BIGINT owner_id "the person; unique with category_id"
+        BIGINT category_id "nullable: null is the overall budget"
+        BIGINT limit_minor "paise, monthly"
         DATETIME updated_at "UTC"
     }
     pending_approval {
         VARCHAR_64 approval_id PK "the card's surface id"
-        INTEGER owner_id "the person; indexed"
+        BIGINT owner_id "the person; indexed"
         VARCHAR_32 thread_id "indexed"
         JSON expense "snapshot shown on the card"
         DATETIME created_at "indexed"
     }
+    pending_delegation {
+        BIGINT owner_id PK "the person; PK with thread_id"
+        VARCHAR_32 thread_id PK
+        VARCHAR_32 agent
+        VARCHAR_64 skill
+        VARCHAR_64 task_id
+        VARCHAR_64 context_id
+        DATETIME created_at "indexed"
+    }
     receipt_file {
-        INTEGER id PK
-        INTEGER owner_id "the person; indexed"
+        BIGINT id PK
+        BIGINT owner_id "the person; indexed"
         VARCHAR_32 storage_key "unique; the file is in UPLOADS_DIR"
         VARCHAR_15 media_type "read from the file's bytes"
         INTEGER size_bytes
         DATETIME created_at "UTC, with time zone"
     }
     app_user {
-        INTEGER id PK "SpendWise's own id for a person"
+        BIGINT id PK "SpendWise's own id for a person"
         VARCHAR_200 name "as the provider last said"
         VARCHAR_320 email
         BOOLEAN email_verified
-        VARCHAR_2048 avatar_url "http(s) only"
+        VARCHAR_2048 avatar_url "https only"
         BOOLEAN is_active
         DATETIME created_at
         DATETIME updated_at
     }
     user_identity {
-        INTEGER id PK
-        INTEGER user_id FK "indexed"
+        BIGINT id PK
+        BIGINT user_id FK "indexed"
         VARCHAR_255 issuer "unique with subject"
         VARCHAR_255 subject
         VARCHAR_320 email "when first seen"
         DATETIME created_at
     }
     user_session {
-        INTEGER id PK
+        BIGINT id PK
         VARCHAR_64 key_hash "unique; SHA-256 of the cookie's key"
         VARCHAR_32 handle "unique; the sign-out link's sid"
-        INTEGER user_id FK "indexed"
+        BIGINT user_id FK "indexed"
         VARCHAR_255 issuer
         VARCHAR_255 provider_session_id "indexed; OIDC sid"
-        TEXT sealed_id_token "encrypted"
+        TEXT sealed_id_token "encrypted; cleared on revoke"
         DATETIME created_at
         DATETIME renewed_at
         DATETIME expires_at "indexed; idle"
@@ -94,7 +104,7 @@ erDiagram
         VARCHAR_255 user_agent "nullable"
     }
     login_attempt {
-        INTEGER id PK
+        BIGINT id PK
         VARCHAR_64 key_hash "unique"
         VARCHAR_64 state
         VARCHAR_64 nonce
@@ -103,8 +113,8 @@ erDiagram
         DATETIME created_at "indexed"
     }
     access_token {
-        INTEGER id PK
-        INTEGER user_id FK "indexed"
+        BIGINT id PK
+        BIGINT user_id FK "indexed"
         VARCHAR_50 name
         VARCHAR_64 token_hash "unique; SHA-256 of the token"
         VARCHAR_4 hint "its last characters"
@@ -119,14 +129,17 @@ erDiagram
 ```
 
 The dotted line is a link kept **in code**, not by the database: there are no foreign keys between modules (below).
-`pending_approval.thread_id` and `conversation_message.thread_id` name the same conversations, also without a key.
+`pending_approval.thread_id`, `pending_delegation.thread_id` and `conversation_message.thread_id` name the same
+conversations, also without a key.
 
 | Table | Owner module | Holds |
 |---|---|---|
 | `category` | categories | the spending categories |
 | `expense` | expenses | every expense |
+| `budget` | budgets | standing monthly limits, overall and per category |
 | `conversation_message` | conversations | chat history, one row per message |
 | `pending_approval` | assistant | delete cards waiting for Approve or Cancel |
+| `pending_delegation` | assistant | A2A agent tasks waiting for the person's follow-up answer |
 | `receipt_file` | receipts | uploaded receipts (the files themselves are in `UPLOADS_DIR`, not the database) |
 | `app_user` | accounts | the people who use SpendWise, by SpendWise's own id |
 | `user_identity` | accounts | how each person signs in: a provider (issuer) and their id there (subject) |
@@ -139,8 +152,9 @@ The dotted line is a link kept **in code**, not by the database: there are no fo
 
 | Column | Type | Notes |
 |---|---|---|
-| `id` | INTEGER, primary key | |
-| `name` | VARCHAR(50), not null | unique index `ix_category_name`; the app also refuses names that differ only in letter case ("food" vs "Food") |
+| `id` | BIGINT, primary key | |
+| `name` | VARCHAR(50), not null | unique index `ix_category_name` |
+| `name_key` | VARCHAR(50), not null | unique index `ix_category_name_key`: trimmed, case-folded `name`, so names that differ only in letter case ("food" vs "Food") are rejected by the database too (D216) |
 | `icon` | VARCHAR(50), not null | an icon *name* (`utensils`), mapped to a picture by the web app |
 
 ## `expense`
@@ -352,6 +366,8 @@ The tables are created and changed only by **Alembic migrations** in `backend/mi
 | `0007_owners` | **deletes the expenses, conversations, delete cards and receipt rows made before sign-in** (they belonged to nobody), then adds `owner_id` to those four tables with their new indexes, `access_token`, and `user_session.user_agent` (Phase 23). The receipt files stay in `UPLOADS_DIR`. Downgrade removes the additions; the deleted rows don't come back |
 | `0008_base_amounts` | adds `expense.base_amount_minor`, `exchange_rate` and `rate_date` (Phase 25), filled in for expenses already in INR (their own amount, rate `1`, their own date); expenses in other currencies stay null (a migration can't call the currency agent). Downgrade drops the three columns |
 | `0009_pending_delegations` | adds `pending_delegation` (Phase 25); downgrade drops it (a question still waiting is forgotten) |
+| `0010_budgets` | adds `budget` and its two unique indexes (`uq_budget_owner_id_category_id` and partial `uq_budget_owner_id_overall`, Phase 27); downgrade drops the indexes and the table |
+| `0011_bigint_and_category_key` | widens all id, owner/category/user reference and minor-unit money columns (`amount_minor`, `base_amount_minor`, `limit_minor`) to 64-bit `BigInteger` (`BIGINT` in PostgreSQL), and adds `category.name_key` with unique index `ix_category_name_key` (D216) |
 
 - `.\run.ps1` runs `alembic upgrade head` before starting; `seed.py` and `mcp_stdio.py` do too. The app itself only
   checks, and refuses to start on an out-of-date database with the command to fix it.

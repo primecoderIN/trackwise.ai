@@ -4,6 +4,8 @@ A slice of the accounts module's read side. The sign-out use case (application/s
 the session, for the sealed ID token it names to the provider; module.py registers the handler.
 """
 
+from sqlmodel import select
+
 from app.core.cqrs import Context, Query
 from app.modules.accounts.models import SignOutView
 from app.modules.accounts.persistence.tables import UserSession
@@ -19,5 +21,5 @@ class GetSignOut(Query[SignOutView]):
 
 def get_sign_out(ctx: Context, query: GetSignOut) -> SignOutView:
     """The sealed ID token kept with the session."""
-    session = ctx.session.get(UserSession, query.session_id)
+    session = ctx.session.exec(select(UserSession).where(UserSession.id == query.session_id)).first()
     return SignOutView(sealed_id_token=session.sealed_id_token if session else None)

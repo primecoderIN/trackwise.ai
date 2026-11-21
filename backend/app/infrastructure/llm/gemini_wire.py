@@ -51,8 +51,9 @@ class DeltaType(StrEnum):
 
 TEXT_PART = "text"
 SIGNATURE = "signature"
-# The only JSON-schema keywords passed on to Gemini; the rest (title, default, ...) are noise to it.
-_KEPT_SCHEMA_KEYWORDS = ("type", "description", "enum", "items", "format")
+# The JSON-schema keywords passed on to Gemini (nested objects and arrays are simplified recursively).
+_KEPT_SCHEMA_KEYWORDS = ("type", "description", "enum", "format", "minimum", "maximum", "required")
+_DEFS_PREFIX = "#/$defs/"
 
 
 def _text_content(text: str) -> list[dict[str, str]]:
@@ -152,25 +153,43 @@ def from_steps(steps: list[dict[str, Any]]) -> list[Message]:
     return messages
 
 
-def _simplify_schema(prop: dict[str, Any]) -> dict[str, Any]:
-    """One argument's JSON schema, cut down to the keywords Gemini uses (_KEPT_SCHEMA_KEYWORDS)."""
-    # Optional arguments arrive as anyOf [X, null]; Gemini just needs X (and "not required").
+def _resolve_ref(prop: dict[str, Any], defs: dict[str, Any]) -> dict[str, Any]:
+    """Inline a local `#/$defs/<Name>` reference while keeping sibling metadata such as description."""
+    ref = prop.get("$ref")
+    if isinstance(ref, str) and ref.startswith(_DEFS_PREFIX):
+        target = defs.get(ref.removeprefix(_DEFS_PREFIX))
+        if isinstance(target, dict):
+            return {**target, **{k: v for k, v in prop.items() if k != "$ref"}}
+    return prop
+
+
+def _simplify_schema(prop: dict[str, Any], defs: dict[str, Any] | None = None) -> dict[str, Any]:
+    """One argument's JSON schema, simplified recursively to the keywords Gemini uses."""
+    local_defs = defs or {}
+    prop = _resolve_ref(prop, local_defs)
+    # Optional or union arguments arrive as anyOf [X, ..., null]; resolve the first non-null branch.
     if "anyOf" in prop:
         real = next((option for option in prop["anyOf"] if option.get("type") != "null"), {})
-        prop = {**prop, **real}
-    return {key: prop[key] for key in _KEPT_SCHEMA_KEYWORDS if key in prop}
+        prop = {**prop, **_resolve_ref(real, local_defs)}
+    cleaned: dict[str, Any] = {key: prop[key] for key in _KEPT_SCHEMA_KEYWORDS if key in prop}
+    if "items" in prop and isinstance(prop["items"], dict):
+        cleaned["items"] = _simplify_schema(prop["items"], local_defs)
+    if "properties" in prop and isinstance(prop["properties"], dict):
+        cleaned["properties"] = {name: _simplify_schema(sub, local_defs) for name, sub in prop["properties"].items()}
+    return cleaned
 
 
 def to_declaration(spec: ToolSpec) -> dict[str, Any]:
     """A neutral tool spec -> a Gemini function declaration."""
     schema = spec.parameters
+    defs = schema.get("$defs") if isinstance(schema.get("$defs"), dict) else {}
     return {
         "type": "function",
         "name": spec.name,
         "description": spec.description,
         "parameters": {
             "type": "object",
-            "properties": {name: _simplify_schema(prop) for name, prop in schema.get("properties", {}).items()},
+            "properties": {name: _simplify_schema(prop, defs) for name, prop in schema.get("properties", {}).items()},
             "required": schema.get("required", []),
         },
     }
@@ -182,7 +201,9 @@ def finish_step(step: dict[str, Any], streamed: str) -> dict[str, Any]:
     Raises ValueError (json.JSONDecodeError) if a function call's streamed arguments aren't valid JSON.
     """
     if step["type"] == StepType.MODEL_OUTPUT and streamed:
-        step["content"] = _text_content(streamed)
+        # Preserve any initial text sent in step.start before appending streamed deltas.
+        existing = _joined_text(step.get("content"))
+        step["content"] = _text_content(existing + streamed)
     elif step["type"] == StepType.FUNCTION_CALL and streamed:
         step["arguments"] = json.loads(streamed)
     elif step["type"] == StepType.THOUGHT and streamed:
@@ -211,18 +232,19 @@ class StepAssembler:
     def add(self, index: int, delta: Any) -> str | None:
         """Add one streamed piece (a step.delta event's delta) to step `index`.
 
-        Returns the piece if it's text of the answer, for the caller to pass on to the user; None otherwise.
+        Returns the piece if it's text of a MODEL_OUTPUT step, for the caller to pass on to the user; None otherwise.
         `delta.type` (a DeltaType) says which attribute holds the piece; other delta types are skipped.
         """
+        step_type = self._steps.get(index, {}).get("type")
         match delta.type:
-            case DeltaType.TEXT if delta.text:
-                # The answer itself. Thoughts arrive as other delta types, so they never reach the user.
+            case DeltaType.TEXT if delta.text and step_type == StepType.MODEL_OUTPUT:
+                # Only surface text belonging to MODEL_OUTPUT steps; thought text must never leak to users.
                 self._pieces[index].append(delta.text)
                 return delta.text
-            case DeltaType.ARGUMENTS:
+            case DeltaType.ARGUMENTS if step_type == StepType.FUNCTION_CALL:
                 # A function call's arguments arrive as fragments of one JSON string.
                 self._pieces[index].append(delta.arguments or "")
-            case DeltaType.THOUGHT_SIGNATURE:
+            case DeltaType.THOUGHT_SIGNATURE if step_type == StepType.THOUGHT:
                 self._pieces[index].append(delta.signature or "")
             # Other deltas (e.g. thought summaries, which we don't ask for) are skipped, as Google advises.
         return None

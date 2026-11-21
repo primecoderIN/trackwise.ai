@@ -18,10 +18,12 @@ from collections.abc import Callable, Iterable
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-APP = ROOT / "backend" / "app"
+BACKEND = ROOT / "backend"
+APP = BACKEND / "app"
 AGENTS = ROOT / "agents"
 WEB_SRC = ROOT / "web" / "src"
 MODULES = APP / "modules"
+ENTRY_SCRIPTS = (BACKEND / "seed.py", BACKEND / "mcp_stdio.py")
 AGENT_PACKAGES = ("receipt", "insights", "currency", "agent_kit")
 
 # Which modules each module may use (AGENTS.md, "Boundaries"); "*" means any other module.
@@ -36,47 +38,101 @@ ALLOWED_MODULE_DEPENDENCIES: dict[str, set[str]] = {
     "mcp": {"expenses", "categories", "reports", "budgets"},
     "assistant": {"*"},
 }
-# The only module files that may import web/: the HTTP adapters.
-HTTP_ADAPTERS = {"api.py", "account_api.py", "http.py", "routes.py"}
-# Where the Gemini adapter may be chosen: the composition root, the adapter itself, and the agents' server.py.
+# The only module files that may import web/: the HTTP adapters (exact paths relative to backend/app/modules/).
+HTTP_ADAPTERS = {
+    "accounts/api.py",
+    "accounts/account_api.py",
+    "assistant/api/routes.py",
+    "budgets/api.py",
+    "categories/api.py",
+    "conversations/api.py",
+    "expenses/api.py",
+    "mcp/http.py",
+    "receipts/api.py",
+    "reports/api.py",
+}
+# Where the Gemini adapter may be chosen: the composition root, the adapter itself, and each agent's server.py.
 LLM_PROVIDER_PATTERN = re.compile(r"llm\.gemini|from google")
-LLM_PROVIDER_FILES = {"bootstrap.py", "gemini.py", "server.py"}
+LLM_PROVIDER_FILES = {
+    "backend/app/bootstrap.py",
+    "backend/app/infrastructure/llm/gemini.py",
+    "agents/receipt/server.py",
+    "agents/insights/server.py",
+    "agents/currency/server.py",
+}
+# The only backend infrastructure modules an agent's server.py may import (D196).
+ALLOWED_AGENT_INFRA = ("app.infrastructure.llm.gemini", "app.infrastructure.logging")
 # No identity provider's name in the code (D185).
 PROVIDER_NAMES = re.compile(r"zitadel", re.IGNORECASE)
-# A person's data is read with its owner in the same statement (D190); take_approval compares the owner itself.
-OWNED_DATA_MODULES = ("expenses", "budgets", "conversations", "receipts", "assistant")
+# A person's data is read with its owner in the same statement (D190), never session.get(Table, id).
+OWNED_DATA_MODULES = ("accounts", "expenses", "budgets", "conversations", "receipts", "assistant")
 SESSION_GET = re.compile(r"session\.get\(")
-SESSION_GET_ALLOWED = {"take_approval.py"}
+SESSION_GET_ALLOWED: set[str] = set()
 
 
 def python_files(*roots: Path) -> Iterable[Path]:
-    """Every .py file under `roots`, skipping caches."""
+    """Every .py file under `roots` (or a file passed directly), skipping caches."""
     for root in roots:
-        yield from (path for path in root.rglob("*.py") if "__pycache__" not in path.parts)
+        if root.is_file():
+            yield root
+        else:
+            yield from (path for path in root.rglob("*.py") if "__pycache__" not in path.parts)
+
+
+def _package_parts(path: Path) -> tuple[str, ...]:
+    """The dotted package enclosing `path` inside backend/ or agents/."""
+    base = AGENTS if path.is_relative_to(AGENTS) else BACKEND if path.is_relative_to(BACKEND) else ROOT
+    parts = path.relative_to(base).with_suffix("").parts
+    return parts[:-1]
+
+
+def _is_submodule(base: str, name: str) -> bool:
+    """Whether `name` is a file or package inside `base` (e.g. `app.modules.expenses` -> `values` or `module`)."""
+    parts = base.split(".")
+    if parts[:2] != ["app", "modules"] or len(parts) != 3:
+        return name == "module"
+    module_dir = MODULES / parts[2]
+    return (module_dir / f"{name}.py").exists() or (module_dir / name).is_dir()
+
+
+def _resolve_import_from(path: Path, node: ast.ImportFrom) -> list[str]:
+    """Resolve an `ImportFrom` node (absolute or relative) to absolute dotted module names."""
+    if node.level == 0:
+        base = node.module or ""
+    else:
+        pkg = _package_parts(path)
+        up = max(0, len(pkg) - (node.level - 1))
+        prefix = pkg[:up]
+        base = ".".join((*prefix, node.module) if node.module else prefix)
+    if not base:
+        return [alias.name for alias in node.names]
+    if base in ("app.modules", "app"):
+        return [f"{base}.{alias.name}" for alias in node.names]
+    resolved = [base]
+    for alias in node.names:
+        if _is_submodule(base, alias.name):
+            resolved.append(f"{base}.{alias.name}")
+    return resolved
 
 
 def imports_of(path: Path) -> list[str]:
-    """Every module `path` imports (absolute names; `from app.modules import x` counts as app.modules.x)."""
+    """Every module `path` imports, with relative imports resolved to absolute names."""
     names: list[str] = []
     for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
         if isinstance(node, ast.Import):
             names += [alias.name for alias in node.names]
-        elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
-            if node.module in ("app.modules", "app"):
-                names += [f"{node.module}.{alias.name}" for alias in node.names]
-            else:
-                names.append(node.module)
+        elif isinstance(node, ast.ImportFrom):
+            names += _resolve_import_from(path, node)
     return names
 
 
 def imports_a_module_py(path: Path) -> bool:
-    """Whether `path` imports a module's wiring: `from app.modules.<name> import module`."""
-    return any(
-        isinstance(node, ast.ImportFrom)
-        and (node.module or "").startswith("app.modules.")
-        and any(alias.name == "module" for alias in node.names)
-        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8")))
-    )
+    """Whether `path` imports any module's `module.py` wiring."""
+    for name in imports_of(path):
+        parts = name.split(".")
+        if parts[:2] == ["app", "modules"] and len(parts) >= 4 and parts[3] == "module":
+            return True
+    return False
 
 
 def relative(path: Path) -> str:
@@ -86,12 +142,12 @@ def relative(path: Path) -> str:
 
 def layer_rules() -> list[str]:
     """1. core/ imports nothing else in the app; infrastructure/ and web/ import only core/; modules never import
-    infrastructure/ (D177)."""
+    infrastructure/ or the composition root (D177)."""
     forbidden = {
-        "core": ("app.modules", "app.infrastructure", "app.web", "app.bootstrap", "app.main"),
-        "infrastructure": ("app.modules", "app.web", "app.bootstrap", "app.main"),
-        "web": ("app.modules", "app.infrastructure", "app.bootstrap", "app.main"),
-        "modules": ("app.infrastructure",),
+        "core": ("app.modules", "app.infrastructure", "app.web", "app.bootstrap", "app.main", "app.agents_host"),
+        "infrastructure": ("app.modules", "app.web", "app.bootstrap", "app.main", "app.agents_host"),
+        "web": ("app.modules", "app.infrastructure", "app.bootstrap", "app.main", "app.agents_host"),
+        "modules": ("app.infrastructure", "app.bootstrap", "app.main", "app.agents_host"),
     }
     return [
         f"{relative(path)} imports {name}"
@@ -118,8 +174,9 @@ def module_rules() -> list[str]:
             allowed = ALLOWED_MODULE_DEPENDENCIES.get(owner, set())
             if "*" not in allowed and other not in allowed:
                 problems.append(f"{relative(path)}: `{owner}` may not depend on `{other}`")
-    for path in python_files(APP, ROOT / "backend" / "scripts", ROOT / "backend" / "migrations"):
-        if path.name not in ("bootstrap.py", "main.py") and imports_a_module_py(path):
+    allowed_wiring = {relative(APP / "bootstrap.py"), relative(APP / "main.py")}
+    for path in python_files(APP, BACKEND / "scripts", BACKEND / "migrations", *ENTRY_SCRIPTS):
+        if relative(path) not in allowed_wiring and imports_a_module_py(path):
             problems.append(f"{relative(path)} imports a module.py: only bootstrap.py and main.py may")
     return problems
 
@@ -128,10 +185,10 @@ def text_rules() -> list[str]:
     """4. Only a composition root picks the LLM provider; 8. no identity provider's name; 9. no session.get( on a
     person's data."""
     problems = []
-    for path in python_files(APP, AGENTS):
-        if LLM_PROVIDER_PATTERN.search(path.read_text(encoding="utf-8")) and path.name not in LLM_PROVIDER_FILES:
+    for path in python_files(APP, AGENTS, *ENTRY_SCRIPTS):
+        if LLM_PROVIDER_PATTERN.search(path.read_text(encoding="utf-8")) and relative(path) not in LLM_PROVIDER_FILES:
             problems.append(f"{relative(path)} picks the LLM provider")
-    sources = [*python_files(APP), *WEB_SRC.rglob("*.ts"), *WEB_SRC.rglob("*.tsx")]
+    sources = [*python_files(APP, *ENTRY_SCRIPTS), *WEB_SRC.rglob("*.ts"), *WEB_SRC.rglob("*.tsx")]
     problems += [
         f"{relative(path)} names an identity provider"
         for path in sources
@@ -139,7 +196,7 @@ def text_rules() -> list[str]:
     ]
     for module in OWNED_DATA_MODULES:
         for path in python_files(MODULES / module):
-            if path.name not in SESSION_GET_ALLOWED and SESSION_GET.search(path.read_text(encoding="utf-8")):
+            if relative(path) not in SESSION_GET_ALLOWED and SESSION_GET.search(path.read_text(encoding="utf-8")):
                 problems.append(f"{relative(path)} reads a row by id alone (session.get): name the owner too")
     return problems
 
@@ -167,7 +224,8 @@ def adapter_rules() -> list[str]:
     problems = [
         f"{relative(path)} imports web/ but isn't an HTTP adapter"
         for path in python_files(MODULES)
-        if path.name not in HTTP_ADAPTERS and any(name.startswith("app.web") for name in imports_of(path))
+        if path.relative_to(MODULES).as_posix() not in HTTP_ADAPTERS
+        and any(name.startswith("app.web") for name in imports_of(path))
     ]
     problems += [
         f"{relative(path)} imports the A2A SDK"
@@ -180,14 +238,21 @@ def adapter_rules() -> list[str]:
 def agent_rules() -> list[str]:
     """10. The agents use only the backend's core/ (plus the Gemini adapter and logging in a server.py); in the
     backend, only agents_host.py imports them (D196, D207)."""
-    forbidden = ("app.modules", "app.web", "app.bootstrap", "app.main", "app.infrastructure.config")
     problems = []
     for path in python_files(AGENTS):
+        is_server = path.parent.parent == AGENTS and path.name == "server.py"
         for name in imports_of(path):
-            if name.startswith(forbidden) or (name.startswith("app.infrastructure") and path.name != "server.py"):
-                problems.append(f"{relative(path)} imports {name}")
+            if not name.startswith("app."):
+                continue
+            if name == "app.core" or name.startswith("app.core."):
+                continue
+            if is_server and name.startswith(ALLOWED_AGENT_INFRA):
+                continue
+            problems.append(f"{relative(path)} imports {name}")
     for path in python_files(APP):
-        if path.name != "agents_host.py" and any(n.split(".")[0] in AGENT_PACKAGES for n in imports_of(path)):
+        if relative(path) != relative(APP / "agents_host.py") and any(
+            n.split(".")[0] in AGENT_PACKAGES for n in imports_of(path)
+        ):
             problems.append(f"{relative(path)} imports an agent: only agents_host.py may")
     return problems
 
@@ -197,15 +262,17 @@ def import_rules() -> list[str]:
     checks = [
         f"import app.modules.{path.name}" for path in sorted(MODULES.iterdir()) if (path / "__init__.py").exists()
     ]
-    checks.append("import receipt.server, insights.server, currency.server")
-    environment = {**os.environ, "PYTHONPATH": os.pathsep.join([str(ROOT / "backend"), str(AGENTS)])}
+    checks += ["import receipt.server", "import insights.server", "import currency.server", "import agent_kit"]
+    environment = {**os.environ, "PYTHONPATH": os.pathsep.join([str(BACKEND), str(AGENTS)])}
     problems = []
     for statement in checks:
         done = subprocess.run(
             [sys.executable, "-c", statement], capture_output=True, text=True, env=environment, check=False
         )
         if done.returncode != 0:
-            problems.append(f"`{statement}` fails on its own: {done.stderr.strip().splitlines()[-1]}")
+            lines = done.stderr.strip().splitlines()
+            reason = lines[-1] if lines else f"exit code {done.returncode}"
+            problems.append(f"`{statement}` fails on its own: {reason}")
     return problems
 
 

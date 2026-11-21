@@ -26,6 +26,8 @@ CallerLookup = Callable[[], int | None]
 NOT_SIGNED_IN = "This MCP connection isn't signed in, or its access token no longer works: use a valid token."
 
 _caller: ContextVar[CallerLookup | None] = ContextVar("spendwise_mcp_caller", default=None)
+_in_http_request: ContextVar[bool] = ContextVar("spendwise_mcp_in_http_request", default=False)
+_process_resolver: CallerLookup | None = None
 
 
 def _lookup_for(who: int | CallerLookup) -> CallerLookup:
@@ -48,9 +50,24 @@ def acting_for(who: int | CallerLookup) -> Iterator[None]:
         _caller.reset(token)
 
 
+@contextmanager
+def act_for_request(who: int | CallerLookup | None) -> Iterator[None]:
+    """Mark an HTTP request context for `who`, ensuring an unauthenticated HTTP request never falls back to
+    `_process_resolver`."""
+    http_token = _in_http_request.set(True)
+    caller_token = _caller.set(_lookup_for(who) if who is not None else None)
+    try:
+        yield
+    finally:
+        _caller.reset(caller_token)
+        _in_http_request.reset(http_token)
+
+
 def act_for_process(lookup: CallerLookup) -> None:
     """Serve every MCP request of this process for whoever `lookup` names: for a server that runs for one person
     (stdio), set before it starts. `mcp run` imports the server and starts it later, so this can't be a block."""
+    global _process_resolver
+    _process_resolver = lookup
     _caller.set(lookup)
 
 
@@ -61,6 +78,8 @@ def current_caller() -> int:
     never falls back to anyone's data.
     """
     lookup = _caller.get()
+    if lookup is None and not _in_http_request.get():
+        lookup = _process_resolver
     user_id = lookup() if lookup is not None else None
     if user_id is None:
         raise AuthenticationError(NOT_SIGNED_IN)

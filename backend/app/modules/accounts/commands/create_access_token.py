@@ -50,5 +50,7 @@ def create_access_token(ctx: Context, command: CreateAccessToken) -> int:
     ctx.session.add(row)
     # flush sends the INSERT inside the transaction, so the database assigns the id now.
     ctx.session.flush()
+    if ctx.session.exec(working).one() > MAX_ACCESS_TOKENS:
+        raise BusinessRuleError(translatable(AccountText.TOO_MANY_TOKENS, max=MAX_ACCESS_TOKENS))
     assert row.id is not None
     return row.id

@@ -28,6 +28,7 @@ try {
     $savedPythonPath = $env:PYTHONPATH
     $env:PYTHONPATH = "backend;agents"
     & $python -m $Name
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
 finally {
     $env:PYTHONPATH = $savedPythonPath

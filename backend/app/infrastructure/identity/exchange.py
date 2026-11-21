@@ -70,7 +70,8 @@ def exchange_code(
         **fields,
     }
     tokens = fetch_json(http, "POST", metadata.token_endpoint, data=form, auth=auth)
-    if not isinstance(tokens.get("id_token"), str):
+    id_token = tokens.get("id_token")
+    if not isinstance(id_token, str) or not id_token.strip():
         raise IdentityError("the token response has no id_token")
     if "access_token" in tokens and str(tokens.get("token_type", "")).lower() != BEARER:
         raise IdentityError(f"unexpected token type {tokens.get('token_type')!r}")

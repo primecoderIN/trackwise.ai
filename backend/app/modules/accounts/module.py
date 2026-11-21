@@ -67,14 +67,16 @@ def create_session_gate(bus: MessageBus, identity: IdentityProvider, clock: Cloc
     return SessionGate(bus=bus, identity=identity, clock=clock)
 
 
-def create_access_tokens(bus: MessageBus, clock: Clock) -> AccessTokens:
+def create_access_tokens(bus: MessageBus, clock: Clock, identity: IdentityProvider | None = None) -> AccessTokens:
     """The personal access tokens (D191): the account routes make them, and the MCP endpoint and the stdio server
     resolve one to the person it acts for (`resolve`)."""
-    return AccessTokens(bus=bus, clock=clock)
+    return AccessTokens(bus=bus, clock=clock, identity=identity)
 
 
 def create_account_router(bus: MessageBus, identity: IdentityProvider, tokens: AccessTokens) -> APIRouter:
     """The signed-in person's account routes (sessions, access tokens): mounted behind the session check."""
+    if tokens.identity is None:
+        object.__setattr__(tokens, "identity", identity)
     return account_api.create_account_router(bus, identity, tokens)
 
 

@@ -34,7 +34,8 @@ def analyse(expenses: list[ExpenseRow], month: YearMonth, today: date) -> Insigh
     """Everything about `month` but the tips (left empty): totals, trends, unusual spends, and the forecast if `month`
     is today's."""
     this = [row for row in expenses if YearMonth.of(row.spent_on) == month]
-    before = [row for row in expenses if YearMonth.of(row.spent_on) == month.shift(-1)]
+    previous_month = month.previous()
+    before = [row for row in expenses if previous_month is not None and YearMonth.of(row.spent_on) == previous_month]
     total = sum(_paise(row) for row in this)
     return Insights(
         month=str(month),
@@ -71,7 +72,7 @@ def _trends(this: list[ExpenseRow], before: list[ExpenseRow]) -> list[CategoryTr
     """This month's categories, biggest first, each against the month before."""
     now, then = _by_category(this), _by_category(before)
     trends = []
-    for category, paise in sorted(now.items(), key=lambda item: item[1], reverse=True)[:MAX_TRENDS]:
+    for category, paise in sorted(now.items(), key=lambda item: (-item[1], item[0]))[:MAX_TRENDS]:
         previous = then.get(category, 0)
         change = None
         if previous:
@@ -98,7 +99,7 @@ def _unusual(this: list[ExpenseRow], everything: list[ExpenseRow]) -> list[Unusu
         paise = _paise(row)
         if usual and paise >= MIN_UNUSUAL_PAISE and paise >= UNUSUAL_FACTOR * usual:
             unusual.append((paise, row, int(usual)))
-    unusual.sort(key=lambda item: item[0], reverse=True)
+    unusual.sort(key=lambda item: (-item[0], item[1].spent_on, item[1].merchant))
     return [
         UnusualSpend(
             spent_on=row.spent_on,

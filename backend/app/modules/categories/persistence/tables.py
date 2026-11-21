@@ -7,6 +7,7 @@ migrations. The table itself is created and changed by Alembic migrations, never
 
 from sqlmodel import Field, SQLModel
 
+from app.core.sql import BigInt
 from app.modules.categories.values import MAX_ICON_LENGTH, MAX_NAME_LENGTH
 
 
@@ -15,11 +16,13 @@ class Category(SQLModel, table=True):
     """The categories table. Private to this module: other modules never import it."""
 
     # None until the row is inserted; the database assigns it (see the flush in commands/create_category.py).
-    id: int | None = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True, sa_type=BigInt)
     # Unique, so people and the AI can refer to a category by its name. The index compares the exact
-    # text ("Food" and "food" are different to it); create_category also refuses names that differ only
-    # in letter case.
+    # text ("Food" and "food" are different to it); name_key enforces case-insensitive uniqueness in the database.
     name: str = Field(max_length=MAX_NAME_LENGTH, unique=True, index=True)
+    # Trimmed, case-folded form of `name` (migration 0011): its unique index prevents concurrent duplicates that differ
+    # only in letter case.
+    name_key: str = Field(max_length=MAX_NAME_LENGTH, unique=True, index=True)
     # An icon name the web app maps to a picture (e.g. "utensils"), not an image.
     icon: str = Field(max_length=MAX_ICON_LENGTH)
 

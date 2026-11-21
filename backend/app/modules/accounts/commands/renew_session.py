@@ -4,6 +4,8 @@ A slice of the accounts module's write side. The session check (application/sess
 use was last renewed more than RENEW_AFTER ago, so a busy session isn't written on every request.
 """
 
+from sqlmodel import col, select
+
 from app.core.cqrs import Command, Context
 from app.modules.accounts.persistence.repository import utc
 from app.modules.accounts.persistence.tables import UserSession
@@ -18,8 +20,11 @@ class RenewSession(Command[None]):
 
 
 def renew_session(ctx: Context, command: RenewSession) -> None:
-    """Stamp the session as renewed now; nothing happens if it has gone in the meantime."""
-    session = ctx.session.get(UserSession, command.session_id)
+    """Stamp the session as renewed now; nothing happens if it has been revoked or gone in the meantime."""
+    statement = select(UserSession).where(
+        col(UserSession.id) == command.session_id, col(UserSession.revoked_at).is_(None)
+    )
+    session = ctx.session.exec(statement).first()
     if session is None:
         return
     now = ctx.clock.now()

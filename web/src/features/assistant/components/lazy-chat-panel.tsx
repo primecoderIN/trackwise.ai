@@ -3,7 +3,7 @@
 // Public as `ChatPanel` (index.ts), with the same props; app/layout uses it. AssistantProvider is not here: it stays
 // in the main bundle, so the conversation exists before the panel's code arrives.
 
-import { Suspense, useState, type ComponentType } from "react"
+import { Suspense, useEffect, useState, type ComponentType } from "react"
 
 import { loadNamespaces } from "@/shared/i18n"
 import { lazyWithRetry } from "@/shared/lib/lazy-with-retry"
@@ -13,6 +13,7 @@ import type { ChatPanelProps } from "./chat-panel"
 
 // Set as soon as the panel's code has arrived.
 let loadedPanel: ComponentType<ChatPanelProps> | undefined
+let preloaded: Promise<{ default: ComponentType<ChatPanelProps> } | undefined> | undefined
 
 async function loadPanel(): Promise<{ default: ComponentType<ChatPanelProps> }> {
   const [{ ChatPanel }] = await Promise.all([import("./chat-panel"), loadNamespaces(assistantTexts)])
@@ -20,13 +21,14 @@ async function loadPanel(): Promise<{ default: ComponentType<ChatPanelProps> }> 
   return { default: ChatPanel }
 }
 
-// Start loading when the app does, in the background, so opening the panel never waits for the network. If
-// this early load fails (a network blip), it isn't an error yet: opening the panel tries once more.
-const preloaded = loadPanel().catch(() => undefined)
+function ensurePreloaded(): Promise<{ default: ComponentType<ChatPanelProps> } | undefined> {
+  preloaded ??= loadPanel().catch(() => undefined)
+  return preloaded
+}
 
 // For a panel opened before its code has arrived. If that load fails too, the panel's error boundary shows it,
 // and its "Try again" loads the code again (lazyWithRetry), with no page reload.
-const PanelWhenLoaded = lazyWithRetry(async () => (await preloaded) ?? loadPanel())
+const PanelWhenLoaded = lazyWithRetry(async () => (await ensurePreloaded()) ?? loadPanel())
 
 /**
  * The chat panel (components/chat-panel.tsx), drawn from its separately loaded chunk; nothing shows until the
@@ -38,6 +40,9 @@ const PanelWhenLoaded = lazyWithRetry(async () => (await preloaded) ?? loadPanel
  * component type never switches under React (which would remount the panel and lose what's typed).
  */
 export function LazyChatPanel(props: ChatPanelProps) {
+  useEffect(() => {
+    void ensurePreloaded()
+  }, [])
   // An initialiser function: useState would call a component passed directly as if it were one.
   const [Panel] = useState<ComponentType<ChatPanelProps>>(() => loadedPanel ?? PanelWhenLoaded)
   return (

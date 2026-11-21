@@ -4,6 +4,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
 
 import type { PaymentMethod } from "../../api"
+import { useTexts } from "../../i18n"
 import { isPaymentMethod, PAYMENT_METHODS, paymentMethodLabel } from "../../payment-methods"
 
 interface PaymentMethodSelectProps {
@@ -23,6 +24,8 @@ interface PaymentMethodSelectProps {
  * the methods; `onChange` gets only a valid one (the Select reports plain strings, so each is checked first).
  */
 export function PaymentMethodSelect({ value, onChange, id, className, ariaLabel }: PaymentMethodSelectProps) {
+  // Subscribe to language switches so the labels re-render in the active language.
+  useTexts()
   return (
     <Select value={value} onValueChange={(next) => isPaymentMethod(next) && onChange(next)}>
       <SelectTrigger id={id} className={className} aria-label={ariaLabel}>

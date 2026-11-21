@@ -12,14 +12,17 @@ every kept task is waiting (D205).
 """
 
 import asyncio
+import time
 from collections import OrderedDict
 
 from a2a.server.context import ServerCallContext
 from a2a.server.tasks import InMemoryTaskStore, TaskStore
-from a2a.types import ListTasksRequest, ListTasksResponse, Task, TaskState
+from a2a.types import ListTasksRequest, ListTasksResponse, Message, Part, Task, TaskState
 
 # Enough for a few clients' tasks still being read or just answered; older ones are forgotten.
 MAX_KEPT_TASKS = 20
+# Waiting tasks older than 15 minutes are treated as expired and evicted like finished tasks.
+WAITING_TTL_SECONDS = 15 * 60.0
 # What a file part says once its bytes are dropped (protocol text, for whoever lists the task).
 FILE_NOT_KEPT = "(file not kept)"
 # The states in which a task waits for its client, and is forgotten last.
@@ -34,30 +37,39 @@ class ForgetfulTaskStore(TaskStore):
         """Wrap `inner` (a new InMemoryTaskStore by default) and keep at most `limit` tasks in it."""
         self._inner = inner or InMemoryTaskStore()
         self._limit = limit
-        # Task ids, least recently saved first, each with the context it was saved under (the store is per owner) and
-        # whether it's waiting for its client.
-        self._kept: OrderedDict[str, tuple[ServerCallContext, bool]] = OrderedDict()
+        # Task ids, least recently saved first, each with (context, waiting, saved_at_monotonic).
+        self._kept: OrderedDict[str, tuple[ServerCallContext, bool, float]] = OrderedDict()
         self._lock = asyncio.Lock()
 
     async def save(self, task: Task, context: ServerCallContext) -> None:
         """Keep `task` without its files' bytes, then forget tasks beyond the limit: the oldest that isn't waiting."""
         async with self._lock:
+            now = time.monotonic()
             await self._inner.save(_without_files(task), context)
-            self._kept[task.id] = (context, task.status.state in WAITING_STATES)
+            self._kept[task.id] = (context, task.status.state in WAITING_STATES, now)
             self._kept.move_to_end(task.id)
             while len(self._kept) > self._limit:
-                old_id = next((kept for kept, (_, waiting) in self._kept.items() if not waiting), None)
+                old_id = next(
+                    (
+                        kept
+                        for kept, (_, waiting, saved_at) in self._kept.items()
+                        if not waiting or (now - saved_at) >= WAITING_TTL_SECONDS
+                    ),
+                    None,
+                )
                 old_id = old_id if old_id is not None else next(iter(self._kept))
-                old_context, _ = self._kept.pop(old_id)
+                old_context, _, _ = self._kept.pop(old_id)
                 await self._inner.delete(old_id, old_context)
 
     async def get(self, task_id: str, context: ServerCallContext) -> Task | None:
         """The kept task with this id, or None (never kept, or already forgotten)."""
-        return await self._inner.get(task_id, context)
+        async with self._lock:
+            return await self._inner.get(task_id, context)
 
     async def list(self, params: ListTasksRequest, context: ServerCallContext) -> ListTasksResponse:
         """The kept tasks matching `params`, as the inner store lists them."""
-        return await self._inner.list(params, context)
+        async with self._lock:
+            return await self._inner.list(params, context)
 
     async def delete(self, task_id: str, context: ServerCallContext) -> None:
         """Forget the task with this id."""
@@ -66,12 +78,26 @@ class ForgetfulTaskStore(TaskStore):
             await self._inner.delete(task_id, context)
 
 
+def _scrub_parts(parts: list[Part]) -> None:
+    """Replace any raw file bytes in `parts` with `FILE_NOT_KEPT` in place."""
+    for part in parts:
+        if part.HasField("raw"):
+            part.text = FILE_NOT_KEPT  # setting the text clears the bytes: a part holds one kind of content
+
+
+def _scrub_message(message: Message) -> None:
+    """Replace any raw file bytes in `message` with `FILE_NOT_KEPT` in place."""
+    _scrub_parts(list(message.parts))
+
+
 def _without_files(task: Task) -> Task:
-    """A copy of `task` whose history's file parts hold a short note instead of their bytes."""
+    """A copy of `task` whose file parts hold a short note instead of their bytes."""
     kept = Task()
     kept.CopyFrom(task)
     for message in kept.history:
-        for part in message.parts:
-            if part.HasField("raw"):
-                part.text = FILE_NOT_KEPT  # setting the text clears the bytes: a part holds one kind of content
+        _scrub_message(message)
+    if kept.status.HasField("message"):
+        _scrub_message(kept.status.message)
+    for artifact in kept.artifacts:
+        _scrub_parts(list(artifact.parts))
     return kept

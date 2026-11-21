@@ -5,11 +5,13 @@ requirements-dev.txt installed and the web app's packages installed (npm ci in w
 
     .\\.venv\\Scripts\\python.exe backend\\scripts\\check.py           # everything
     .\\.venv\\Scripts\\python.exe backend\\scripts\\check.py --python  # only the Python checks
+    .\\.venv\\Scripts\\python.exe backend\\scripts\\check.py --web     # only the web checks
 
 It doesn't run the migrations check (that needs a database: see AGENTS.md section 7) or anything that calls the
 model. Each step is one command, printed before it runs.
 """
 
+import argparse
 import subprocess
 import sys
 from pathlib import Path
@@ -43,8 +45,18 @@ def run(title: str, command: list[str], folder: Path) -> bool:
 
 
 def main() -> int:
-    """Run the steps (only the Python ones with --python); 1 at the first failure, 0 if all pass."""
-    steps = PYTHON_STEPS if "--python" in sys.argv[1:] else PYTHON_STEPS + WEB_STEPS
+    """Run the requested checks (default: both Python and web); 1 at the first failure, 0 if all pass."""
+    parser = argparse.ArgumentParser(description="Run SpendWise's automated checks.")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--python", action="store_true", help="only the Python checks")
+    group.add_argument("--web", action="store_true", help="only the web checks")
+    args = parser.parse_args()
+    if args.python:
+        steps = PYTHON_STEPS
+    elif args.web:
+        steps = WEB_STEPS
+    else:
+        steps = PYTHON_STEPS + WEB_STEPS
     for title, command, folder in steps:
         if not run(title, command, folder):
             print(f"\nFAILED: {title}")

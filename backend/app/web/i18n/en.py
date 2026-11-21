@@ -17,10 +17,15 @@ class WebText(StrEnum):
     UNEXPECTED = "problems.unexpected"
     SERVICE_FAILED = "problems.serviceFailed"
     INVALID_REQUEST = "problems.invalidRequest"
+    INVALID_TOKEN = "problems.invalidToken"
+    NOT_FOUND = "problems.notFound"
+    METHOD_NOT_ALLOWED = "problems.methodNotAllowed"
+    PAYLOAD_TOO_LARGE = "problems.payloadTooLarge"
     SIGN_IN_REQUIRED = "problems.signInRequired"
     NOT_FROM_APP = "problems.notFromApp"
     TOO_FAST = "problems.tooFast"
     DAILY_LIMIT = "problems.dailyLimit"
+    RATE_LIMITED = "problems.rateLimited"
 
 
 EN: dict[WebText, TextValue] = {
@@ -30,6 +35,12 @@ EN: dict[WebText, TextValue] = {
     WebText.SERVICE_FAILED: "A service the app depends on didn't answer properly. Try again in a moment.",
     # A 422's detail; which values were wrong is in the problem's "errors" list, for the client's developer.
     WebText.INVALID_REQUEST: "Some of the values sent aren't valid.",
+    # A 400 from an invalid sign-in or back-channel logout token.
+    WebText.INVALID_TOKEN: "The token sent with this request isn't valid.",
+    # Standard FastAPI/Starlette HTTP errors, translated for people (D180).
+    WebText.NOT_FOUND: "That address doesn't exist.",
+    WebText.METHOD_NOT_ALLOWED: "This action isn't allowed on that address.",
+    WebText.PAYLOAD_TOO_LARGE: "The request is too large.",
     # A 401: no session, or it has ended (expired, signed out). The web app answers it by showing the sign-in page.
     WebText.SIGN_IN_REQUIRED: "Sign in to continue.",
     # A 403 from the X-CSRF check: the request didn't come from the app's own pages.
@@ -37,4 +48,6 @@ EN: dict[WebText, TextValue] = {
     # 429s from the assistant's rate limit (D194): a minute's allowance, then a day's (the counts reset at midnight UTC).
     WebText.TOO_FAST: "You're sending requests to the assistant too quickly. Wait a minute and try again.",
     WebText.DAILY_LIMIT: "You've reached today's limit for the assistant. Try again tomorrow.",
+    # 429 from non-model routes (reports, receipts, sign-in, MCP).
+    WebText.RATE_LIMITED: "You're sending too many requests right now. Wait a moment and try again.",
 }

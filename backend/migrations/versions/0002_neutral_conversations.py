@@ -18,7 +18,7 @@ from collections.abc import Sequence
 from typing import Any
 
 import sqlalchemy as sa
-from alembic import op
+from alembic import context, op
 
 revision: str = "0002"
 down_revision: str | Sequence[str] | None = "0001"
@@ -91,17 +91,19 @@ def _to_gemini(message: dict[str, Any]) -> dict[str, Any] | None:
 
 def _convert(table: str, convert: Any, kind_of: Any) -> None:
     """Rewrite every row's content with `convert` and its kind column with `kind_of`; delete rows it can't convert."""
+    if context.is_offline_mode():
+        return
     connection = op.get_bind()
+    update = sa.text(f"UPDATE {table} SET kind = :kind, content = :content WHERE id = :id").bindparams(
+        sa.bindparam("content", type_=sa.JSON())
+    )
     rows = connection.execute(sa.text(f"SELECT id, content FROM {table}")).fetchall()
     for row_id, raw in rows:
         converted = convert(json.loads(raw) if isinstance(raw, str) else raw)
         if converted is None:
             connection.execute(sa.text(f"DELETE FROM {table} WHERE id = :id"), {"id": row_id})
         else:
-            connection.execute(
-                sa.text(f"UPDATE {table} SET kind = :kind, content = :content WHERE id = :id"),
-                {"kind": kind_of(converted), "content": json.dumps(converted), "id": row_id},
-            )
+            connection.execute(update, {"kind": kind_of(converted), "content": converted, "id": row_id})
 
 
 def upgrade() -> None:

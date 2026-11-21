@@ -38,20 +38,19 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
-    with op.batch_alter_table(TABLE, schema=None) as batch_op:
-        batch_op.create_index(OWNER_CATEGORY_INDEX, ["owner_id", "category_id"], unique=True)
-        batch_op.create_index(
-            OWNER_OVERALL_INDEX,
-            ["owner_id"],
-            unique=True,
-            sqlite_where=sa.text(OVERALL_ROWS),
-            postgresql_where=sa.text(OVERALL_ROWS),
-        )
+    op.create_index(OWNER_CATEGORY_INDEX, TABLE, ["owner_id", "category_id"], unique=True)
+    op.create_index(
+        OWNER_OVERALL_INDEX,
+        TABLE,
+        ["owner_id"],
+        unique=True,
+        sqlite_where=sa.text(OVERALL_ROWS),
+        postgresql_where=sa.text(OVERALL_ROWS),
+    )
 
 
 def downgrade() -> None:
     """Drop the indexes and the table."""
-    with op.batch_alter_table(TABLE, schema=None) as batch_op:
-        batch_op.drop_index(OWNER_OVERALL_INDEX)
-        batch_op.drop_index(OWNER_CATEGORY_INDEX)
+    op.drop_index(OWNER_OVERALL_INDEX, table_name=TABLE)
+    op.drop_index(OWNER_CATEGORY_INDEX, table_name=TABLE)
     op.drop_table(TABLE)

@@ -10,11 +10,13 @@ Amounts and rates travel as decimal strings: a JSON number could be read as a fl
 
 import re
 from datetime import date
+from decimal import Decimal
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, StringConstraints
+from pydantic import BaseModel, ConfigDict, StringConstraints, ValidationError, field_validator
 
 from app.core.money import CurrencyCode
+from app.core.months import MAX_DATE, MIN_DATE
 
 SKILL_ID = "convert_currency"
 ARTIFACT_NAME = "conversion"
@@ -25,7 +27,8 @@ AmountText = Annotated[str, StringConstraints(pattern=r"^\d{1,12}(\.\d{1,2})?$")
 # One line asking for a conversion: an amount, a currency, "to" or "in", a currency, and optionally "on" a date.
 TEXT_REQUEST = re.compile(
     r"^\s*(\d{1,12}(?:\.\d{1,2})?)\s+([A-Za-z]{3})\s+(?:to|in)\s+([A-Za-z]{3})"
-    r"(?:\s+on\s+(\d{4}-\d{2}-\d{2}))?\s*\??\s*$"
+    r"(?:\s+on\s+(\d{4}-\d{2}-\d{2}))?\s*\??\s*$",
+    re.IGNORECASE,
 )
 
 
@@ -39,11 +42,27 @@ class ConversionRequest(BaseModel):
     # The day the rate is for; today if left out. A day after today is read as today.
     on: date | None = None
 
+    @field_validator("amount")
+    @classmethod
+    def _positive_amount(cls, value: str) -> str:
+        """Require a positive amount (> 0)."""
+        if Decimal(value) <= 0:
+            raise ValueError("amount must be greater than zero")
+        return value
+
+    @field_validator("on")
+    @classmethod
+    def _supported_date(cls, value: date | None) -> date | None:
+        """Keep the requested date within SpendWise's supported calendar range (1900-2099)."""
+        if value is not None and not (MIN_DATE <= value <= MAX_DATE):
+            raise ValueError("date must be between 1900-01-01 and 2099-12-31")
+        return value
+
 
 # The `conversion` artifact's data: the request as understood, the rate used and its day, the converted amount (rounded
 # half up to 2 decimals: core.money.convert_minor) and where the rate came from.
 class ConversionAnswer(BaseModel):
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(extra="forbid", frozen=True)
 
     amount: str
     from_currency: str
@@ -60,6 +79,9 @@ def parse_text(line: str) -> ConversionRequest | None:
     if match is None:
         return None
     amount, source, target, on = match.groups()
-    return ConversionRequest.model_validate(
-        {"amount": amount, "from_currency": source.upper(), "to_currency": target.upper(), "on": on}
-    )
+    try:
+        return ConversionRequest.model_validate(
+            {"amount": amount, "from_currency": source.upper(), "to_currency": target.upper(), "on": on}
+        )
+    except ValidationError:
+        return None

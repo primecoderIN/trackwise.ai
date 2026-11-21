@@ -18,6 +18,7 @@ import {
 import { useTexts } from "../i18n"
 import { useSignedInUser } from "../queries"
 import { ownSitePath } from "../sign-in-urls"
+import { broadcastSessionChange } from "../use-session-sync"
 import { UserAvatar } from "./user-avatar"
 
 // For the browser console only (developers): the server sent a sign-out link that leaves this site.
@@ -27,8 +28,12 @@ const FOREIGN_SIGN_OUT_LINK = "The sign-out link isn't on this site, so it wasn'
 // answer, so it's followed only if it stays on this site; anything else is a bug worth reporting, never a navigation.
 function signOut(logoutUrl: string): void {
   const path = ownSitePath(logoutUrl, window.location.origin)
-  if (path) window.location.assign(path)
-  else reportUnexpected(new Error(FOREIGN_SIGN_OUT_LINK))
+  if (path) {
+    broadcastSessionChange()
+    window.location.assign(path)
+  } else {
+    reportUnexpected(new Error(FOREIGN_SIGN_OUT_LINK))
+  }
 }
 
 /** The person's picture and name; opened, their email and Sign out. Nothing while nobody is signed in. */

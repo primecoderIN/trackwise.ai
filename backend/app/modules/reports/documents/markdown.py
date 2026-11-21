@@ -105,7 +105,8 @@ def report_markdown(report: MonthlyReport, language: Language) -> str:
     t = partial(text, language)  # t(key, **values): a text in `language`
     money: Callable[[Decimal], str] = partial(format_money, currency=report.currency, language=language)
     month = YearMonth.parse(report.month)
-    previous = month.shift(-1).first_day()
+    previous_month = month.previous()
+    previous = previous_month.first_day() if previous_month is not None else date(month.year - 1, 12, 1)
     title = t(ReportText.TITLE, month=format_month(month.first_day(), language))
     if report.expense_count == 0:
         total = t(ReportText.NOTHING_SPENT)

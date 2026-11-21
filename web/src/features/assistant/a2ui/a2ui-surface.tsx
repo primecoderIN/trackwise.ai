@@ -45,7 +45,10 @@ export const A2uiSurfaceView = memo(function A2uiSurfaceView(props: A2uiSurfaceV
   // A card is drawn from data the agent sent: if anything in it crashes while drawing, only this card
   // shows a note, instead of the whole app going blank.
   return (
-    <ErrorBoundary fallback={() => <Unsupported reason="crashedCard" />}>
+    <ErrorBoundary
+      key={`${props.surface.id}-${props.surface.components.size}`}
+      fallback={() => <Unsupported reason="crashedCard" />}
+    >
       <SurfaceContent {...props} />
     </ErrorBoundary>
   )

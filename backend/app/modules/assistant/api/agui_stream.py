@@ -79,7 +79,9 @@ def _events_for(
     if request.receipt_id is not None:
         return assistant.read_receipt(owner_id, thread, request.receipt_id, request.text, today, language)
     # AG-UI clients name their threads themselves, so an id the person doesn't have yet starts a new conversation.
-    return assistant.run_turn(owner_id, thread, request.text, today, language)
+    return assistant.run_turn(
+        owner_id, thread, request.text, today, language, is_user_text=not request.is_form_submission
+    )
 
 
 class _Writer:

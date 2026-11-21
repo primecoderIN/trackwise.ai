@@ -58,12 +58,14 @@ class InsightsExecutor(AgentExecutor):
 
     async def execute(self, context: RequestContext, event_queue: EventQueue) -> None:
         """Answer the request (or its resumption): ask which month if it must, else publish the insights."""
+        existing_task = context.current_task
+        resuming = existing_task is not None and existing_task.status.state == TaskState.TASK_STATE_INPUT_REQUIRED
         message, updater = await start_task(context, event_queue)
-        resuming = context.current_task is not None and context.current_task.status.state == (
-            TaskState.TASK_STATE_INPUT_REQUIRED
-        )
+        if existing_task is not None and not resuming:
+            await reject(updater, WRONG_PARTS)
+            return
         try:
-            request = _original(context.current_task) if resuming else _request(message)
+            request = _original(existing_task) if resuming else _request(message)
             reply = _reply(message, request) if resuming else None
         except RejectedRequest as exc:
             logger.info("task %s rejected: %s", updater.task_id, exc)
@@ -72,6 +74,12 @@ class InsightsExecutor(AgentExecutor):
         month = _month(request, reply)
         if month is None:
             await self._ask(updater, request, again=resuming)
+            return
+        if month not in set(months_in(request.expenses)):
+            if resuming:
+                await self._ask(updater, request, again=True)
+            else:
+                await reject(updater, NO_EXPENSES)
             return
         await self._answer(updater, request, month)
 

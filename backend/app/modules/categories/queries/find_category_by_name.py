@@ -6,8 +6,8 @@ to spot a duplicate. The answer is a frozen CategoryRead copy (models.py), never
 """
 
 from pydantic import ConfigDict
-from sqlalchemy import func
-from sqlmodel import select
+from sqlalchemy import func, or_
+from sqlmodel import col, select
 
 from app.core.cqrs import Context, Query
 from app.modules.categories.models import CategoryRead
@@ -29,10 +29,12 @@ class FindCategoryByName(Query[CategoryRead | None]):
 def find_category_by_name(ctx: Context, query: FindCategoryByName) -> CategoryRead | None:
     """The category whose name matches in any letter case, or None.
 
-    The name arrives already trimmed of spaces (FindCategoryByName strips them). Only the first match is
-    taken; create_category makes sure there is never more than one.
+    The name arrives already trimmed of spaces (FindCategoryByName strips them). Matching against `name_key`
+    uses the unique index on the case-folded name (migration 0011), with `lower(name)` as a fallback.
     """
-    # The database lowercases both sides, so the comparison is the same wherever it's asked from.
-    statement = select(Category).where(func.lower(Category.name) == func.lower(query.name))
+    key = query.name.casefold()
+    statement = select(Category).where(
+        or_(col(Category.name_key) == key, func.lower(Category.name) == func.lower(query.name))
+    )
     row = ctx.session.exec(statement).first()
     return CategoryRead.model_validate(row) if row else None

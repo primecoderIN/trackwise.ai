@@ -41,27 +41,39 @@ their contracts and a **command/query bus**. The web app talks to it through a *
 
 ```mermaid
 flowchart TD
-    subgraph Browser ["Browser: React 19 SPA (web/)"]
+    subgraph Browser ["Browser: Next.js 16 + React 19 (web/)"]
         direction LR
+        F_AUTH["features/auth & account<br/>sign-in, sessions, tokens"]
         F_EXP["features/expenses<br/>table, filters, add & edit"]
-        F_DASH["features/dashboard<br/>stats, charts, recent"]
+        F_BUD["features/budgets<br/>overall & category limits"]
+        F_DASH["features/dashboard<br/>stats, budget card, charts, recent"]
         F_CAT["features/categories"]
         F_AST["features/assistant<br/>chat, AG-UI stream, A2UI renderer"]
-        SHARED["shared/<br/>typed HTTP client (generated), ui kit, theme"]
+        SHARED["shared/<br/>typed HTTP client (generated), ui kit, i18n, theme"]
     end
 
     subgraph Host ["FastAPI app (backend/app/main.py)"]
-        REST["/api/v1 REST<br/>RFC 9457 problem details"]
+        REST["/api/v1 REST<br/>X-CSRF + session cookie · RFC 9457 problems"]
         AGUI["/api/v1/agent<br/>AG-UI over Server-Sent Events"]
-        MCPHTTP["/mcp/ Streamable HTTP<br/>bearer token (optional)"]
+        MCPHTTP["/mcp/ Streamable HTTP<br/>personal access token"]
     end
 
     subgraph Modules ["Modules (backend/app/modules/)"]
+        ACC["accounts<br/>users · sessions · access tokens"]
         CAT["categories<br/>commands · queries"]
-        EXP["expenses<br/>commands · queries · domain<br/>optimistic concurrency"]
+        EXP["expenses<br/>commands · queries · recorder<br/>INR conversion · optimistic concurrency"]
+        BUD["budgets<br/>monthly limits · SaveWatcher"]
+        REC["receipts<br/>validated uploads"]
+        REP["reports<br/>monthly figures · CSV & Markdown"]
         CONV["conversations<br/>provider-neutral history"]
-        AST["assistant<br/>agent loop · approvals · A2UI cards & forms"]
-        MCP["mcp<br/>tools & resources (adapter)"]
+        AST["assistant<br/>agent loop · approvals · skills<br/>delegation · A2UI cards & forms"]
+        MCP["mcp<br/>9 tools & 2 resources"]
+    end
+
+    subgraph Agents ["Hosted A2A Agents (agents/)"]
+        A_REC["receipt agent<br/>extract_receipt"]
+        A_INS["insights agent<br/>analyze_spending"]
+        A_CUR["currency agent<br/>convert_currency"]
     end
 
     subgraph Core ["core/ (building blocks, no I/O)"]
@@ -98,11 +110,12 @@ flowchart TD
 
 ## 🌟 Core Architectural Principles
 
-- **Modular monolith, strictly bounded:** each module (`categories`, `expenses`, `conversations`, `assistant`) owns
-  its tables, contracts and handlers. Another module's names come only from its package (`app.modules.expenses`), never
-  its files; no module queries another's tables; links are plain ids with no cross-module foreign keys.
-  Outside the modules, shared code is grouped by concern: `core/` (building blocks) imports nothing else,
-  `infrastructure/` and `web/` import only `core/`, and `bootstrap.py` is the one composition root.
+- **Modular monolith, strictly bounded:** each module (`accounts`, `categories`, `expenses`, `budgets`, `conversations`,
+  `receipts`, `reports`, `assistant`, `mcp`) owns its tables, contracts and handlers. Another module's names come only
+  from its package (`app.modules.expenses`), never its files; no module queries another's tables; links are plain ids
+  with no cross-module foreign keys. Outside the modules, shared code is grouped by concern: `core/` (building blocks)
+  imports nothing else, `infrastructure/` and `web/` import only `core/`, and `bootstrap.py` is the one composition
+  root.
 - **Vertical slices inside a module:** each command or query is one file holding the message and its handler, so a
   use case is one file to read and adding one is a new file plus one registration line.
 - **CQRS-lite with a unit of work:** every operation is a **command** (changes data, returns at most an id) or a
@@ -150,7 +163,7 @@ flowchart TD
 | | [**Database Schema**](./docs/database_schema.md) | Tables, columns, indexes, which module owns what, and the migrations. |
 | | [**Configuration**](./docs/configuration.md) | Every setting (backend `.env`, web `.env`), defaults, and the generated contract. |
 | | [**Security**](./docs/security.md) | What protects what (one origin, sign-in and sessions, MCP token, approvals, prompt injection, the renderer), and known gaps. |
-| **Engineering Record** | [**Phase notes**](./docs/README.md#phase-notes) | Phases 1–22 and the refactors: design, what was built, how to verify it, design questions. |
+| **Engineering Record** | [**Phase notes**](./docs/README.md#phase-notes) | Phases 1–27 and the refactors: design, what was built, how to verify it, design questions. |
 | | [**Sources**](./docs/sources.md) | What the official docs, specs and library code say, with links. |
 | | [**Gemini**](./docs/gemini.md) · [**Troubleshooting**](./docs/troubleshooting.md) · [**Git**](./docs/git.md) | Models and the free tier; problems already hit; committing safely. |
 
@@ -224,24 +237,30 @@ spendwise/
       infrastructure/     the outside world: config, db, migrations, logging, llm/ (the Gemini adapter)
       web/                what every route shares: dependencies (BusDep, ClockDep), problems (RFC 9457 errors)
       modules/
+        accounts/         users, OpenID Connect sign-in, server-side sessions, personal access tokens
         categories/       commands/ and queries/ (one file per message: the message and its handler), values,
                           models, persistence/ (tables), api, module
-        expenses/         + domain/ (business rules) and persistence/repository.py (the write side)
+        expenses/         + domain/ (business rules), recorder (INR conversion) and persistence/repository.py
+        budgets/          monthly limits (overall and per category), status queries, SaveWatcher alerts
         conversations/    chat threads, stored as provider-neutral messages
+        receipts/         validated receipt uploads and file storage
+        reports/          monthly reports (computed by the monthly-report skill script), CSV and Markdown downloads
         assistant/        api/ (routes, AG-UI in and out), application/ (use cases), agent/ (the loop),
-                          approvals/, tools/ (port + MCP adapter), a2ui/ (cards & forms)
+                          approvals/, tools/ (port + MCP adapter), receipt_agent/, delegation/, skills/, a2ui/
         mcp/              MCP server: typed tool contract, tools/ (one file per tool), resources, HTTP endpoint
-    migrations/           Alembic: 0001 baseline, 0002 conversations + approvals, 0003 expense versions,
-                          0004 conversation index
-    scripts/              export_contracts.py: the contract for the web app
+    migrations/           Alembic: 0001 baseline through 0011 64-bit BigInteger ids/amounts and category name_key
+    scripts/              export_contracts.py, check.py (all automated checks), check_rules.py (architecture rules)
     seed.py               sample categories and expenses
     mcp_stdio.py          the MCP server over stdio
+  agents/                 A2A agents (receipt, insights, currency) and shared agent_kit/, hosted in-process on main
+  skills/                 Agent Skills (SKILL.md folders and server-run scripts)
   web/
-    src/app/              providers, routes, layout, the list of text namespaces
-    src/features/         expenses, categories, dashboard, assistant (each with its texts in i18n/)
+    src/app/              Next.js App Router routes, providers, frame, SEO metadata, text namespaces
+    src/features/         auth, account, expenses, budgets, categories, dashboard, assistant (each with i18n/)
     src/shared/           ui kit, typed API client + generated contract, config, languages (i18n), formatting, theme
   docs/                   architecture, onboarding, API, schema, security, decisions, phase notes
   run.ps1                 one-command dev start (Windows)
+  run-agent.ps1           run a single A2A agent standalone (optional)
   requirements.txt        pinned backend dependencies
   .env.example            every setting the app reads, with no secret values
 ```
@@ -284,14 +303,14 @@ spendwise/
   `.\run.ps1` applies migrations, and `backend\seed.py` creates the default categories in a fresh database.
 - `web/src/shared/api/*.gen.ts` and `web/openapi.json` are generated from the backend: after changing an API, run
   `.\.venv\Scripts\python.exe backend\scripts\export_contracts.py`, then `npm run gen:api` in `web/`, and commit them.
-- `__pycache__/` and `web/dist/` are build output: git-ignored and safe to delete.
+- `__pycache__/` and `web/.next/` are build output: git-ignored and safe to delete.
 
 ### What gets committed
 
 | Commit | Never commit |
 |---|---|
-| Source code (`backend/`, `web/src/`), migrations, generated contracts | `.venv/`, `node_modules/`, `web/dist/` |
-| `requirements.txt`, `web/package.json`, `web/package-lock.json` | `__pycache__/`, `*.pyc` |
-| `.env.example`, `docs/`, `README.md`, `run.ps1` | `.env`, `*.db` (your local database) |
+| Source code (`backend/`, `agents/`, `skills/`, `web/src/`), migrations, generated contracts | `.venv/`, `node_modules/`, `web/.next/` |
+| `requirements.txt`, `requirements-dev.txt`, `web/package.json`, `web/package-lock.json` | `__pycache__/`, `*.pyc` |
+| `.env.example`, `docs/`, `README.md`, `run.ps1`, `run-agent.ps1` | `.env`, `*.db` (any local check database) |
 
 Update `docs/` in the same commit as the code it describes ([docs/README.md](docs/README.md)).

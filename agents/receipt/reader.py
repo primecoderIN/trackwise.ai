@@ -20,9 +20,11 @@ from pydantic import ValidationError
 
 from app.core.llm import Attachment, LlmError, StructuredOutputModel, restrict_to_choices
 from app.core.money import CURRENCY_PATTERN
+from app.core.months import MAX_DATE, MIN_DATE
 from receipt.contract import (
     CATEGORY_FIELD,
     PAYMENT_METHOD_FIELD,
+    LineItem,
     ReadingRequest,
     ReceiptExtraction,
 )
@@ -61,20 +63,49 @@ def schema_for(request: ReadingRequest) -> dict[str, Any]:
     return restrict_to_choices(schema, PAYMENT_METHOD_FIELD, list(request.payment_methods))
 
 
+def _match_choice(candidate: str | None, allowed: list[str]) -> str | None:
+    """The canonical value in `allowed` matching `candidate` (case-insensitively), or None."""
+    if candidate is None:
+        return None
+    key = candidate.strip().casefold()
+    return next((item for item in allowed if item.casefold() == key), None)
+
+
+def _clean_items(items: list[LineItem]) -> list[LineItem]:
+    """Keep line items with non-empty descriptions, clearing any non-positive line amounts."""
+    cleaned: list[LineItem] = []
+    for item in items:
+        desc = item.description.strip()
+        if not desc:
+            continue
+        amount = item.amount if item.amount is not None and item.amount > 0 else None
+        cleaned.append(LineItem(description=desc, amount=amount))
+    return cleaned
+
+
 def checked(extraction: ReceiptExtraction, request: ReadingRequest) -> ReceiptExtraction:
     """The model's answer with anything that can't be right set to null: it's data to check, not trust.
 
     A category or payment method not in the request's lists (the enums should prevent it), a currency that isn't a
-    three-letter code, a total that isn't positive. A person still confirms every field before anything is saved.
+    three-letter code, a total that isn't positive, a negative tax, or an out-of-range date. A person still confirms
+    every field before anything is saved.
     """
     currency = (extraction.currency or "").strip().upper()
+    merchant = (extraction.merchant or "").strip() or None
+    spent_on = (
+        extraction.spent_on
+        if extraction.spent_on is not None and MIN_DATE <= extraction.spent_on <= min(MAX_DATE, request.today)
+        else None
+    )
     return extraction.model_copy(
         update={
-            CATEGORY_FIELD: extraction.category if extraction.category in request.categories else None,
-            PAYMENT_METHOD_FIELD: (
-                extraction.payment_method if extraction.payment_method in request.payment_methods else None
-            ),
+            "merchant": merchant,
+            "spent_on": spent_on,
+            "line_items": _clean_items(extraction.line_items),
+            CATEGORY_FIELD: _match_choice(extraction.category, request.categories),
+            PAYMENT_METHOD_FIELD: _match_choice(extraction.payment_method, request.payment_methods),
             "currency": currency if re.fullmatch(CURRENCY_PATTERN, currency) else None,
+            "tax": extraction.tax if extraction.tax is not None and extraction.tax >= 0 else None,
             "total": extraction.total if extraction.total is not None and extraction.total > 0 else None,
         }
     )

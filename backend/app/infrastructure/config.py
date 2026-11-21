@@ -1,13 +1,12 @@
 """Settings and fixed values the whole backend reads (infrastructure).
 
-Values that differ between machines (the Gemini key and model, the database URL, the MCP token and URL, the uploads
-folder, the sign-in provider and its keys) come from the environment or .env, into one Settings object that
-get_settings() reads on first use and keeps: importing this file reads nothing. Values that are part of the design (the
-API prefix and version, the MCP path) are constants instead: they change in code, together with the contract, never per
-machine. Read by db.py (the default engine), the composition root (which hands the Gemini key and model to the Gemini
-adapter, the MCP URL and token to the tools, the uploads folder to the file store, and the OIDC_* settings, PUBLIC_URL
-and the session keys to sign-in), main.py (the constants), the migrations and the export script. docs/configuration.md
-lists every setting.
+Values that differ between machines (the Gemini key and model, the database URL, the uploads folder, the sign-in
+provider and its keys) come from the environment or .env, into one Settings object that get_settings() reads on first
+use and keeps: importing this file reads nothing. Values that are part of the design (the API prefix and version, the
+MCP path) are constants instead: they change in code, together with the contract, never per machine. Read by db.py
+(the default engine), the composition root (which hands the Gemini key and model to the Gemini adapter, the uploads
+folder to the file store, and the OIDC_* settings, PUBLIC_URL and the session keys to sign-in), main.py (the
+constants), the migrations and the export script. docs/configuration.md lists every setting.
 """
 
 from functools import cache
@@ -55,8 +54,7 @@ class Settings(BaseSettings):
     gemini_api_key: SecretStr | None = None
     gemini_model: str | None = None
     # How many requests each person may make per minute, and per day, to the routes that call the language model
-    # (POST /agent, /chat, /parse and receipt reading): each one spends Gemini quota (D194). Counted in memory, per
-    # server process.
+    # (POST /agent, /chat, /parse): each one spends Gemini quota (D194). Counted in memory, per server process.
     model_requests_per_minute: int = Field(default=10, ge=1)
     model_requests_per_day: int = Field(default=300, ge=1)
     # The Neon/PostgreSQL connection string is required at runtime and must never appear in logs.
@@ -78,7 +76,7 @@ class Settings(BaseSettings):
     # The scopes every sign-in asks for, space-separated. Add a provider's own when it needs one for roles.
     oidc_scopes: str = "openid profile email"
     # The sign-in page's buttons, a JSON list (identity/options.py). Empty: one button, the provider's own page.
-    oidc_login_options: list[OidcLoginOption] = []
+    oidc_login_options: list[OidcLoginOption] = Field(default_factory=list)
     # Where the tokens list the person's roles, and the role they must have to sign in. Both unset: anyone the
     # provider lets sign in may (then limit who that is at the provider: docs/identity_provider.md).
     oidc_role_claim: str | None = None
@@ -89,7 +87,7 @@ class Settings(BaseSettings):
     public_url: str = "http://localhost:5173"
     # Keys that seal the ID token each session keeps (Fernet, a JSON list, newest first). Make one with:
     # python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-    session_encryption_keys: list[SecretStr] = []
+    session_encryption_keys: list[SecretStr] = Field(default_factory=list)
     # The session cookie's Secure flag (and its __Host- prefix). Leave it on: browsers accept Secure cookies on
     # http://localhost; turn it off only for a browser that doesn't.
     cookie_secure: bool = True
@@ -98,11 +96,32 @@ class Settings(BaseSettings):
     @field_validator("public_url")
     @classmethod
     def _origin_only(cls, value: str) -> str:
-        """PUBLIC_URL as an origin: http(s), a host, no path. Raises ValueError otherwise."""
+        """PUBLIC_URL as an origin: http(s), a host (no credentials), no path. Raises ValueError otherwise."""
         parts = urlsplit(value.rstrip("/"))
-        if parts.scheme not in ("http", "https") or not parts.netloc or parts.path or parts.query or parts.fragment:
+        bad_parts = parts.path or parts.query or parts.fragment or parts.username or parts.password
+        if parts.scheme not in ("http", "https") or not parts.hostname or bad_parts:
             raise ValueError("PUBLIC_URL must be an origin such as https://spendwise.example (no path)")
         return f"{parts.scheme}://{parts.netloc}"
+
+    @field_validator("oidc_issuer")
+    @classmethod
+    def _valid_issuer(cls, value: str | None) -> str | None:
+        """OIDC_ISSUER must be an http(s) URL with a host, no query/fragment, and fit the 255-char DB column."""
+        if value is None:
+            return None
+        parts = urlsplit(value)
+        bad_parts = parts.query or parts.fragment or parts.username or parts.password
+        if len(value) > 255 or parts.scheme not in ("http", "https") or not parts.hostname or bad_parts:
+            raise ValueError("OIDC_ISSUER must be an http(s) URL (at most 255 characters, no query or fragment)")
+        return value
+
+    @field_validator("oidc_scopes")
+    @classmethod
+    def _includes_openid(cls, value: str) -> str:
+        """OIDC_SCOPES must include the required `openid` scope (OpenID Connect Core 1.0, 3.1.2.1)."""
+        if "openid" not in value.split():
+            raise ValueError("OIDC_SCOPES must include 'openid'")
+        return value
 
     def missing_for_sign_in(self) -> list[str]:
         """The names of the settings sign-in still needs; empty when it can work."""

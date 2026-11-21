@@ -12,13 +12,15 @@ the form built by expense_form() below is sent instead, so the user always gets 
 
 import json
 import logging
+import re
 from datetime import date
 from enum import StrEnum
 from functools import partial
 from typing import Any
 
 from app.core.i18n import Language, text
-from app.core.money import DEFAULT_CURRENCY
+from app.core.money import CURRENCY_PATTERN, DEFAULT_CURRENCY
+from app.core.months import MAX_DATE, MIN_DATE
 from app.modules.assistant.a2ui.form_tool import DATA_ROOT, FIELDS, FORM_ARGUMENT, field_path
 from app.modules.assistant.a2ui.models import (
     ROOT_ID,
@@ -99,11 +101,32 @@ def _inputs(category_names: list[str], language: Language) -> list[Component]:
     ]
 
 
+def _normalized_currency(value: Any) -> str:
+    """A 3-letter uppercase ISO currency code, or DEFAULT_CURRENCY ('INR') when missing or malformed."""
+    code = str(value).strip().upper() if isinstance(value, str) else ""
+    return code if re.fullmatch(CURRENCY_PATTERN, code) else DEFAULT_CURRENCY
+
+
+def _normalized_date(value: Any, today: date) -> str:
+    """A valid ISO date string within MIN_DATE..MAX_DATE, or today's ISO date when missing or out of bounds."""
+    if isinstance(value, date):
+        return value.isoformat() if MIN_DATE <= value <= MAX_DATE else today.isoformat()
+    if isinstance(value, str):
+        try:
+            parsed = date.fromisoformat(value.strip())
+            if MIN_DATE <= parsed <= MAX_DATE:
+                return parsed.isoformat()
+        except ValueError:
+            pass
+    return today.isoformat()
+
+
 def _data_model(values: dict[str, Any], today: date) -> dict[str, Any]:
     """The built-in form's starting data: what was understood (no date means today, no currency INR), and "" or []
     for the rest."""
-    defaults = {"spent_on": today.isoformat(), "currency": DEFAULT_CURRENCY}
-    known = {**defaults, **{key: value for key, value in values.items() if value}}
+    known = {key: value for key, value in values.items() if value}
+    known["spent_on"] = _normalized_date(known.get("spent_on"), today)
+    known["currency"] = _normalized_currency(known.get("currency"))
 
     def typed(field: str) -> str:
         """A text input's starting value: what was understood, or ""."""
@@ -141,7 +164,7 @@ def _label_payment_options(components: list[Any], language: Language) -> None:
                     option.label = payment_method_label(methods[option.value], language)
 
 
-def _model_form(form: Any, language: Language) -> CreateSurfaceMessage:
+def _model_form(form: Any, today: date, language: Language) -> CreateSurfaceMessage:
     """Turn the form the model wrote into a checked A2UI message (its payment options labelled in `language`), or
     raise ValueError saying why not."""
     data = json.loads(form) if isinstance(form, str) else form
@@ -163,6 +186,26 @@ def _model_form(form: Any, language: Language) -> CreateSurfaceMessage:
     # able to approve a delete. Nor may a form run a function in the browser (a download, D209).
     if any(button.action.event is None or button.action.event.name != ActionName.SAVE_EXPENSE for button in buttons):
         raise ValueError(f"a form's buttons may only use the {ActionName.SAVE_EXPENSE} action")
+    expected_paths = {field: field_path(field) for field in FIELDS}
+    input_paths = {
+        c.value.path
+        for c in surface.components
+        if isinstance(c, (TextField, ChoicePicker, DateTimeInput)) and isinstance(c.value, DataBinding)
+    }
+    if not set(expected_paths.values()) <= input_paths:
+        raise ValueError("the form is missing inputs bound to one or more expense fields")
+    for button in buttons:
+        assert button.action.event is not None
+        context = button.action.event.context or {}
+        for field, path in expected_paths.items():
+            binding = context.get(field)
+            if not isinstance(binding, DataBinding) or binding.path != path:
+                raise ValueError(f"the form's Save button must bind '{field}' to '{path}'")
+    if not isinstance(surface.data_model, dict) or not isinstance(surface.data_model.get(DATA_ROOT), dict):
+        surface.data_model = {DATA_ROOT: {}}
+    expense_data = surface.data_model[DATA_ROOT]
+    expense_data["currency"] = _normalized_currency(expense_data.get("currency"))
+    expense_data["spent_on"] = _normalized_date(expense_data.get("spent_on"), today)
     _label_payment_options(surface.components, language)
     return CreateSurfaceMessage(create_surface=surface)
 
@@ -172,7 +215,7 @@ def expense_form_from_call(
 ) -> tuple[CreateSurfaceMessage, FormSource]:
     """The form for a show_expense_form call: the model's own if it passes the checks, else ours (in `language`)."""
     try:
-        return _model_form(arguments.get(FORM_ARGUMENT), language), FormSource.MODEL
+        return _model_form(arguments.get(FORM_ARGUMENT), today, language), FormSource.MODEL
     except (ValueError, TypeError) as exc:  # ValueError includes JSON and Pydantic validation errors
         logger.warning("the model's form was rejected, sending the built-in one instead: %s", str(exc)[:500])
         values = {field: arguments.get(field) for field in FIELDS}
@@ -187,9 +230,15 @@ def describe_action(action: UserAction) -> str:
     """
 
     def single(value: Any) -> Any:
-        """A submitted value as one value: a picker's list becomes its choice (or "")."""
-        # A ChoicePicker sends a list; our pickers allow one choice.
-        return (value[0] if value else "") if isinstance(value, list) else value
+        """A submitted value as one value: a single-choice picker's list becomes its choice (or ""), a multi-select
+        list is preserved, and booleans become "true"/"false"."""
+        if isinstance(value, bool):
+            return "true" if value else "false"
+        if isinstance(value, list):
+            if not value:
+                return ""
+            return value[0] if len(value) == 1 else value
+        return value
 
     values = {key: single(value) for key, value in action.context.items()}
     return (

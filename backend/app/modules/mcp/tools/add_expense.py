@@ -58,6 +58,8 @@ def register_add_expense(server: MCPServer, context: ToolContext) -> None:
         ] = DEFAULT_CURRENCY,
     ) -> ExpenseSaved:
         with tool_errors():
+            if isinstance(amount, bool):
+                raise ValueError("amount must be a number")
             # The caller's own expense: the person behind the token or the signed-in run (caller.py), never an
             # argument (D191).
             owner = current_caller()

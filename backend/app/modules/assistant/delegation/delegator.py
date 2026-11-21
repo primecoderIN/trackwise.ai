@@ -84,15 +84,21 @@ class Delegator:
         """The rule on when to delegate, if any agent is offered."""
         return [] if self._spec is None else [DELEGATE_RULE]
 
-    def resume(self, message: str) -> Generator[AgentEvent, None, str]:
+    def resume(self, message: str, *, can_resume: bool = True) -> Generator[AgentEvent, None, str]:
         """If an agent is waiting for the person's answer here, send `message` to it on the same task; return the
-        message, with what came of it added for the model. Unchanged if nothing was waiting."""
+        message, with what came of it added for the model. Unchanged if nothing was waiting or `can_resume` is False."""
+        if not can_resume or not message.strip():
+            return message
         pending = self.bus.execute(TakeTask(owner_id=self.owner_id, thread_id=self.thread_id))
         skill = None if pending is None else self._offered.get((pending.agent, pending.skill))
         if pending is None or skill is None:
             return message
         ref = TaskRef(task_id=pending.task_id, context_id=pending.context_id)
-        result, _ = yield from self._ask(skill, [TextPart(text=message)], ref)
+        try:
+            result, _ = yield from self._ask(skill, [TextPart(text=message)], ref, pending_on_unavailable=pending)
+        except Exception:
+            self.bus.execute(RememberTask(owner_id=self.owner_id, thread_id=self.thread_id, task=pending))
+            raise
         return f"{message}\n\n{RESUMED.format(agent=skill.agent, result=result)}"
 
     def _delegate(self, call: ToolCall) -> Generator[AgentEvent, None, CallOutcome]:
@@ -116,7 +122,12 @@ class Delegator:
         return skill, DelegationRequest(owner_id=self.owner_id, request=text.strip(), month=parsed, today=self.today)
 
     def _ask(
-        self, skill: DelegatedSkill, parts: list[Any], resume: TaskRef | None
+        self,
+        skill: DelegatedSkill,
+        parts: list[Any],
+        resume: TaskRef | None,
+        *,
+        pending_on_unavailable: PendingTask | None = None,
     ) -> Generator[AgentEvent, None, tuple[str, bool]]:
         """Send to the agent under a chip; return what to tell the model and whether it went well (keeping the task
         if the agent asks something)."""
@@ -125,6 +136,10 @@ class Delegator:
         try:
             task = self.agents.send(skill.agent, skill.skill_id, parts, skill.artifact, resume)
         except AgentUnavailableError:
+            if pending_on_unavailable is not None:
+                self.bus.execute(
+                    RememberTask(owner_id=self.owner_id, thread_id=self.thread_id, task=pending_on_unavailable)
+                )
             yield _finished(call_id, skill, ok=False)
             return UNAVAILABLE.format(agent=skill.agent), False
         result, ok = self._result(skill, task)

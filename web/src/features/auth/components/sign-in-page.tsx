@@ -18,6 +18,7 @@ import { useTexts } from "../i18n"
 import { useLoginOptions, useSignedInUser } from "../queries"
 import { afterSignIn, failureText } from "../sign-in-urls"
 import { useSessionSync } from "../use-session-sync"
+import { SessionChecking } from "./session-screens"
 import { SignInOptions } from "./sign-in-options"
 
 /**
@@ -33,13 +34,17 @@ export function SignInPage() {
   const user = useSignedInUser()
   // Another tab signing in moves this page on too (and this page, drawn after a sign-out, tells the other tabs).
   useSessionSync(user.data !== undefined)
-  const options = useLoginOptions()
+  const options = useLoginOptions(user.data === null)
   const returnTo = params.get(AUTH.params.returnTo)
   const failure = failureText(params.get(AUTH.params.error))
 
   useEffect(() => {
     if (user.data) router.replace(afterSignIn(returnTo, window.location.origin))
   }, [user.data, returnTo, router])
+
+  if (user.isPending || user.data) {
+    return <SessionChecking />
+  }
 
   return (
     <main className="relative flex min-h-svh items-center justify-center p-4">

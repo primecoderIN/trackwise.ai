@@ -1,7 +1,7 @@
 // A component of the dashboard feature: the row of three stat cards at the top of the Dashboard. Used by the
 // Dashboard page.
 
-import { formatMoney, formatMonth } from "@/shared/lib/format"
+import { formatCount, formatMoney, formatMonth } from "@/shared/lib/format"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 
 import type { MonthlySummary } from "../api"
@@ -31,7 +31,7 @@ export function StatCards({ summary }: { summary: MonthlySummary }) {
       <Card>
         <CardHeader>
           <CardDescription>{t("stats.expensesThisMonth")}</CardDescription>
-          <CardTitle className="text-3xl tabular-nums">{summary.expense_count}</CardTitle>
+          <CardTitle className="text-3xl tabular-nums">{formatCount(summary.expense_count)}</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
           {t("stats.categoriesUsed", { count: summary.by_category.length })}
@@ -41,7 +41,9 @@ export function StatCards({ summary }: { summary: MonthlySummary }) {
       <Card>
         <CardHeader>
           <CardDescription>{t("stats.topCategory")}</CardDescription>
-          <CardTitle className="text-3xl">{top ? top.category_name : "—"}</CardTitle>
+          <CardTitle className="truncate text-3xl" title={top?.category_name}>
+            {top ? top.category_name : "—"}
+          </CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
           {top

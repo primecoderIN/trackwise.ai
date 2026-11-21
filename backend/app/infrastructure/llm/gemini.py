@@ -12,6 +12,7 @@ The composition root (bootstrap.py) builds one GeminiModel with the API key and 
 and injects it; nothing else imports this file.
 """
 
+import logging
 import threading
 from collections.abc import Callable, Iterator, Sequence
 from typing import Any
@@ -24,15 +25,17 @@ from app.core.llm.messages import Message, ReasoningEffort, ToolSpec, Usage
 from app.core.llm.port import Attachment, LlmError
 from app.infrastructure.llm.gemini_wire import EventType, StepAssembler, to_declaration, to_input, to_steps
 
+logger = logging.getLogger(__name__)
+
 # The SDK's defaults (5 attempts, waits of up to 60 s) can leave a request hanging for many minutes while
 # Gemini is down. Give up on an attempt after 60 s and try at most twice. 60 s, not less: a function-calling
 # step can take 20-30 s while the model thinks.
 TIMEOUT_MS = 60_000
+TIMEOUT_SECONDS = TIMEOUT_MS / 1000
 ATTEMPTS = 2
-# Retry only when Google's side failed (5xx), e.g. "high demand". Never on 429 (quota used up): the SDK then
-# sleeps for as long as Google's retry-after-ms header asks, with no upper limit and no timeout, so the request
-# looked hung. Failing at once logs the quota message (a person is told the service failed: D180).
-RETRY_STATUS_CODES = (500, 502, 503, 504)
+# Retry only transient gateway/server errors without unbounded Retry-After waits. Never retry 429 or 503:
+# google-genai sleeps for the full server Retry-After header on both with no upper cap, hanging worker threads.
+RETRY_STATUS_CODES = (500, 502, 504)
 JSON_MIME_TYPE = "application/json"
 
 # Say exactly what to fix, instead of letting a vague SDK error surface later.
@@ -40,6 +43,7 @@ MISSING_KEY = "GEMINI_API_KEY is not set. Add it to .env in the project folder (
 MISSING_MODEL = "GEMINI_MODEL is not set. Add it to .env in the project folder (see .env.example)."
 NO_TEXT = "Gemini returned no text."
 STREAM_FAILED = "Gemini reported an error."
+STREAM_INCOMPLETE = "Gemini stream ended before completion."
 
 # Makes the SDK client from an API key. Replaceable, so the adapter can run against a fake client.
 ClientFactory = Callable[[str], genai.Client]
@@ -93,6 +97,13 @@ class GeminiModel:
             # so we get the fields and types we asked for instead of free-form prose.
             response_format={"type": "text", "mime_type": JSON_MIME_TYPE, "schema": schema},
         )
+        usage = getattr(interaction, "usage", None)
+        if usage is not None:
+            logger.info(
+                "structured call tokens: %s in, %s out",
+                getattr(usage, "total_input_tokens", None),
+                getattr(usage, "total_output_tokens", None),
+            )
         if not interaction.output_text:
             raise LlmError(NO_TEXT)
         return interaction.output_text
@@ -129,6 +140,13 @@ class GeminiModel:
                 self._client = self._client_factory(self._api_key.get_secret_value())
             return self._client
 
+    def close(self) -> None:
+        """Close the shared Gemini client's HTTP pool on app shutdown."""
+        with self._client_lock:
+            client, self._client = self._client, None
+        if client is not None and hasattr(client, "close"):
+            client.close()
+
     def _create(self, **request: Any) -> Any:
         """Send one request to Gemini. Returns the whole interaction, or with stream=True, an event iterator.
 
@@ -144,6 +162,10 @@ class GeminiModel:
                 # Don't let Google keep this conversation for later retrieval; we don't need it.
                 # (On the free tier, Google's data-use terms still apply to what we send.)
                 store=False,
+                # Disable automatic multi-hop continuation (which restarts step.index at 0 on hop 2 and bypasses
+                # per-hop timeouts), and enforce an overall wall-clock timeout directly.
+                automatic_continuation=False,
+                timeout=TIMEOUT_SECONDS,
                 **request,
             )
         except Exception as exc:
@@ -166,12 +188,13 @@ class GeminiStream:
         self.text = ""
         self.messages: list[Message] = []
         self.usage = Usage()
+        self._completed = False
 
     def __iter__(self) -> Iterator[str]:
         """Yield the answer's text as it arrives; when the stream ends, fill `.messages`.
 
-        Raises LlmError if Gemini reports an error, the connection breaks mid-answer, or a function call's
-        arguments aren't valid JSON.
+        Raises LlmError if Gemini reports an error, the connection breaks mid-answer before a terminal COMPLETED
+        event, or a function call's arguments aren't valid JSON.
         """
         assembler = StepAssembler()
         try:
@@ -182,6 +205,8 @@ class GeminiStream:
                     if text is not None:
                         self.text += text
                         yield text
+            if not self._completed:
+                raise LlmError(STREAM_INCOMPLETE)
             self.messages = assembler.messages()
         except LlmError:
             raise
@@ -201,6 +226,7 @@ class GeminiStream:
                 return assembler.add(event.index, event.delta)
             case EventType.COMPLETED:
                 # Only the token counts: unlike a non-streamed response, this final event doesn't repeat the steps.
+                self._completed = True
                 usage = event.interaction.usage
                 if usage is not None:
                     self.usage = Usage(input_tokens=usage.total_input_tokens, output_tokens=usage.total_output_tokens)

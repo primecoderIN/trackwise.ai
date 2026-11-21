@@ -22,12 +22,17 @@ from app.infrastructure.config import get_settings
 SQLITE_BACKEND = "sqlite"
 # How a SQLite URL names a database that lives only in memory ("sqlite://" has no database name at all).
 IN_MEMORY_DATABASES = (None, "", ":memory:")
+# Recycle idle Postgres connections every 5 minutes so Neon scale-to-zero never hands back dead sockets.
+POSTGRES_POOL_RECYCLE_SECONDS = 300
+# How long SQLite waits for another writer before raising SQLITE_BUSY (isolated check engines).
+SQLITE_BUSY_TIMEOUT_MS = 5000
 
 
 def create_db_engine(url: str) -> Engine:
     """An engine (a pool of connections) for the database at `url`; on SQLite, made fully transactional.
 
-    Creating it doesn't connect yet: the first connection is made on first use.
+    Creating it doesn't connect yet: the first connection is made on first use. Non-SQLite engines enable
+    `pool_pre_ping` and `pool_recycle` so serverless PostgreSQL (Neon) connections recover cleanly after idle suspend.
     """
     parsed = make_url(url)
     is_sqlite = parsed.get_backend_name() == SQLITE_BACKEND
@@ -37,21 +42,39 @@ def create_db_engine(url: str) -> Engine:
     # An in-memory SQLite database exists only inside its connection, and SQLAlchemy would give each thread its
     # own: every request would see a different, empty database. One shared connection keeps it one database.
     in_memory = is_sqlite and parsed.database in IN_MEMORY_DATABASES
-    engine = create_engine(url, connect_args=connect_args, **({"poolclass": StaticPool} if in_memory else {}))
+    pool_options: dict[str, Any] = (
+        {"poolclass": StaticPool}
+        if in_memory
+        else ({} if is_sqlite else {"pool_pre_ping": True, "pool_recycle": POSTGRES_POOL_RECYCLE_SECONDS})
+    )
+    engine = create_engine(url, connect_args=connect_args, **pool_options)
     if is_sqlite:
         # Python's sqlite3 driver manages transactions itself, and gets two things wrong for us: it commits
         # schema changes (CREATE, ALTER, DROP) immediately, so a migration that fails halfway stays half done,
         # and it breaks SAVEPOINTs. SQLAlchemy's documented fix: turn the driver's handling off, and start
         # every transaction ourselves.
         # https://docs.sqlalchemy.org/en/20/dialects/sqlite.html#serializable-isolation-savepoints-transactional-ddl
-        event.listen(engine, "connect", _driver_hands_off)
+        event.listen(engine, "connect", _sqlite_connect(in_memory))
         event.listen(engine, "begin", _begin)
     return engine
 
 
-def _driver_hands_off(dbapi_connection: Any, connection_record: Any) -> None:
-    """Put each new SQLite connection in the driver's autocommit mode: it never begins or commits on its own."""
-    dbapi_connection.isolation_level = None
+def _sqlite_connect(in_memory: bool) -> Any:
+    """Configure each new SQLite connection: explicit transactions, foreign keys, busy timeout, and WAL on disk."""
+
+    def _configure(dbapi_connection: Any, connection_record: Any) -> None:
+        dbapi_connection.isolation_level = None
+        cursor = dbapi_connection.cursor()
+        try:
+            cursor.execute("PRAGMA foreign_keys = ON")
+            cursor.execute(f"PRAGMA busy_timeout = {SQLITE_BUSY_TIMEOUT_MS}")
+            if not in_memory:
+                cursor.execute("PRAGMA journal_mode = WAL")
+                cursor.execute("PRAGMA synchronous = NORMAL")
+        finally:
+            cursor.close()
+
+    return _configure
 
 
 def _begin(connection: Any) -> None:

@@ -95,7 +95,15 @@ class Assistant:
         return approval_id
 
     def _answer(
-        self, owner_id: int, thread_id: str, text: str, today: date, surface: Surface, language: Language
+        self,
+        owner_id: int,
+        thread_id: str,
+        text: str,
+        today: date,
+        surface: Surface,
+        language: Language,
+        *,
+        is_user_text: bool = True,
     ) -> Iterator[AgentEvent]:
         """Answer one message in the owner's thread on `surface`, saving the turn when it finishes. Yields its
         events.
@@ -111,8 +119,9 @@ class Assistant:
         history = self.bus.ask(conversations.GetHistory(owner_id=owner_id, thread_id=thread_id, from_turn=since))
         delegator = Delegator(self.directory, self.agents, self.bus, owner_id, thread_id, today)
         # An agent waiting for this person's answer here gets this message first, on its own task (D206); the
-        # model then reads the message with what came of it.
-        text = yield from delegator.resume(text)
+        # model then reads the message with what came of it. Only plain user text answers a waiting question
+        # (a form submission does not consume the pending delegation).
+        text = yield from delegator.resume(text, can_resume=is_user_text)
         # Beside the expense tools: other agents to delegate to, and the skills to read (each offers nothing if empty).
         extensions = (delegator, SkillTool(self.skills))
         agent = Agent(llm=self.llm, tools=self.tools.acting_for(owner_id), extensions=extensions)
@@ -122,7 +131,14 @@ class Assistant:
             yield event
 
     def run_turn(
-        self, owner_id: int, thread_id: str, text: str, today: date, language: Language
+        self,
+        owner_id: int,
+        thread_id: str,
+        text: str,
+        today: date,
+        language: Language,
+        *,
+        is_user_text: bool = True,
     ) -> Iterator[AgentEvent]:
         """Answer one of the owner's messages in the web panel, in `language`. A thread they don't have yet starts
         a new conversation, even if another person uses the same id: threads are per person (D190).
@@ -131,7 +147,7 @@ class Assistant:
         recorded in this thread.
         """
         panel = WebPanel(request_approval=lambda expense: self._request_approval(owner_id, thread_id, expense))
-        return self._answer(owner_id, thread_id, text, today, panel, language)
+        return self._answer(owner_id, thread_id, text, today, panel, language, is_user_text=is_user_text)
 
     def read_receipt(
         self, owner_id: int, thread_id: str, receipt_id: int, message: str, today: date, language: Language

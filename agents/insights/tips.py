@@ -39,9 +39,8 @@ Tip = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_
 
 
 # The model's answer. Its JSON schema is sent to the model, so the descriptions are instructions it reads.
+# Saving tips for one month of spending.
 class TipsAnswer(BaseModel):
-    """Saving tips for one month of spending."""
-
     tips: list[Tip] = Field(
         min_length=TIPS_COUNT, max_length=TIPS_COUNT, description=f"Exactly {TIPS_COUNT} tips, one sentence each."
     )

@@ -64,7 +64,6 @@ def create_router(
     """
     reader = AgentReceiptReader(agents)
     directory = AgentDirectory(agents, delegable_skills(bus), clock)
-    directory.load()
     assistant = Assistant(
         bus=bus,
         tools=tools,

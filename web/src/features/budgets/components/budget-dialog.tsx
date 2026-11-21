@@ -62,7 +62,7 @@ export function BudgetDialog({ scope, name, currentLimit }: BudgetDialogProps) {
               </Button>
             )}
             <DialogClose asChild>
-              <Button type="button" variant="outline">
+              <Button type="button" variant="outline" disabled={busy}>
                 {t("dialog.cancel")}
               </Button>
             </DialogClose>

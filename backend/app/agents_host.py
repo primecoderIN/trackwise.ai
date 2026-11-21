@@ -9,9 +9,11 @@ random key made at startup (its gate still checks it), so no agent key is config
 The multi-server version, where each agent is its own service on 9001-9003, is the `multi-server` branch.
 """
 
+import inspect
 import secrets
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
+from typing import Any
 
 import httpx
 from pydantic import SecretStr
@@ -39,12 +41,16 @@ def hosted_agents(llm: LanguageModel, clock: Clock) -> A2AAgents:
         sys.path.append(str(AGENTS_DIR))
     builders = _builders(llm, clock)
     endpoints, transports = {}, {}
+    cleanups: list[Callable[[], Coroutine[Any, Any, None]]] = []
     for name, build in builders.items():
         key = secrets.token_urlsafe(KEY_BYTES)
         url, app = build(key)
         endpoints[name] = AgentEndpoint(url, SecretStr(key))
         transports[name] = httpx.ASGITransport(app=app)
-    return A2AAgents(endpoints, transports)
+        close = getattr(getattr(app.state, "a2a_handler", None), "aclose", None)
+        if inspect.iscoroutinefunction(close):
+            cleanups.append(close)
+    return A2AAgents(endpoints, transports, cleanups=cleanups)
 
 
 def _builders(llm: LanguageModel, clock: Clock) -> dict[str, Callable[[str], tuple[str, Starlette]]]:
@@ -60,17 +66,17 @@ def _builders(llm: LanguageModel, clock: Clock) -> dict[str, Callable[[str], tup
 
     def receipt(key: str) -> tuple[str, Starlette]:
         """The receipt agent, reading with the backend's model."""
-        settings = ReceiptSettings(_env_file=None, receipt_agent_key=key)  # pyright: ignore[reportCallIssue]  (pydantic-settings' own argument)
+        settings = ReceiptSettings(_env_file=None, receipt_agent_key=key, receipt_agent_port=9001)  # pyright: ignore[reportCallIssue]  (pydantic-settings' own argument)
         return settings.url, receipt_app(settings, llm)
 
     def insights(key: str) -> tuple[str, Starlette]:
         """The insights agent, writing tips with the backend's model."""
-        settings = InsightsSettings(_env_file=None, insights_agent_key=key)  # pyright: ignore[reportCallIssue]  (pydantic-settings' own argument)
+        settings = InsightsSettings(_env_file=None, insights_agent_key=key, insights_agent_port=9002)  # pyright: ignore[reportCallIssue]  (pydantic-settings' own argument)
         return settings.url, insights_app(settings, llm)
 
     def currency(key: str) -> tuple[str, Starlette]:
         """The currency agent, with the mock rates and the backend's clock."""
-        settings = CurrencySettings(_env_file=None, currency_agent_key=key)  # pyright: ignore[reportCallIssue]  (pydantic-settings' own argument)
+        settings = CurrencySettings(_env_file=None, currency_agent_key=key, currency_agent_port=9003)  # pyright: ignore[reportCallIssue]  (pydantic-settings' own argument)
         return settings.url, currency_app(settings, MockRateProvider(), clock)
 
     return {"receipt": receipt, "insights": insights, "currency": currency}

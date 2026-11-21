@@ -13,6 +13,7 @@ from app.modules.receipts.queries.get_receipt import GetReceipt
 from app.modules.receipts.values import MAX_RECEIPT_BYTES
 from app.web.auth import CurrentUserDep
 from app.web.dependencies import BusDep, IdPath
+from app.web.rate_limits import RECEIPTS_QUOTA
 
 TAG = "receipts"
 
@@ -29,14 +30,18 @@ def create_router(uploader: ReceiptUploader) -> APIRouter:
     # receipt and its Location. The type is read from the file's bytes; an empty, too large or unsupported file is a
     # 422 (business-rule). FastAPI has already spooled the upload to a temporary file; at most one byte past the
     # limit is read from it, enough to know it's too large.
-    @router.post("/receipts", status_code=201)
+    @router.post("/receipts", status_code=201, dependencies=[RECEIPTS_QUOTA])
     def upload_receipt(
         file: UploadFile, principal: CurrentUserDep, bus: BusDep, request: Request, response: Response
     ) -> ReceiptRead:
         owner = principal.user_id
-        receipt_id = uploader.upload(owner, file.file.read(MAX_RECEIPT_BYTES + 1))
-        # 201 Created says where the new resource lives (url_for includes the /api/v1 prefix).
-        response.headers["Location"] = str(request.url_for(get_receipt.__name__, receipt_id=receipt_id))
+        try:
+            data = file.file.read(MAX_RECEIPT_BYTES + 1)
+        finally:
+            file.file.close()
+        receipt_id = uploader.upload(owner, data)
+        # 201 Created says where the new resource lives (url_for.path includes the /api/v1 prefix).
+        response.headers["Location"] = request.url_for(get_receipt.__name__, receipt_id=receipt_id).path
         return bus.ask(GetReceipt(owner_id=owner, receipt_id=receipt_id)).public()
 
     # GET /api/v1/receipts/{receipt_id}: what's known about one of the signed-in person's receipts (not its bytes).

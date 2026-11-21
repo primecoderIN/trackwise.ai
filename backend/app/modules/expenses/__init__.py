@@ -39,12 +39,26 @@ from app.modules.expenses.queries.get_expense import GetExpense
 from app.modules.expenses.queries.get_monthly_summary import CategoryTotal, GetMonthlySummary, MonthlySummary
 from app.modules.expenses.queries.get_monthly_trend import GetMonthlyTrend, MonthlyTrend, MonthTotal
 from app.modules.expenses.queries.list_expenses import ExpenseFilters, ListExpenses
-from app.modules.expenses.values import MAX_LIST_LIMIT, MAX_MERCHANT_LENGTH, MAX_NOTE_LENGTH, ExpenseId, PaymentMethod
+from app.modules.expenses.values import (
+    DEFAULT_LIST_LIMIT,
+    DEFAULT_TREND_MONTHS,
+    MAX_LIST_LIMIT,
+    MAX_MERCHANT_LENGTH,
+    MAX_NOTE_LENGTH,
+    MAX_SEARCH_LENGTH,
+    MAX_TREND_MONTHS,
+    ExpenseId,
+    PaymentMethod,
+)
 
 __all__ = [
+    "DEFAULT_LIST_LIMIT",
+    "DEFAULT_TREND_MONTHS",
     "MAX_LIST_LIMIT",
     "MAX_MERCHANT_LENGTH",
     "MAX_NOTE_LENGTH",
+    "MAX_SEARCH_LENGTH",
+    "MAX_TREND_MONTHS",
     "CategoryTotal",
     "CreateExpense",
     "DeleteExpense",

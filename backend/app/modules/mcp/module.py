@@ -6,7 +6,7 @@ personal access token into its owner. Nothing else imports this file: other modu
 which loads no server code.
 """
 
-from app.modules.mcp.http import TokenResolver, create_http_app
+from app.modules.mcp.http import AccessTokenAuth, PersonalTokenGate, TokenResolver, create_http_app
 from app.modules.mcp.server import create_server
 
-__all__ = ["TokenResolver", "create_http_app", "create_server"]
+__all__ = ["AccessTokenAuth", "PersonalTokenGate", "TokenResolver", "create_http_app", "create_server"]

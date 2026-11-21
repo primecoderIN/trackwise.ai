@@ -35,6 +35,9 @@ export const LIMITS = {
   "messageLength": 2000,
   "threadIdLength": 32,
   "userMessageLength": 200,
+  "merchantLength": 100,
+  "noteLength": 500,
+  "searchLength": 100,
   "listDefault": 100,
   "listMax": 500,
   "trendMonthsDefault": 6,
@@ -54,7 +57,7 @@ export const REPORT_FORMATS = [
   "md"
 ] as const
 
-export const MONTH_PATTERN = "^(19|20)\\d{2}-(0[1-9]|1[0-2])$" as const
+export const MONTH_PATTERN = "^(19|20)[0-9]{2}-(0[1-9]|1[0-2])$" as const
 
 export const BUDGETS = {
   "states": {

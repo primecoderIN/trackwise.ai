@@ -43,6 +43,8 @@ def register_set_budget(server: MCPServer, context: ToolContext) -> None:
         ] = "",
     ) -> budgets.BudgetStatus:
         with tool_errors():
+            if isinstance(limit, bool):
+                raise ValueError("limit must be a number")
             # The caller's own budget (caller.py, D191); never a person named in the arguments.
             owner = current_caller()
             category_id = views.category_id(category) if given(category) else None

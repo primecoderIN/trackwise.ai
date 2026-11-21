@@ -11,7 +11,6 @@ MCP tool get_monthly_report (through the mcp module's ToolContext) use it.
 
 import logging
 from dataclasses import dataclass
-from datetime import timedelta
 
 from pydantic import ValidationError
 
@@ -85,7 +84,9 @@ class MonthlyReports:
     def _read(self, owner: UserId, month: YearMonth) -> _Month:
         """Every expense of `owner`'s in the month and the month before, read a page at a time, and the category
         names. Only their own expenses are ever read (ListExpenses always names the owner, D190)."""
-        start, end = month.shift(-1).first_day(), month.shift(1).first_day() - timedelta(days=1)
+        previous = month.previous()
+        start = previous.first_day() if previous is not None else month.first_day()
+        end = month.last_day()
         rows: list[expenses.ExpenseRead] = []
         while True:
             filters = expenses.ExpenseFilters(
@@ -122,7 +123,7 @@ class MonthlyReports:
         }
         try:
             report = MonthlyReport.model_validate(self._skills.run_script(REPORT_SKILL, REPORT_SCRIPT, payload))
-        except (SkillNotFoundError, SkillScriptError, ValidationError) as exc:
+        except (SkillNotFoundError, SkillScriptError, ValidationError, ValueError) as exc:
             # What went wrong goes to the log, at DEBUG (it may quote the person's data); people get a catalogued text.
             logger.warning("the monthly report for %s couldn't be made: %s", month, type(exc).__name__)
             logger.debug("monthly report failure: %s", exc)

@@ -31,11 +31,13 @@ class EndSession(Command[None]):
 
 
 def end_session(ctx: Context, command: EndSession) -> None:
-    """Set revoked_at to the clock's now on the session, if it's still live."""
+    """Set revoked_at to the clock's now and clear sealed_id_token on the session, if it's still live."""
     which = (
         col(UserSession.id) == command.session_id
         if command.session_id is not None
         else col(UserSession.key_hash) == command.key_hash
     )
     still_live = col(UserSession.revoked_at).is_(None)
-    ctx.session.execute(update(UserSession).where(which, still_live).values(revoked_at=ctx.clock.now()))
+    ctx.session.execute(
+        update(UserSession).where(which, still_live).values(revoked_at=ctx.clock.now(), sealed_id_token=None)
+    )

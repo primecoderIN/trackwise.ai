@@ -34,6 +34,7 @@ from app.modules.accounts.values import (
 from app.web.auth import CookiesDep, CurrentUserDep, optional_user, require_csrf
 from app.web.dependencies import BusDep
 from app.web.i18n import WebText
+from app.web.rate_limits import AUTH_QUOTA
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +91,7 @@ def _add_sign_in_routes(router: APIRouter, sign_in: SignInFlow) -> None:
     # GET /api/v1/auth/login?option=google&return_to=/expenses: start signing in. A navigation, not an API call:
     # 302 to the provider, with a short-lived login cookie that ties the sign-in to this browser. If the provider
     # can't be used, 302 to the sign-in page with ?error=unavailable.
-    @router.get("/login", response_class=RedirectResponse, status_code=302)
+    @router.get("/login", response_class=RedirectResponse, status_code=302, dependencies=[AUTH_QUOTA])
     def login(
         request: Request,
         cookies: CookiesDep,
@@ -112,7 +113,7 @@ def _add_sign_in_routes(router: APIRouter, sign_in: SignInFlow) -> None:
     # GET /api/v1/auth/callback?code=...&state=...: where the provider sends the browser back (the registered
     # redirect URI). 302 to the page the sign-in started from, with the session cookie; or to the sign-in page with
     # ?error=<SignInFailure>. Either way the login cookie is cleared: each sign-in completes once.
-    @router.get("/callback", response_class=RedirectResponse, status_code=302)
+    @router.get("/callback", response_class=RedirectResponse, status_code=302, dependencies=[AUTH_QUOTA])
     def callback(
         request: Request,
         cookies: CookiesDep,
@@ -165,7 +166,7 @@ def _add_session_routes(router: APIRouter, sign_out: SignOutFlow) -> None:
 
     # POST /api/v1/auth/backchannel-logout: the provider says a session ended there (OIDC Back-Channel Logout 1.0):
     # a form with a signed logout_token. 200 once the matching sessions have ended; 400 if the token fails a check.
-    @router.post("/backchannel-logout")
+    @router.post("/backchannel-logout", dependencies=[AUTH_QUOTA])
     def backchannel_logout(form: Annotated[BackchannelLogoutForm, Form()]) -> Response:
         sign_out.back_channel(form.logout_token)
         return Response(headers=NO_STORE)

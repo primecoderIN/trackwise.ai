@@ -6,7 +6,6 @@ as ExpenseRead copies in an ExpenseList (models.py). ExpenseFilters is also GET 
 (api.py), so its docstring and field descriptions are part of the OpenAPI document: notes are `#` comments.
 """
 
-from datetime import date
 from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -18,7 +17,13 @@ from app.core.ids import UserId
 from app.modules.categories import CategoryId
 from app.modules.expenses.models import ExpenseList, ExpenseRead
 from app.modules.expenses.persistence.tables import Expense
-from app.modules.expenses.values import DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT, MAX_MERCHANT_LENGTH, MAX_SEARCH_LENGTH
+from app.modules.expenses.values import (
+    DEFAULT_LIST_LIMIT,
+    MAX_LIST_LIMIT,
+    MAX_MERCHANT_LENGTH,
+    MAX_SEARCH_LENGTH,
+    SpentOnDate,
+)
 
 
 # Which expenses, and which page: GET /expenses's query parameters, MCP's list_expenses arguments (translated) and
@@ -33,8 +38,8 @@ class ExpenseFilters(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
-    start_date: date | None = None
-    end_date: date | None = None
+    start_date: SpentOnDate | None = None
+    end_date: SpentOnDate | None = None
     category_id: CategoryId | None = None
     # min_length=1: an empty value is an error, not a silent "no filter".
     merchant: str | None = Field(
