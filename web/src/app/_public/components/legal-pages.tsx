@@ -7,6 +7,7 @@ import Link from "next/link"
 import { Button } from "@/shared/ui/button"
 
 import type { PublicSiteTexts } from "../texts"
+import { BreadcrumbJsonLd } from "./breadcrumb-json-ld"
 import { PUBLIC_CONTAINER } from "./container"
 import { PublicFrame } from "./public-frame"
 
@@ -17,6 +18,12 @@ export function PublicLegalPage({ texts, kind }: { texts: PublicSiteTexts; kind:
 
   return (
     <PublicFrame texts={texts} currentPage={currentPage}>
+      <BreadcrumbJsonLd
+        homeName={texts.footer.home}
+        homePath={texts.paths.landing}
+        pageName={page.title}
+        pagePath={texts.paths[currentPage]}
+      />
       <section className="border-b bg-muted/25 py-12">
         <div className={PUBLIC_CONTAINER}>
           <p className="text-xs font-medium text-primary">{page.updated}</p>
@@ -76,6 +83,12 @@ export function PublicContactPage({ texts }: { texts: PublicSiteTexts }) {
 
   return (
     <PublicFrame texts={texts} currentPage="contact">
+      <BreadcrumbJsonLd
+        homeName={texts.footer.home}
+        homePath={texts.paths.landing}
+        pageName={texts.nav.contact}
+        pagePath={texts.paths.contact}
+      />
       <section className="border-b bg-muted/25 py-12">
         <div className={PUBLIC_CONTAINER}>
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{contactPage.title}</h1>

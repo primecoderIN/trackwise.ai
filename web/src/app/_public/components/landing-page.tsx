@@ -21,7 +21,12 @@ function LandingJsonLd({ texts }: { texts: PublicSiteTexts }) {
   const graph = {
     "@context": "https://schema.org",
     "@graph": [
-      { "@type": "Organization", name: APP_NAME, url: origin.toString() },
+      {
+        "@type": "Organization",
+        name: APP_NAME,
+        url: origin.toString(),
+        logo: new URL("/icon", origin).toString(),
+      },
       { "@type": "WebSite", name: APP_NAME, url: origin.toString(), inLanguage: texts.lang },
       {
         "@type": "SoftwareApplication",
@@ -31,6 +36,9 @@ function LandingJsonLd({ texts }: { texts: PublicSiteTexts }) {
         inLanguage: texts.lang,
         url: pageUrl,
         description: texts.landing.metaDescription,
+        screenshot: new URL("/opengraph-image", origin).toString(),
+        offers: { "@type": "Offer", price: "0", priceCurrency: "INR" },
+        featureList: texts.featuresPage.sections.map((section) => section.title),
       },
     ],
   }

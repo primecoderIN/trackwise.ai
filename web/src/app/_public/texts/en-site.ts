@@ -70,7 +70,7 @@ export const EN_SITE_TEXTS: SiteCoreTexts = {
     languageLabel: "Switch language",
   },
   landing: {
-    title: `${APP_NAME} — AI Expense Tracker, Receipt Scanner & Monthly Budgets`,
+    title: "AI Expense Tracker, Receipt Scanner & Monthly Budgets",
     metaDescription:
       "Track daily expenses in INR and foreign currencies, scan receipts with human confirmation, set monthly budgets, and connect MCP clients in English and Hindi.",
     badge: "Bilingual AI Expense Workspace · English & हिन्दी",

@@ -3034,8 +3034,9 @@ is natural. It's still a soft, model-judged guard.
     `/hi`, `/hi/features`, `/hi/security`, `/hi/faq`, `/hi/privacy-policy`, `/hi/terms-of-service`, `/hi/contact`
     (with permanent 308 redirects from `/privacy`, `/terms`, `/hi/privacy` and `/hi/terms`) are rendered on the server
     outside `(client)/`, with `publicPage` metadata, `hreflang` alternates (`en`, `hi`, `x-default`),
-    `opengraph-image.tsx` (`next/og`), JSON-LD structured data (`Organization`, `WebSite`, `SoftwareApplication` on `/`;
-    categorized `FAQPage` on `/faq`), Zoho Expense-style multi-page product hierarchy using a wide `PUBLIC_CONTAINER`
+    `opengraph-image.tsx` (`next/og`), `icon.tsx` (`32x32`), `apple-icon.tsx` (`180x180`), `favicon.ico`,
+    `favicon.svg`, `manifest.ts` (`/manifest.webmanifest`), JSON-LD structured data (`Organization`, `WebSite`,
+    `SoftwareApplication` on `/`; categorized `FAQPage` on `/faq`; `BreadcrumbList` across secondary public pages), Zoho Expense-style multi-page product hierarchy using a wide `PUBLIC_CONTAINER`
     (`max-w-[1520px]`) 12-column split hero with an auto-playing interactive bilingual product walkthrough video
     player (`WalkthroughPlayer` / `WalkthroughStageCanvas`) plus bespoke feature previews, a shared `NavProgressBar`
     horizontal route-transition loader beneath public and signed-in navbars, comprehensive feature and FAQ coverage

@@ -45,16 +45,40 @@ export const PUBLIC_PATHS: readonly string[] = [
 ]
 
 /**
- * The site's origin, e.g. https://spendwise.example: PUBLIC_URL (shared/config/site.ts), else the development address.
+ * The site's origin, e.g. https://trackwise.ai: PUBLIC_URL (shared/config/site.ts), else the development address.
  * Canonical URLs, the sitemap and link previews are built on it.
  */
 export function siteUrl(): URL {
   return new URL(process.env[PUBLIC_URL_SETTING] || DEFAULT_PUBLIC_URL)
 }
 
+const EN_KEYWORDS = [
+  "AI expense tracker",
+  "receipt scanner",
+  "personal finance India",
+  "monthly budget tracker",
+  "multi-currency expense tracker INR",
+  "MCP expense tools",
+  APP_NAME,
+]
+
+const HI_KEYWORDS = ["AI खर्च ट्रैकर", "रसीद स्कैनर", "मासिक बजट ऐप", "दैनिक खर्च हिसाब", "हिन्दी बजट ट्रैकर", APP_NAME]
+
+const INDEXABLE_ROBOTS: Metadata["robots"] = {
+  index: true,
+  follow: true,
+  googleBot: {
+    index: true,
+    follow: true,
+    "max-snippet": -1,
+    "max-image-preview": "large",
+    "max-video-preview": -1,
+  },
+}
+
 /**
  * The metadata every page starts from (the root layout's): the site's address, the title (a page's own title
- * becomes "<title> | SpendWise"), the description, the icon, the link preview, and optional Search Console verification.
+ * becomes "<title> | trackwise.ai"), the description, icons, OpenGraph defaults, and Search Console verification.
  */
 export function siteMetadata(): Metadata {
   const googleVerification = process.env[GOOGLE_SITE_VERIFICATION_SETTING]?.trim()
@@ -63,15 +87,42 @@ export function siteMetadata(): Metadata {
     title: { default: APP_NAME, template: `%s | ${APP_NAME}` },
     description: APP_DESCRIPTION,
     applicationName: APP_NAME,
-    icons: { icon: "/favicon.svg" },
-    openGraph: { type: "website", siteName: APP_NAME, title: APP_NAME, description: APP_DESCRIPTION },
-    twitter: { card: "summary_large_image", title: APP_NAME, description: APP_DESCRIPTION },
+    category: "Finance",
+    keywords: EN_KEYWORDS,
+    authors: [{ name: APP_NAME }],
+    creator: APP_NAME,
+    publisher: APP_NAME,
+    formatDetection: { email: false, address: false, telephone: false },
+    robots: INDEXABLE_ROBOTS,
+    icons: {
+      icon: [
+        { url: "/favicon.ico", sizes: "any" },
+        { url: "/favicon.svg", type: "image/svg+xml" },
+        { url: "/icon", type: "image/png", sizes: "32x32" },
+      ],
+      apple: [{ url: "/apple-icon", sizes: "180x180", type: "image/png" }],
+    },
+    openGraph: {
+      type: "website",
+      locale: "en_IN",
+      alternateLocale: ["hi_IN"],
+      siteName: APP_NAME,
+      title: APP_NAME,
+      description: APP_DESCRIPTION,
+      images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: APP_NAME }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: APP_NAME,
+      description: APP_DESCRIPTION,
+      images: ["/opengraph-image"],
+    },
     ...(googleVerification ? { verification: { google: googleVerification } } : {}),
   }
 }
 
 /**
- * A public page's metadata: indexed, under its own title, description, canonical address, Open Graph & X card tags,
+ * A public page's metadata: indexed with rich snippets, canonical URL, Open Graph & X card images, locale tags,
  * and optional hreflang language alternates (`en`, `hi`, `x-default`).
  */
 export function publicPage(
@@ -80,27 +131,34 @@ export function publicPage(
   options?: { description?: string; languages?: { en: string; hi: string } },
 ): Metadata {
   const description = options?.description ?? APP_DESCRIPTION
+  const isHindi = path === ROUTES.landingHi || path.startsWith(`${ROUTES.landingHi}/`)
   const languages = options?.languages
     ? { en: options.languages.en, hi: options.languages.hi, "x-default": options.languages.en }
     : undefined
   return {
     title,
     description,
+    keywords: isHindi ? HI_KEYWORDS : EN_KEYWORDS,
+    robots: INDEXABLE_ROBOTS,
     alternates: {
       canonical: path,
       ...(languages ? { languages } : {}),
     },
     openGraph: {
       type: "website",
+      locale: isHindi ? "hi_IN" : "en_IN",
+      alternateLocale: [isHindi ? "en_IN" : "hi_IN"],
       siteName: APP_NAME,
       title,
       description,
       url: path,
+      images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: `${title} — ${APP_NAME}` }],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
+      images: ["/opengraph-image"],
     },
   }
 }

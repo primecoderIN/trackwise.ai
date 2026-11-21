@@ -14,8 +14,15 @@ import { siteMetadata } from "./_seo/seo"
 /** The metadata every page starts from: title template, description, icon, link preview (app/_seo/seo.ts). */
 export const metadata: Metadata = siteMetadata()
 
-/** The viewport: the page's width follows the device's, as phones expect. */
-export const viewport: Viewport = { width: "device-width", initialScale: 1 }
+/** The viewport and responsive theme colors for mobile and desktop browsers. */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
+  ],
+}
 
 /**
  * The document around every page. The theme script runs in <head>, before anything is painted, so dark mode never

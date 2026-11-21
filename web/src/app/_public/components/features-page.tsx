@@ -7,6 +7,7 @@ import Link from "next/link"
 import { Button } from "@/shared/ui/button"
 
 import type { PublicSiteTexts } from "../texts"
+import { BreadcrumbJsonLd } from "./breadcrumb-json-ld"
 import { PUBLIC_CONTAINER } from "./container"
 import { FeaturePreview } from "./feature-previews"
 import { PublicFrame } from "./public-frame"
@@ -97,6 +98,12 @@ export function PublicFeaturesPage({ texts }: { texts: PublicSiteTexts }) {
   const { featuresPage } = texts
   return (
     <PublicFrame texts={texts} currentPage="features">
+      <BreadcrumbJsonLd
+        homeName={texts.footer.home}
+        homePath={texts.paths.landing}
+        pageName={texts.nav.features}
+        pagePath={texts.paths.features}
+      />
       <FeaturesHero texts={texts} />
 
       <div className="divide-y">

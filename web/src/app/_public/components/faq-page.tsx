@@ -7,6 +7,7 @@ import Link from "next/link"
 import { Button } from "@/shared/ui/button"
 
 import type { PublicSiteTexts } from "../texts"
+import { BreadcrumbJsonLd } from "./breadcrumb-json-ld"
 import { PUBLIC_CONTAINER } from "./container"
 import { PublicFrame } from "./public-frame"
 
@@ -34,6 +35,12 @@ export function PublicFaqPage({ texts }: { texts: PublicSiteTexts }) {
   return (
     <PublicFrame texts={texts} currentPage="faq">
       <FaqJsonLd texts={texts} />
+      <BreadcrumbJsonLd
+        homeName={texts.footer.home}
+        homePath={texts.paths.landing}
+        pageName={texts.nav.faq}
+        pagePath={texts.paths.faq}
+      />
 
       <section className="border-b bg-[radial-gradient(ellipse_at_top,oklch(0.47_0.19_262_/_0.08),transparent_65%)] pt-12 pb-12 sm:pt-16">
         <div className={PUBLIC_CONTAINER}>

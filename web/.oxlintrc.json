@@ -169,7 +169,9 @@
         "src/app/**/not-found.tsx",
         "src/app/**/error.tsx",
         "src/app/**/global-error.tsx",
-        "src/app/**/opengraph-image.tsx"
+        "src/app/**/opengraph-image.tsx",
+        "src/app/**/icon.tsx",
+        "src/app/**/apple-icon.tsx"
       ],
       "rules": {
         "react/only-export-components": "off"
