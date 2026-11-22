@@ -1,6 +1,6 @@
 # Security
 
-What protects SpendWise today, why, and what's still missing before it could run anywhere but your own machine.
+What protects trackwise.ai today, why, and what's still missing before it could run anywhere but your own machine.
 
 **Scope today:** people sign in through an identity provider (Phase 22), and each person's data is their own
 (Phase 23): every object is checked against its owner. The backend listens on `127.0.0.1`, the web app on
@@ -58,12 +58,12 @@ the backend is the client, and the browser never sees a token (D185, D186: the b
 | The provider's picture used against the page | It's shown only from an `https:` address, as an `<img>` (no script runs), with `referrerPolicy="no-referrer"`, so its host isn't told which page asked |
 
 Who may sign in at all is the provider's decision (with ZITADEL, a role in the project); `OIDC_REQUIRED_ROLE` lets
-SpendWise check a role too. The OpenID Connect and OAuth facts these rely on: [sources.md](sources.md#27-openid-connect-and-zitadel-phase-22).
+trackwise.ai check a role too.
 
 ## Each person's own data (BOLA)
 
 Signing in says who is asking; it doesn't say which objects they may touch. Broken object level authorization, an
-API that serves any object whose id it's given, is OWASP's first API risk, and SpendWise's ids are sequential. So
+API that serves any object whose id it's given, is OWASP's first API risk, and trackwise.ai's ids are sequential. So
 every object is checked against its owner, on the server, where it's read (D190):
 
 | Risk | Defence |
@@ -83,8 +83,7 @@ The owner check is server-side only: nothing the browser does can widen it. The 
 |---|---|
 | One person's data still on screen (or in memory) after another signs in, in the same browser | the page is unloaded when its person changes: a full navigation to the sign-in page when the session ends, a reload when someone else signs in; tabs tell each other to ask the server again |
 | A link that leads off the site (`?return_to=https://evil.example`, a tampered sign-out link) | only paths on this site are followed (`ownSitePath`, `afterSignIn`); anything else goes to the start page |
- A check that runs two people through
-every door is in the phase note ([phases/phase-23-per-person-data.md](phases/phase-23-per-person-data.md)).
+
 
 ## Headers and caching (D193)
 
@@ -121,8 +120,7 @@ message: nothing in an MCP request can name a person (D191). Without a caller, e
 | Guessing | 256 random bits; anything not shaped like a token isn't even looked up |
 | Seeing it again later | it's sent once, in the answer that makes it, with `Cache-Control: no-store`, and kept only in that dialog's state in the browser (never in its storage); closing the dialog forgets it |
 
-The MCP spec requires Streamable HTTP servers to validate `Origin` and recommends authentication
-([sources.md](sources.md#10-mcp-python-sdk-230-in-process-clients-structured-output-http-security-refactor)).
+Per the MCP Streamable HTTP specification, the server validates `Origin` on every request and requires authentication.
 
 ## The AI assistant
 
@@ -228,7 +226,7 @@ Every AG-UI event is validated with `@ag-ui/core`'s schemas before it's used.
 - INFO logs record what happened (message length, tool names, ok or error, token counts), never the content: message
   text and tool arguments are financial data and appear only at DEBUG.
 - Gemini is called with `store=False`, so Google doesn't keep the conversation for later retrieval. On the free tier,
-  Google's data-use terms still apply to what's sent ([gemini.md](gemini.md)).
+  Google AI / Gemini API data-use terms apply to payloads sent to the model.
 - The application database is Neon PostgreSQL (`DATABASE_URL`, held as a `SecretStr` in settings); any local `.db`
   file used for isolated checks is git-ignored.
 - Sign-in logs say what happened (signed in: session 12; refused: the required role is missing) and the provider's
@@ -246,7 +244,6 @@ Every backend and web dependency is pinned to an exact version (`requirements.tx
 | **No HTTPS** | traffic, including the session cookie, would be readable | TLS at a reverse proxy; the cookie is Secure, so browsers send it only over HTTPS (and to `localhost`) |
 | **One process's rate limit** | the model allowance (D194) is counted in memory: several server processes would each count separately | a shared counter (Redis) before running more than one |
 | **Inline scripts allowed** | the pages' CSP allows `'unsafe-inline'` scripts (Next.js's bootstrap), so it can't stop an injected inline script | a nonce-based CSP, if the pages are rendered per request anyway (D193) |
-| **No request-size limit** | an upload is spooled to a temporary file before the receipts route can refuse it, so a very large one uses disk and time | a body-size limit at the proxy (a little over 5 MB for `POST /receipts`) |
 | **The mock exchange rates** | the currency agent's rates are made up (D203): an amount in another currency is stored at a rate that isn't real | a real rate provider (an exchange-rate API) behind `currency/rates.RateProvider` before relying on the INR amounts |
 | **The agents speak plain HTTP** (`multi-server` branch only) | its requests carry the key and a receipt; on one machine they never leave it, but across machines anyone on the path could read them | TLS (or mTLS) between the backend and the agent before they run on different machines, and a key that can be rotated without a restart |
 | **Uploaded files are never deleted** | receipts accumulate in `UPLOADS_DIR` | a retention rule, or deleting a receipt once its expense is saved |

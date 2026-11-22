@@ -1,16 +1,15 @@
 # Identity provider
 
-How SpendWise signs people in, what it needs from an identity provider, how to set up today's provider (ZITADEL),
-and how to switch to another. The design and its reasons: [phases/phase-22-sign-in.md](phases/phase-22-sign-in.md),
-D185–D187 in [decisions.md](decisions.md).
+How trackwise.ai signs people in, what it needs from an identity provider, how to set up today's provider (ZITADEL),
+and how to switch to another. See D185–D187 in [decisions.md](decisions.md) and [security.md](security.md).
 
-## How SpendWise uses a provider
+## How trackwise.ai uses a provider
 
-SpendWise is a **confidential web client** of any provider that implements **OpenID Connect** (D185). It uses only
+trackwise.ai is a **confidential web client** of any provider that implements **OpenID Connect** (D185). It uses only
 the published standards: Discovery, the authorization code flow with PKCE (S256), the ID token's checks, UserInfo,
 RP-Initiated Logout and Back-Channel Logout. The provider's name appears nowhere in the code; it's configuration.
 
-| The provider does | SpendWise does |
+| The provider does | trackwise.ai does |
 |---|---|
 | shows the login page, and the Google / GitHub (later Apple) buttons on it | starts the sign-in, checks the answer, keeps the session (one HttpOnly cookie, D186) |
 | keeps the person's account, their linked social logins, MFA | keeps its own user (its own id), found by the provider's issuer and subject (D187) |
@@ -56,21 +55,21 @@ Until the issuer, client id, secret and a key are all set, nobody can sign in an
 
 ## ZITADEL (today's provider)
 
-These steps follow ZITADEL's documentation ([sources.md](sources.md#27-openid-connect-and-zitadel-phase-22)). Part 4
+These steps follow ZITADEL's standard PKCE OIDC application setup. Part 4
 walks through them in the console and corrects anything that differs.
 
 1. **Instance.** Create a ZITADEL Cloud instance. Its address is the issuer: `OIDC_ISSUER=https://<instance>.zitadel.cloud`.
-2. **Project and who may sign in.** Create a project, e.g. "SpendWise", and a role in it, e.g. `spendwise-user`.
-   Assign the role to each person who may use SpendWise. Turn on the project's **"Check Role Assignment on
+2. **Project and who may sign in.** Create a project, e.g. "trackwise.ai", and a role in it, e.g. `trackwise-user`.
+   Assign the role to each person who may use trackwise.ai. Turn on the project's **"Check Role Assignment on
    Authentication"** (older consoles: "Check authorization on Authentication"): then only people with a role in the
-   project can sign in at all. Turn on **"Assert Roles on Authentication"** too if SpendWise should check the role
+   project can sign in at all. Turn on **"Assert Roles on Authentication"** too if trackwise.ai should check the role
    itself (`OIDC_REQUIRED_ROLE`): it sends the roles through UserInfo (and in tokens, by the application's settings).
 3. **Application.** In the project, add a **Web** application with the authentication method that uses a client
    secret ("Code"). Add the redirect and post-logout URIs above. Turn on **development mode** for the
    `http://localhost` addresses (it allows plain http); never in production. Copy the client id and secret into `.env`.
 4. **Social logins.** Add Google and GitHub as identity providers (each needs an OAuth app at Google or GitHub, with
    the callback address ZITADEL shows), and allow external login in the login settings. Whether a first login creates
-   a ZITADEL user, and whether ZITADEL links accounts, is set there; SpendWise never merges people by email itself.
+   a ZITADEL user, and whether ZITADEL links accounts, is set there; trackwise.ai never merges people by email itself.
 5. **Buttons (optional).** For a "Continue with Google" button that skips ZITADEL's page, give each option the
    provider-hint scope with that identity provider's id. If the identity provider belongs to one organization, add the
    organization's scope too:
@@ -78,14 +77,14 @@ walks through them in the console and corrects anything that differs.
    OIDC_LOGIN_OPTIONS=[{"key":"google","label":"Google","extra_scopes":["urn:zitadel:iam:org:idp:id:<google idp id>"]},{"key":"github","label":"GitHub","extra_scopes":["urn:zitadel:iam:org:idp:id:<github idp id>"]}]
    ```
 6. **Roles (optional).** `OIDC_ROLE_CLAIM=urn:zitadel:iam:org:project:roles` (an object keyed by role name) and
-   `OIDC_REQUIRED_ROLE=spendwise-user`. SpendWise reads the claim from the ID token, or from UserInfo when the ID token
+   `OIDC_REQUIRED_ROLE=trackwise-user`. trackwise.ai reads the claim from the ID token, or from UserInfo when the ID token
    doesn't carry it.
 7. **Branding.** Logo and colours of the login page are set in ZITADEL's branding settings.
-8. **Back-channel logout (production).** Set the application's back-channel logout URI. ZITADEL then tells SpendWise
-   when a session ends there, and SpendWise ends the matching sessions.
+8. **Back-channel logout (production).** Set the application's back-channel logout URI. ZITADEL then tells trackwise.ai
+   when a session ends there, and trackwise.ai ends the matching sessions.
 
 By ZITADEL's claims reference, the email and name are in the ID token only for `response_type=id_token`; for
-SpendWise's code flow they come from UserInfo, which SpendWise asks whenever the ID token lacks them (or lacks the
+trackwise.ai's code flow they come from UserInfo, which trackwise.ai asks whenever the ID token lacks them (or lacks the
 role claim).
 
 ## Another provider
@@ -102,16 +101,16 @@ all would need one new adapter for the `IdentityProvider` port (`core/identity.p
 
 ## Switching providers
 
-1. Set up the new provider, with the people who use SpendWise (imported, or signing up there).
-2. Register SpendWise there with the same addresses (above).
+1. Set up the new provider, with the people who use trackwise.ai (imported, or signing up there).
+2. Register trackwise.ai there with the same addresses (above).
 3. Change `OIDC_*` in `.env` and restart. Every session from the old provider stops working (a session remembers its
    issuer), so everyone signs in again.
 4. A person's first sign-in at the new provider has a new issuer and subject. Unless it's linked to their existing
-   SpendWise user, it becomes a new user. Two ways to link, to be built when a switch is planned (the tables already
+   trackwise.ai user, it becomes a new user. Two ways to link, to be built when a switch is planned (the tables already
    allow it: a user can have several identities):
    - **a mapping import:** a list of old subject → new subject, added as identities of the existing users;
    - **a time-limited email-match mode:** during the switch only, a first sign-in from the new issuer joins the user
-     whose old identity has the same *verified* email. Outside that window SpendWise never matches people by email.
+     whose old identity has the same *verified* email. Outside that window trackwise.ai never matches people by email.
 
 Since Phase 23 a person's data points at their user id (`owner_id`), so a new user id starts with no data. After Phase
 23, link identities before switching.

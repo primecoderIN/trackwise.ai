@@ -1,6 +1,6 @@
 # Database Schema
 
-SpendWise uses one Neon PostgreSQL database configured by the required `DATABASE_URL`. Each table belongs to
+trackwise.ai uses one Neon PostgreSQL database configured by the required `DATABASE_URL`. Each table belongs to
 **exactly one module**, and only that module reads or writes it. SQLite is retained only for explicitly created,
 isolated checks; the app does not create a local database file.
 
@@ -71,7 +71,7 @@ erDiagram
         DATETIME created_at "UTC, with time zone"
     }
     app_user {
-        BIGINT id PK "SpendWise's own id for a person"
+        BIGINT id PK "trackwise.ai's own id for a person"
         VARCHAR_200 name "as the provider last said"
         VARCHAR_320 email
         BOOLEAN email_verified
@@ -144,7 +144,7 @@ conversations, also without a key.
 | `pending_approval` | assistant | delete cards waiting for Approve or Cancel |
 | `pending_delegation` | assistant | A2A agent tasks waiting for the person's follow-up answer |
 | `receipt_file` | receipts | uploaded receipts (the files themselves are in `UPLOADS_DIR`, not the database) |
-| `app_user` | accounts | the people who use SpendWise, by SpendWise's own id |
+| `app_user` | accounts | the people who use trackwise.ai, by trackwise.ai's own id |
 | `user_identity` | accounts | how each person signs in: a provider (issuer) and their id there (subject) |
 | `user_session` | accounts | signed-in browsers: the hash of each cookie's key, and the session's lifetimes |
 | `login_attempt` | accounts | sign-ins that have left for the provider and not come back yet |
@@ -165,7 +165,7 @@ conversations, also without a key.
 | Column | Type | Notes |
 |---|---|---|
 | `id` | INTEGER, primary key | shown everywhere as `#14` |
-| `owner_id` | INTEGER, not null | whose expense it is (SpendWise's user id, no foreign key: D13). Every read and change filters on it (D190); the index `ix_expense_owner_id_spent_on` (owner_id, spent_on) serves "my expenses this month" |
+| `owner_id` | INTEGER, not null | whose expense it is (trackwise.ai's user id, no foreign key: D13). Every read and change filters on it (D190); the index `ix_expense_owner_id_spent_on` (owner_id, spent_on) serves "my expenses this month" |
 | `amount_minor` | INTEGER, not null | **whole paise**: ₹450.50 is `45050`. Never a float |
 | `currency` | VARCHAR(3), not null | ISO 4217 code, default `INR` |
 | `category_id` | INTEGER, not null | index `ix_expense_category_id`. **No foreign key**: the expenses module asks the categories module whether the category exists |
@@ -204,7 +204,7 @@ the user, and nothing can slip in between the check and the delete.
 | `thread_id` | VARCHAR(32), not null | with `owner_id` and `turn`, the index `ix_conversation_message_owner_id_thread_id_turn`: every read of a thread filters on all three |
 | `turn` | INTEGER, not null | 1 for the first user message of a thread, 2 for the next, … Only the last 10 turns are resent to the model |
 | `kind` | VARCHAR(30), not null | `user_text`, `assistant_text`, `tool_call`, `tool_result` or `reasoning` (also inside `content`) |
-| `content` | JSON, not null | the message, in SpendWise's own format, not any provider's |
+| `content` | JSON, not null | the message, in trackwise.ai's own format, not any provider's |
 | `created_at` | DATETIME with time zone, not null | |
 
 What `content` looks like for each kind:
@@ -286,9 +286,9 @@ module, which D13 allows (it forbids them between modules).
 
 | Column | Type | Notes |
 |---|---|---|
-| `id` | INTEGER, primary key | SpendWise's own id for the person: what every other module's `owner_id` points at (D190), whatever provider they use |
+| `id` | INTEGER, primary key | trackwise.ai's own id for the person: what every other module's `owner_id` points at (D190), whatever provider they use |
 | `name`, `email`, `email_verified`, `avatar_url` | VARCHAR(200), VARCHAR(320), BOOLEAN, VARCHAR(2048) | the profile as the provider said at the last sign-in; never used to find a person. A picture is kept only as an http(s) URL |
-| `is_active` | BOOLEAN, not null | SpendWise's own off switch: off, the person can't sign in and their sessions stop working |
+| `is_active` | BOOLEAN, not null | trackwise.ai's own off switch: off, the person can't sign in and their sessions stop working |
 | `welcomed_at` | DATETIME with time zone, nullable | when the person finished (or skipped) the first-run welcome flow (Phase 29, D220) |
 | `terms_version`, `terms_accepted_at` | VARCHAR(32), DATETIME with time zone, nullable | which Terms of Service and Privacy Policy version the person accepted, and when |
 | `created_at`, `updated_at` | DATETIME with time zone | UTC, from the app's clock |
@@ -363,7 +363,7 @@ The tables are created and changed only by **Alembic migrations** in `backend/mi
 | Revision | What it does |
 |---|---|
 | `0001_baseline` | the schema from Phases 3–18 (`category`, `expense`, `chatmessage`), each table created only if missing, so databases from before migrations keep their data |
-| `0002_neutral_conversations` | renames `chatmessage` → `conversation_message` and converts every stored message from Gemini's format to SpendWise's own (and back, on downgrade); adds `pending_approval` |
+| `0002_neutral_conversations` | renames `chatmessage` → `conversation_message` and converts every stored message from Gemini's format to trackwise.ai's own (and back, on downgrade); adds `pending_approval` |
 | `0003_expense_version` | adds `expense.version` (existing expenses start at 1) |
 | `0004_conversation_turn_index` | indexes `conversation_message` on (thread_id, turn) and drops the old thread_id index, which the new one makes redundant |
 | `0005_receipt_files` | adds `receipt_file` (Phase 21); downgrade drops it and leaves the files in `UPLOADS_DIR` |

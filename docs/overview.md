@@ -1,84 +1,60 @@
-# Overview
+# trackwise.ai Product Overview
 
-SpendWise is an **agentic expense tracker**: a web app for recording and understanding your spending, with an AI
-assistant that can do the same things for you in plain words. It was delivered in phases, each with an engineering
-note, and every design decision is recorded with its reasoning ([README.md](README.md)).
+**trackwise.ai** is a personal finance and expense intelligence web application built around a fast, privacy-conscious workspace and an embedded AI assistant. It gives people full manual control over expenses, categories, budgets, and reports—while allowing natural language, receipt uploads, and external AI clients to work across the exact same data safely.
 
-![The Dashboard](images/hero.png)
+---
 
-## What you can do
+## 1. Public SaaS Site & Onboarding (English & Hindi)
 
-### On the web app
+Unauthenticated visitors land on a server-rendered, SEO-optimized SaaS site at `/` (English) and `/hi` (Hindi):
 
-| Page | What it does |
-|---|---|
-| **Dashboard** | This month's total, the number of expenses, the top category, a bar chart by category, a 6-month trend line, and the 5 most recent expenses. Reloads by itself when the assistant changes something. |
-| **Expenses** | A sortable table of every expense, with search, a category filter and a date range (all filtered on the server). Add expenses in a dialog, edit them in place, delete one or several (after a confirmation). |
-| **Assistant panel** | A chat on every page (a side panel on desktop, a sheet on phones). Its replies stream in as they're written. |
-| **Budgets** | A monthly limit for all spending and one per category, each with a bar coloured by its state (on track, near the limit, over); the overall bar marks how much of the month has gone by. Set, change or remove a limit in a dialog; step back through earlier months. The Dashboard shows a Budget card too. |
+- **Dedicated Public Routes:** `/` (Overview + Interactive Walkthrough Video Player), `/features`, `/security`, `/faq`, `/privacy-policy`, `/terms-of-service`, `/contact`, and their Hindi counterparts under `/hi/...`.
+- **Interactive Product Walkthrough:** Embedded animated showcase walking visitors through multi-currency logging, receipt extraction, live budget alerts, and monthly insights.
+- **First-Run Workspace Welcome:** After signing in via OpenID Connect, new users complete a one-time onboarding dialog stored on the server (`CompleteWelcome`): selecting preferred language (`en` / `hi`), optionally setting an initial monthly overall budget, accepting the current terms version, and optionally trying a starter assistant prompt. Signed-in visitors returning to `/` see an **Open Dashboard** button right in the header/hero.
 
-### With the assistant
+---
 
-| You say | What happens |
-|---|---|
-| *"Add 250 for lunch at Subway today, paid by UPI"* | It records the expense. A chip shows "Saving expense…" → "Expense saved", a card shows the saved expense, and the pages refresh. |
-| *"Add lunch"* (details missing) | It shows a **form**, pre-filled with what it understood. You complete it and press Save. |
-| *"Where did my money go this month?"* | An **insight card**: total vs last month, the biggest category, and a donut chart. |
-| *"Show my Swiggy orders"* | A **list card** of matching expenses, each with its id (`#14`). |
-| *"Change #14 to 300"* | It updates the expense and shows the result. |
-| *"Delete #14"* | A card with **Approve** and **Cancel**. Nothing is deleted until you press Approve. |
-| *"Set my food budget to 8000"*, *"How are my budgets?"* | It sets the limit, or checks them, and shows a **budget card**. A saved expense that pushes a budget past 80% or over its limit says so on its card. |
+## 2. Signed-In Workspace (`/dashboard`, `/expenses`, `/budgets`, `/categories`, `/reports`, `/settings`)
 
-The assistant reads and changes data only through the same tools any MCP client gets, under the same rules as the web
-app (an amount must be positive, a category must exist, ...). It cannot delete by itself.
+All signed-in routes sit inside a unified frame with light/dark theme switching, live English/Hindi UI switching, and a zero-dependency **Command Palette (`Ctrl/⌘ + K`)** for keyboard navigation and quick expense entry:
 
-### For other AI tools
+- **Dashboard (`/dashboard`):** Monthly total spend in normalized INR (`₹`), percentage comparison against the previous month, transaction counts, category breakdown bar/list, payment-method distribution, and daily spending charts. Month switching lets users review historical periods seamlessly.
+- **Expenses Ledger (`/expenses`):** Server-paginated, filterable table (by month, category, merchant search, payment method, and date range) with inline add/edit dialogs supporting multi-currency entry, optimistic concurrency checks on edits/deletes, and instant budget threshold toast notices on save.
+- **Monthly Budgets (`/budgets`):** Set an overall monthly budget and/or per-category monthly caps. Progress bars highlight approaching (`>= 80%`) and exceeded (`> 100%`) limits, and saving/editing an expense from **any** surface (UI, Assistant, or MCP) triggers localized budget alerts when thresholds cross.
+- **Categories (`/categories`):** View all 8 curated categories (`Food`, `Transport`, `Shopping`, `Bills`, `Entertainment`, `Health`, `Education`, `Other`) with monthly spending summaries and icons.
+- **Reports (`/reports`):** Structured monthly summary featuring total spend, month-over-month delta, daily average, category and payment breakdowns, largest expenses, and one-click **CSV** (formula-injection sanitized) or **Markdown** downloads.
+- **Settings (`/settings`):** Organized into four tabs:
+  - **Profile:** Connected OIDC identity details.
+  - **Preferences:** Persistent language (`English` / `हिन्दी`) and theme selection.
+  - **Security:** Session visibility and sign-out controls.
+  - **Developer:** Manage scoped **Personal Access Tokens (`spw_...`)** with selectable expiration (`30`, `90`, `365` days) and instant revocation for MCP clients.
 
-The same expense tools are available to any **MCP** client (MCP Inspector, Claude Desktop): `add_expense`,
-`list_expenses`, `get_expense`, `get_summary`, `update_expense`, `delete_expense`, `get_monthly_report`, `get_budgets`,
-`set_budget`, and two resources (`expenses://categories`, `expenses://recent`). Over stdio with `backend\mcp_stdio.py`,
-or over HTTP at `/mcp/` with a bearer token ([api_endpoints.md](api_endpoints.md#mcp-tools-and-resources)).
+---
 
-## The tech stack
+## 3. Streaming AI Assistant & Specialised Agents
 
-| Layer | Technology | Why |
-|---|---|---|
-| Backend framework | **FastAPI** 0.162 (Python 3.11+; Python CI: 3.14/3.15) | Typed APIs, OpenAPI, native SSE |
-| Data | **SQLModel** / **SQLAlchemy** 2.1 on **Neon PostgreSQL**, **Alembic** 1.20 migrations | A required `DATABASE_URL`; no local database file |
-| Architecture | Modular monolith, **CQRS-lite** with a message bus and unit of work | Clear boundaries without the cost of microservices ([architecture.md](architecture.md)) |
-| AI model | **Google Gemini** (Interactions API, streaming, function calling), behind a provider-neutral port | Free tier for development; replaceable ([gemini.md](gemini.md)) |
-| Agent tools | **MCP** (Model Context Protocol), Python SDK 2.3 | One set of tools for the assistant and any other AI client |
-| Agent ↔ UI | **AG-UI** 1.0 (events over SSE), **A2UI** 1.0 (UI as data) | Live tool progress, cards and forms the agent describes but can't script ([assistant_architecture.md](assistant_architecture.md)) |
-| Web app | **Next.js** 16 (App Router), **React** 19, **TypeScript** 7 | Server-rendered metadata, robots.txt and a sitemap for search engines (D188) |
-| UI | **Tailwind CSS** 4, **shadcn/ui** (Radix), **Recharts** 3 (via shadcn charts), lucide icons | |
-| Web data | **TanStack Query** 5, **openapi-fetch** with types from **openapi-typescript**, **@ag-ui/core** + zod | Caching, cancellation, a typed client generated from the backend, validated streams |
-| Tables | **TanStack Table** 9 | Sorting and row selection |
-| Lint | **oxlint** 1.93 (React, TypeScript, jsx-a11y, import boundaries) | Fast, and enforces the feature-slice rules |
+Docked beside every workspace view (`AssistantProvider` over **AG-UI** Server-Sent Events), the assistant collaborates across user finances without hiding edits:
 
-## How it's organised
+- **Conversational Logging & Search:** Understands casual Hinglish/English prompts (*"Paid 420 via UPI at Swiggy today"* or *"Show food spends this month"*), renders live progress chips (*"Saving expense…"*) in the active language, and syncs frontend queries immediately on completion.
+- **Rich Interactive Cards (A2UI):** Renders validated spending breakdown charts, KPI stat strips, budget progress meters, editable confirmation forms (for ambiguous entries or scanned receipts), and two-step **database-backed delete approvals** (adds/edits execute directly; deletes always require explicit human approval).
+- **Multi-Modal Receipt Extraction:** Uploading an image/PDF in chat or via upload routes stores bytes separately from SQL and routes them to the isolated `receipt` A2A specialist agent (`extract_receipt`). Extracted merchant, amount, currency, date, category, and payment method appear inside an editable form—nothing is saved until confirmed.
+- **Multi-Currency Conversion (`currency` agent):** Non-INR expenses query exact historical exchange rates (`convert_currency`) on save so original currency is preserved alongside normalized `BigInteger` paise totals (`base_amount_minor`).
+- **Spending Insights (`insights` agent) & Agent Skills:** Combines deterministic server-computed aggregates with contextual AI recommendations (`analyze_spending`) and curated Agent Skills (`categorization` guidelines and `monthly-report` isolated `python -I` calculations).
 
-- **Backend:** one FastAPI process, split into modules by business domain (`accounts`, `categories`, `expenses`,
-  `budgets`, `conversations`, `receipts`, `reports`, `assistant`, and the `mcp` adapter), plus the hosted A2A agents
-  (`agents/receipt`, `agents/insights`, `agents/currency`) and Agent Skills (`skills/`). Each module owns its tables,
-  keeps each command or query in one file with its handler, and talks to the others only through their contracts and
-  the bus. → [architecture.md](architecture.md)
-- **Web:** one Next.js + React app, split into feature slices (`auth`, `account`, `expenses`, `budgets`, `categories`,
-  `dashboard`, `assistant`) over a `shared/` layer, composed in `app/`. → [frontend_onboarding.md](frontend_onboarding.md)
-- **The contract between them** is generated from the backend: REST types from OpenAPI, protocol names and labels from
-  a script. → [api_endpoints.md](api_endpoints.md), [configuration.md](configuration.md)
+---
 
-## Roadmap
+## 4. External MCP Access (`/mcp/`)
 
-| Done | Phases |
-|---|---|
-| Foundations | 1 setup · 2 first Gemini call · 3 modular structure · 4 expenses API · 5 tests (later removed) |
-| AI basics | 6 structured output (`/parse`) · 7 function calling (`/chat`) · 8 memory (threads) |
-| Tools | 9 MCP server · 10 the agent uses MCP |
-| Web app | 11 frontend + Expenses · 12 Dashboard · 13 chat panel |
-| Agent UI | 14 AG-UI streaming · 15 tool progress · 16 A2UI cards · 17 A2UI forms · 18 insight cards + approvals |
-| Architecture | the refactor: CQRS, feature slices, migrations, generated contracts ([phases/refactor-architecture.md](phases/refactor-architecture.md)) |
-| Product | 19-20 English and Hindi · 21 receipts · 22 signing in · 23 each person's own data · 24-25 A2A agents · 26 Agent Skills · 27 budgets ([phases/](phases/)) |
+Any standard **Model Context Protocol** client (Claude Desktop, Cursor, or custom CLI agents) can connect via:
+- **Stdio (`backend/mcp_stdio.py`)** for local workstation sessions, or
+- **Streamable HTTP (`POST /mcp/`)** guarded by `Origin` checks, rate limits, and Personal Access Tokens.
 
-**Planned:** real exchange rates, recurring expenses, proactive alerts, statement import, Hinglish and voice, data
-export and deletion, page-aware chat, production readiness, paid plans with Razorpay, a WhatsApp channel, and more:
-[roadmap.md](roadmap.md).
+All MCP tools (`add_expense`, `edit_expense`, `delete_expense` with `confirmed=true`, `search_expenses`, `get_summary`, `get_budgets`, `set_budget`, `get_monthly_report`, etc.) enforce the exact same CQRS rules, per-owner `owner_id` filtering, and budget alert checks as the web app.
+
+---
+
+## Deliberate Scope Boundaries
+
+- **Single user per account:** Expenses, budgets, conversations, receipts, and PATs belong strictly to one authenticated `UserId`. Shared family/team workspaces are planned for a later phase ([Roadmap](roadmap.md)).
+- **Curated global categories:** Categories are seeded across the workspace (`seed.py`) to keep cross-currency reporting, Agent Skills, and charts consistent.
+- **Safe client-side state:** Zero financial records or tokens live in `localStorage` or `sessionStorage`; switching accounts or signing out cleanly resets all active client memory and SSE streams.

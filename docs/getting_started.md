@@ -18,8 +18,8 @@ Optional: **uv** (for `mcp dev`, the MCP Inspector launcher).
 ## 2. Get the code and your settings
 
 ```powershell
-git clone https://github.com/sanjeevgnrgy/spendwise.git
-cd spendwise
+git clone https://github.com/primecoderIN/trackwise.ai.git
+cd trackwise.ai
 Copy-Item .env.example .env       # macOS/Linux: cp .env.example .env
 ```
 
@@ -131,7 +131,7 @@ npx @modelcontextprotocol/inspector .\.venv\Scripts\python.exe backend\mcp_stdio
 .\.venv\Scripts\mcp.exe dev backend\mcp_stdio.py
 ```
 
-Claude Desktop setup: [phases/phase-9-mcp-module.md](phases/phase-9-mcp-module.md).
+For local stdio MCP clients (such as Claude Desktop), register `.venv/Scripts/python.exe -m app.mcp_stdio` with `SPENDWISE_TOKEN` set in `env`.
 
 Every MCP connection acts for one person, with a **personal access token** made on the Settings page (D191). For
 stdio, give it to the server in the environment: `$env:SPENDWISE_TOKEN = "spw_..."` before the commands above, or
@@ -150,4 +150,4 @@ needs neither: it calls the MCP server in-process, for whoever is signed in.
 | After changing a backend API | `.\.venv\Scripts\python.exe backend\scripts\export_contracts.py`, then `npm run gen:api` in `web/` |
 | Change a table | edit its `persistence/tables.py`, then generate and run a migration ([backend_onboarding.md](backend_onboarding.md#recipe-add-or-change-a-table)) |
 | Type-check, lint and build the web app | `npm run build` and `npx oxlint` in `web/` |
-| Something's wrong | [troubleshooting.md](troubleshooting.md) |
+| Verify setup & checks | Hit `GET /health` and run `.venv/Scripts/python.exe backend/scripts/check.py` |

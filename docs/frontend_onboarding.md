@@ -113,7 +113,7 @@ export function listExpenses(filters: ExpenseFilters, signal?: AbortSignal): Pro
 ```
 
 - `unwrap()` returns the data, or throws an **`ApiError`** with the problem's `detail` (every backend error is an RFC
-  9457 problem). A dropped connection becomes "Can't reach the SpendWise API…".
+  9457 problem). A dropped connection becomes "Can't reach the trackwise.ai API…".
 - `unwrapEmpty()` is for 204 answers (deletes).
 - An aborted request (the page was left, Stop was pressed) is re-thrown as is, so TanStack Query can ignore it.
 

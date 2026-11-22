@@ -1,4 +1,4 @@
-# How SpendWise Works
+# How trackwise.ai Works
 
 The main flows, from a click to the database and back, as diagrams. For the rules behind them see
 [architecture.md](architecture.md); for the assistant's internals, [assistant_architecture.md](assistant_architecture.md).

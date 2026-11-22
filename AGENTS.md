@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Rules for AI coding agents, and anyone else, changing SpendWise. They describe how this codebase is built: a change
+Rules for AI coding agents, and anyone else, changing trackwise.ai. They describe how this codebase is built: a change
 that doesn't follow them isn't finished. The reasoning behind each rule is in [docs/](docs/README.md). Read the linked
 doc before working in an area, and check [decisions.md](docs/decisions.md) before changing a settled choice.
 
@@ -20,7 +20,7 @@ doc before working in an area, and check [decisions.md](docs/decisions.md) befor
 3. **Secrets stay secret.** Never read, print, log or commit `.env` values (`DATABASE_URL`, `GEMINI_API_KEY`,
    `OIDC_CLIENT_SECRET`, `SESSION_ENCRYPTION_KEYS`) or a personal access token. Never
    stage `.env`, `*.db`, `.venv/`, `node_modules/`, `web/.next/` or `__pycache__/`. Before each commit, confirm the
-   staged diff doesn't contain the key ([git.md](docs/git.md#before-every-commit)).
+   staged diff contains no secrets, tokens, or `.env` values.
 4. **No live model calls without permission.** Calling Gemini spends the owner's quota. Verify with a fake model
    plugged in through the seams (section 7) unless the owner explicitly allows a live call.
 5. **Never experiment on the owner's database** (the Neon PostgreSQL database in `DATABASE_URL`). Run checks and
@@ -324,13 +324,13 @@ and `npm ci` in `web/`):
 .\.venv\Scripts\python.exe backend\scripts\check.py
 
 # Migrations, on an isolated temporary SQLite database (never on the live Neon database)
-$env:DATABASE_URL = "sqlite:///$($env:TEMP -replace '\\','/')/spendwise-check.db"
+$env:DATABASE_URL = "sqlite:///$($env:TEMP -replace '\\','/')/trackwise-check.db"
 .\.venv\Scripts\python.exe -m alembic -c backend\alembic.ini upgrade head
 .\.venv\Scripts\python.exe -m alembic -c backend\alembic.ini downgrade base
 .\.venv\Scripts\python.exe -m alembic -c backend\alembic.ini upgrade head
 .\.venv\Scripts\python.exe -m alembic -c backend\alembic.ini check     # "No new upgrade operations detected."
 Remove-Item Env:DATABASE_URL
-Remove-Item "$env:TEMP\spendwise-check.db*" -ErrorAction SilentlyContinue
+Remove-Item "$env:TEMP\trackwise-check.db*" -ErrorAction SilentlyContinue
 
 # After any change to an API, limit, label or protocol name: regenerate the web app's contract
 .\.venv\Scripts\python.exe backend\scripts\export_contracts.py; cd web; npm run gen:api; cd ..
@@ -347,13 +347,10 @@ library's typing limit, with the reason on the same line.
   build above are enough: don't start servers or drive a browser unless the owner asks.
 
 **Docs, in the same change.**
-- A phase note (`docs/phases/`), or a "Later changes" note on the phase it affects.
-- A decision in `decisions.md`. It's append-only: old entries get "Updated by" or "Superseded by" lines, never edits.
-- Updates to `architecture.md`, `api_endpoints.md`, `database_schema.md`, `configuration.md` and `security.md` where
-  the change touches them.
-- `sources.md` for any fact taken from external docs or a library's code (with the link or path).
-- `troubleshooting.md` for any problem that took real effort.
-- Full list: [docs/README.md](docs/README.md#keeping-these-docs-current).
+- A decision in `decisions.md` (with `Updated by` / `Superseded by` notes when revising an earlier ADR).
+- Updates to `architecture.md`, `assistant_architecture.md`, `api_endpoints.md`, `database_schema.md`,
+  `configuration.md`, `security.md` and `overview.md` where the change touches them.
+- Guide index: [docs/README.md](docs/README.md#keeping-these-docs-current).
 
 **Review.** Re-read your whole diff against this file, fix what you find, then hand over with a short summary of what
 changed, how it was verified, and anything left open.

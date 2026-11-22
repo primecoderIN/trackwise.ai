@@ -183,7 +183,7 @@ A2UI describes UI as **data**: a flat list of components that refer to each othe
 small data model. The agent never sends HTML or code, and the browser draws each component with its own trusted one.
 
 **Catalogs.** The basic catalog's subset (Text, Card, Row, Column, List, Divider, TextField, ChoicePicker,
-DateTimeInput, Button) plus SpendWise's own insights catalog (`urn:spendwise:catalog:insights:v1`: **Chart** and
+DateTimeInput, Button) plus trackwise.ai's own insights catalog (`urn:spendwise:catalog:insights:v1`: **Chart** and
 **Stat**), mixed on one surface with a per-component `@catalogId`.
 
 **Cards** (`a2ui/cards.py`, the insight card in `a2ui/summary_card.py`, the report card in `a2ui/report_card.py`) are
@@ -248,8 +248,8 @@ sequenceDiagram
 
 ## Skills: instructions loaded when needed (Phase 26, D208)
 
-The model also has **Agent Skills**: SpendWise's own instructions for particular tasks, in `skills/<name>/SKILL.md`.
-Only each skill's name and description sit in the system instruction ("categorization: Chooses the right SpendWise
+The model also has **Agent Skills**: trackwise.ai's own instructions for particular tasks, in `skills/<name>/SKILL.md`.
+Only each skill's name and description sit in the system instruction ("categorization: Chooses the right trackwise.ai
 category for an expense… Use when recording or changing an expense and the user didn't name the category"). When a task
 matches, the model calls `load_skill("categorization")` and gets the skill's steps and rules; if they tell it to, it
 calls `load_skill("categorization", "references/merchants.md")` for the merchant list. A chip shows each read
@@ -263,7 +263,7 @@ picks the month and writes two or three sentences; the arithmetic is exact, and 
 ## Other agents: delegating (Phase 25, D206)
 
 The assistant is also an **orchestrator**: besides the expense tools, the model may hand a request to another
-SpendWise agent with `delegate_to_agent(agent, skill, request, month?)`.
+trackwise.ai agent with `delegate_to_agent(agent, skill, request, month?)`.
 
 **How the model decides which agent to call.** It reads three things, every turn:
 

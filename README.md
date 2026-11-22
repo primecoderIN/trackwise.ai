@@ -1,316 +1,204 @@
-# 💸 SpendWise
+# trackwise.ai
 
-<div align="center">
-  <img src="https://img.shields.io/badge/Python-3.15-3776AB?logo=python&logoColor=white" alt="Python 3.15" />
-  <img src="https://img.shields.io/badge/FastAPI-0.162-009688?logo=fastapi&logoColor=white" alt="FastAPI" />
-  <img src="https://img.shields.io/badge/SQLAlchemy-2.1_+_Alembic-D71F00?logo=sqlalchemy&logoColor=white" alt="SQLAlchemy and Alembic" />
-  <img src="https://img.shields.io/badge/Neon-PostgreSQL-00E699" alt="Neon PostgreSQL" />
-  <img src="https://img.shields.io/badge/Google_Gemini-Interactions_API-8E75B2?logo=googlegemini&logoColor=white" alt="Google Gemini" />
-  <img src="https://img.shields.io/badge/MCP-Python_SDK_2.3-000000?logo=anthropic&logoColor=white" alt="Model Context Protocol" />
-  <img src="https://img.shields.io/badge/AG--UI-1.0-6E56CF" alt="AG-UI" />
-  <img src="https://img.shields.io/badge/A2UI-1.0-4285F4" alt="A2UI" />
-  <img src="https://img.shields.io/badge/React-19.3-61DAFB?logo=react&logoColor=black" alt="React" />
-  <img src="https://img.shields.io/badge/TypeScript-7.0-3178C6?logo=typescript&logoColor=white" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Next.js-16.4-000000?logo=nextdotjs&logoColor=white" alt="Next.js" />
-  <img src="https://img.shields.io/badge/TanStack_Query-5.107-FF4154?logo=reactquery&logoColor=white" alt="TanStack Query" />
-  <img src="https://img.shields.io/badge/Tailwind_CSS-4.3_+_shadcn%2Fui-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind CSS and shadcn/ui" />
-</div>
-<br>
+**trackwise.ai** is a full-stack, multi-tenant expense tracking, budgeting, and AI financial assistant platform built with a **Modular Monolith** backend (**FastAPI**, **CQRS-lite**, **Neon PostgreSQL**) and a **Next.js 16 App Router** web application featuring a server-rendered bilingual SaaS site (`en` / `hi`) and an interactive workspace powered by **AG-UI**, **A2UI**, **MCP**, **Agent Skills**, and **A2A agents**.
 
-<div align="center">
-  <img src="./docs/images/hero.png" alt="The SpendWise Dashboard: this month's total, spending by category, the 6-month trend and recent expenses" width="100%" />
-</div>
-<br>
+![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.162.5-009688?logo=fastapi&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-16.4.6-000000?logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-19.3.1-61DAFB?logo=react&logoColor=black)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon%20(Psycopg%203)-4169E1?logo=postgresql&logoColor=white)
+![MCP](https://img.shields.io/badge/MCP-2.3.0-1F2937)
+![AG-UI](https://img.shields.io/badge/AG--UI-1.0.0-4F46E5)
+![A2A](https://img.shields.io/badge/A2A-1.3.1-0F766E)
 
-**SpendWise** is an agentic expense tracker. You record and explore expenses on a web app, or ask an AI assistant
-in plain words: *"add 250 for lunch at Subway"*, *"where did my money go this month?"*, *"delete #14"*. The assistant
-works through the same rules as the app: it reads and changes data only through MCP tools, streams its answer and
-its tool activity live (AG-UI), shows cards, charts and forms drawn from data (A2UI), and never deletes anything
-until you press **Approve**.
-
-It runs on a **FastAPI modular monolith with CQRS** and a **React app organised as feature slices**, with one typed
-contract generated from the backend. Every design decision is recorded with its reasoning, and each delivery phase
-has an engineering note ([docs/](docs/README.md)).
+![trackwise.ai workspace preview](docs/images/hero.png)
 
 ---
 
-## 🏗️ System Architecture
+## Why This Project Stands Out
 
-One backend process, deployed as one unit, divided into **modules by business domain** that talk only through
-their contracts and a **command/query bus**. The web app talks to it through a **generated, typed contract**.
+- **Production-Grade Modular Monolith (`backend/`):** Nine strictly bounded domain modules communicate through public module contracts (`__init__.py`) and a typed CQRS `MessageBus`, with cross-module database joins forbidden and automated rule checks enforced in CI (`backend/scripts/check_rules.py`).
+- **Multi-Protocol AI Architecture:** Combines **AG-UI** event streaming, server-validated **A2UI** interactive cards/charts/forms, an embedded/HTTP **MCP** server for user-scoped AI client access, **Agent Skills** with isolated `python -I` report computation, and three **A2A** specialist agents (`receipt`, `currency`, `insights`) hosted in-process on `main`.
+- **Security by Construction:** Backend-for-Frontend (**BFF**) OIDC authentication with `HttpOnly` / `SameSite=Strict` session cookies and CSRF checks, `owner_id` scoping on every owned query and mutation, streaming request-body size limits, database-backed destructive action approvals, and localized **RFC 9457** errors that never leak internal exceptions or third-party error strings.
+- **Full SaaS Surface + Technical SEO (`web/`):** Server-rendered bilingual marketing, security, FAQ, and DPDP legal pages (`/`, `/features`, `/security`, `/faq`, `/privacy-policy`, `/terms-of-service`, `/contact`, and `/hi/...`) with `hreflang` alternates, JSON-LD structured data, dynamic Open Graph images, custom vector/adaptive favicons, and an interactive product walkthrough player alongside the client-rendered workspace.
+
+---
+
+## Core Capabilities
+
+| Area | Built Features |
+|---|---|
+| **Public SaaS Site** | Bilingual server-rendered pages (`en` & `/hi`), animated 4-scene Walkthrough player, route-transition progress bar, dynamic OG cards, sitemap/robots/manifest, and JSON-LD (`Organization`, `WebSite`, `SoftwareApplication`, `FAQPage`, `BreadcrumbList`). |
+| **Expense & Budget Workspace** | KPI Dashboard (`/dashboard`), paginated/filtered ledger (`/expenses`), shared categories breakdown (`/categories`), overall & per-category monthly limits with live 80%/100% alert notices (`/budgets`), CSV/Markdown monthly exports (`/reports`), `Ctrl/⌘ + K` command palette, and server-stored onboarding welcome & terms acceptance. |
+| **Streaming AI Assistant** | Natural-language expense logging, editable confirmation forms, DB-persisted delete approvals, streaming AG-UI timeline, interactive A2UI spending charts/cards, and conversation history synced with workspace queries. |
+| **Receipt Scanning** | Multipart upload validated by magic bytes -> delegated to the `receipt` A2A agent -> structured extraction presented as an editable card before any row is saved. |
+| **Multi-Currency & Insights** | All expenses store original currency plus server-computed `BigInteger` INR (`base_amount_minor`) via the `currency` A2A agent; spending recommendations come from deterministic aggregations + the `insights` A2A agent. |
+| **External MCP Clients** | Standard MCP tools exposed over stdio or Streamable HTTP with `Origin` validation and revocable Personal Access Tokens (`spw_` prefix, SHA-256 hashed) managed in `/settings`. |
+
+---
+
+## System Architecture
 
 ```mermaid
-flowchart TD
-    subgraph Browser ["Browser: Next.js 16 + React 19 (web/)"]
-        direction LR
-        F_AUTH["features/auth & account<br/>sign-in, sessions, tokens"]
-        F_EXP["features/expenses<br/>table, filters, add & edit"]
-        F_BUD["features/budgets<br/>overall & category limits"]
-        F_DASH["features/dashboard<br/>stats, budget card, charts, recent"]
-        F_CAT["features/categories"]
-        F_AST["features/assistant<br/>chat, AG-UI stream, A2UI renderer"]
-        SHARED["shared/<br/>typed HTTP client (generated), ui kit, i18n, theme"]
+flowchart LR
+    User["Browser User"] -->|HTTPS / Same-Origin| Next["Next.js 16 App (web/)"]
+    MCPClient["Claude Desktop / Cursor"] -->|stdio or Bearer PAT + Origin| MCP["MCP Server (/mcp)"]
+
+    subgraph Public["(public)/ Server-Rendered SSR + SEO"]
+        NextPub["Landing, Features, Security, FAQ, Legal (EN & /hi)"]
     end
 
-    subgraph Host ["FastAPI app (backend/app/main.py)"]
-        REST["/api/v1 REST<br/>X-CSRF + session cookie · RFC 9457 problems"]
-        AGUI["/api/v1/agent<br/>AG-UI over Server-Sent Events"]
-        MCPHTTP["/mcp/ Streamable HTTP<br/>personal access token"]
+    subgraph Workspace["(client)/ Authenticated BFF App"]
+        NextApp["Dashboard, Expenses, Categories, Budgets, Reports, Settings, AI Drawer"]
     end
 
-    subgraph Modules ["Modules (backend/app/modules/)"]
-        ACC["accounts<br/>users · sessions · access tokens"]
-        CAT["categories<br/>commands · queries"]
-        EXP["expenses<br/>commands · queries · recorder<br/>INR conversion · optimistic concurrency"]
-        BUD["budgets<br/>monthly limits · SaveWatcher"]
-        REC["receipts<br/>validated uploads"]
-        REP["reports<br/>monthly figures · CSV & Markdown"]
-        CONV["conversations<br/>provider-neutral history"]
-        AST["assistant<br/>agent loop · approvals · skills<br/>delegation · A2UI cards & forms"]
-        MCP["mcp<br/>9 tools & 2 resources"]
+    Next --- Public
+    Next --- Workspace
+    Next -->|"Relative /api/v1/* + Session Cookie + X-CSRF"| API["FastAPI Modular Monolith (backend/app)"]
+    MCP --> Bus
+
+    subgraph Backend["CQRS Modular Monolith"]
+        Guards["Security Headers, BodySizeLimit, Rate Limits, OIDC Auth, RFC 9457"]
+        Bus["MessageBus & Unit of Work (core/cqrs.py)"]
+        Modules["accounts · categories · expenses · budgets · receipts · reports · conversations · assistant · mcp"]
+        Guards --> Bus
+        Bus --> Modules
     end
 
-    subgraph Agents ["Hosted A2A Agents (agents/)"]
-        A_REC["receipt agent<br/>extract_receipt"]
-        A_INS["insights agent<br/>analyze_spending"]
-        A_CUR["currency agent<br/>convert_currency"]
+    API --> Guards
+
+    subgraph AI["Hosted AI Specialists & Skills"]
+        Agents["A2A Agents: receipt · currency · insights"]
+        Skills["Sandboxed Skills: categorization · monthly-report"]
     end
 
-    subgraph Core ["core/ (building blocks, no I/O)"]
-        BUS["MessageBus<br/>CQRS + unit of work"]
-        LLM["LLM port"]
-        VALUES["errors · clock · money · months · ids"]
-    end
+    Infra["Infrastructure: Gemini · OpenID Connect · Neon PostgreSQL · FileStore"]
 
-    subgraph Infra ["infrastructure/ (the outside world)"]
-        GEMA["Gemini adapter"]
-        INFRA["config · db · migrations · logging"]
-    end
-
-    DB[("Neon PostgreSQL<br/>Alembic migrations")]
-    GEM["Google Gemini API"]
-    EXT["MCP clients<br/>Inspector, Claude Desktop"]
-
-    Browser -->|"openapi-fetch + TanStack Query"| REST
-    F_AST -->|"fetch + SSE, validated with @ag-ui/core"| AGUI
-    REST --> BUS
-    AGUI --> AST
-    AST -->|"in-process MCP client"| MCP
-    AST --> LLM
-    MCP --> BUS
-    MCPHTTP --> MCP
-    EXT -->|"stdio or HTTP"| MCP
-    BUS --> CAT & EXP & CONV & AST
-    CAT & EXP & CONV & AST --> DB
-    GEMA -.->|implements| LLM
-    GEMA --> GEM
+    Modules --> Agents
+    Modules --> Skills
+    Modules --> Infra
+    Agents --> Infra
 ```
 
----
-
-## 🌟 Core Architectural Principles
-
-- **Modular monolith, strictly bounded:** each module (`accounts`, `categories`, `expenses`, `budgets`, `conversations`,
-  `receipts`, `reports`, `assistant`, `mcp`) owns its tables, contracts and handlers. Another module's names come only
-  from its package (`app.modules.expenses`), never its files; no module queries another's tables; links are plain ids
-  with no cross-module foreign keys. Outside the modules, shared code is grouped by concern: `core/` (building blocks)
-  imports nothing else, `infrastructure/` and `web/` import only `core/`, and `bootstrap.py` is the one composition
-  root.
-- **Vertical slices inside a module:** each command or query is one file holding the message and its handler, so a
-  use case is one file to read and adding one is a new file plus one registration line.
-- **CQRS-lite with a unit of work:** every operation is a **command** (changes data, returns at most an id) or a
-  **query** (reads, changes nothing), sent through `MessageBus`. The bus opens one session per outermost command,
-  commits once, rolls back on error, and gives nested commands a SAVEPOINT. Same database for reads and writes.
-- **Ports and adapters:** the LLM (`core/llm`: provider-neutral messages, Gemini behind narrow model ports) and the
-  assistant's expense tools (an `ExpenseTools` port over MCP) are interfaces; the composition root picks the adapter.
-  Chat history is stored in SpendWise's own message format, so another provider is one new adapter.
-- **MCP is the agent's only door to data:** the assistant has no tools of its own. It discovers this app's MCP server
-  and calls it **in-process** by default (no HTTP to itself). Tools return **typed, structured results**
-  (`outputSchema`), so cards never guess at JSON keys.
-- **Human in the loop, enforced by the server:** in the web panel the model can't delete. A delete becomes an
-  Approve/Cancel card; the server keeps a snapshot of what the card showed, and Approve deletes only that **version**
-  (checked in the `DELETE` statement itself). Each card decides once, in its own thread, within 15 minutes.
-- **Server-driven UI, safely:** cards and forms are **A2UI** descriptions (data, not HTML). The renderer maps an
-  allow-list of components to its own, refuses unknown catalogs, loops, runaway sizes and deep nesting, and puts
-  every card behind its own error boundary.
-- **Streaming you can follow:** replies stream as **AG-UI** events (text, tool calls with live status chips, state,
-  cards); the browser validates every event with AG-UI's own schemas, and a **Stop** button ends a run.
-- **Feature slices on the web:** `features/<name>/` owns its components, hooks, API calls and types and exports
-  through `index.ts`; `shared/` knows no feature; `app/` composes them. Lint rules enforce it.
-- **One contract, generated:** REST types (OpenAPI → `schema.gen.ts`) and protocol names, labels and limits
-  (`contracts.gen.ts`) come from the backend. No magic strings, nothing copied by hand.
-- **Correct by construction:** money as integer paise with `Decimal`, Alembic migrations on PostgreSQL,
-  RFC 9457 problem details for every error, a `Clock` instead of `date.today()`, and user data logged only at DEBUG.
+For deeper diagrams and boundary rules, see [How trackwise.ai Works](docs/how_trackwise_works.md), [Architecture](docs/architecture.md), and [Assistant Architecture](docs/assistant_architecture.md).
 
 ---
 
-## 📚 Documentation Index
+## Engineering Highlights
 
-| Category | Guide | Description |
+1. **Enforced Boundaries (`backend/scripts/check_rules.py`):** 13 static rules verify layered imports (`core/` -> nowhere, `infrastructure/` & `web/` -> `core/` only), one-way module dependencies, zero cross-module table queries, injected clocks instead of `date.today()`, and mandatory `owner_id` filtering (zero unscoped `session.get()` calls on owned tables).
+2. **Generated Full-Stack Contracts:** [`backend/scripts/export_contracts.py`](backend/scripts/export_contracts.py) exports FastAPI's OpenAPI specification (`web/openapi.json`) and shared enums/limits/A2UI/AG-UI constants (`contracts.gen.ts`), and `npm run gen:api` generates `schema.gen.ts` for compile-time typed `openapi-fetch` queries.
+3. **Untrusted Data & AI Guardrails:** Receipts and LLM extractions are treated as untrusted data (no tools allowed during image extraction, Pydantic `model_validate`, allow-listed categories/payment methods), A2UI trees enforce strict depth (`<= 12`), component count (`<= 300`), and safe client actions, and CSV exports sanitize formula triggers (`=`, `+`, `-`, `@`).
+4. **Full Localization (`en` / `hi`):** Both the React UI (`i18next` lazy namespaces typed against `en.ts`) and server-generated cards, tool chips, and RFC 9457 error details (`Accept-Language` + Babel CLDR money/date formatting) stay aligned.
+5. **100% Seam-Driven Testability:** `bootstrap.build(clock, llm, tools, engine, files, identity, sealer, agents, skills, settings)` accepts fakes/in-memory engines without monkeypatching.
+
+---
+
+## Documentation Index
+
+| Audience | Document | What It Covers |
 |---|---|---|
-| **Overview & Architecture** | [**Overview**](./docs/overview.md) | What SpendWise does, its features, the tech stack and the roadmap. |
-| | [**Architecture**](./docs/architecture.md) | Module rules, CQRS and the bus, request flows, feature slices, the shared contract, adding a module. |
-| | [**Assistant Architecture**](./docs/assistant_architecture.md) | The agent loop, tools over MCP, AG-UI streaming, A2UI cards and forms, approvals, memory and cost. |
-| | [**How SpendWise Works**](./docs/how_spendwise_works.md) | The main flows as diagrams: recording, asking, deleting with approval, data staying in sync. |
-| | [**Architecture Review**](./docs/architecture-review.md) | Every finding of the architecture review and the code reviews, and how each was resolved. |
-| | [**Decision Log**](./docs/decisions.md) | Every design decision, with why, and when to revisit it. |
-| **Developer Onboarding** | [**Getting Started**](./docs/getting_started.md) | Setup from zero: Python, Node, `.env`, migrations, sample data, the web app, MCP clients. |
-| | [**Backend Onboarding**](./docs/backend_onboarding.md) | Working in the backend: adding a command, query, route, migration or MCP tool, step by step. |
-| | [**Frontend Onboarding**](./docs/frontend_onboarding.md) | Working in the web app: feature slices, TanStack Query, the generated client, the A2UI renderer. |
-| | [**Web README**](./web/README.md) | The web app's scripts and folders. |
-| | [**Rules for AI agents**](./AGENTS.md) | The rules every change must follow, for AI coding agents and people alike: architecture, layout, documentation, verification, the working agreement. |
-| **Contracts, Schema & Security** | [**API Endpoints**](./docs/api_endpoints.md) | Every REST route, the AG-UI stream, MCP tools and resources, the error format, with examples. |
-| | [**Database Schema**](./docs/database_schema.md) | Tables, columns, indexes, which module owns what, and the migrations. |
-| | [**Configuration**](./docs/configuration.md) | Every setting (backend `.env`, web `.env`), defaults, and the generated contract. |
-| | [**Security**](./docs/security.md) | What protects what (one origin, sign-in and sessions, MCP token, approvals, prompt injection, the renderer), and known gaps. |
-| **Engineering Record** | [**Phase notes**](./docs/README.md#phase-notes) | Phases 1–27 and the refactors: design, what was built, how to verify it, design questions. |
-| | [**Sources**](./docs/sources.md) | What the official docs, specs and library code say, with links. |
-| | [**Gemini**](./docs/gemini.md) · [**Troubleshooting**](./docs/troubleshooting.md) · [**Git**](./docs/git.md) | Models and the free tier; problems already hit; committing safely. |
+| **PMs & Clients** | [Product Overview](docs/overview.md) | All workspace views, public pages, AI capabilities, and deliberate scope limits |
+| **PMs & Clients** | [How trackwise.ai Works](docs/how_trackwise_works.md) | Visual flowcharts for web UX, chat/approvals, receipts, A2A agents, and MCP |
+| **PMs & Clients** | [Roadmap](docs/roadmap.md) | Completed phases and planned extensions (recurring expenses, multi-currency, billing) |
+| **Architects & Interviewers** | [Architecture](docs/architecture.md) | Modular monolith layers, CQRS bus, vertical slices, feature slices, and 13 scans |
+| **Architects & Interviewers** | [Assistant Architecture](docs/assistant_architecture.md) | AG-UI loop, A2UI surfaces, approvals, A2A delegation, and Agent Skills |
+| **Architects & Interviewers** | [Architecture Decisions (ADRs)](docs/decisions.md) | Key technical choices and trade-offs (`D1–D220`) |
+| **Security Reviewers** | [Security Architecture](docs/security.md) | BFF sessions, OIDC, BOLA/IDOR isolation, A2A/MCP hardening, A2UI safety, and CSP |
+| **Integrators** | [API Reference](docs/api_endpoints.md) | REST `/api/v1`, `/mcp`, OIDC routes, streaming chat, and RFC 9457 problems |
+| **Integrators** | [Database Schema](docs/database_schema.md) | 9 tables (`0001`–`0012`), `BigInteger` money storage, and module ownership |
+| **Developers** | [Getting Started](docs/getting_started.md) | Environment setup, Neon PostgreSQL, migrations, seed data, and MCP clients |
+| **Developers** | [Configuration](docs/configuration.md) | `.env` reference, timeouts, quotas, upload limits, and rate limits |
+| **Developers** | [Identity Provider Setup](docs/identity_provider.md) | OIDC configuration (ZITADEL / Keycloak / Authentik) and switching providers |
+| **Contributors** | [Backend Onboarding](docs/backend_onboarding.md) · [Frontend Onboarding](docs/frontend_onboarding.md) | Vertical slice and React feature-slice implementation recipes + [AGENTS.md](AGENTS.md) |
 
 ---
 
-## ⚡ Quick Start (Windows)
+## Quick Start
 
-### 1. Start the backend
+> **Prerequisites:** Python 3.11+, Node.js 20+, a PostgreSQL connection string (e.g. Neon), a Gemini API key, and an OpenID Connect provider. Full step-by-step instructions live in [Getting Started](docs/getting_started.md).
 
-From the project folder (the repo root, where `run.ps1` is):
-
-```powershell
-Copy-Item .env.example .env     # once, then paste your Gemini API key into .env
-.\run.ps1                       # creates .venv, installs requirements, runs the migrations, starts the server
-```
-
-> [!IMPORTANT]
-> **A Neon PostgreSQL URL is required.** Set `DATABASE_URL` in `.env` to your Neon connection string, using the
-> `postgresql+psycopg://` scheme. The app does not create a local SQLite database.
->
-> **A Gemini API key is needed for the assistant.** Get one at https://aistudio.google.com/apikey and put it after
-> `GEMINI_API_KEY=` in `.env`. Everything else (the Dashboard, the Expenses page, the REST API, MCP) works without it.
-
-### 2. Add default categories
+### 1. Configure Environment & Seed Database
 
 ```powershell
+Copy-Item .env.example .env
+# Populate DATABASE_URL, GEMINI_API_KEY, SESSION_ENCRYPTION_KEYS, and OIDC_* values in .env
+
+python -m venv .venv
+.\.venv\Scripts\pip.exe install -r requirements.txt
+.\.venv\Scripts\python.exe -m alembic -c backend\alembic.ini upgrade head
 .\.venv\Scripts\python.exe backend\seed.py
 ```
 
-On a fresh Neon database this creates the default categories. After signing in, add demo expenses with
-`.\.venv\Scripts\python.exe backend\seed.py --sample-for <your-email>`.
-
-### 3. Start the web app
+### 2. Start Backend & Web App
 
 ```powershell
+# Terminal 1: FastAPI backend + hosted A2A agents + optional /mcp
+.\run.ps1
+
+# Terminal 2: Next.js 16 dev server
 cd web
-npm install      # first time, and after package.json changes
-npm run dev      # then open http://localhost:5173
+npm install
+npm run dev
 ```
 
-Requirements: Python 3.11+ (Python CI checks on 3.14 and 3.15; developed on 3.14) and Node.js 20+ (developed on 24).
-Full setup, macOS/Linux commands and MCP clients: [docs/getting_started.md](docs/getting_started.md).
+### 3. Run Verification Suite
+
+Install dev dependencies (`pip install -r requirements-dev.txt`), then run all 9 Python, architecture, lint, format, type, and Next.js production build checks:
+
+```powershell
+.\.venv\Scripts\python.exe backend\scripts\check.py
+```
 
 ---
 
-## 🌐 Local Access Points
+## Local Access Points
 
-| Service | Local URL | Purpose |
+| Surface | URL | Purpose |
 |---|---|---|
-| **Web app (Next.js)** | `http://localhost:5173` | Dashboard, Expenses page, the Assistant panel; it reaches the API at its own `/api/v1` (the dev server forwards it) |
-| **Backend API (FastAPI)** | `http://127.0.0.1:8000/api/v1` | REST API (expenses, categories, summaries, the assistant), for tools and `curl`: needs a session cookie and `X-CSRF: 1` |
-| **Sign in** | `http://localhost:5173/sign-in` | The sign-in page: a button per way of signing in, each opening the identity provider's login page; set up with [docs/identity_provider.md](./docs/identity_provider.md) |
-| **API docs (Swagger UI)** | `http://127.0.0.1:8000/docs` | Try every route in the browser; ReDoc at `/redoc` |
-| **OpenAPI document** | `http://127.0.0.1:8000/openapi.json` | The contract the web app's types are generated from |
-| **Health check** | `http://127.0.0.1:8000/health` | `{"status": "ok"}` when the server and its database are up |
-| **AG-UI stream** | `POST http://127.0.0.1:8000/api/v1/agent` | The assistant's streamed runs (Server-Sent Events) |
-| **MCP over HTTP** | `http://127.0.0.1:8000/mcp/` | Send `Authorization: Bearer <token>`, a personal access token made on the Settings page; acts for its owner |
-| **MCP over stdio** | `.\.venv\Scripts\python.exe backend\mcp_stdio.py` | For MCP Inspector and Claude Desktop; no web server needed |
+| **Web App & Public Site** | `http://localhost:5173` | Bilingual SaaS pages (`/`), Dashboard (`/dashboard`), and Workspace |
+| **FastAPI API & Swagger** | `http://127.0.0.1:8000/docs` | OpenAPI docs and `/api/v1/*` endpoints |
+| **Health Probe** | `http://127.0.0.1:8000/health` | Database, schema revision, and hosted agents readiness check |
+| **Streamable HTTP MCP** | `http://127.0.0.1:8000/mcp/` | External AI client endpoint using a Personal Access Token |
 
 ---
 
-## 📁 Project Layout
+## Repository Layout
 
+```text
+trackwise.ai/
+├── AGENTS.md                         # Engineering standards & agent contract
+├── requirements.txt                  # Pinned backend runtime dependencies
+├── requirements-dev.txt              # Pinned Ruff & Pyright checks
+├── run.ps1                           # Local dev launcher (venv, Alembic upgrade, Uvicorn)
+├── backend/
+│   ├── alembic.ini                   # Alembic configuration
+│   ├── seed.py                       # Seeds the 8 shared expense categories
+│   ├── mcp_stdio.py                  # Stdio MCP transport entrypoint
+│   ├── migrations/versions/          # 0001_baseline .. 0012_user_onboarding_and_terms
+│   ├── scripts/                      # check.py (9 CI gates), check_rules.py, export_contracts.py
+│   └── app/
+│       ├── core/                     # CQRS bus, errors, money/month/clock primitives, ports
+│       ├── infrastructure/           # Gemini LLM, A2A client, OIDC, Fernet, Neon DB, FileStore
+│       ├── web/                      # Auth deps, CSRF, BodySizeLimit, rate limits, security headers
+│       ├── modules/                  # accounts, assistant, budgets, categories, conversations,
+│       │                             # expenses, mcp, receipts, reports
+│       ├── agents_host.py            # In-process A2A mounting for main branch
+│       ├── bootstrap.py              # Composition root (DI assembly)
+│       └── main.py                   # FastAPI factory & route registration
+├── agents/                           # Standalone A2A agents & shared agent_kit
+│   ├── agent_kit/                    # Auth gate, ForgetfulTaskStore, card builders
+│   ├── currency/                     # FX rate lookup agent
+│   ├── insights/                     # Structured numbers + Gemini tips agent
+│   └── receipt/                      # Multimodal receipt extraction agent
+├── skills/                           # Runtime Agent Skills (agentskills.io)
+│   ├── categorization/               # Merchant/purchase classification instructions
+│   └── monthly-report/               # Report skill + isolated Python computation script
+├── web/                              # Next.js 16 (App Router) + React 19 + Tailwind 4
+│   └── src/
+│       ├── app/                      # (public) SSR/SEO site, (client) BFF shell, _frame, _seo, _shell
+│       ├── features/                 # account, assistant, auth, budgets, categories, dashboard,
+│       │                             # expenses, reports
+│       └── shared/                   # openapi-fetch client, generated contracts, formatting, UI kit
+└── docs/                             # Curated technical, security, API & product documentation
 ```
-spendwise/
-  backend/
-    app/
-      main.py             the web app: routes under /api/v1, /health, /mcp/, error handling
-      bootstrap.py        the composition root: modules, bus, LLM adapter, MCP server, routers
-      core/               building blocks: cqrs (the bus), errors, ids, clock, months, money, llm/ (the port)
-      infrastructure/     the outside world: config, db, migrations, logging, llm/ (the Gemini adapter)
-      web/                what every route shares: dependencies (BusDep, ClockDep), problems (RFC 9457 errors)
-      modules/
-        accounts/         users, OpenID Connect sign-in, server-side sessions, personal access tokens
-        categories/       commands/ and queries/ (one file per message: the message and its handler), values,
-                          models, persistence/ (tables), api, module
-        expenses/         + domain/ (business rules), recorder (INR conversion) and persistence/repository.py
-        budgets/          monthly limits (overall and per category), status queries, SaveWatcher alerts
-        conversations/    chat threads, stored as provider-neutral messages
-        receipts/         validated receipt uploads and file storage
-        reports/          monthly reports (computed by the monthly-report skill script), CSV and Markdown downloads
-        assistant/        api/ (routes, AG-UI in and out), application/ (use cases), agent/ (the loop),
-                          approvals/, tools/ (port + MCP adapter), receipt_agent/, delegation/, skills/, a2ui/
-        mcp/              MCP server: typed tool contract, tools/ (one file per tool), resources, HTTP endpoint
-    migrations/           Alembic: 0001 baseline through 0011 64-bit BigInteger ids/amounts and category name_key
-    scripts/              export_contracts.py, check.py (all automated checks), check_rules.py (architecture rules)
-    seed.py               sample categories and expenses
-    mcp_stdio.py          the MCP server over stdio
-  agents/                 A2A agents (receipt, insights, currency) and shared agent_kit/, hosted in-process on main
-  skills/                 Agent Skills (SKILL.md folders and server-run scripts)
-  web/
-    src/app/              Next.js App Router routes, providers, frame, SEO metadata, text namespaces
-    src/features/         auth, account, expenses, budgets, categories, dashboard, assistant (each with i18n/)
-    src/shared/           ui kit, typed API client + generated contract, config, languages (i18n), formatting, theme
-  docs/                   architecture, onboarding, API, schema, security, decisions, phase notes
-  run.ps1                 one-command dev start (Windows)
-  run-agent.ps1           run a single A2A agent standalone (optional)
-  requirements.txt        pinned backend dependencies
-  .env.example            every setting the app reads, with no secret values
-```
-
----
-
-## 📏 Conventions
-
-### Virtual environment
-
-- One venv per project, in `.venv` in the project folder. Never install project packages into the global Python.
-- Run tools as `python -m pip`, `python -m uvicorn`, `python -m alembic` rather than bare commands, so they run with
-  the same Python as the app. `run.ps1` calls the venv's Python directly, so no activation is needed.
-- `.venv` is never committed and can be rebuilt from `requirements.txt` at any time. If you move or rename the
-  project folder, delete `.venv` and create it again: a venv stores absolute paths.
-- In VS Code, the repo's `.vscode/settings.json` already points at `.venv`.
-
-### Dependencies
-
-- `requirements.txt` and `web/package.json` pin **exact** versions, so every machine installs the same thing.
-- To add a backend dependency: `python -m pip install <package>`, read the version with `python -m pip show
-  <package>`, add `<package>==<version>` to `requirements.txt`, and commit it with the code that uses it.
-- To add a web dependency: `npm install --save-exact <package>@<version>`.
-
-### Configuration and secrets
-
-- Secrets and machine-specific settings live in `.env`, never in code. `.env` is git-ignored; `.env.example` is
-  committed and lists every setting with no real values. All settings are read in
-  `backend/app/infrastructure/config.py`; real environment variables override `.env`. Details:
-  [docs/configuration.md](docs/configuration.md).
-
-### Money
-
-- Amounts are stored as whole **paise** (integer minor units) plus a currency code, default `INR`: 450.50 rupees is
-  stored as `45050`. Convert only with `app.core.money`, which uses `Decimal`. Never put money through a `float`.
-
-### Database and generated files
-
-- The app requires a Neon PostgreSQL connection URL in `DATABASE_URL`; it does not create a local SQLite database.
-  `.\run.ps1` applies migrations, and `backend\seed.py` creates the default categories in a fresh database.
-- `web/src/shared/api/*.gen.ts` and `web/openapi.json` are generated from the backend: after changing an API, run
-  `.\.venv\Scripts\python.exe backend\scripts\export_contracts.py`, then `npm run gen:api` in `web/`, and commit them.
-- `__pycache__/` and `web/.next/` are build output: git-ignored and safe to delete.
-
-### What gets committed
-
-| Commit | Never commit |
-|---|---|
-| Source code (`backend/`, `agents/`, `skills/`, `web/src/`), migrations, generated contracts | `.venv/`, `node_modules/`, `web/.next/` |
-| `requirements.txt`, `requirements-dev.txt`, `web/package.json`, `web/package-lock.json` | `__pycache__/`, `*.pyc` |
-| `.env.example`, `docs/`, `README.md`, `run.ps1`, `run-agent.ps1` | `.env`, `*.db` (any local check database) |
-
-Update `docs/` in the same commit as the code it describes ([docs/README.md](docs/README.md)).

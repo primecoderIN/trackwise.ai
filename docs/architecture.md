@@ -1,6 +1,6 @@
 # Architecture
 
-SpendWise is **one backend** (FastAPI, a modular monolith with CQRS) and **one web app** (React, organised as feature
+trackwise.ai is **one backend** (FastAPI, a modular monolith with CQRS) and **one web app** (React, organised as feature
 slices). Each half has strict boundaries, and the two share one contract that's generated from the backend.
 
 ## The backend: a modular monolith
@@ -591,7 +591,7 @@ violation. It also runs the `jsx-a11y` accessibility rules. Route files (`page.t
 may export `metadata` beside their component (Next's convention), so the fast-refresh rule is off for them only.
 
 Working guides: [backend_onboarding.md](backend_onboarding.md), [frontend_onboarding.md](frontend_onboarding.md).
-The full review that shaped these rules: [architecture-review.md](architecture-review.md).
+Automated checks enforce these rules in `backend/scripts/check_rules.py` and `npx oxlint`.
 
 ## The shared contract
 
@@ -629,7 +629,7 @@ production: one reverse proxy in front of both: pages to Next.js, /api/v1/ to Ne
   the backend builds, such as a new expense's `Location`, name the backend's address. The web app never reads them.
 - **When the backend can't be reached, the server in front answers for it:** Next.js with 500 in plain text, a
   reverse proxy with 502, 503 or 504. The backend's own errors are always problems, so `ApiError.fromProblem` reads
-  any 5xx that isn't one as "can't reach SpendWise".
+  any 5xx that isn't one as "can't reach trackwise.ai".
 - **Why:** the sign-in of Phase 22 keeps the session on the server and gives the browser one HttpOnly cookie. On one
   origin that cookie can be `SameSite=Strict` with the `__Host-` prefix, and needs no CORS credentials (the Duende BFF
   pattern).

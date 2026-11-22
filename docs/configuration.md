@@ -1,6 +1,6 @@
 # Configuration
 
-Every setting SpendWise reads, where it comes from, and its default. Secrets never live in code: they go in `.env`
+Every setting trackwise.ai reads, where it comes from, and its default. Secrets never live in code: they go in `.env`
 (git-ignored), and `.env.example` (committed) lists every name with no real values.
 
 ## How the backend reads settings
@@ -20,7 +20,7 @@ All backend settings are one Pydantic `Settings` class in `backend/app/infrastru
 | Setting | Default | Used for |
 |---|---|---|
 | `GEMINI_API_KEY` | not set | The assistant (`/chat`, `/agent`) and `/parse`. Without it, those routes fail with a message saying the key is missing; everything else works. Get one at https://aistudio.google.com/apikey |
-| `GEMINI_MODEL` | not set | Which Gemini model answers, e.g. `gemini-3.5-flash-lite`. Model ids and free-tier limits: [gemini.md](gemini.md) |
+| `GEMINI_MODEL` | not set | Gemini model id (e.g. `gemini-3.5-flash-lite` or `gemini-3.8-flash`). Changing it requires an app restart; free-tier quotas apply per Google AI Studio project |
 | `DATABASE_URL` | required | Neon PostgreSQL connection URL. The running app does not fall back to a local SQLite file |
 | `MODEL_REQUESTS_PER_MINUTE`, `MODEL_REQUESTS_PER_DAY` | `10`, `300` | How many requests to the routes that call the model (`/agent`, `/chat`, `/parse`; a receipt is read through `/agent`) each person may make per minute and per day (UTC); one more is a 429 (D194). Counted in memory, per server process |
 | `SKILLS_DIR` | `<project>/skills` | The Agent Skills folder (D208): one folder per skill with its `SKILL.md`, read once, at the first turn (restart to pick up an edited skill). A skill's `scripts/*.py` are run by the server with the backend's own Python (D209) |
@@ -49,7 +49,7 @@ Example `.env`:
 GEMINI_API_KEY=AIza...your key...
 GEMINI_MODEL=gemini-3.5-flash-lite
 DATABASE_URL=postgresql+psycopg://<user>:<password>@<host>/<database>?sslmode=require
-OIDC_ISSUER=https://spendwise-abc.zitadel.cloud
+OIDC_ISSUER=https://trackwise-abc.zitadel.cloud
 OIDC_CLIENT_ID=...
 OIDC_CLIENT_SECRET=...
 SESSION_ENCRYPTION_KEYS=["...a Fernet key..."]
@@ -67,7 +67,7 @@ These are deliberate design values, each defined once, next to the code it gover
 | Value | Where | What it controls |
 |---|---|---|
 | `API_PREFIX = "/api/v1"`, `API_VERSION = "1.0.0"`, `MCP_PATH = "/mcp"` | `infrastructure/config.py` | URLs and the OpenAPI version |
-| Gemini timeout 60 s, 2 attempts, retry only on 5xx | `infrastructure/llm/gemini.py` | how long a model call may hang ([gemini.md](gemini.md#timeouts-and-retries)) |
+| Gemini timeout 60 s, 2 attempts, retry only on 5xx | `infrastructure/llm/gemini.py` | how long a model call may hang before raising `ExternalServiceError` |
 | `MAX_STEPS = 5` | `assistant/agent/agent.py` | model round trips per message |
 | `REASONING_EFFORT = low` | `assistant/agent/agent.py` | how hard the model thinks (deeper is slower) |
 | `MAX_HISTORY_TURNS = 10` | `assistant/application/assistant.py` | earlier turns resent with each message (cost vs memory) |

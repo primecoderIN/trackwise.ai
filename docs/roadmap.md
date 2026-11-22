@@ -1,8 +1,8 @@
 # Roadmap: planned features
 
-What SpendWise builds next, in order, and how each feature fits the architecture. This is a plan, not a record: each
+What trackwise.ai builds next, in order, and how each feature fits the architecture. This is a plan, not a record: each
 feature becomes a phase only when it starts, with the owner's design choices asked first, then its own phase note
-([phases/](phases/)) and decisions ([decisions.md](decisions.md)). When a phase is done, its entry here is marked done
+and architecture decisions ([decisions.md](decisions.md)). When a phase is done, its entry here is marked done
 and points at its note.
 
 Written 2026-11-20, after Phase 27 (Budgets). Updated 2026-11-21: Phases 28 and 29 (the app's frame, the missing
@@ -14,7 +14,7 @@ down. Phase numbers below are provisional.
 | Phase | Feature | Why now | Size |
 |---|---|---|---|
 | 28 | [The app frame and the missing pages](#28-the-app-frame-and-the-missing-pages) (**Done** — D219) | The app looks like an internal tool: a thin menu, no page headers or empty states, features reachable only through the chat | Medium |
-| 29 | [The public site, SEO foundations and first run](#29-the-public-site-seo-foundations-and-first-run) (**Done** — D220) | A visitor sees only a sign-in page; nothing says what SpendWise is, and search engines have nothing to index | Medium-large |
+| 29 | [The public site, SEO foundations and first run](#29-the-public-site-seo-foundations-and-first-run) (**Done** — D220) | A visitor sees only a sign-in page; nothing says what trackwise.ai is, and search engines have nothing to index | Medium-large |
 | 30 | [Real exchange rates](#30-real-exchange-rates) | Foreign expenses are stored at made-up rates today: the one place the app keeps untrue numbers | Small |
 | 31 | [Recurring expenses and the subscription finder](#31-recurring-expenses-and-the-subscription-finder) | Rent and subscriptions recorded once; forgotten subscriptions found in the history | Medium-large |
 | 32 | [Proactive alerts and the weekly digest](#32-proactive-alerts-and-the-weekly-digest) | The app speaks first: unusual spends, renewals due, budgets at risk | Medium |
@@ -24,7 +24,7 @@ down. Phase numbers below are provisional.
 | 36 | [Page-aware chat and bulk changes](#36-page-aware-chat-and-bulk-changes) | "Recategorize these as Travel" acts on the rows selected, after an Approve | Medium |
 | 37 | [Ship it: production readiness](#37-ship-it-production-readiness) | Required before real people and real money: a safety review, Docker Compose, HTTPS, database operations, the README | Medium-large |
 | 38 | [Search growth: content pages and free tools](#38-search-growth-content-pages-and-free-tools) | Ranking takes months and needs a live domain: start as soon as Phase 37 is deployed, so people arrive before there's a plan to sell | Medium, then ongoing |
-| 39 | [SpendWise plans and payments (Razorpay)](#39-spendwise-plans-and-payments-razorpay) | A free plan and a paid one, billed through Razorpay | Large |
+| 39 | [trackwise.ai plans and payments (Razorpay)](#39-trackwiseai-plans-and-payments-razorpay) | A free plan and a paid one, billed through Razorpay | Large |
 | 40 | [WhatsApp channel](#40-whatsapp-channel) | Record and ask from WhatsApp, without opening the app | Medium |
 | later | [The next tier](#later-the-next-tier) | Tax helper, splits with UPI links, receipt vault, what-if planning, trip mode, item-level insights, assistant history, Connect page | Each small-medium |
 
@@ -95,7 +95,7 @@ showing the error page with a working retry.
 
 ## 29. The public site, SEO foundations and first run
 
-**For the user:** a visitor to the address learns what SpendWise does and how their data is kept private, and starts
+**For the user:** a visitor to the address learns what trackwise.ai does and how their data is kept private, and starts
 in one click; search engines find and rank the public pages; a new person is welcomed and set up in a minute.
 
 **Today:** `/` is the signed-in Dashboard; the only public page is `/sign-in`. The SEO base exists (D188): metadata
@@ -109,7 +109,7 @@ from `_seo/seo.ts` and `PUBLIC_URL`, signed-in pages `noindex`, `robots.txt` and
   - Screenshots, and a "Get started" button to sign in.
   - No invented testimonials or user counts.
 - **The Dashboard moves to `/dashboard`:** `ROUTES`, the server's redirect after sign-in, and links. A signed-in
-  visitor at `/` sees the landing page with "Open SpendWise", or is sent to the Dashboard (decision).
+  visitor at `/` sees the landing page with "Open trackwise.ai", or is sent to the Dashboard (decision).
 - **A shared public frame:** a header (logo, Features, Pricing once Phase 39 adds it, Sign in) and a footer
   (Privacy, Terms, Contact) for every public page.
 - **Legal and contact pages** (public, server-rendered):
@@ -117,8 +117,7 @@ from `_seo/seo.ts` and `PUBLIC_URL`, signed-in pages `noindex`, `robots.txt` and
     Digital Personal Data Protection Act, 2023.
   - A contact page with the support and grievance address.
   - Linked from the footer, the sign-in page and the welcome flow.
-- **SEO foundations** (each fact checked against Google Search Central and the Next.js docs, and recorded in
-  sources.md):
+- **SEO foundations** (verified against Google Search Central and Next.js 16 documentation):
   - **Real HTML:** every public page rendered on the server with its own texts (D188's trade-off: server-side texts,
     beside the browser's i18next), one `h1`, semantic headings, descriptive `alt` texts, readable addresses.
   - **Per-page metadata:** a unique title and description, a canonical URL, Open Graph and X card tags, and a link
@@ -273,7 +272,7 @@ costs quota); whether replies are ever spoken.
 
 ## 35. Your data and preferences in Settings
 
-**For the user:** in Settings: download everything SpendWise holds about them; delete it all; choose a default
+**For the user:** in Settings: download everything trackwise.ai holds about them; delete it all; choose a default
 currency for new expenses; add categories of their own.
 
 **Today:** Settings shows the profile, where the person is signed in, and their personal access tokens; Phase 28
@@ -351,7 +350,7 @@ which pages send context besides Expenses.
 - An audit trail (who changed what, when, before and after).
 - An email sender (a `Mailer` port) for the digest and billing receipts.
 - Backups and restore, tested.
-- **The README:** what SpendWise does, an architecture diagram with the module map (Mermaid), setup with Docker Compose,
+- **The README:** what trackwise.ai does, an architecture diagram with the module map (Mermaid), setup with Docker Compose,
   and a demo script that walks through the main features.
 
 The remaining gaps are listed in
@@ -367,7 +366,7 @@ provider; the live injection check's calls.
 ## 38. Search growth: content pages and free tools
 
 **For the user:** people searching for things like "expense tracker in Hindi", "receipt scanner app" or "monthly
-budget calculator" find SpendWise, read something useful, and sign up from there.
+budget calculator" find trackwise.ai, read something useful, and sign up from there.
 
 **Why it's separate from Phase 29:** Phase 29 makes the site technically ready for search engines. Ranking also needs
 pages worth finding, links to them, and months of measuring and adjusting. That can only start once the site is live
@@ -405,7 +404,7 @@ compared by hand against known examples; Search Console showing the pages indexe
 
 ---
 
-## 39. SpendWise plans and payments (Razorpay)
+## 39. trackwise.ai plans and payments (Razorpay)
 
 **For the user:** a free plan to start, and a paid plan for heavier use, paid monthly or yearly by UPI, card or net
 banking through Razorpay; the plan, its renewal date and invoices in Settings; cancel any time.
@@ -445,7 +444,7 @@ the modules):
 - **Secrets:** `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` in `.env`, never logged or sent to
   the browser except the public key id. Test mode keys until launch.
 
-**To confirm against Razorpay's documentation at design time** (and record in sources.md): the Subscriptions API's
+**To verify against Razorpay's API documentation at implementation time:** the Subscriptions API's
 plan and subscription objects, the checkout options for subscriptions, the webhook events and their payloads, the
 signature checks, and how UPI Autopay and card mandates behave for renewals (RBI's rules on recurring payments: the
 first payment's authentication, notices before later debits, limits).
@@ -463,7 +462,7 @@ renewal, cancellation, entitlements switching.
 
 ## 40. WhatsApp channel
 
-**For the user:** message SpendWise on WhatsApp: "kal 200 ka petrol" is saved; "how much on food this month?" is
+**For the user:** message trackwise.ai on WhatsApp: "kal 200 ka petrol" is saved; "how much on food this month?" is
 answered; budget alerts and the weekly digest arrive there.
 
 **Scope:** a WhatsApp adapter (the WhatsApp Business Platform's webhooks and messages) in front of the same assistant
@@ -507,7 +506,7 @@ The original plan's last two phases, mapped to what's built and what's planned:
 | Ship it, A: safety review | Tool, receipt and agent outputs as data; A2UI validated; `/agent` rate-limited; uploads capped; no keys or receipts in logs; an injected-receipt check | All built (D180, D193, D194, D199 and the renderer's rules), except the recorded injected-receipt check: **Phase 37** |
 | Ship it, B: tests | Per-module tests, architecture tests, routing with a mocked Gemini, A2UI validation, an end-to-end chat test | **The owner's**: AGENTS.md rule 2 and D173 say the owner writes the automated tests. The code is built for them (every port passed in, section 5 of AGENTS.md), and each phase's checks show what to cover |
 | Ship it, C: Docker Compose | Backend (with MCP), the three agents, web, one `.env` | **Phase 37** (two containers on `main`, five on `multi-server`; Neon PostgreSQL is external) |
-| Ship it, D: README | What it does, a Mermaid diagram with a module map, setup, a demo script, "what I learned" | **Phase 37.** A README and diagrams exist ([how_spendwise_works.md](how_spendwise_works.md)); the refresh adds the module map and a demo script. The docs keep a professional engineering tone, so "what I learned" belongs in the owner's own notes rather than the README |
+| Ship it, D: README | What it does, a Mermaid diagram with a module map, setup, a demo script, "what I learned" | **Phase 37.** A README and diagrams exist ([how_trackwise_works.md](how_trackwise_works.md)); the refresh adds the module map and a demo script. The docs keep a professional engineering tone, so "what I learned" belongs in the owner's own notes rather than the README |
 
 ---
 

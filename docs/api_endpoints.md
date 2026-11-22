@@ -104,7 +104,7 @@ with the session cookie (`__Host-spendwise-session`, HttpOnly, Secure, SameSite=
 | `cancelled` | the person cancelled at the provider, or it refused them |
 | `expired` | the sign-in took over 10 minutes, was already used, or started in another browser |
 | `rejected` | something in the provider's answer failed a check (state, signature, nonce, ...) |
-| `not-allowed` | signed in, but may not use SpendWise (no required role, or the account is switched off) |
+| `not-allowed` | signed in, but may not use trackwise.ai (no required role, or the account is switched off) |
 | `unavailable` | the provider couldn't be used (not configured, unreachable, an error) |
 
 Either way the login cookie is cleared.
@@ -269,7 +269,7 @@ of ₹5,000.00)", D212). Usually empty; the web app shows each as a warning toas
 | `spent_on` | required date |
 | `payment_method` | required; one of the six |
 | `note` | optional; up to 500 characters |
-| `currency` | optional; three capital letters, default `INR`. Any other currency is converted to INR by the currency agent before saving (D204): **422** `business-rule` if it has no rate for it ("SpendWise can't convert XYZ to INR yet"), **502** if it can't be reached; nothing is saved |
+| `currency` | optional; three capital letters, default `INR`. Any other currency is converted to INR by the currency agent before saving (D204): **422** `business-rule` if it has no rate for it ("trackwise.ai can't convert XYZ to INR yet"), **502** if it can't be reached; nothing is saved |
 
 ### `GET /api/v1/expenses`
 
@@ -400,7 +400,7 @@ and by payment method with their share, biggest first, and the five biggest expe
 ### `GET /api/v1/reports/monthly/{month}/{format}`
 
 The report as a file to save, in the request's language (`Accept-Language`), sent as an attachment
-(`Content-Disposition: attachment; filename="spendwise-2026-11.csv"`):
+(`Content-Disposition: attachment; filename="trackwise-2026-11.csv"`):
 
 | `format` | File |
 |---|---|
