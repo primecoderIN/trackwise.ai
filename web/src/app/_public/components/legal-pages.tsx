@@ -1,5 +1,5 @@
-// Server-rendered Legal (Privacy Policy & Terms of Service) and Contact / DPDP Grievance pages (Phase 29).
-// Uses PUBLIC_CONTAINER with a 12-column sticky section index on Legal pages so wide screens stay balanced.
+// Server-rendered Legal (Privacy Policy & Terms of Service) and global Contact pages (Phase 29).
+// Uses PUBLIC_CONTAINER with a 12-column sticky section index on Legal pages and global support cards on Contact.
 
 import { Mail, ShieldCheck } from "lucide-react"
 import Link from "next/link"
@@ -11,7 +11,7 @@ import { BreadcrumbJsonLd } from "./breadcrumb-json-ld"
 import { PUBLIC_CONTAINER } from "./container"
 import { PublicFrame } from "./public-frame"
 
-/** Structured two-column SaaS layout for Privacy Policy and Terms of Service in both English and Hindi. */
+/** Structured two-column layout for Privacy Policy and Terms of Service in both English and Hindi. */
 export function PublicLegalPage({ texts, kind }: { texts: PublicSiteTexts; kind: "privacy" | "terms" }) {
   const page = kind === "privacy" ? texts.privacyPage : texts.termsPage
   const currentPage = kind === "privacy" ? "privacy" : "terms"
@@ -50,7 +50,7 @@ export function PublicLegalPage({ texts, kind }: { texts: PublicSiteTexts; kind:
               </ul>
               <div className="mt-5 flex flex-wrap gap-2 border-t pt-4">
                 <Button asChild variant="outline" size="sm">
-                  <Link href={texts.paths.security}>{texts.nav.security}</Link>
+                  <Link href={texts.paths.faq}>{texts.nav.faq}</Link>
                 </Button>
                 <Button asChild variant="outline" size="sm">
                   <Link href={texts.paths.contact}>{texts.nav.contact}</Link>
@@ -77,7 +77,7 @@ export function PublicLegalPage({ texts, kind }: { texts: PublicSiteTexts; kind:
   )
 }
 
-/** Public Support and DPDP Grievance Officer contact page (`/contact` and `/hi/contact`). */
+/** Public Support and Privacy Requests contact page (`/contact` and `/hi/contact`). */
 export function PublicContactPage({ texts }: { texts: PublicSiteTexts }) {
   const { contactPage } = texts
 
@@ -118,11 +118,11 @@ export function PublicContactPage({ texts }: { texts: PublicSiteTexts }) {
               <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <ShieldCheck className="size-5" aria-hidden="true" />
               </div>
-              <h2 className="mt-4 text-lg font-semibold">{contactPage.grievanceHeading}</h2>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{contactPage.grievanceBody}</p>
+              <h2 className="mt-4 text-lg font-semibold">{contactPage.privacyHeading}</h2>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{contactPage.privacyBody}</p>
               <p className="mt-4 text-sm font-semibold text-primary">
-                <a href={`mailto:${contactPage.grievanceEmail}`} className="hover:underline">
-                  {contactPage.grievanceEmail}
+                <a href={`mailto:${contactPage.privacyEmail}`} className="hover:underline">
+                  {contactPage.privacyEmail}
                 </a>
               </p>
             </section>
@@ -135,7 +135,7 @@ export function PublicContactPage({ texts }: { texts: PublicSiteTexts }) {
                 <Link href={texts.paths.faq}>{texts.nav.faq}</Link>
               </Button>
               <Button asChild variant="outline" size="sm">
-                <Link href={texts.paths.security}>{texts.nav.security}</Link>
+                <Link href={texts.paths.howItWorks}>{texts.nav.howItWorks}</Link>
               </Button>
             </div>
           </div>

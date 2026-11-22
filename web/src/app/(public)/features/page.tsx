@@ -12,6 +12,7 @@ const texts = getPublicSiteTexts("en")
 /** Metadata for the English Features page, with hreflang alternate to /hi/features. */
 export const metadata: Metadata = publicPage(texts.featuresPage.title, ROUTES.features, {
   description: texts.featuresPage.metaDescription,
+  keywords: texts.featuresPage.keywords,
   languages: { en: ROUTES.features, hi: ROUTES.featuresHi },
 })
 

@@ -1,5 +1,5 @@
 // Lower showcase sections for the server-rendered landing page (`/` and `/hi`, Phase 29).
-// Uses PUBLIC_CONTAINER across every band so sections expand cleanly edge-to-edge without empty side gutters.
+// Uses PUBLIC_CONTAINER across every band and links visitors cleanly to How It Works, Features, and FAQ.
 
 import { ArrowRight, Globe } from "lucide-react"
 import Link from "next/link"
@@ -10,7 +10,7 @@ import type { PublicSiteTexts } from "../texts"
 import { PUBLIC_CONTAINER } from "./container"
 import { PublicSessionAction } from "./public-session-action"
 
-/** Four clickable product pillar cards linking visitors straight to `/features` and `/security`. */
+/** Four clickable product pillar cards linking visitors to `/features` and `/faq`. */
 export function LandingPillarsSection({ texts }: { texts: PublicSiteTexts }) {
   const { landing, paths } = texts
   return (
@@ -44,18 +44,26 @@ export function LandingPillarsSection({ texts }: { texts: PublicSiteTexts }) {
   )
 }
 
-/** Three-step Capture -> Track -> Act workflow band, bilingual/MCP highlight, and executive CTA. */
+/** Three-step workflow summary, bilingual switcher highlight, and bottom call-to-action band. */
 export function LandingWorkflowAndCta({ texts }: { texts: PublicSiteTexts }) {
-  const { landing } = texts
+  const { landing, paths } = texts
   return (
     <>
       <section className="border-t py-16 sm:py-20">
         <div className={PUBLIC_CONTAINER}>
-          <div className="max-w-3xl">
-            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">{landing.workflowTitle}</h2>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
-              {landing.workflowSubtitle}
-            </p>
+          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+            <div className="max-w-3xl">
+              <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">{landing.workflowTitle}</h2>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
+                {landing.workflowSubtitle}
+              </p>
+            </div>
+            <Button asChild variant="outline" className="shrink-0 gap-2">
+              <Link href={paths.howItWorks}>
+                <span>{landing.workflowCta}</span>
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
+            </Button>
           </div>
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             {landing.workflowSteps.map((step) => (
@@ -77,7 +85,7 @@ export function LandingWorkflowAndCta({ texts }: { texts: PublicSiteTexts }) {
             <div className="max-w-3xl">
               <div className="inline-flex items-center gap-2 text-xs font-semibold text-primary">
                 <Globe className="size-4" aria-hidden="true" />
-                <span>EN · HI · MCP</span>
+                <span>English · हिन्दी</span>
               </div>
               <h2 className="mt-2 text-xl font-bold tracking-tight sm:text-2xl">{landing.bilingualBannerTitle}</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{landing.bilingualBannerSubtitle}</p>
@@ -115,7 +123,7 @@ export function LandingWorkflowAndCta({ texts }: { texts: PublicSiteTexts }) {
                   size="lg"
                   className="border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white dark:border-border dark:text-foreground"
                 >
-                  <Link href={texts.paths.faq}>{landing.faqCta}</Link>
+                  <Link href={paths.faq}>{landing.faqCta}</Link>
                 </Button>
               </div>
             </div>

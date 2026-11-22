@@ -149,10 +149,16 @@ export function WelcomeDialog({ onOpenChat }: { onOpenChat: () => void }) {
                 {t("welcome.termsLabel", { version: ACCOUNT.currentTermsVersion })}
               </Label>
               <div className="flex gap-3 text-xs text-muted-foreground">
-                <Link href={ROUTES.terms} className="underline hover:text-foreground">
+                <Link
+                  href={language === "hi" ? ROUTES.termsHi : ROUTES.terms}
+                  className="underline hover:text-foreground"
+                >
                   {t("welcome.viewTerms")}
                 </Link>
-                <Link href={ROUTES.privacy} className="underline hover:text-foreground">
+                <Link
+                  href={language === "hi" ? ROUTES.privacyHi : ROUTES.privacy}
+                  className="underline hover:text-foreground"
+                >
                   {t("welcome.viewPrivacy")}
                 </Link>
               </div>

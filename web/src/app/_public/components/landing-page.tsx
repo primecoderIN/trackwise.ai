@@ -1,5 +1,5 @@
-// Server-rendered SaaS landing page for SpendWise (`/` and `/hi`, Phase 29).
-// Uses a full-width 12-column split hero (value copy + animated walkthrough video player) and delegates lower bands.
+// Server-rendered global landing page for trackwise.ai (`/` and `/hi`, Phase 29).
+// Uses a 12-column split hero with an interactive walkthrough player and delegates lower bands.
 
 import { ArrowRight, CheckCircle2, Sparkles } from "lucide-react"
 import Link from "next/link"
@@ -37,7 +37,7 @@ function LandingJsonLd({ texts }: { texts: PublicSiteTexts }) {
         url: pageUrl,
         description: texts.landing.metaDescription,
         screenshot: new URL("/opengraph-image", origin).toString(),
-        offers: { "@type": "Offer", price: "0", priceCurrency: "INR" },
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
         featureList: texts.featuresPage.sections.map((section) => section.title),
       },
     ],
@@ -50,7 +50,7 @@ function LandingJsonLd({ texts }: { texts: PublicSiteTexts }) {
   )
 }
 
-/** Public Landing view (`/` and `/hi`), with a full-width split hero and interactive video walkthrough. */
+/** Public Landing view (`/` and `/hi`), with a full-width split hero and interactive walkthrough player. */
 export function PublicLandingPage({ texts }: { texts: PublicSiteTexts }) {
   const { landing } = texts
   return (
@@ -76,8 +76,8 @@ export function PublicLandingPage({ texts }: { texts: PublicSiteTexts }) {
                 size="lg"
               />
               <Button asChild variant="outline" size="lg" className="gap-2 bg-background">
-                <Link href={texts.paths.features}>
-                  <span>{landing.exploreFeatures}</span>
+                <Link href={texts.paths.howItWorks}>
+                  <span>{landing.howItWorksCta}</span>
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </Link>
               </Button>

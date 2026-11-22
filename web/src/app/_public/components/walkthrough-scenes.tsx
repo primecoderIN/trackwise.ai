@@ -1,5 +1,5 @@
-// Animated application screens rendered inside the Hero Walkthrough Video Player (Phase 29).
-// Depicts real-time multi-currency conversion, receipt scanning beams, assistant typing + approval gates, and reports.
+// Animated application screens rendered inside the Hero Walkthrough Player (Phase 29).
+// Depicts chat logging, receipt scanning confirmation, delete safety prompts, and monthly budget/report exports.
 
 import {
   Bot,

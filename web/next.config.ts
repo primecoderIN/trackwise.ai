@@ -40,6 +40,8 @@ const config: NextConfig = {
   },
   async redirects() {
     return [
+      { source: "/security", destination: "/faq", permanent: true },
+      { source: "/hi/security", destination: "/hi/faq", permanent: true },
       { source: "/privacy", destination: "/privacy-policy", permanent: true },
       { source: "/hi/privacy", destination: "/hi/privacy-policy", permanent: true },
       { source: "/terms", destination: "/terms-of-service", permanent: true },

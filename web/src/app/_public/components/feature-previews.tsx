@@ -1,10 +1,10 @@
-// Bespoke SaaS UI preview cards for the top 3 sections of `/features` (Assistant Approvals, Receipt Scanning, and
-// Multi-Currency Expenses Ledger), plus the dispatcher across all 6 preview kinds. Part of app/_public/components/.
+// Preview cards for the top 3 sections of `/features` (AI Assistant, Receipt Scanning, Expenses & Currencies),
+// plus the dispatcher across all 6 preview kinds. Part of app/_public/components/.
 
 import { Bot, FileCheck2, Search, ShieldAlert } from "lucide-react"
 
 import type { FeaturesPageTexts, FeatureShowcaseSection } from "../texts"
-import { BudgetsFeaturePreview, McpFeaturePreview, ReportsFeaturePreview } from "./feature-preview-cards"
+import { BudgetsFeaturePreview, ReportsFeaturePreview, WorkspaceFeaturePreview } from "./feature-preview-cards"
 
 type PreviewData = FeaturesPageTexts["previewData"]
 
@@ -70,18 +70,18 @@ function ExpensesFeaturePreview({ data }: { data: PreviewData }) {
         <span>{data.expensesSearchPlaceholder}</span>
       </div>
       <div className="flex items-center justify-between rounded-xl border bg-background px-3.5 py-2.5 text-xs">
-        <div className="font-semibold">Cloud Hosting · #18</div>
+        <div className="font-semibold">{data.expensesPrimaryTitle}</div>
         <div className="text-right tabular-nums">
-          <p className="font-semibold">{data.expensesCurrencyOrig}</p>
-          <p className="text-muted-foreground">{data.expensesCurrencyInr}</p>
+          <p className="font-semibold">{data.expensesPrimaryAmount}</p>
+          <p className="text-muted-foreground">{data.expensesPrimaryNote}</p>
         </div>
       </div>
-      <p className="text-[11px] text-muted-foreground">{data.expensesRateNote}</p>
+      <p className="text-[11px] text-muted-foreground">{data.expensesSecondaryNote}</p>
     </div>
   )
 }
 
-/** Dispatches the SaaS mockup card matching `kind` for each showcase row on `/features`. */
+/** Dispatches the product preview card matching `kind` for each showcase row on `/features`. */
 export function FeaturePreview({ kind, data }: { kind: FeatureShowcaseSection["previewKind"]; data: PreviewData }) {
   switch (kind) {
     case "assistant":
@@ -94,7 +94,7 @@ export function FeaturePreview({ kind, data }: { kind: FeatureShowcaseSection["p
       return <BudgetsFeaturePreview data={data} />
     case "reports":
       return <ReportsFeaturePreview data={data} />
-    case "mcp":
-      return <McpFeaturePreview data={data} />
+    case "workspace":
+      return <WorkspaceFeaturePreview data={data} />
   }
 }

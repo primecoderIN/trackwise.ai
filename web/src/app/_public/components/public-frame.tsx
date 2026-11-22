@@ -1,5 +1,5 @@
-// Shared SaaS navigation header and multi-column footer for every server-rendered public page (Phase 29).
-// Preserves the current page across EN/HI switches with zero client JS overhead on navigation or mobile quick-links.
+// Shared navigation header and footer for every server-rendered public page (Phase 29).
+// Displays only the core marketing routes (How It Works, Features, FAQ, Contact) plus sign-in and language switcher.
 
 import { Globe, Wallet } from "lucide-react"
 import Link from "next/link"
@@ -14,7 +14,12 @@ import type { PublicRouteKey, PublicSiteTexts } from "../texts"
 import { PUBLIC_CONTAINER } from "./container"
 import { PublicSessionAction } from "./public-session-action"
 
-const NAV_ITEMS: readonly ("features" | "security" | "faq" | "contact")[] = ["features", "security", "faq", "contact"]
+const NAV_ITEMS: readonly ("howItWorks" | "features" | "faq" | "contact")[] = [
+  "howItWorks",
+  "features",
+  "faq",
+  "contact",
+]
 
 function NavLinks({
   texts,
@@ -85,23 +90,16 @@ function PublicFooter({ texts, currentPage }: { texts: PublicSiteTexts; currentP
       heading: footer.productHeading,
       links: [
         { href: paths.landing, label: footer.home },
+        { href: paths.howItWorks, label: footer.howItWorks },
         { href: paths.features, label: footer.features },
         { href: ROUTES.signIn, label: footer.signIn },
       ],
     },
     {
-      heading: footer.trustHeading,
+      heading: footer.supportHeading,
       links: [
-        { href: paths.security, label: footer.security },
         { href: paths.faq, label: footer.faq },
         { href: paths.contact, label: footer.contact },
-      ],
-    },
-    {
-      heading: footer.legalHeading,
-      links: [
-        { href: paths.privacy, label: footer.privacy },
-        { href: paths.terms, label: footer.terms },
       ],
     },
   ]
@@ -119,7 +117,7 @@ function PublicFooter({ texts, currentPage }: { texts: PublicSiteTexts; currentP
           <p className="text-xs leading-relaxed text-muted-foreground">{footer.tagline}</p>
           <p className="text-xs text-muted-foreground">{footer.rights}</p>
         </div>
-        {columns.map((col, index) => (
+        {columns.map((col) => (
           <div key={col.heading} className="flex flex-col gap-2.5">
             <p className="text-xs font-semibold tracking-wider text-foreground uppercase">{col.heading}</p>
             <ul className="flex flex-col gap-2 text-xs text-muted-foreground">
@@ -130,28 +128,32 @@ function PublicFooter({ texts, currentPage }: { texts: PublicSiteTexts; currentP
                   </Link>
                 </li>
               ))}
-              {index === columns.length - 1 ? (
-                <li>
-                  <Link
-                    href={texts.otherPaths[currentPage]}
-                    lang={texts.otherLang}
-                    hrefLang={texts.otherLang}
-                    className="inline-flex items-center gap-1 hover:text-foreground"
-                  >
-                    <Globe className="size-3" aria-hidden="true" />
-                    <span>{texts.otherLangLabel}</span>
-                  </Link>
-                </li>
-              ) : null}
             </ul>
           </div>
         ))}
+        <div className="flex flex-col gap-2.5">
+          <p className="text-xs font-semibold tracking-wider text-foreground uppercase">{footer.languageHeading}</p>
+          <ul className="flex flex-col gap-2 text-xs text-muted-foreground">
+            <li>
+              <Link
+                href={texts.otherPaths[currentPage]}
+                lang={texts.otherLang}
+                hrefLang={texts.otherLang}
+                aria-label={footer.languageLabel}
+                className="inline-flex items-center gap-1.5 hover:text-foreground"
+              >
+                <Globe className="size-3.5" aria-hidden="true" />
+                <span>{texts.otherLangLabel}</span>
+              </Link>
+            </li>
+          </ul>
+        </div>
       </div>
     </footer>
   )
 }
 
-/** Shared executive SaaS header, mobile quick-nav strip, and 4-column wide footer for all public pages. */
+/** Shared public navigation header, mobile quick-nav strip, and 4-column marketing footer. */
 export function PublicFrame({
   texts,
   currentPage,

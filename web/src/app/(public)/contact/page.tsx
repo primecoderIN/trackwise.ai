@@ -1,4 +1,4 @@
-// The public Contact and DPDP Grievance page at "/contact" (English), rendered on the server (Phase 29).
+// The public Contact & Support page at "/contact" (English), rendered on the server (Phase 29).
 
 import type { Metadata } from "next"
 
@@ -12,10 +12,11 @@ const texts = getPublicSiteTexts("en")
 /** Metadata for the English contact page, with hreflang alternate to /hi/contact. */
 export const metadata: Metadata = publicPage(texts.contactPage.title, ROUTES.contact, {
   description: texts.contactPage.metaDescription,
+  keywords: texts.contactPage.keywords,
   languages: { en: ROUTES.contact, hi: ROUTES.contactHi },
 })
 
-/** The English Contact and DPDP Grievance page. */
+/** The English global Support and Privacy Requests page. */
 export default function ContactRoute() {
   return <PublicContactPage texts={texts} />
 }

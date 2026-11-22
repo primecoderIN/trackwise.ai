@@ -8,19 +8,24 @@ import { ROUTES } from "@/shared/config/routes"
 
 import { PUBLIC_PAGE_PAIRS, PUBLIC_PATHS, siteUrl } from "./_seo/seo"
 
-const LAST_MODIFIED = new Date("2026-11-21T00:00:00.000Z")
+const LAST_MODIFIED = new Date("2026-11-22T00:00:00.000Z")
 
 function crawlSignals(path: string): {
   changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"]
   priority: number
 } {
   if (path === ROUTES.landing || path === ROUTES.landingHi) return { changeFrequency: "weekly", priority: 1.0 }
-  if (path === ROUTES.features || path === ROUTES.featuresHi) return { changeFrequency: "weekly", priority: 0.9 }
-  if (path === ROUTES.faq || path === ROUTES.faqHi || path === ROUTES.security || path === ROUTES.securityHi) {
-    return { changeFrequency: "monthly", priority: 0.8 }
+  if (
+    path === ROUTES.howItWorks ||
+    path === ROUTES.howItWorksHi ||
+    path === ROUTES.features ||
+    path === ROUTES.featuresHi
+  ) {
+    return { changeFrequency: "weekly", priority: 0.9 }
   }
-  if (path === ROUTES.signIn) return { changeFrequency: "yearly", priority: 0.3 }
-  return { changeFrequency: "monthly", priority: 0.5 }
+  if (path === ROUTES.faq || path === ROUTES.faqHi) return { changeFrequency: "monthly", priority: 0.8 }
+  if (path === ROUTES.contact || path === ROUTES.contactHi) return { changeFrequency: "monthly", priority: 0.7 }
+  return { changeFrequency: "yearly", priority: 0.3 }
 }
 
 /** sitemap.xml: every public page at its full address, with bilingual en/hi/x-default hreflang alternates. */

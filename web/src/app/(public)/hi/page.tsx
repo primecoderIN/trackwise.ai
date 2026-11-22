@@ -12,6 +12,7 @@ const texts = getPublicSiteTexts("hi")
 /** Metadata for the Hindi landing page, with hreflang alternate to /. */
 export const metadata: Metadata = publicPage(texts.landing.title, ROUTES.landingHi, {
   description: texts.landing.metaDescription,
+  keywords: texts.landing.keywords,
   languages: { en: ROUTES.landing, hi: ROUTES.landingHi },
 })
 

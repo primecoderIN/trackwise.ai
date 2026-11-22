@@ -1,5 +1,5 @@
-// Open Graph and X card preview image for SpendWise, generated at build time by Next.js (`next/og`, Phase 29).
-// Part of the app composition (app/opengraph-image.tsx).
+// Open Graph and X card preview image for trackwise.ai, generated at build time by Next.js (`next/og`, Phase 29).
+// Part of the app composition (app/opengraph-image.tsx). Uses global, consumer-friendly branding and highlights.
 
 import { ImageResponse } from "next/og"
 
@@ -14,7 +14,7 @@ export const size = { width: 1200, height: 630 }
 /** PNG media type for Open Graph compatibility. */
 export const contentType = "image/png"
 
-/** Renders SpendWise's Open Graph card image. */
+/** Renders trackwise.ai's global Open Graph card image. */
 export default function Image() {
   return new ImageResponse(
     <div
@@ -41,23 +41,34 @@ export default function Image() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontWeight: 800,
           }}
         >
-          ₹
+          <svg
+            width="30"
+            height="30"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#ffffff"
+            strokeWidth="2.1"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1" />
+            <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4" />
+          </svg>
         </div>
         <span>{APP_NAME}</span>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "20px", maxWidth: "960px" }}>
-        <div style={{ fontSize: "64px", fontWeight: 700, lineHeight: 1.15 }}>
+        <div style={{ fontSize: "62px", fontWeight: 700, lineHeight: 1.15 }}>
           AI Expense Tracker, Receipt Scanner & Monthly Budgets
         </div>
         <div style={{ fontSize: "28px", color: "#cbd5e1", lineHeight: 1.4 }}>{APP_DESCRIPTION}</div>
       </div>
       <div style={{ display: "flex", gap: "24px", fontSize: "22px", color: "#e2e8f0" }}>
-        <span>• Assistant & A2UI Cards</span>
+        <span>• Conversational AI Assistant</span>
         <span>• Receipt Scanning</span>
-        <span>• Multi-Currency (INR)</span>
+        <span>• Monthly Budgets</span>
         <span>• English & Hindi</span>
       </div>
     </div>,

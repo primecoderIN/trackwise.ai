@@ -1,5 +1,5 @@
 // Server-rendered dedicated Features tour page (`/features` and `/hi/features`, Phase 29).
-// Uses PUBLIC_CONTAINER end-to-end with alternating 5/7 text-and-preview layouts plus a full-width matrix.
+// Uses PUBLIC_CONTAINER end-to-end with alternating 5/7 text-and-preview layouts plus a consumer workflow matrix.
 
 import { ArrowRight, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
@@ -71,7 +71,7 @@ function FeaturesMatrix({ texts }: { texts: PublicSiteTexts }) {
                 <th className="px-5 py-3.5">{featuresPage.matrixHeaders.capability}</th>
                 <th className="px-5 py-3.5">{featuresPage.matrixHeaders.webApp}</th>
                 <th className="px-5 py-3.5">{featuresPage.matrixHeaders.assistant}</th>
-                <th className="px-5 py-3.5">{featuresPage.matrixHeaders.mcp}</th>
+                <th className="px-5 py-3.5">{featuresPage.matrixHeaders.receipts}</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -82,7 +82,7 @@ function FeaturesMatrix({ texts }: { texts: PublicSiteTexts }) {
                   </th>
                   <td className="px-5 py-4 text-muted-foreground">{row.webApp}</td>
                   <td className="px-5 py-4 text-muted-foreground">{row.assistant}</td>
-                  <td className="px-5 py-4 text-muted-foreground">{row.mcp}</td>
+                  <td className="px-5 py-4 text-muted-foreground">{row.receipts}</td>
                 </tr>
               ))}
             </tbody>
@@ -93,7 +93,7 @@ function FeaturesMatrix({ texts }: { texts: PublicSiteTexts }) {
   )
 }
 
-/** Dedicated Features deep-dive view covering Assistant, Receipts, Expenses, Budgets, Reports, and MCP. */
+/** Dedicated Features deep-dive view covering Assistant, Receipts, Expenses, Budgets, Reports, and Workspace Controls. */
 export function PublicFeaturesPage({ texts }: { texts: PublicSiteTexts }) {
   const { featuresPage } = texts
   return (
@@ -155,8 +155,8 @@ export function PublicFeaturesPage({ texts }: { texts: PublicSiteTexts }) {
                 signedInLabel={featuresPage.openDashboard}
               />
               <Button asChild variant="outline" className="gap-1.5">
-                <Link href={texts.paths.security}>
-                  <span>{texts.nav.security}</span>
+                <Link href={texts.paths.howItWorks}>
+                  <span>{featuresPage.howItWorksCta}</span>
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </Link>
               </Button>

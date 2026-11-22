@@ -12,6 +12,7 @@ const texts = getPublicSiteTexts("hi")
 /** Metadata for the Hindi FAQ page, with hreflang alternate to /faq. */
 export const metadata: Metadata = publicPage(texts.faqPage.title, ROUTES.faqHi, {
   description: texts.faqPage.metaDescription,
+  keywords: texts.faqPage.keywords,
   languages: { en: ROUTES.faq, hi: ROUTES.faqHi },
 })
 

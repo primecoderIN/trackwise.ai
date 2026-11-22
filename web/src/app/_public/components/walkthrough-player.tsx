@@ -1,7 +1,7 @@
 "use client"
 
-// Auto-playing animated interactive video player showing a real user operating SpendWise across 4 scenes (Phase 29).
-// Renders a gliding cursor, click ripples, typing prompt, receipt laser scan, and full Play/Pause/Scrub video controls.
+// Auto-playing animated interactive walkthrough player showing trackwise.ai across 4 core scenes (Phase 29).
+// Renders a gliding cursor, click ripples, typing prompt, receipt preview scan, and Play/Pause/Scrub controls.
 
 import { MousePointer2, Pause, Play, RotateCcw } from "lucide-react"
 import { useEffect, useState } from "react"

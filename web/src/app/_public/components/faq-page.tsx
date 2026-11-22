@@ -28,7 +28,7 @@ function FaqJsonLd({ texts }: { texts: PublicSiteTexts }) {
   )
 }
 
-/** Dedicated FAQ page covering Assistant, Receipts, FX, Budgets, Reports, MCP, and Security in a wide 12-col grid. */
+/** Dedicated FAQ page covering Getting Started, Assistant, Receipts, Currencies, Budgets, Reports, and Privacy. */
 export function PublicFaqPage({ texts }: { texts: PublicSiteTexts }) {
   const { faqPage } = texts
 

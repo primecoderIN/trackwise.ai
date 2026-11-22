@@ -1,4 +1,4 @@
-// Schema.org BreadcrumbList structured data helper rendered inside secondary public pages (/features, /security, /faq, etc.).
+// Schema.org BreadcrumbList structured data helper rendered inside secondary public pages (/how-it-works, /features, /faq, etc.).
 // Keeps breadcrumb JSON-LD localized in English and Hindi across all non-home public routes.
 
 import { siteUrl } from "@/app/_seo/seo"

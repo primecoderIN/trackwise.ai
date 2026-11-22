@@ -14,12 +14,12 @@ const GOOGLE_SITE_VERIFICATION_SETTING = "GOOGLE_SITE_VERIFICATION"
 /** Bilingual pairs of public pages (English and Hindi) for hreflang alternates and the sitemap. */
 export const PUBLIC_PAGE_PAIRS: readonly { en: string; hi: string }[] = [
   { en: ROUTES.landing, hi: ROUTES.landingHi },
+  { en: ROUTES.howItWorks, hi: ROUTES.howItWorksHi },
   { en: ROUTES.features, hi: ROUTES.featuresHi },
-  { en: ROUTES.security, hi: ROUTES.securityHi },
   { en: ROUTES.faq, hi: ROUTES.faqHi },
+  { en: ROUTES.contact, hi: ROUTES.contactHi },
   { en: ROUTES.privacy, hi: ROUTES.privacyHi },
   { en: ROUTES.terms, hi: ROUTES.termsHi },
-  { en: ROUTES.contact, hi: ROUTES.contactHi },
 ]
 
 /**
@@ -29,18 +29,18 @@ export const PUBLIC_PAGE_PAIRS: readonly { en: string; hi: string }[] = [
 export const PUBLIC_PATHS: readonly string[] = [
   ROUTES.landing,
   ROUTES.landingHi,
+  ROUTES.howItWorks,
+  ROUTES.howItWorksHi,
   ROUTES.features,
   ROUTES.featuresHi,
-  ROUTES.security,
-  ROUTES.securityHi,
   ROUTES.faq,
   ROUTES.faqHi,
+  ROUTES.contact,
+  ROUTES.contactHi,
   ROUTES.privacy,
   ROUTES.privacyHi,
   ROUTES.terms,
   ROUTES.termsHi,
-  ROUTES.contact,
-  ROUTES.contactHi,
   ROUTES.signIn,
 ]
 
@@ -54,15 +54,15 @@ export function siteUrl(): URL {
 
 const EN_KEYWORDS = [
   "AI expense tracker",
-  "receipt scanner",
-  "personal finance India",
+  "receipt scanner app",
+  "personal expense manager",
   "monthly budget tracker",
-  "multi-currency expense tracker INR",
-  "MCP expense tools",
+  "spending insights",
+  "bilingual budget app",
   APP_NAME,
 ]
 
-const HI_KEYWORDS = ["AI खर्च ट्रैकर", "रसीद स्कैनर", "मासिक बजट ऐप", "दैनिक खर्च हिसाब", "हिन्दी बजट ट्रैकर", APP_NAME]
+const HI_KEYWORDS = ["AI खर्च ट्रैकर", "रसीद स्कैनर ऐप", "मासिक बजट प्लानर", "दैनिक खर्च हिसाब", "व्यक्तिगत वित्त ट्रैकर", APP_NAME]
 
 const INDEXABLE_ROBOTS: Metadata["robots"] = {
   index: true,
@@ -104,7 +104,7 @@ export function siteMetadata(): Metadata {
     },
     openGraph: {
       type: "website",
-      locale: "en_IN",
+      locale: "en_US",
       alternateLocale: ["hi_IN"],
       siteName: APP_NAME,
       title: APP_NAME,
@@ -123,12 +123,12 @@ export function siteMetadata(): Metadata {
 
 /**
  * A public page's metadata: indexed with rich snippets, canonical URL, Open Graph & X card images, locale tags,
- * and optional hreflang language alternates (`en`, `hi`, `x-default`).
+ * optional page-specific keywords, and optional hreflang language alternates (`en`, `hi`, `x-default`).
  */
 export function publicPage(
   title: string,
   path: string,
-  options?: { description?: string; languages?: { en: string; hi: string } },
+  options?: { description?: string; keywords?: readonly string[]; languages?: { en: string; hi: string } },
 ): Metadata {
   const description = options?.description ?? APP_DESCRIPTION
   const isHindi = path === ROUTES.landingHi || path.startsWith(`${ROUTES.landingHi}/`)
@@ -138,7 +138,7 @@ export function publicPage(
   return {
     title,
     description,
-    keywords: isHindi ? HI_KEYWORDS : EN_KEYWORDS,
+    keywords: options?.keywords ? [...options.keywords] : isHindi ? HI_KEYWORDS : EN_KEYWORDS,
     robots: INDEXABLE_ROBOTS,
     alternates: {
       canonical: path,
@@ -146,8 +146,8 @@ export function publicPage(
     },
     openGraph: {
       type: "website",
-      locale: isHindi ? "hi_IN" : "en_IN",
-      alternateLocale: [isHindi ? "en_IN" : "hi_IN"],
+      locale: isHindi ? "hi_IN" : "en_US",
+      alternateLocale: [isHindi ? "en_US" : "hi_IN"],
       siteName: APP_NAME,
       title,
       description,
