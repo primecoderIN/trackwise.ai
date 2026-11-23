@@ -19,8 +19,9 @@ BACKEND_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BACKEND_DIR))
 
 from app import bootstrap  # noqa: E402
+from app.core.clock import DEFAULT_TIMEZONE  # noqa: E402
 from app.core.i18n import Language  # noqa: E402
-from app.core.money import DEFAULT_CURRENCY  # noqa: E402
+from app.core.money import DEFAULT_CURRENCY, DEFAULT_USER_CURRENCY, SUPPORTED_CURRENCIES  # noqa: E402
 from app.core.months import YearMonth  # noqa: E402
 from app.infrastructure.config import API_PREFIX, PROJECT_DIR, Settings  # noqa: E402
 from app.infrastructure.db import create_db_engine  # noqa: E402
@@ -193,6 +194,9 @@ def _contracts() -> dict[str, object]:
         "API_PREFIX": API_PREFIX,
         "PROBLEM_JSON": PROBLEM_JSON,
         "DEFAULT_CURRENCY": DEFAULT_CURRENCY,
+        "DEFAULT_USER_CURRENCY": DEFAULT_USER_CURRENCY,
+        "SUPPORTED_CURRENCIES": list(SUPPORTED_CURRENCIES),
+        "DEFAULT_TIMEZONE": DEFAULT_TIMEZONE,
         # The languages the server writes its texts in; the web app's language table is typed against them.
         "LANGUAGES": [language.value for language in Language],
         "PAYMENT_METHOD_LABELS": _payment_method_labels(),

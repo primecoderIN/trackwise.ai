@@ -111,10 +111,14 @@ Either way the login cookie is cleared.
 
 ### `GET /api/v1/auth/user`
 
-Who is signed in, and the link that signs this browser out (401 when nobody is):
+Who is signed in, their account preferences (`preferred_language`, `default_currency`, `timezone`), onboarding state,
+and the link that signs this browser out (401 when nobody is):
 
 ```json
 {"id": 1, "name": "Asha Rao", "email": "asha@example.com", "avatar_url": "https://...",
+ "preferred_language": "en", "default_currency": "USD", "timezone": "UTC",
+ "welcomed_at": "2026-11-23T09:12:00Z", "terms_version": "2026-11",
+ "terms_accepted_at": "2026-11-23T09:12:00Z",
  "logout_url": "/api/v1/auth/logout?sid=4f1c...e2"}
 ```
 
@@ -193,9 +197,22 @@ Revokes the token: it stops working at once. **204**.
 
 ### `POST /api/v1/account/welcome`
 
-Records that the signed-in person completed (or skipped) the first-run welcome flow and accepted the current Terms of
-Service and Privacy Policy version (`{"terms_version": "2026-11"}`). Stored on the account (`welcomed_at`,
-`terms_version`, `terms_accepted_at`), never in browser storage (D192, D220). **204**.
+Records that the signed-in person completed (or skipped) the first-run welcome flow, chose initial account preferences,
+and accepted the current Terms of Service and Privacy Policy version:
+
+```json
+{"terms_version": "2026-11", "preferred_language": "en", "default_currency": "USD", "timezone": "America/New_York"}
+```
+
+Stored on the account (`preferred_language`, `default_currency`, `timezone`, `welcomed_at`, `terms_version`,
+`terms_accepted_at`), never in browser storage (D192, D220). Preference fields default to `"en"`, `"USD"`, `"UTC"`.
+Invalid currencies or unknown IANA timezones return 422. **204**.
+
+### `PATCH /api/v1/account/preferences`
+
+Updates one or more of the signed-in person's stored preferences (`preferred_language`, `default_currency`, `timezone`),
+returning the updated `CurrentUser`. Leave fields out to keep their current values; explicit `null` values and invalid
+IANA timezones or unsupported currencies return 422.
 
 ## Categories
 

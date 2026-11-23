@@ -12,6 +12,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.exceptions import RequestValidationError
 
+from app.core.clock import clock_today
 from app.core.months import YearMonth
 from app.modules.budgets.commands.remove_budget import RemoveBudget
 from app.modules.budgets.commands.set_budget import BudgetChange, SetBudget
@@ -40,7 +41,7 @@ def _only_query(*allowed: str) -> Any:
 
 
 # GET /api/v1/budgets?month=2026-11: the month's spending (in INR) against the signed-in person's budgets: the overall
-# line and one line per category. Without `month`, the current month (the clock's).
+# line and one line per category. Without `month`, the current month in the user's time zone.
 @router.get("/budgets", dependencies=[_only_query("month")])
 def get_budget_status(
     principal: CurrentUserDep,
@@ -48,8 +49,9 @@ def get_budget_status(
     clock: ClockDep,
     month: Annotated[str | None, Query(pattern=YearMonth.PATTERN, examples=["2026-11"])] = None,
 ) -> BudgetStatus:
-    which = YearMonth.of(clock.today()) if month is None else YearMonth.parse(month)
-    return bus.ask(GetBudgetStatus(owner_id=principal.user_id, month=which))
+    today = clock_today(clock, principal.timezone)
+    which = YearMonth.of(today) if month is None else YearMonth.parse(month)
+    return bus.ask(GetBudgetStatus(owner_id=principal.user_id, month=which, today=today))
 
 
 # PUT /api/v1/budgets/overall: set the monthly limit for all spending together; the body is {"limit": "40000"}. 204.

@@ -22,7 +22,9 @@ from mcp.server.mcpserver import MCPServer
 from mcp.types import Tool
 from pydantic import BaseModel, TypeAdapter
 
+from app.core.clock import DEFAULT_TIMEZONE
 from app.core.i18n import translatable
+from app.core.identity import TokenCaller
 from app.core.llm import ToolSpec
 from app.modules.assistant.i18n import ChatText
 from app.modules.assistant.tools.port import ToolOutput, ToolsUnavailableError
@@ -62,16 +64,23 @@ class _ToolList:
 class McpExpenseTools:
     """ExpenseTools over this app's own MCP server, in-process, acting for one person once bound (acting_for)."""
 
-    def __init__(self, server: MCPServer, owner_id: int | None = None, listed: _ToolList | None = None) -> None:
+    def __init__(
+        self,
+        server: MCPServer,
+        owner_id: int | None = None,
+        listed: _ToolList | None = None,
+        timezone: str = DEFAULT_TIMEZONE,
+    ) -> None:
         """`server` is the MCP server object; `owner_id` the person the tools act for (None until bound: no tool can
         run then). `listed` is the tool list shared with the copy this one was bound from."""
         self._server = server
         self._owner_id = owner_id
         self._listed = _ToolList() if listed is None else listed
+        self._timezone = timezone
 
-    def acting_for(self, owner_id: int) -> McpExpenseTools:
+    def acting_for(self, owner_id: int, timezone: str = DEFAULT_TIMEZONE) -> McpExpenseTools:
         """A copy acting for `owner_id`: every tool call reads and changes only their expenses."""
-        return McpExpenseTools(self._server, owner_id, self._listed)
+        return McpExpenseTools(self._server, owner_id, self._listed, timezone=timezone)
 
     async def _with_client(self, operation: Callable[[Client], Awaitable[T]]) -> T:
         """Open a session as the bound person (if any), run `operation` with its client, and close the session.
@@ -81,7 +90,7 @@ class McpExpenseTools:
         """
         with ExitStack() as stack:
             if self._owner_id is not None:
-                stack.enter_context(serving_caller(self._owner_id))
+                stack.enter_context(serving_caller(TokenCaller(user_id=self._owner_id, timezone=self._timezone)))
             async with Client(self._server) as client:
                 return await operation(client)
 

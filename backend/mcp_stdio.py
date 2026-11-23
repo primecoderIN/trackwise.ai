@@ -37,8 +37,8 @@ services = bootstrap.build()
 atexit.register(services.close)
 server = services.mcp_server
 _token = os.environ.get(TOKEN_VARIABLE, "")
-act_for_process(lambda: services.access_tokens.resolve(_token) if _token else None)
-if not _token or services.access_tokens.resolve(_token) is None:
+act_for_process(lambda: services.access_tokens.resolve_caller(_token) if _token else None)
+if not _token or services.access_tokens.resolve_caller(_token) is None:
     # Never the token itself in the log: only that it's missing or doesn't work.
     logger.warning("%s is missing or doesn't work: every tool call will be refused until it's fixed.", TOKEN_VARIABLE)
 

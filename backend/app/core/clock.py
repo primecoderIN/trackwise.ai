@@ -9,9 +9,42 @@ through web/dependencies.ClockDep.
 """
 
 from datetime import UTC, date, datetime
+from functools import cache
 from typing import Annotated, Protocol
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError, available_timezones
 
-from pydantic import AfterValidator
+from pydantic import AfterValidator, Field
+
+DEFAULT_TIMEZONE = "UTC"
+MAX_TIMEZONE_LENGTH = 64
+
+
+@cache
+def _available_timezones() -> frozenset[str]:
+    """Lazily load valid IANA time zone keys without reading tzdata at import time."""
+    return frozenset(available_timezones())
+
+
+def validate_timezone(value: str) -> str:
+    """Ensure `value` is 'UTC' or a canonical 'Area/Location' IANA time zone name."""
+    cleaned = value.strip()
+    if not cleaned or len(cleaned) > MAX_TIMEZONE_LENGTH:
+        raise ValueError("timezone must be a valid IANA time zone")
+    # Restrict single-token names to UTC so legacy abbreviations (EST, CET) and Factory don't slip through.
+    if cleaned != DEFAULT_TIMEZONE and ("/" not in cleaned or cleaned not in _available_timezones()):
+        raise ValueError(f"unknown IANA timezone: {cleaned}")
+    try:
+        ZoneInfo(cleaned)
+    except ZoneInfoNotFoundError as exc:
+        raise ValueError(f"unknown IANA timezone: {cleaned}") from exc
+    return cleaned
+
+
+TimeZoneName = Annotated[
+    str,
+    Field(min_length=1, max_length=MAX_TIMEZONE_LENGTH, examples=[DEFAULT_TIMEZONE]),
+    AfterValidator(validate_timezone),
+]
 
 
 def as_utc(moment: datetime) -> datetime:
@@ -46,10 +79,21 @@ class SystemClock:
 
     def today(self) -> date:
         """Today's date on the server."""
-        # The server's local date; per-user time zones are not stored yet.
+        # The server's local date when no user time zone is supplied; user-scoped operations use clock_today().
         return date.today()
 
     def now(self) -> datetime:
         """The current moment, in UTC."""
         # Always UTC for timestamps; showing them in local time is the client's job.
         return datetime.now(UTC)
+
+
+def parse_timezone(name: str) -> ZoneInfo:
+    """Return a `ZoneInfo` for a valid IANA time zone name (such as 'UTC' or 'America/New_York')."""
+    return ZoneInfo(validate_timezone(name))
+
+
+def clock_today(clock: Clock, timezone: str | ZoneInfo = DEFAULT_TIMEZONE) -> date:
+    """Today's calendar date in `timezone` according to `clock.now()`."""
+    zone = parse_timezone(timezone) if isinstance(timezone, str) else timezone
+    return as_utc(clock.now()).astimezone(zone).date()

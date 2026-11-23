@@ -15,11 +15,14 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
 
+from app.core.clock import DEFAULT_TIMEZONE
 from app.core.errors import AuthenticationError
+from app.core.identity import TokenCaller
 
-# Answers the caller's user id, asked on every tool call: None once the credentials stop working (the stdio
-# server's token revoked or expired since it started).
-CallerLookup = Callable[[], int | None]
+CallerIdentity = int | TokenCaller
+# Answers the caller's user id (or TokenCaller with account preferences), asked on every tool call: None once
+# credentials stop working (the stdio server's token revoked or expired since it started).
+CallerLookup = Callable[[], CallerIdentity | None]
 
 # What an MCP client is told when no caller is set or its credentials stopped working (English: only MCP clients
 # and the model read it).
@@ -30,16 +33,16 @@ _in_http_request: ContextVar[bool] = ContextVar("spendwise_mcp_in_http_request",
 _process_resolver: CallerLookup | None = None
 
 
-def _lookup_for(who: int | CallerLookup) -> CallerLookup:
-    """A lookup for a fixed user id, or the lookup itself."""
-    if isinstance(who, int):
+def _lookup_for(who: CallerIdentity | CallerLookup) -> CallerLookup:
+    """A lookup for a fixed user id / TokenCaller, or the lookup itself."""
+    if isinstance(who, (int, TokenCaller)):
         return lambda: who
     return who
 
 
 @contextmanager
-def acting_for(who: int | CallerLookup) -> Iterator[None]:
-    """Serve the MCP requests started inside the block for `who`: a user id, or a lookup asked on each call.
+def acting_for(who: CallerIdentity | CallerLookup) -> Iterator[None]:
+    """Serve the MCP requests started inside the block for `who`: a user id, TokenCaller, or a lookup.
 
     The previous caller (usually none) is back when the block ends, even if it raises.
     """
@@ -51,7 +54,7 @@ def acting_for(who: int | CallerLookup) -> Iterator[None]:
 
 
 @contextmanager
-def act_for_request(who: int | CallerLookup | None) -> Iterator[None]:
+def act_for_request(who: CallerIdentity | CallerLookup | None) -> Iterator[None]:
     """Mark an HTTP request context for `who`, ensuring an unauthenticated HTTP request never falls back to
     `_process_resolver`."""
     http_token = _in_http_request.set(True)
@@ -71,16 +74,28 @@ def act_for_process(lookup: CallerLookup) -> None:
     _caller.set(lookup)
 
 
+def _resolved_caller() -> CallerIdentity:
+    """The resolved CallerIdentity (user id or TokenCaller), or AuthenticationError if missing/invalid."""
+    lookup = _caller.get()
+    if lookup is None and not _in_http_request.get():
+        lookup = _process_resolver
+    resolved = lookup() if lookup is not None else None
+    if resolved is None:
+        raise AuthenticationError(NOT_SIGNED_IN)
+    return resolved
+
+
 def current_caller() -> int:
     """The user id the current MCP request acts for.
 
     Raises AuthenticationError (an MCP tool error) if no caller is set, or its credentials no longer work: a tool
     never falls back to anyone's data.
     """
-    lookup = _caller.get()
-    if lookup is None and not _in_http_request.get():
-        lookup = _process_resolver
-    user_id = lookup() if lookup is not None else None
-    if user_id is None:
-        raise AuthenticationError(NOT_SIGNED_IN)
-    return user_id
+    resolved = _resolved_caller()
+    return resolved if isinstance(resolved, int) else resolved.user_id
+
+
+def current_timezone() -> str:
+    """The IANA time zone name for the current MCP caller, defaulting to 'UTC'."""
+    resolved = _resolved_caller()
+    return DEFAULT_TIMEZONE if isinstance(resolved, int) else resolved.timezone

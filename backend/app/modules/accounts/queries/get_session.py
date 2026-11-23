@@ -8,6 +8,7 @@ from pydantic import Field
 from sqlmodel import col, select
 
 from app.core.cqrs import Context, Query
+from app.core.i18n import Language
 from app.modules.accounts.models import SessionView
 from app.modules.accounts.persistence.tables import AppUser, UserSession
 from app.modules.accounts.queries.live_sessions import live_session_conditions
@@ -29,16 +30,25 @@ def get_session(ctx: Context, query: GetSession) -> SessionView | None:
     if query.issuer is None:
         return None
     statement = (
-        select(UserSession)
+        select(UserSession, AppUser)
         .join(AppUser, col(AppUser.id) == col(UserSession.user_id))
         .where(
             col(UserSession.key_hash) == query.key_hash,
             *live_session_conditions(ctx.clock.now(), query.issuer),
         )
     )
-    session = ctx.session.exec(statement).first()
-    if session is None or session.id is None:
+    row = ctx.session.exec(statement).first()
+    if row is None:
+        return None
+    session, user = row
+    if session.id is None:
         return None
     return SessionView(
-        session_id=session.id, user_id=session.user_id, handle=session.handle, renewed_at=session.renewed_at
+        session_id=session.id,
+        user_id=session.user_id,
+        handle=session.handle,
+        renewed_at=session.renewed_at,
+        preferred_language=Language(user.preferred_language),
+        default_currency=user.default_currency,
+        timezone=user.timezone,
     )

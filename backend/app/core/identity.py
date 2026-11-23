@@ -12,7 +12,10 @@ Core layer: plain types and a Protocol, no framework and no I/O.
 from dataclasses import dataclass, field
 from typing import Protocol
 
+from app.core.clock import DEFAULT_TIMEZONE
 from app.core.errors import AppError, ExternalServiceError
+from app.core.i18n import DEFAULT_LANGUAGE, Language
+from app.core.money import DEFAULT_USER_CURRENCY
 
 
 @dataclass(frozen=True)
@@ -54,11 +57,24 @@ class LogoutNotice:
 
 @dataclass(frozen=True)
 class Principal:
-    """The person a request comes from: their user id, and the session it runs in (its id and public handle)."""
+    """The person a request comes from: their user id, session, and account preferences."""
 
     user_id: int
     session_id: int
     session_handle: str
+    preferred_language: Language = DEFAULT_LANGUAGE
+    default_currency: str = DEFAULT_USER_CURRENCY
+    timezone: str = DEFAULT_TIMEZONE
+
+
+@dataclass(frozen=True)
+class TokenCaller:
+    """The owner of a personal access token (MCP requests) along with their account preferences."""
+
+    user_id: int
+    preferred_language: Language = DEFAULT_LANGUAGE
+    default_currency: str = DEFAULT_USER_CURRENCY
+    timezone: str = DEFAULT_TIMEZONE
 
 
 class IdentityError(ExternalServiceError):

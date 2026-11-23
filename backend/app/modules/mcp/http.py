@@ -20,14 +20,15 @@ from starlette.datastructures import MutableHeaders
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from app.core.errors import ForbiddenError, TooManyRequestsError
+from app.core.identity import TokenCaller
 from app.core.rate_limit import RateLimiter
 from app.modules.mcp.caller import act_for_request
 from app.modules.mcp.contracts import AUTHORIZATION_HEADER, BEARER_SCHEME
 from app.web.problems import HTTP_SLUG, RETRY_AFTER, UNAUTHORIZED_SLUG, problem_response
 
-# Turns a token, as sent, into the user id of the person it belongs to; None if it doesn't work (unknown, expired,
-# revoked, or its owner switched off). The accounts module's, handed in by the composition root.
-TokenResolver = Callable[[str], int | None]
+# Turns a token, as sent, into its owner's id (or TokenCaller with preferences); None if it doesn't work
+# (unknown, expired, revoked, or its owner switched off). The accounts module's, handed in by the composition root.
+TokenResolver = Callable[[str], int | TokenCaller | None]
 
 # ASGI gives header names in lower case, as bytes.
 AUTHORIZATION = AUTHORIZATION_HEADER.lower().encode()
@@ -132,8 +133,8 @@ class AccessTokenAuth:
         token = _token_in(raw_headers.get(AUTHORIZATION, b""))
         # The lookup reads the database: in a worker thread, so the event loop isn't held up. Only the token's hash
         # is compared (the accounts module stores nothing else), so its timing reveals nothing about the token.
-        owner = await anyio.to_thread.run_sync(self._resolve, token) if token else None
-        if owner is None:
+        resolved = await anyio.to_thread.run_sync(self._resolve, token) if token else None
+        if resolved is None:
             response = problem_response(
                 401,
                 UNAUTHORIZED_SLUG,
@@ -145,8 +146,9 @@ class AccessTokenAuth:
             await response(scope, receive, send_no_store)
             return
 
+        owner_id = resolved if isinstance(resolved, int) else resolved.user_id
         if self._rate_limiter is not None and scope.get("method", "").upper() == "POST":
-            refusal = self._rate_limiter.take(owner)
+            refusal = self._rate_limiter.take(owner_id)
             if refusal is not None:
                 response = problem_response(
                     429,
@@ -179,7 +181,7 @@ class AccessTokenAuth:
 
         # Everything the SDK starts for this request (its tasks, the tool's worker thread) copies this context, so
         # the tools see this owner, and only for this request.
-        with act_for_request(owner):
+        with act_for_request(resolved):
             try:
                 await self._app(scope, limited_receive, tracking_send)
             except BaseException as exc:

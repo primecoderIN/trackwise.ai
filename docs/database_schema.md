@@ -77,6 +77,9 @@ erDiagram
         BOOLEAN email_verified
         VARCHAR_2048 avatar_url "https only"
         BOOLEAN is_active
+        VARCHAR_10 preferred_language "'en' by default"
+        VARCHAR_3 default_currency "'USD' by default"
+        VARCHAR_64 timezone "'UTC' by default; IANA zone"
         DATETIME welcomed_at "nullable; first-run welcome"
         VARCHAR_32 terms_version "nullable; accepted version"
         DATETIME terms_accepted_at "nullable"
@@ -289,6 +292,9 @@ module, which D13 allows (it forbids them between modules).
 | `id` | INTEGER, primary key | trackwise.ai's own id for the person: what every other module's `owner_id` points at (D190), whatever provider they use |
 | `name`, `email`, `email_verified`, `avatar_url` | VARCHAR(200), VARCHAR(320), BOOLEAN, VARCHAR(2048) | the profile as the provider said at the last sign-in; never used to find a person. A picture is kept only as an http(s) URL |
 | `is_active` | BOOLEAN, not null | trackwise.ai's own off switch: off, the person can't sign in and their sessions stop working |
+| `preferred_language` | VARCHAR(10), not null | `'en'` by default; persisted preference (`en`, `hi`) across sessions and surfaces |
+| `default_currency` | VARCHAR(3), not null | `'USD'` by default; ISO 4217 currency preference for the user |
+| `timezone` | VARCHAR(64), not null | `'UTC'` by default; IANA time zone name (`America/New_York`, `Asia/Kolkata`, ...) validated via `zoneinfo` |
 | `welcomed_at` | DATETIME with time zone, nullable | when the person finished (or skipped) the first-run welcome flow (Phase 29, D220) |
 | `terms_version`, `terms_accepted_at` | VARCHAR(32), DATETIME with time zone, nullable | which Terms of Service and Privacy Policy version the person accepted, and when |
 | `created_at`, `updated_at` | DATETIME with time zone | UTC, from the app's clock |
@@ -374,6 +380,7 @@ The tables are created and changed only by **Alembic migrations** in `backend/mi
 | `0010_budgets` | adds `budget` and its two unique indexes (`uq_budget_owner_id_category_id` and partial `uq_budget_owner_id_overall`, Phase 27); downgrade drops the indexes and the table |
 | `0011_bigint_and_category_key` | widens all id, owner/category/user reference and minor-unit money columns (`amount_minor`, `base_amount_minor`, `limit_minor`) to 64-bit `BigInteger` (`BIGINT` in PostgreSQL), and adds `category.name_key` with unique index `ix_category_name_key` (D216) |
 | `0012_user_onboarding_and_terms` | adds `app_user.welcomed_at`, `terms_version` and `terms_accepted_at` for the first-run welcome flow and terms acceptance (Phase 29, D220) |
+| `0013_user_preferences` | adds `app_user.preferred_language` (`'en'`), `default_currency` (`'USD'`), and `timezone` (`'UTC'`) with `NOT NULL` defaults |
 
 - `.\run.ps1` runs `alembic upgrade head` before starting; `seed.py` and `mcp_stdio.py` do too. The app itself only
   checks, and refuses to start on an out-of-date database with the command to fix it.

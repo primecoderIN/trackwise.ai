@@ -10,18 +10,35 @@ hands the currency values to the web app, whose formatMoney writes amounts the s
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Annotated
 
-from pydantic import Field
+from pydantic import AfterValidator, Field
 
 from app.core.i18n import DEFAULT_LANGUAGE, Language, format_currency_amount
 
 DEFAULT_CURRENCY = "INR"
 # The currency every expense is also stored in, and every total is added up in (D204): the default one.
 BASE_CURRENCY = DEFAULT_CURRENCY
+# Per-user default currency for new accounts (Phase A global onboarding); supported currencies match rates.py.
+DEFAULT_USER_CURRENCY = "USD"
+SUPPORTED_CURRENCIES: tuple[str, ...] = ("USD", "EUR", "GBP", "INR", "CAD", "AUD", "SGD", "CHF", "AED", "JPY")
 PAISE_PER_RUPEE = 100
 # An ISO 4217 code in capitals ("INR", "USD"). Lowercase "inr" is refused rather than quietly
 # matching nothing, which would show a 0 total.
 CURRENCY_PATTERN = r"^[A-Z]{3}$"
 CurrencyCode = Annotated[str, Field(pattern=CURRENCY_PATTERN, examples=[DEFAULT_CURRENCY])]
+
+
+def validate_supported_currency(value: str) -> str:
+    """Validate that `value` is one of SUPPORTED_CURRENCIES, returning it unchanged if supported."""
+    if value not in SUPPORTED_CURRENCIES:
+        raise ValueError(f"currency must be one of: {', '.join(SUPPORTED_CURRENCIES)}")
+    return value
+
+
+SupportedCurrencyCode = Annotated[
+    str,
+    Field(pattern=CURRENCY_PATTERN, examples=[DEFAULT_USER_CURRENCY]),
+    AfterValidator(validate_supported_currency),
+]
 # A currency's symbol where the app shows one on its own, as a chart's unit ("₹").
 CURRENCY_SYMBOLS = {"INR": "₹"}
 

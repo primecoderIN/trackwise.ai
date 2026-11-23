@@ -11,6 +11,7 @@ MCP tool get_monthly_report (through the mcp module's ToolContext) use it.
 
 import logging
 from dataclasses import dataclass
+from datetime import date
 
 from pydantic import ValidationError
 
@@ -65,12 +66,14 @@ class MonthlyReports:
         self._skills = skills
         self._clock = clock
 
-    def figures(self, owner: UserId, month: YearMonth) -> MonthlyReport:
+    def figures(self, owner: UserId, month: YearMonth, *, today: date | None = None) -> MonthlyReport:
         """The month's figures for `owner`. Raises BusinessRuleError for a month with too many expenses to report on,
         ExternalServiceError (a text for people) when the script fails or answers something unusable."""
-        return self._run_script(month, self._read(owner, month))
+        return self._run_script(month, self._read(owner, month), today=today)
 
-    def download(self, owner: UserId, month: YearMonth, form: ReportFormat, language: Language) -> ReportFile:
+    def download(
+        self, owner: UserId, month: YearMonth, form: ReportFormat, language: Language, *, today: date | None = None
+    ) -> ReportFile:
         """The month's report as a file, in `language`: the markdown report, or every expense of the month as CSV.
         Raises as figures() does."""
         data = self._read(owner, month)
@@ -78,7 +81,7 @@ class MonthlyReports:
             in_month = [row for row in data.rows if YearMonth.of(row.spent_on) == month]
             content = expenses_csv(in_month, data.names, language)
         else:
-            content = report_markdown(self._run_script(month, data), language)
+            content = report_markdown(self._run_script(month, data, today=today), language)
         return ReportFile(f"{FILE_NAME_PREFIX}-{month}.{form.value}", MEDIA_TYPES[form], content)
 
     def _read(self, owner: UserId, month: YearMonth) -> _Month:
@@ -102,13 +105,13 @@ class MonthlyReports:
         names = {category.id: category.name for category in self._bus.ask(categories.ListCategories())}
         return _Month(rows, names)
 
-    def _run_script(self, month: YearMonth, data: _Month) -> MonthlyReport:
+    def _run_script(self, month: YearMonth, data: _Month, *, today: date | None = None) -> MonthlyReport:
         """Run the skill's script on the expenses that have an INR amount, and check its answer."""
         # Every currency counts through its INR amount (D204); one saved before it could be converted has none yet,
         # so it's left out, as in the monthly summary. No notes: the figures don't need them.
         payload = {
             "month": str(month),
-            "today": self._clock.today().isoformat(),
+            "today": (today or self._clock.today()).isoformat(),
             "expenses": [
                 {
                     "spent_on": row.spent_on.isoformat(),

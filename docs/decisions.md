@@ -36,10 +36,10 @@ Early phases established the core stack, storage primitives, and initial UI/AI w
 - **Why:** Decouples persisted history from LLM vendor schema changes (**Extended by D174**: composite `(thread_id, turn)` index via migration `0004`).
 
 ### D148 & D163. Transactional Alembic migrations (`backend/migrations/`)
-- **Choice:** Schema changes evolve exclusively via numbered Alembic migrations (`0001`–`0012`) with working `downgrade()` functions, transactional DDL, and SQLite explicit `BEGIN`/SAVEPOINT handling for isolated local checks. Startup refuses an unmigrated database.
+- **Choice:** Schema changes evolve exclusively via numbered Alembic migrations (`0001`–`0013`) with working `downgrade()` functions, transactional DDL, and SQLite explicit `BEGIN`/SAVEPOINT handling for isolated local checks. Startup refuses an unmigrated database.
 
 ### D151. Injected `Clock` port (`core/clock.py`)
-- **Choice:** Time comes exclusively from `ctx.clock` / `ClockDep`, never `date.today()` or `datetime.now()` (**Extended by D218**: `as_utc()` normalizes tz-aware values).
+- **Choice:** Time comes exclusively from `ctx.clock` / `ClockDep` (and `clock_today(clock, tz)` using user IANA time zones), never `date.today()` or `datetime.now()` (**Extended by D218**: `as_utc()` normalizes tz-aware values).
 
 ### D162. Optimistic concurrency via `expense.version`
 - **Choice:** `expense.version` increments on every update (migration `0003`); `DeleteExpense` checks `expected_version` atomically in SQL (`WHERE id = ? AND owner_id = ? AND version = ?`).
@@ -141,3 +141,7 @@ Early phases established the core stack, storage primitives, and initial UI/AI w
 ### D221. Pluggable cloud object storage behind `FileStore` (Backblaze B2 adapter; no local disk fallback)
 - **Choice:** Replaced `LocalFileStore` (`UPLOADS_DIR`) with `B2FileStore` (`infrastructure/storage/b2.py`, `b2_wire.py`) behind the provider-agnostic `FileStore` port, selected via `STORAGE_PROVIDER` in `bootstrap._FILE_STORES` (with `check_rules.py` rule 14 confining vendor references to `bootstrap.py` and `infrastructure/storage/`). When storage settings are unset (e.g. during contract export), `bootstrap._file_store()` injects fail-closed `UnconfiguredFileStore` (never writing to local disk); partial `B2_*` configuration fails validation at startup.
 - **Why:** Stores all uploaded receipts in a private, card-free 10 GB cloud bucket without adding SDK dependencies (`boto3`/`b2sdk`), leaking vendor details into domain modules/`web/`, or changing `receipt_file.storage_key` (keys remain 32-hex UUIDs, grouped in the bucket via `B2_PREFIX`). Swapping providers later only requires adding a new `infrastructure/storage/<provider>.py` adapter and registering it in `bootstrap._FILE_STORES`.
+
+### D222. Persisted user preferences & IANA time zones on `app_user`
+- **Choice:** Added `preferred_language` (`"en"`), `default_currency` (`"USD"`, validated against `SUPPORTED_CURRENCIES`), and `timezone` (`"UTC"`, validated against stdlib `zoneinfo` + pinned `tzdata`) to `app_user` (migration `0013`), saved in `CompleteWelcome` (`POST /api/v1/account/welcome`) and updated via `PATCH /api/v1/account/preferences`. Attached preferences to `Principal` (`SessionGate`) and `TokenCaller` (`AccessTokens.resolve_caller`), and introduced `clock_today(clock, timezone)` so routes, budgets, reports, assistant turns, and MCP tools resolve dates in the caller's IANA zone without crossing module boundaries or altering UTC timestamp/quota storage.
+- **Why:** Keeps user settings cross-device and accessible to browserless MCP/background callers while keeping `expenses`, `budgets`, `reports`, and `mcp` free of an `accounts` dependency.

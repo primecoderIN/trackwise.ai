@@ -15,9 +15,10 @@ from typing import Annotated
 from mcp.server.mcpserver import MCPServer
 from pydantic import Field
 
+from app.core.clock import clock_today
 from app.core.months import YearMonth
 from app.modules import budgets
-from app.modules.mcp.caller import current_caller
+from app.modules.mcp.caller import current_caller, current_timezone
 from app.modules.mcp.contracts import ResourceUri, ToolName
 from app.modules.mcp.tools.context import ToolContext
 from app.modules.mcp.tools.support import ADDS_DATA, given, tool_errors
@@ -47,9 +48,10 @@ def register_set_budget(server: MCPServer, context: ToolContext) -> None:
                 raise ValueError("limit must be a number")
             # The caller's own budget (caller.py, D191); never a person named in the arguments.
             owner = current_caller()
+            today = clock_today(clock, current_timezone())
             category_id = views.category_id(category) if given(category) else None
             command = budgets.SetBudget.model_validate(
                 {"owner_id": owner, "category_id": category_id, "limit": str(limit)}
             )
             bus.execute(command)
-            return bus.ask(budgets.GetBudgetStatus(owner_id=owner, month=YearMonth.of(clock.today())))
+            return bus.ask(budgets.GetBudgetStatus(owner_id=owner, month=YearMonth.of(today), today=today))

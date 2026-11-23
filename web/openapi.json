@@ -1492,6 +1492,47 @@
           }
         }
       }
+    },
+    "/api/v1/account/preferences": {
+      "patch": {
+        "tags": [
+          "account"
+        ],
+        "summary": "Update Preferences",
+        "operationId": "update_preferences_api_v1_account_preferences_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserPreferencesChange"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentUser"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2245,6 +2286,104 @@
         ],
         "title": "CreatedAccessToken"
       },
+      "CurrentUser": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url"
+          },
+          "preferred_language": {
+            "$ref": "#/components/schemas/Language",
+            "default": "en"
+          },
+          "default_currency": {
+            "type": "string",
+            "title": "Default Currency",
+            "default": "USD"
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone",
+            "default": "UTC"
+          },
+          "welcomed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Welcomed At"
+          },
+          "terms_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Terms Version"
+          },
+          "terms_accepted_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Terms Accepted At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email",
+          "avatar_url"
+        ],
+        "title": "CurrentUser"
+      },
       "DataSource": {
         "properties": {
           "type": {
@@ -2783,6 +2922,15 @@
         ],
         "title": "ImagePart",
         "description": "An image part."
+      },
+      "Language": {
+        "type": "string",
+        "enum": [
+          "en",
+          "hi"
+        ],
+        "title": "Language",
+        "description": "A language, by its BCP 47 code: what the web app sends in Accept-Language."
       },
       "LoginOptionRead": {
         "properties": {
@@ -3757,6 +3905,20 @@
             ],
             "title": "Avatar Url"
           },
+          "preferred_language": {
+            "$ref": "#/components/schemas/Language",
+            "default": "en"
+          },
+          "default_currency": {
+            "type": "string",
+            "title": "Default Currency",
+            "default": "USD"
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone",
+            "default": "UTC"
+          },
           "welcomed_at": {
             "anyOf": [
               {
@@ -4343,6 +4505,54 @@
         "title": "UserMessage",
         "description": "A message from the person using the application."
       },
+      "UserPreferencesChange": {
+        "properties": {
+          "preferred_language": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Language"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "default_currency": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Z]{3}$",
+                "examples": [
+                  "USD"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Currency"
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1,
+                "examples": [
+                  "UTC"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "UserPreferencesChange"
+      },
       "ValidationError": {
         "properties": {
           "loc": {
@@ -4450,6 +4660,29 @@
             "minLength": 1,
             "title": "Terms Version",
             "default": "2026-11"
+          },
+          "preferred_language": {
+            "$ref": "#/components/schemas/Language",
+            "default": "en"
+          },
+          "default_currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$",
+            "title": "Default Currency",
+            "default": "USD",
+            "examples": [
+              "USD"
+            ]
+          },
+          "timezone": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Timezone",
+            "default": "UTC",
+            "examples": [
+              "UTC"
+            ]
           }
         },
         "additionalProperties": false,

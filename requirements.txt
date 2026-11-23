@@ -17,6 +17,9 @@ alembic==1.20.1
 # CLDR data for writing money, days and months in each language (core/i18n), the same data the browser's Intl
 # uses, so the server's cards and the web app's pages agree.
 babel==2.18.0
+# IANA time zone database used by stdlib zoneinfo on Windows and minimal container images; already installed by
+# sub-dependencies, pinned here because user timezone validation and Clock resolution depend on it directly.
+tzdata==2026.6
 # Imported directly (queries, migrations, middleware, the MCP client's HTTP), so pinned here even
 # though other packages bring them: their behaviour is part of ours.
 sqlalchemy==2.1.8

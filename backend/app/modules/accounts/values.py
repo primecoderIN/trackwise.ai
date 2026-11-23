@@ -9,8 +9,16 @@ import math
 from datetime import timedelta
 from enum import IntEnum, StrEnum
 
+from app.core.clock import DEFAULT_TIMEZONE as DEFAULT_TIMEZONE
+from app.core.clock import MAX_TIMEZONE_LENGTH as MAX_TIMEZONE_LENGTH
+from app.core.i18n import DEFAULT_LANGUAGE as DEFAULT_LANGUAGE
 from app.core.ids import RecordId
 from app.core.ids import UserId as UserId  # core's (every module's data points at it); re-exported for accounts
+from app.core.money import DEFAULT_USER_CURRENCY as DEFAULT_USER_CURRENCY
+from app.core.money import SUPPORTED_CURRENCIES as SUPPORTED_CURRENCIES
+
+MAX_LANGUAGE_LENGTH = 10
+MAX_CURRENCY_LENGTH = 3
 
 SessionId = RecordId
 TokenId = RecordId

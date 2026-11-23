@@ -16,13 +16,17 @@ from app.modules.accounts.commands.complete_welcome import CompleteWelcome
 from app.modules.accounts.commands.revoke_access_token import RevokeAccessToken
 from app.modules.accounts.commands.sign_out_other_sessions import SignOutOtherSessions
 from app.modules.accounts.commands.sign_out_session import SignOutSession
+from app.modules.accounts.commands.update_preferences import UpdatePreferences
 from app.modules.accounts.models import (
     AccessTokenRead,
     CreatedAccessToken,
+    CurrentUser,
     NewAccessToken,
     SessionRead,
+    UserPreferencesChange,
     WelcomeAcceptance,
 )
+from app.modules.accounts.queries.get_current_user import GetCurrentUser
 from app.modules.accounts.queries.list_access_tokens import ListAccessTokens
 from app.modules.accounts.queries.list_sessions import ListSessions
 from app.web.auth import CurrentUserDep
@@ -79,10 +83,24 @@ def create_account_router(bus: MessageBus, identity: IdentityProvider, tokens: A
     def revoke_token(token_id: IdPath, principal: CurrentUserDep) -> None:
         bus.execute(RevokeAccessToken(owner_id=principal.user_id, token_id=token_id))
 
-    # POST /api/v1/account/welcome: record that the signed-in person completed the first-run welcome flow and accepted
-    # the current terms version (Phase 29). Stored on the account, never in browser storage (D192).
+    # POST /api/v1/account/welcome: record that the signed-in person completed the first-run welcome flow, chose their
+    # initial preferences, and accepted the current terms version (Phase 29 / globalization).
     @router.post("/welcome", status_code=204)
     def complete_welcome(body: WelcomeAcceptance, principal: CurrentUserDep) -> None:
-        bus.execute(CompleteWelcome(owner_id=principal.user_id, terms_version=body.terms_version))
+        bus.execute(
+            CompleteWelcome(
+                owner_id=principal.user_id,
+                terms_version=body.terms_version,
+                preferred_language=body.preferred_language,
+                default_currency=body.default_currency,
+                timezone=body.timezone,
+            )
+        )
+
+    # PATCH /api/v1/account/preferences: update the signed-in person's language, default currency, or timezone.
+    @router.patch("/preferences")
+    def update_preferences(body: UserPreferencesChange, principal: CurrentUserDep) -> CurrentUser:
+        bus.execute(UpdatePreferences(owner_id=principal.user_id, changes=body))
+        return bus.ask(GetCurrentUser(user_id=principal.user_id))
 
     return router

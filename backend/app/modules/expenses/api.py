@@ -18,6 +18,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, Query, Request, Response
 from fastapi.exceptions import RequestValidationError
 
+from app.core.clock import clock_today
 from app.core.months import YearMonth
 from app.modules.expenses.application.record_expense import ExpenseRecorder
 from app.modules.expenses.application.save_watch import SaveWatcher
@@ -138,6 +139,6 @@ def monthly_trend(
     clock: ClockDep,
     months: Annotated[int, Query(ge=1, le=MAX_TREND_MONTHS)] = DEFAULT_TREND_MONTHS,
 ) -> MonthlyTrend:
-    # "The last N months" counts back from the clock's today.
-    query = GetMonthlyTrend(owner_id=principal.user_id, months=months, until=clock.today())
+    # "The last N months" counts back from today in the user's time zone.
+    query = GetMonthlyTrend(owner_id=principal.user_id, months=months, until=clock_today(clock, principal.timezone))
     return bus.ask(query)

@@ -33,4 +33,11 @@ class SessionGate:
             return None
         if self.clock.now() - utc(session.renewed_at) >= RENEW_AFTER:
             self.bus.execute(RenewSession(session_id=session.session_id))
-        return Principal(user_id=session.user_id, session_id=session.session_id, session_handle=session.handle)
+        return Principal(
+            user_id=session.user_id,
+            session_id=session.session_id,
+            session_handle=session.handle,
+            preferred_language=session.preferred_language,
+            default_currency=session.default_currency,
+            timezone=session.timezone,
+        )

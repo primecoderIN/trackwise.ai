@@ -18,6 +18,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 
+from app.core.clock import clock_today
 from app.modules.assistant.api import agui_stream
 from app.modules.assistant.api.agui_request import AgentRequest, read_request
 from app.modules.assistant.api.schemas import ChatRequest, ChatResponse, ParseRequest
@@ -55,10 +56,10 @@ def create_router(assistant: Assistant, parser: ExpenseParser) -> APIRouter:
     # Each of the three calls the model, so each counts against the person's allowance (MODEL_QUOTA, D194): a 429
     # once it's spent.
     @router.post("/parse", dependencies=[MODEL_QUOTA])
-    def parse_expense(body: ParseRequest, clock: ClockDep) -> ParseResponse:
+    def parse_expense(body: ParseRequest, principal: CurrentUserDep, clock: ClockDep) -> ParseResponse:
         # Suggests an expense from the text but saves nothing. No categories yet is a 422 (BusinessRuleError);
         # a model that fails or answers in the wrong shape is a 502 (LlmError).
-        return parser.parse(body.text, clock.today())
+        return parser.parse(body.text, clock_today(clock, principal.timezone))
 
     # One message in, the whole reply out as one JSON body: no streaming, no cards or buttons.
     @router.post("/chat", dependencies=[MODEL_QUOTA])
@@ -68,7 +69,10 @@ def create_router(assistant: Assistant, parser: ExpenseParser) -> APIRouter:
         # A thread_id the person doesn't have is a 404 rather than a silent new conversation. Everything acts for the
         # signed-in person: their threads, their expenses (D190, D191).
         owner = principal.user_id
-        thread_id, finished = assistant.chat(owner, body.message, body.thread_id, clock.today(), language)
+        today = clock_today(clock, principal.timezone)
+        thread_id, finished = assistant.chat(
+            owner, body.message, body.thread_id, today, language, timezone=principal.timezone
+        )
         return ChatResponse(thread_id=thread_id, reply=finished.reply, tool_calls=finished.tool_calls)
 
     # The same agent as /chat, but the reply is streamed as AG-UI events over Server-Sent Events, so the
@@ -85,7 +89,10 @@ def create_router(assistant: Assistant, parser: ExpenseParser) -> APIRouter:
         # A plain (sync) generator: FastAPI runs it in a worker thread, and adds a ": ping" comment every
         # 15 s while the agent is quiet (e.g. running tools), so proxies don't close the connection.
         # The run acts for the signed-in person: their thread, their cards, their expenses (D190, D191).
-        for event in agui_stream.stream(request, principal.user_id, assistant, clock.today(), language):
+        today = clock_today(clock, principal.timezone)
+        for event in agui_stream.stream(
+            request, principal.user_id, assistant, today, language, timezone=principal.timezone
+        ):
             # AG-UI's JSON (camelCase field names) as the event's `data:` line.
             yield ServerSentEvent(raw_data=event.model_dump_json(by_alias=True, exclude_none=True))
 

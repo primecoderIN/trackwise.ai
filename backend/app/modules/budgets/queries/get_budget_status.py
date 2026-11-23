@@ -7,6 +7,7 @@ the limits are read from this module's own table. Asked by GET /budgets (the Bud
 budget card) and, in part 2, by the assistant. The answer is a REST response, so notes about it are `#` comments.
 """
 
+from datetime import date
 from decimal import Decimal
 
 from pydantic import BaseModel, Field
@@ -55,6 +56,7 @@ class GetBudgetStatus(Query[BudgetStatus]):
 
     owner_id: UserId
     month: YearMonth
+    today: date | None = None
 
 
 def _line(spent_minor: int, limit_minor: int | None) -> BudgetLine:
@@ -95,7 +97,7 @@ def get_budget_status(ctx: Context, query: GetBudgetStatus) -> BudgetStatus:
     return BudgetStatus(
         month=str(query.month),
         currency=BASE_CURRENCY,
-        month_elapsed_percent=month_elapsed_percent(query.month, ctx.clock.today()),
+        month_elapsed_percent=month_elapsed_percent(query.month, query.today or ctx.clock.today()),
         overall=_line(summary.total_minor, limits.get(None)),
         categories=sorted(lines, key=_order),
     )

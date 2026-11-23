@@ -16,9 +16,10 @@ from typing import Annotated
 from mcp.server.mcpserver import MCPServer
 from pydantic import Field
 
+from app.core.clock import clock_today
 from app.core.months import YearMonth
 from app.modules import reports
-from app.modules.mcp.caller import current_caller
+from app.modules.mcp.caller import current_caller, current_timezone
 from app.modules.mcp.contracts import ToolName
 from app.modules.mcp.tools.context import ToolContext
 from app.modules.mcp.tools.support import READS_ONLY, tool_errors
@@ -26,7 +27,7 @@ from app.modules.mcp.tools.support import READS_ONLY, tool_errors
 
 def register_get_monthly_report(server: MCPServer, context: ToolContext) -> None:
     """Add the get_monthly_report tool: the caller's report for one month, from the reports module."""
-    monthly_reports = context.monthly_reports
+    monthly_reports, clock = context.monthly_reports, context.clock
 
     @server.tool(
         name=ToolName.GET_MONTHLY_REPORT,
@@ -41,4 +42,5 @@ def register_get_monthly_report(server: MCPServer, context: ToolContext) -> None
     ) -> reports.MonthlyReport:
         with tool_errors():
             # The caller's own expenses only (caller.py, D191).
-            return monthly_reports.figures(current_caller(), YearMonth.parse(month))
+            today = clock_today(clock, current_timezone())
+            return monthly_reports.figures(current_caller(), YearMonth.parse(month), today=today)

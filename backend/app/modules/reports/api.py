@@ -13,12 +13,13 @@ from typing import Annotated
 
 from fastapi import APIRouter, Path, Response
 
+from app.core.clock import clock_today
 from app.core.months import YearMonth
 from app.modules.reports.application.monthly_reports import MonthlyReports
 from app.modules.reports.models import MonthlyReport
 from app.modules.reports.values import MEDIA_TYPES, ReportFormat
 from app.web.auth import CurrentUserDep
-from app.web.dependencies import LanguageDep
+from app.web.dependencies import ClockDep, LanguageDep
 from app.web.rate_limits import REPORTS_QUOTA
 
 TAG = "reports"
@@ -37,8 +38,9 @@ def create_router(reports: MonthlyReports) -> APIRouter:
     # INR): the total against the month before, by category, by payment method, the biggest expenses, the daily
     # average. 502 if the report can't be made right now.
     @router.get("/reports/monthly/{month}", dependencies=[REPORTS_QUOTA])
-    def get_monthly_report(month: MonthPath, principal: CurrentUserDep) -> MonthlyReport:
-        return reports.figures(principal.user_id, YearMonth.parse(month))
+    def get_monthly_report(month: MonthPath, principal: CurrentUserDep, clock: ClockDep) -> MonthlyReport:
+        today = clock_today(clock, principal.timezone)
+        return reports.figures(principal.user_id, YearMonth.parse(month), today=today)
 
     # GET /api/v1/reports/monthly/{month}/{format}: the month's report as a file to save, in the request's language:
     # "csv" (every expense of the month) or "md" (the report in markdown). Sent as an attachment, with its name.
@@ -49,9 +51,14 @@ def create_router(reports: MonthlyReports) -> APIRouter:
         dependencies=[REPORTS_QUOTA],
     )
     def download_monthly_report(
-        month: MonthPath, format: ReportFormat, principal: CurrentUserDep, language: LanguageDep
+        month: MonthPath,
+        format: ReportFormat,
+        principal: CurrentUserDep,
+        clock: ClockDep,
+        language: LanguageDep,
     ) -> Response:
-        file = reports.download(principal.user_id, YearMonth.parse(month), format, language)
+        today = clock_today(clock, principal.timezone)
+        file = reports.download(principal.user_id, YearMonth.parse(month), format, language, today=today)
         disposition = f'attachment; filename="{file.name}"'
         return Response(file.content, media_type=file.media_type, headers={"Content-Disposition": disposition})
 

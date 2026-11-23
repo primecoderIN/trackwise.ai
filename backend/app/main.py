@@ -57,7 +57,7 @@ def create_app(services: Services | None = None) -> FastAPI:
     # MCP over HTTP: every request needs a personal access token, and acts only for its owner (D191).
     mcp_http_app = mcp_module.create_http_app(
         built.mcp_server,
-        built.access_tokens.resolve,
+        built.access_tokens.resolve_caller,
         public_url=built.public_url,
         rate_limiter=built.mcp_quota,
     )

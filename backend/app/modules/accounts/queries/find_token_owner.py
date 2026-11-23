@@ -8,6 +8,7 @@ from pydantic import Field
 from sqlmodel import col, select
 
 from app.core.cqrs import Context, Query
+from app.core.i18n import Language
 from app.modules.accounts.models import TokenOwner
 from app.modules.accounts.persistence.tables import AccessToken, AppUser
 from app.modules.accounts.values import KEY_HASH_LENGTH
@@ -23,7 +24,7 @@ def find_token_owner(ctx: Context, query: FindTokenOwner) -> TokenOwner | None:
     """The working token with that hash and its owner, or None. Looked up by the hash only (a unique index): the
     token itself is never stored, so a copy of the database can't be used to call the tools."""
     statement = (
-        select(AccessToken)
+        select(AccessToken, AppUser)
         .join(AppUser, col(AppUser.id) == col(AccessToken.user_id))
         .where(
             col(AccessToken.token_hash) == query.token_hash,
@@ -31,7 +32,17 @@ def find_token_owner(ctx: Context, query: FindTokenOwner) -> TokenOwner | None:
             col(AppUser.is_active).is_(True),
         )
     )
-    row = ctx.session.exec(statement).first()
-    if row is None or row.id is None:
+    found = ctx.session.exec(statement).first()
+    if found is None:
         return None
-    return TokenOwner(token_id=row.id, user_id=row.user_id, last_used_at=row.last_used_at)
+    row, user = found
+    if row.id is None:
+        return None
+    return TokenOwner(
+        token_id=row.id,
+        user_id=row.user_id,
+        last_used_at=row.last_used_at,
+        preferred_language=Language(user.preferred_language),
+        default_currency=user.default_currency,
+        timezone=user.timezone,
+    )

@@ -7,6 +7,23 @@ export const PROBLEM_JSON = "application/problem+json" as const
 
 export const DEFAULT_CURRENCY = "INR" as const
 
+export const DEFAULT_USER_CURRENCY = "USD" as const
+
+export const SUPPORTED_CURRENCIES = [
+  "USD",
+  "EUR",
+  "GBP",
+  "INR",
+  "CAD",
+  "AUD",
+  "SGD",
+  "CHF",
+  "AED",
+  "JPY"
+] as const
+
+export const DEFAULT_TIMEZONE = "UTC" as const
+
 export const LANGUAGES = [
   "en",
   "hi"

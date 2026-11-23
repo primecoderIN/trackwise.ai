@@ -12,14 +12,20 @@ from sqlmodel import Field, SQLModel
 
 from app.core.sql import BigInt
 from app.modules.accounts.values import (
+    DEFAULT_LANGUAGE,
+    DEFAULT_TIMEZONE,
+    DEFAULT_USER_CURRENCY,
     HANDLE_LENGTH,
     KEY_HASH_LENGTH,
+    MAX_CURRENCY_LENGTH,
     MAX_EMAIL_LENGTH,
     MAX_ISSUER_LENGTH,
+    MAX_LANGUAGE_LENGTH,
     MAX_NAME_LENGTH,
     MAX_STATE_LENGTH,
     MAX_SUBJECT_LENGTH,
     MAX_TERMS_VERSION_LENGTH,
+    MAX_TIMEZONE_LENGTH,
     MAX_TOKEN_NAME_LENGTH,
     MAX_URL_LENGTH,
     MAX_USER_AGENT_LENGTH,
@@ -44,6 +50,10 @@ class AppUser(SQLModel, table=True):
     avatar_url: str | None = Field(default=None, max_length=MAX_URL_LENGTH)
     # SpendWise's own off switch: a person switched off can't sign in, and their sessions stop working.
     is_active: bool = True
+    # Preferences persisted with the account across web, assistant, and MCP surfaces.
+    preferred_language: str = Field(default=DEFAULT_LANGUAGE.value, max_length=MAX_LANGUAGE_LENGTH)
+    default_currency: str = Field(default=DEFAULT_USER_CURRENCY, max_length=MAX_CURRENCY_LENGTH)
+    timezone: str = Field(default=DEFAULT_TIMEZONE, max_length=MAX_TIMEZONE_LENGTH)
     # When the person finished (or skipped) the first-run welcome flow, and which terms version they accepted.
     welcomed_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
     terms_version: str | None = Field(default=None, max_length=MAX_TERMS_VERSION_LENGTH)

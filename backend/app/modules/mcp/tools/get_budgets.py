@@ -13,9 +13,10 @@ from typing import Annotated
 from mcp.server.mcpserver import MCPServer
 from pydantic import Field
 
+from app.core.clock import clock_today
 from app.core.months import YearMonth
 from app.modules import budgets
-from app.modules.mcp.caller import current_caller
+from app.modules.mcp.caller import current_caller, current_timezone
 from app.modules.mcp.contracts import ToolName
 from app.modules.mcp.tools.context import ToolContext
 from app.modules.mcp.tools.support import READS_ONLY, given, tool_errors
@@ -42,6 +43,7 @@ def register_get_budgets(server: MCPServer, context: ToolContext) -> None:
         ] = "",
     ) -> budgets.BudgetStatus:
         with tool_errors():
-            which = YearMonth.parse(month) if given(month) else YearMonth.of(clock.today())
+            today = clock_today(clock, current_timezone())
+            which = YearMonth.parse(month) if given(month) else YearMonth.of(today)
             # The caller's own budgets only (caller.py, D191).
-            return bus.ask(budgets.GetBudgetStatus(owner_id=current_caller(), month=which))
+            return bus.ask(budgets.GetBudgetStatus(owner_id=current_caller(), month=which, today=today))

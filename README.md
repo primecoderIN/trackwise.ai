@@ -106,7 +106,7 @@ For deeper diagrams and boundary rules, see [How trackwise.ai Works](docs/how_tr
 | **Architecture** | [Architecture Decisions (ADRs)](docs/decisions.md) | Key technical choices and trade-offs (`D1–D221`) |
 | **Security** | [Security Architecture](docs/security.md) | BFF sessions, OIDC, BOLA/IDOR isolation, A2A/MCP hardening, A2UI safety, and CSP |
 | **API & Data** | [API Reference](docs/api_endpoints.md) | REST `/api/v1`, `/mcp`, OIDC routes, streaming chat, and RFC 9457 problems |
-| **API & Data** | [Database Schema](docs/database_schema.md) | 9 tables (`0001`–`0012`), `BigInteger` money storage, and module ownership |
+| **API & Data** | [Database Schema](docs/database_schema.md) | 9 tables (`0001`–`0013`), `BigInteger` money storage, and module ownership |
 | **Setup** | [Getting Started](docs/getting_started.md) | Environment setup, Neon PostgreSQL, migrations, seed data, and MCP clients |
 | **Setup** | [Configuration](docs/configuration.md) | `.env` reference, timeouts, quotas, upload limits, and rate limits |
 | **Setup** | [Identity Provider Setup](docs/identity_provider.md) | OIDC configuration (ZITADEL / Keycloak / Authentik) and switching providers |
@@ -175,7 +175,7 @@ trackwise.ai/
 │   ├── alembic.ini                   # Alembic configuration
 │   ├── seed.py                       # Seeds the 8 shared expense categories
 │   ├── mcp_stdio.py                  # Stdio MCP transport entrypoint
-│   ├── migrations/versions/          # 0001_baseline .. 0012_user_onboarding_and_terms
+│   ├── migrations/versions/          # 0001_baseline .. 0013_user_preferences
 │   ├── scripts/                      # check.py (9 CI gates), check_rules.py, export_contracts.py
 │   └── app/
 │       ├── core/                     # CQRS bus, errors, money/month/clock primitives, ports

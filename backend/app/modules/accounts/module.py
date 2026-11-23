@@ -31,6 +31,7 @@ from app.modules.accounts.commands.sign_out_session import SignOutSession, sign_
 from app.modules.accounts.commands.start_login import StartLogin, start_login
 from app.modules.accounts.commands.take_login_attempt import TakeLoginAttempt, take_login_attempt
 from app.modules.accounts.commands.touch_access_token import TouchAccessToken, touch_access_token
+from app.modules.accounts.commands.update_preferences import UpdatePreferences, update_preferences
 from app.modules.accounts.persistence.tables import TABLES
 from app.modules.accounts.queries.find_token_owner import FindTokenOwner, find_token_owner
 from app.modules.accounts.queries.find_users_by_email import FindUsersByEmail, find_users_by_email
@@ -55,6 +56,7 @@ def register_handlers(bus: MessageBus) -> None:
     bus.register(RevokeAccessToken, revoke_access_token)
     bus.register(TouchAccessToken, touch_access_token)
     bus.register(CompleteWelcome, complete_welcome)
+    bus.register(UpdatePreferences, update_preferences)
     bus.register(GetSession, get_session)
     bus.register(GetCurrentUser, get_current_user)
     bus.register(GetSignOut, get_sign_out)

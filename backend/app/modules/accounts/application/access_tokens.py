@@ -11,11 +11,11 @@ from datetime import timedelta
 
 from app.core.clock import Clock, as_utc
 from app.core.cqrs import MessageBus
-from app.core.identity import IdentityProvider
+from app.core.identity import IdentityProvider, TokenCaller
 from app.modules.accounts.commands.create_access_token import CreateAccessToken
 from app.modules.accounts.commands.touch_access_token import TouchAccessToken
 from app.modules.accounts.domain.keys import hash_key, new_access_token
-from app.modules.accounts.models import CreatedAccessToken, NewAccessToken
+from app.modules.accounts.models import CreatedAccessToken, NewAccessToken, TokenOwner
 from app.modules.accounts.queries.find_token_owner import FindTokenOwner
 from app.modules.accounts.queries.list_access_tokens import ListAccessTokens
 from app.modules.accounts.values import (
@@ -51,9 +51,8 @@ class AccessTokens:
         made = next(item for item in self.bus.ask(ListAccessTokens(owner_id=owner_id)) if item.id == token_id)
         return CreatedAccessToken(**made.model_dump(), token=token)
 
-    def resolve(self, token: str) -> int | None:
-        """The user id `token` acts for, or None if it doesn't work (sign-in unconfigured, malformed, unknown, revoked,
-        expired, or its owner switched off). Notes the token's use, at most once per TOKEN_TOUCH_AFTER."""
+    def _resolve_owner(self, token: str) -> TokenOwner | None:
+        """Resolve a raw bearer token into its TokenOwner and touch last_used_at if stale, or None if invalid."""
         if self.identity is not None and self.identity.issuer is None:
             return None
         # Anything that can't be a token isn't looked up at all.
@@ -65,4 +64,22 @@ class AccessTokens:
         last_used = owner.last_used_at
         if last_used is None or self.clock.now() - as_utc(last_used) >= TOKEN_TOUCH_AFTER:
             self.bus.execute(TouchAccessToken(token_id=owner.token_id))
-        return owner.user_id
+        return owner
+
+    def resolve(self, token: str) -> int | None:
+        """The user id `token` acts for, or None if it doesn't work (sign-in unconfigured, malformed, unknown, revoked,
+        expired, or its owner switched off). Notes the token's use, at most once per TOKEN_TOUCH_AFTER."""
+        owner = self._resolve_owner(token)
+        return None if owner is None else owner.user_id
+
+    def resolve_caller(self, token: str) -> TokenCaller | None:
+        """Resolve `token` to a TokenCaller carrying user id and account preferences, or None if invalid."""
+        owner = self._resolve_owner(token)
+        if owner is None:
+            return None
+        return TokenCaller(
+            user_id=owner.user_id,
+            preferred_language=owner.preferred_language,
+            default_currency=owner.default_currency,
+            timezone=owner.timezone,
+        )

@@ -7,23 +7,28 @@ Stored on the server with the account so it follows the person across devices an
 from pydantic import Field
 from sqlmodel import select
 
-from app.core.clock import as_utc
+from app.core.clock import DEFAULT_TIMEZONE, TimeZoneName, as_utc
 from app.core.cqrs import Command, Context
 from app.core.errors import NotFoundError
+from app.core.i18n import DEFAULT_LANGUAGE, Language
+from app.core.money import DEFAULT_USER_CURRENCY, SupportedCurrencyCode
 from app.modules.accounts.persistence.tables import AppUser
 from app.modules.accounts.values import CURRENT_TERMS_VERSION, MAX_TERMS_VERSION_LENGTH, UserId
 
 
 # Sent by POST /account/welcome for the signed-in person.
 class CompleteWelcome(Command[None]):
-    """Marks the person's welcome flow complete and records the accepted terms version."""
+    """Marks the person's welcome flow complete and stores their initial preferences and terms acceptance."""
 
     owner_id: UserId
     terms_version: str = Field(default=CURRENT_TERMS_VERSION, min_length=1, max_length=MAX_TERMS_VERSION_LENGTH)
+    preferred_language: Language = DEFAULT_LANGUAGE
+    default_currency: SupportedCurrencyCode = DEFAULT_USER_CURRENCY
+    timezone: TimeZoneName = DEFAULT_TIMEZONE
 
 
 def complete_welcome(ctx: Context, command: CompleteWelcome) -> None:
-    """Record `welcomed_at` (if not already set) and the latest `terms_version` and `terms_accepted_at`."""
+    """Record preferences, `welcomed_at` (if unset), `terms_version`, and `terms_accepted_at`."""
     user = ctx.session.exec(select(AppUser).where(AppUser.id == command.owner_id)).first()
     if user is None:
         raise NotFoundError(f"user {command.owner_id} not found")
@@ -32,6 +37,9 @@ def complete_welcome(ctx: Context, command: CompleteWelcome) -> None:
         user.welcomed_at = now
     else:
         user.welcomed_at = as_utc(user.welcomed_at)
+    user.preferred_language = command.preferred_language.value
+    user.default_currency = command.default_currency
+    user.timezone = command.timezone
     user.terms_version = command.terms_version
     user.terms_accepted_at = now
     user.updated_at = now

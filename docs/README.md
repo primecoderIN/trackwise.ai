@@ -31,7 +31,7 @@ Technical and product documentation for **trackwise.ai**, organized by topic.
 |---|---|
 | [Security Architecture](security.md) | BFF OIDC auth, CSRF protection, `owner_id` query isolation, PAT hashing, upload/prompt-injection guardrails, A2UI safety, and CSP headers |
 | [API Reference](api_endpoints.md) | REST `/api/v1/*` routes, OIDC auth endpoints, streaming `POST /api/v1/agent`, `/mcp/`, and RFC 9457 error responses |
-| [Database Schema](database_schema.md) | PostgreSQL table layout across Alembic migrations `0001`–`0012`, 64-bit `BigInteger` money storage, indexes, and cross-module ID discipline |
+| [Database Schema](database_schema.md) | PostgreSQL table layout across Alembic migrations `0001`–`0013`, 64-bit `BigInteger` money storage, indexes, and cross-module ID discipline |
 
 ### 4. Setup, Operations & Contributor Guides
 *Run the project locally, configure external providers, or add new backend and frontend slices.*

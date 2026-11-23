@@ -503,6 +503,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/account/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Preferences */
+        patch: operations["update_preferences_api_v1_account_preferences_patch"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -791,6 +808,35 @@ export interface components {
             /** Token */
             token: string;
         };
+        /** CurrentUser */
+        CurrentUser: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string | null;
+            /** Email */
+            email: string | null;
+            /** Avatar Url */
+            avatar_url: string | null;
+            /** @default en */
+            preferred_language?: components["schemas"]["Language"];
+            /**
+             * Default Currency
+             * @default USD
+             */
+            default_currency?: string;
+            /**
+             * Timezone
+             * @default UTC
+             */
+            timezone?: string;
+            /** Welcomed At */
+            welcomed_at?: string | null;
+            /** Terms Version */
+            terms_version?: string | null;
+            /** Terms Accepted At */
+            terms_accepted_at?: string | null;
+        };
         /**
          * DataSource
          * @description Bytes carried inline.
@@ -980,6 +1026,12 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /**
+         * Language
+         * @description A language, by its BCP 47 code: what the web app sends in Accept-Language.
+         * @enum {string}
+         */
+        Language: "en" | "hi";
         /** LoginOptionRead */
         LoginOptionRead: {
             /** Key */
@@ -1336,6 +1388,18 @@ export interface components {
             email: string | null;
             /** Avatar Url */
             avatar_url: string | null;
+            /** @default en */
+            preferred_language?: components["schemas"]["Language"];
+            /**
+             * Default Currency
+             * @default USD
+             */
+            default_currency?: string;
+            /**
+             * Timezone
+             * @default UTC
+             */
+            timezone?: string;
             /** Welcomed At */
             welcomed_at?: string | null;
             /** Terms Version */
@@ -1344,14 +1408,6 @@ export interface components {
             terms_accepted_at?: string | null;
             /** Logout Url */
             logout_url: string;
-        };
-        /** WelcomeAcceptance */
-        WelcomeAcceptance: {
-            /**
-             * Terms Version
-             * @default 2026-11
-             */
-            terms_version?: string;
         };
         /**
          * SystemMessage
@@ -1558,6 +1614,14 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /** UserPreferencesChange */
+        UserPreferencesChange: {
+            preferred_language?: components["schemas"]["Language"] | null;
+            /** Default Currency */
+            default_currency?: string | null;
+            /** Timezone */
+            timezone?: string | null;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -1589,6 +1653,28 @@ export interface components {
             metadata?: unknown | null;
         } & {
             [key: string]: unknown;
+        };
+        /** WelcomeAcceptance */
+        WelcomeAcceptance: {
+            /**
+             * Terms Version
+             * @default 2026-11
+             */
+            terms_version?: string;
+            /** @default en */
+            preferred_language?: components["schemas"]["Language"];
+            /**
+             * Default Currency
+             * @default USD
+             * @example USD
+             */
+            default_currency?: string;
+            /**
+             * Timezone
+             * @default UTC
+             * @example UTC
+             */
+            timezone?: string;
         };
     };
     responses: never;
@@ -2615,6 +2701,39 @@ export interface operations {
             };
         };
     };
+    update_preferences_api_v1_account_preferences_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserPreferencesChange"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrentUser"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
 }
 type FlattenedDeepRequired<T> = {
     [K in keyof T]-?: FlattenedDeepRequired<T[K] extends unknown[] | undefined | null ? Extract<T[K], unknown[]>[number] : T[K]>;
@@ -2633,6 +2752,7 @@ export const developerMessageRoleValues: ReadonlyArray<FlattenedDeepRequired<com
 export const documentPartTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DocumentPart"]["type"]> = ["document"];
 export const fileSourceTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FileSource"]["type"]> = ["file"];
 export const imagePartTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImagePart"]["type"]> = ["image"];
+export const languageValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Language"]> = ["en", "hi"];
 export const messageKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MessageKind"]> = ["user_text", "assistant_text", "tool_call", "tool_result", "reasoning"];
 export const paymentMethodValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PaymentMethod"]> = ["cash", "upi", "card", "netbanking", "wallet", "other"];
 export const reasoningMessageRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ReasoningMessage"]["role"]> = ["reasoning"];
