@@ -4,12 +4,12 @@
 
 ---
 
-## 1. Public SaaS Site & Onboarding (English & Hindi)
+## 1. Public Website & Onboarding (English & Hindi)
 
-Unauthenticated visitors land on a server-rendered, SEO-optimized SaaS site at `/` (English) and `/hi` (Hindi):
+Unauthenticated visitors land on a server-rendered, SEO-optimized public website at `/` (English) and `/hi` (Hindi):
 
-- **Dedicated Public Routes:** `/` (Overview + Interactive Walkthrough Video Player), `/features`, `/security`, `/faq`, `/privacy-policy`, `/terms-of-service`, `/contact`, and their Hindi counterparts under `/hi/...`.
-- **Interactive Product Walkthrough:** Embedded animated showcase walking visitors through multi-currency logging, receipt extraction, live budget alerts, and monthly insights.
+- **Marketing Routes:** `/` (Home + Interactive Walkthrough Player), `/how-it-works`, `/features`, `/faq`, `/contact`, and their Hindi counterparts under `/hi/...`. `/privacy-policy` and `/terms-of-service` remain accessible from onboarding consent and sign-in; `/security` permanently redirects to `/faq`.
+- **Interactive Product Walkthrough:** Embedded animated preview demonstrating chat expense logging, receipt scan confirmation, delete safety prompts, and monthly budget/report exports.
 - **First-Run Workspace Welcome:** After signing in via OpenID Connect, new users complete a one-time onboarding dialog stored on the server (`CompleteWelcome`): selecting preferred language (`en` / `hi`), optionally setting an initial monthly overall budget, accepting the current terms version, and optionally trying a starter assistant prompt. Signed-in visitors returning to `/` see an **Open Dashboard** button right in the header/hero.
 
 ---
@@ -21,7 +21,7 @@ All signed-in routes sit inside a unified frame with light/dark theme switching,
 - **Dashboard (`/dashboard`):** Monthly total spend in normalized INR (`₹`), percentage comparison against the previous month, transaction counts, category breakdown bar/list, payment-method distribution, and daily spending charts. Month switching lets users review historical periods seamlessly.
 - **Expenses Ledger (`/expenses`):** Server-paginated, filterable table (by month, category, merchant search, payment method, and date range) with inline add/edit dialogs supporting multi-currency entry, optimistic concurrency checks on edits/deletes, and instant budget threshold toast notices on save.
 - **Monthly Budgets (`/budgets`):** Set an overall monthly budget and/or per-category monthly caps. Progress bars highlight approaching (`>= 80%`) and exceeded (`> 100%`) limits, and saving/editing an expense from **any** surface (UI, Assistant, or MCP) triggers localized budget alerts when thresholds cross.
-- **Categories (`/categories`):** View all 8 curated categories (`Food`, `Transport`, `Shopping`, `Bills`, `Entertainment`, `Health`, `Education`, `Other`) with monthly spending summaries and icons.
+- **Categories (`/categories`):** View all 8 curated categories (`Food`, `Transport`, `Shopping`, `Bills`, `Entertainment`, `Health`, `Travel`, `Other`) with monthly spending summaries and icons.
 - **Reports (`/reports`):** Structured monthly summary featuring total spend, month-over-month delta, daily average, category and payment breakdowns, largest expenses, and one-click **CSV** (formula-injection sanitized) or **Markdown** downloads.
 - **Settings (`/settings`):** Organized into four tabs:
   - **Profile:** Connected OIDC identity details.

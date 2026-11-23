@@ -1,21 +1,21 @@
 # trackwise.ai Documentation Hub
 
-Welcome to the documentation for **trackwise.ai** — organized by reader role so interviewers, product managers, security reviewers, and contributors can jump straight to what they need.
+Technical and product documentation for **trackwise.ai**, organized by topic.
 
 ---
 
-## By Audience
+## Documentation Map
 
-### 1. Product Managers & Clients
+### 1. Product & Workflows
 *Understand what the platform does, how users interact with it, and where it is headed.*
 
 | Document | Summary |
 |---|---|
-| [Product Overview](overview.md) | Complete tour of the workspace UI, bilingual public SaaS site, AI assistant, receipt scanning, and MCP integrations |
+| [Product Overview](overview.md) | Workspace views, public pages, AI assistant, receipt scanning, and MCP integrations |
 | [How trackwise.ai Works](how_trackwise_works.md) | Visual Mermaid diagrams for authentication, dashboard/ledger UX, AG-UI streaming, delete approvals, A2A delegation, and MCP |
 | [Roadmap](roadmap.md) | Delivered milestones and upcoming capabilities (recurring expenses, imports, team workspaces, billing) |
 
-### 2. Architects & Technical Interviewers
+### 2. System & AI Architecture
 *Inspect system structure, modularity, AI protocol orchestration, and trade-offs.*
 
 | Document | Summary |

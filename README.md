@@ -15,12 +15,12 @@
 
 ---
 
-## Why This Project Stands Out
+## Overview
 
-- **Production-Grade Modular Monolith (`backend/`):** Nine strictly bounded domain modules communicate through public module contracts (`__init__.py`) and a typed CQRS `MessageBus`, with cross-module database joins forbidden and automated rule checks enforced in CI (`backend/scripts/check_rules.py`).
+- **Modular Monolith (`backend/`):** Nine domain modules communicate through public module contracts (`__init__.py`) and a typed CQRS `MessageBus`, with cross-module database joins forbidden and automated rule checks enforced in CI (`backend/scripts/check_rules.py`).
 - **Multi-Protocol AI Architecture:** Combines **AG-UI** event streaming, server-validated **A2UI** interactive cards/charts/forms, an embedded/HTTP **MCP** server for user-scoped AI client access, **Agent Skills** with isolated `python -I` report computation, and three **A2A** specialist agents (`receipt`, `currency`, `insights`) hosted in-process on `main`.
 - **Security by Construction:** Backend-for-Frontend (**BFF**) OIDC authentication with `HttpOnly` / `SameSite=Strict` session cookies and CSRF checks, `owner_id` scoping on every owned query and mutation, streaming request-body size limits, database-backed destructive action approvals, and localized **RFC 9457** errors that never leak internal exceptions or third-party error strings.
-- **Full SaaS Surface + Technical SEO (`web/`):** Server-rendered bilingual marketing, security, FAQ, and DPDP legal pages (`/`, `/features`, `/security`, `/faq`, `/privacy-policy`, `/terms-of-service`, `/contact`, and `/hi/...`) with `hreflang` alternates, JSON-LD structured data, dynamic Open Graph images, custom vector/adaptive favicons, and an interactive product walkthrough player alongside the client-rendered workspace.
+- **Public Website & SEO (`web/`):** Server-rendered global marketing routes (`/`, `/how-it-works`, `/features`, `/faq`, `/contact`, and `/hi/...` mirrors) in plain consumer language, plus `/privacy-policy` and `/terms-of-service` for onboarding consent and sign-in, with `hreflang` alternates, JSON-LD structured data, dynamic Open Graph images, custom vector/adaptive favicons, and an interactive walkthrough player alongside the client-rendered workspace.
 
 ---
 
@@ -28,7 +28,7 @@
 
 | Area | Built Features |
 |---|---|
-| **Public SaaS Site** | Bilingual server-rendered pages (`en` & `/hi`), animated 4-scene Walkthrough player, route-transition progress bar, dynamic OG cards, sitemap/robots/manifest, and JSON-LD (`Organization`, `WebSite`, `SoftwareApplication`, `FAQPage`, `BreadcrumbList`). |
+| **Public Website** | Bilingual server-rendered pages (`en` & `/hi`), 4-scene animated walkthrough player, route-transition progress bar, dynamic OG cards, sitemap/robots/manifest, 308 redirects (`/security` -> `/faq`), and JSON-LD (`Organization`, `WebSite`, `SoftwareApplication`, `HowTo`, `FAQPage`, `BreadcrumbList`). |
 | **Expense & Budget Workspace** | KPI Dashboard (`/dashboard`), paginated/filtered ledger (`/expenses`), shared categories breakdown (`/categories`), overall & per-category monthly limits with live 80%/100% alert notices (`/budgets`), CSV/Markdown monthly exports (`/reports`), `Ctrl/⌘ + K` command palette, and server-stored onboarding welcome & terms acceptance. |
 | **Streaming AI Assistant** | Natural-language expense logging, editable confirmation forms, DB-persisted delete approvals, streaming AG-UI timeline, interactive A2UI spending charts/cards, and conversation history synced with workspace queries. |
 | **Receipt Scanning** | Multipart upload validated by magic bytes -> delegated to the `receipt` A2A agent -> structured extraction presented as an editable card before any row is saved. |
@@ -45,7 +45,7 @@ flowchart LR
     MCPClient["Claude Desktop / Cursor"] -->|stdio or Bearer PAT + Origin| MCP["MCP Server (/mcp)"]
 
     subgraph Public["(public)/ Server-Rendered SSR + SEO"]
-        NextPub["Landing, Features, Security, FAQ, Legal (EN & /hi)"]
+        NextPub["Home, How It Works, Features, FAQ, Contact (EN & /hi)"]
     end
 
     subgraph Workspace["(client)/ Authenticated BFF App"]
@@ -96,21 +96,21 @@ For deeper diagrams and boundary rules, see [How trackwise.ai Works](docs/how_tr
 
 ## Documentation Index
 
-| Audience | Document | What It Covers |
+| Area | Document | What It Covers |
 |---|---|---|
-| **PMs & Clients** | [Product Overview](docs/overview.md) | All workspace views, public pages, AI capabilities, and deliberate scope limits |
-| **PMs & Clients** | [How trackwise.ai Works](docs/how_trackwise_works.md) | Visual flowcharts for web UX, chat/approvals, receipts, A2A agents, and MCP |
-| **PMs & Clients** | [Roadmap](docs/roadmap.md) | Completed phases and planned extensions (recurring expenses, multi-currency, billing) |
-| **Architects & Interviewers** | [Architecture](docs/architecture.md) | Modular monolith layers, CQRS bus, vertical slices, feature slices, and 13 scans |
-| **Architects & Interviewers** | [Assistant Architecture](docs/assistant_architecture.md) | AG-UI loop, A2UI surfaces, approvals, A2A delegation, and Agent Skills |
-| **Architects & Interviewers** | [Architecture Decisions (ADRs)](docs/decisions.md) | Key technical choices and trade-offs (`D1–D220`) |
-| **Security Reviewers** | [Security Architecture](docs/security.md) | BFF sessions, OIDC, BOLA/IDOR isolation, A2A/MCP hardening, A2UI safety, and CSP |
-| **Integrators** | [API Reference](docs/api_endpoints.md) | REST `/api/v1`, `/mcp`, OIDC routes, streaming chat, and RFC 9457 problems |
-| **Integrators** | [Database Schema](docs/database_schema.md) | 9 tables (`0001`–`0012`), `BigInteger` money storage, and module ownership |
-| **Developers** | [Getting Started](docs/getting_started.md) | Environment setup, Neon PostgreSQL, migrations, seed data, and MCP clients |
-| **Developers** | [Configuration](docs/configuration.md) | `.env` reference, timeouts, quotas, upload limits, and rate limits |
-| **Developers** | [Identity Provider Setup](docs/identity_provider.md) | OIDC configuration (ZITADEL / Keycloak / Authentik) and switching providers |
-| **Contributors** | [Backend Onboarding](docs/backend_onboarding.md) · [Frontend Onboarding](docs/frontend_onboarding.md) | Vertical slice and React feature-slice implementation recipes + [AGENTS.md](AGENTS.md) |
+| **Product** | [Product Overview](docs/overview.md) | Workspace views, public pages, AI capabilities, and current scope |
+| **Product** | [How trackwise.ai Works](docs/how_trackwise_works.md) | Visual flowcharts for web UX, chat/approvals, receipts, A2A agents, and MCP |
+| **Product** | [Roadmap](docs/roadmap.md) | Completed phases and planned extensions (recurring expenses, multi-currency, billing) |
+| **Architecture** | [Architecture](docs/architecture.md) | Modular monolith layers, CQRS bus, vertical slices, feature slices, and 13 scans |
+| **Architecture** | [Assistant Architecture](docs/assistant_architecture.md) | AG-UI loop, A2UI surfaces, approvals, A2A delegation, and Agent Skills |
+| **Architecture** | [Architecture Decisions (ADRs)](docs/decisions.md) | Key technical choices and trade-offs (`D1–D220`) |
+| **Security** | [Security Architecture](docs/security.md) | BFF sessions, OIDC, BOLA/IDOR isolation, A2A/MCP hardening, A2UI safety, and CSP |
+| **API & Data** | [API Reference](docs/api_endpoints.md) | REST `/api/v1`, `/mcp`, OIDC routes, streaming chat, and RFC 9457 problems |
+| **API & Data** | [Database Schema](docs/database_schema.md) | 9 tables (`0001`–`0012`), `BigInteger` money storage, and module ownership |
+| **Setup** | [Getting Started](docs/getting_started.md) | Environment setup, Neon PostgreSQL, migrations, seed data, and MCP clients |
+| **Setup** | [Configuration](docs/configuration.md) | `.env` reference, timeouts, quotas, upload limits, and rate limits |
+| **Setup** | [Identity Provider Setup](docs/identity_provider.md) | OIDC configuration (ZITADEL / Keycloak / Authentik) and switching providers |
+| **Contributing** | [Backend Onboarding](docs/backend_onboarding.md) · [Frontend Onboarding](docs/frontend_onboarding.md) | Vertical slice and React feature-slice implementation recipes + [AGENTS.md](AGENTS.md) |
 
 ---
 
@@ -156,7 +156,7 @@ Install dev dependencies (`pip install -r requirements-dev.txt`), then run all 9
 
 | Surface | URL | Purpose |
 |---|---|---|
-| **Web App & Public Site** | `http://localhost:5173` | Bilingual SaaS pages (`/`), Dashboard (`/dashboard`), and Workspace |
+| **Web App & Public Site** | `http://localhost:5173` | Public website (`/`), Dashboard (`/dashboard`), and Workspace |
 | **FastAPI API & Swagger** | `http://127.0.0.1:8000/docs` | OpenAPI docs and `/api/v1/*` endpoints |
 | **Health Probe** | `http://127.0.0.1:8000/health` | Database, schema revision, and hosted agents readiness check |
 | **Streamable HTTP MCP** | `http://127.0.0.1:8000/mcp/` | External AI client endpoint using a Personal Access Token |

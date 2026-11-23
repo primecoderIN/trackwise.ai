@@ -310,6 +310,7 @@ logic that can be a pure function is one.
   schema text.
 - **TypeScript:** `/** */` on exports (VS Code shows it on hover), `//` for logic, no comments inside JSX.
 - **Style:** plain English, professional tone, lines no longer than 120 characters.
+- **READMEs & `docs/`:** write concise, neutral technical and product prose; avoid showcase pitches, hype headings, or audience persona labels ("interviewers", "PMs", "recruiters").
 - **Keep comments true:** when you change code, fix the comments around it.
 
 ## 7. Definition of done

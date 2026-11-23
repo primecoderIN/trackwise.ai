@@ -3,7 +3,7 @@
 The **Next.js 16.4.6** (App Router) frontend for **trackwise.ai**, written in React 19, TypeScript, Tailwind CSS 4, shadcn/ui, TanStack Query, and i18next.
 
 It serves two distinct rendering surfaces on one origin:
-- **`app/(public)/`**: Server-rendered bilingual (`en` and `/hi`) SaaS landing, features, security, FAQ, legal, and contact pages with technical SEO (`metadata`, `hreflang`, JSON-LD, `opengraph-image.tsx`, `manifest.ts`, `robots.ts`, `sitemap.ts`).
+- **`app/(public)/`**: Server-rendered bilingual (`en` and `/hi`) pages (`/`, `/how-it-works`, `/features`, `/faq`, `/contact`, plus `/privacy-policy` and `/terms-of-service` for consent and sign-in) with technical SEO (`metadata`, `hreflang`, JSON-LD, `opengraph-image.tsx`, `manifest.ts`, `robots.ts`, `sitemap.ts`).
 - **`app/(client)/`**: Client-rendered Backend-for-Frontend (**BFF**) workspace (`ClientRoot`) protected by session checks (`AuthGate`), `X-CSRF` headers, and relative `/api/v1/*` rewrites configured in `next.config.ts`.
 
 ---
