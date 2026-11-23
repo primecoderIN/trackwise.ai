@@ -5,12 +5,15 @@ A use case (application layer) of the receipts module, built by module.py and ca
 StoreReceipt. If recording fails, the file is deleted again, so no file is ever kept without its row.
 """
 
+import logging
 from dataclasses import dataclass
 
 from app.core.cqrs import MessageBus
 from app.core.files import FileStore
 from app.modules.receipts.commands.store_receipt import StoreReceipt
 from app.modules.receipts.domain.file_types import check_receipt_file
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -31,6 +34,9 @@ class ReceiptUploader:
             receipt = StoreReceipt(owner_id=owner_id, storage_key=key, media_type=media_type, size_bytes=len(data))
             return self.bus.execute(receipt)
         except BaseException:
-            # Without its row the file could never be found again: don't keep it.
-            self.files.delete(key)
+            # Without its row the file could never be found again: don't keep it, without masking the original error.
+            try:
+                self.files.delete(key)
+            except Exception as cleanup_exc:
+                logger.warning("failed to delete orphaned receipt file %s: %r", key, cleanup_exc)
             raise

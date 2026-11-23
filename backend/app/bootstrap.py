@@ -8,6 +8,7 @@ database engine, a file store, an identity provider, a sealer or the remote agen
 (the bus, the MCP server, the session check, the routes, main.create_app(services)) uses those instead of the real ones.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from fastapi import APIRouter
@@ -27,11 +28,13 @@ from app.core.sealing import Sealer
 from app.core.skills import SkillLibrary
 from app.infrastructure import db
 from app.infrastructure.config import API_PREFIX, Settings, get_settings
-from app.infrastructure.files import LocalFileStore
+from app.infrastructure.files import UnconfiguredFileStore
 from app.infrastructure.identity import ClientCredentials, OidcIdentityProvider, UnconfiguredIdentityProvider
 from app.infrastructure.llm.gemini import GeminiModel
 from app.infrastructure.sealing import FernetSealer
 from app.infrastructure.skills import FolderSkillLibrary
+from app.infrastructure.storage.b2 import B2FileStore
+from app.infrastructure.storage.b2_wire import B2Config
 from app.modules import accounts, budgets, expenses, reports
 from app.modules.accounts import module as accounts_module
 from app.modules.assistant import module as assistant_module
@@ -118,7 +121,7 @@ class Services:
 
     def close(self) -> None:
         """Close any background loops, HTTP clients and database pools owned by these services."""
-        for resource in (self.agents, self.tools, self.llm):
+        for resource in (self.agents, self.tools, self.llm, self.files):
             closer = getattr(resource, "close", None)
             if callable(closer):
                 closer()
@@ -154,8 +157,9 @@ def build(
     - llm: Gemini, with GEMINI_API_KEY and GEMINI_MODEL (checked on the first model call, not here);
     - tools: this app's own MCP server, called in-process (acting, on each run, for the person signed in);
     - engine: the database in DATABASE_URL (infrastructure/db.default_engine());
-    - files: a folder on disk, UPLOADS_DIR (created on the first upload). A check that uses a copy of the database
-      should pass its own too, so uploads don't land among the real ones;
+    - files: the configured FileStore adapter (selected via STORAGE_PROVIDER), or UnconfiguredFileStore when
+      required storage settings are missing (fail-closed). A check that uses a copy of the database should pass
+      its own too, so uploads don't land in real storage;
     - identity: the OpenID Connect provider in OIDC_ISSUER (nothing is fetched from it until someone signs in), or,
       if a sign-in setting is missing, one that refuses every sign-in (D185);
     - sealer: Fernet, with SESSION_ENCRYPTION_KEYS;
@@ -181,7 +185,7 @@ def build(
     if tools is None:
         # The assistant's tools: this app's own MCP server, in-process. Each run binds them to the signed-in person.
         tools = assistant_module.McpExpenseTools(mcp_server)
-    files = LocalFileStore(settings.uploads_dir) if files is None else files
+    files = _file_store(settings) if files is None else files
     identity = _identity_provider(settings, clock) if identity is None else identity
     if sealer is None:
         sealer = FernetSealer([key.get_secret_value() for key in settings.session_encryption_keys])
@@ -232,6 +236,34 @@ def _sign_in_config(settings: Settings) -> accounts_module.SignInConfig:
         signed_out_url=settings.public_url + accounts.SIGN_IN_PAGE,
         required_role=settings.oidc_required_role,
     )
+
+
+def _b2_file_store(settings: Settings) -> FileStore:
+    """Build B2FileStore from validated Backblaze B2 settings, or UnconfiguredFileStore if unset."""
+    missing = settings.missing_for_b2()
+    if missing or settings.b2_key_id is None or settings.b2_application_key is None or settings.b2_bucket_name is None:
+        return UnconfiguredFileStore(missing)
+    return B2FileStore(
+        B2Config(
+            key_id=settings.b2_key_id,
+            application_key=settings.b2_application_key.get_secret_value(),
+            bucket_name=settings.b2_bucket_name,
+            bucket_id=settings.b2_bucket_id,
+            prefix=settings.b2_prefix,
+        )
+    )
+
+
+# Registry of file-storage adapters by STORAGE_PROVIDER; adding another backend adds one entry here.
+_FILE_STORES: dict[str, Callable[[Settings], FileStore]] = {"b2": _b2_file_store}
+
+
+def _file_store(settings: Settings) -> FileStore:
+    """The one place that picks the receipt FileStore adapter for `settings.storage_provider`."""
+    builder = _FILE_STORES.get(settings.storage_provider)
+    if builder is None:
+        raise ValueError(f"Unsupported STORAGE_PROVIDER: {settings.storage_provider!r}")
+    return builder(settings)
 
 
 def _identity_provider(settings: Settings, clock: Clock) -> IdentityProvider:

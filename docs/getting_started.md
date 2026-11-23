@@ -40,7 +40,8 @@ The app applies migrations to that database and does not create or use a local S
 
 The `OIDC_*` settings and the key are for signing in (Phase 22): set up the provider first with
 [identity_provider.md](identity_provider.md). Without them the app starts, but nobody can sign in and every API
-route answers 401.
+route answers 401. For receipt uploads, also set `B2_KEY_ID`, `B2_APPLICATION_KEY`, and `B2_BUCKET_NAME` for a private
+Backblaze B2 bucket ([configuration.md](configuration.md)); without them, receipt uploads and reads refuse fail-closed.
 
 `.env` is git-ignored: your secrets never get committed. Most other settings have a working default; see
 [configuration.md](configuration.md).

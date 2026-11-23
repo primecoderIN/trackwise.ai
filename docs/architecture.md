@@ -76,7 +76,8 @@ backend/
                          checks), session_factory(), default_engine() (requires DATABASE_URL, built on first use)
       migrations.py      run / check the Alembic migrations from code
       logging.py         console logging for our own loggers ("app.*")
-      files.py           LocalFileStore: the FileStore port as a folder (UPLOADS_DIR), files named by random keys
+      files.py           UnconfiguredFileStore (fail-closed when storage isn't configured), KEY_PATTERN, normalize_storage_prefix
+      storage/           cloud object-storage adapters implementing FileStore: b2.py (B2FileStore over httpx), b2_wire.py
       identity/          the sign-in adapters: oidc.py (OidcIdentityProvider: standard OpenID Connect only),
                          documents.py (discovery and signing keys, cached), exchange.py (token and UserInfo
                          endpoints), tokens.py (checking ID and logout tokens), options.py (OIDC_LOGIN_OPTIONS),
@@ -198,7 +199,8 @@ backend/
     sign-in provider (`core/identity.py`: `IdentityProvider`), sealed secrets (`core/sealing.py`: `Sealer`) and the
     expense tools (`assistant/tools/port.py`: `ExpenseTools`) and the receipt reader
     (`assistant/receipt_agent/port.py`: `ReceiptReader`) are protocols with one adapter each (`GeminiModel` in
-    `infrastructure/llm/`; `LocalFileStore` in `infrastructure/files.py`; `OidcIdentityProvider`, standard OpenID
+    `infrastructure/llm/`; `B2FileStore` in `infrastructure/storage/b2.py` (or `UnconfiguredFileStore` in
+    `infrastructure/files.py` when storage settings are unset); `OidcIdentityProvider`, standard OpenID
     Connect, in `infrastructure/identity/`, D185; `FernetSealer` in `infrastructure/sealing.py`; `McpExpenseTools` in
     `assistant/tools/mcp_adapter.py`, in-process by default). **Remote agents** sit behind `core/agents.py`
     (`RemoteAgents`), whose one adapter, `A2AAgents` in `infrastructure/a2a/`, is the only code that uses the A2A SDK
@@ -657,6 +659,7 @@ source's imports (Python's `ast`) and checks:
 11. The agents import on their own.
 12. Only `infrastructure/a2a` imports the A2A SDK (D201).
 13. Module dependencies follow the allowed graph (AGENTS.md, "Boundaries"): no cycles.
+14. Only `bootstrap.py` and `infrastructure/storage/` reference a file-storage vendor adapter (D221).
 
 The web app's import rules are checked by `npx oxlint`, its types by `tsc`, its style by Prettier. Python's style and
 types: Ruff and Pyright (`pyproject.toml`).

@@ -20,9 +20,9 @@ Technical and product documentation for **trackwise.ai**, organized by topic.
 
 | Document | Summary |
 |---|---|
-| [System Architecture](architecture.md) | Modular Monolith domain boundaries, CQRS-lite `MessageBus`, Ports & Adapters, Next.js feature slices, and 13 automated static checks |
+| [System Architecture](architecture.md) | Modular Monolith domain boundaries, CQRS-lite `MessageBus`, Ports & Adapters, Next.js feature slices, and 14 automated static checks |
 | [Assistant & Multi-Agent Architecture](assistant_architecture.md) | AG-UI SSE streaming, server-validated A2UI cards/forms, DB-backed approvals, hosted A2A agents (`receipt`, `currency`, `insights`), and sandboxed Agent Skills |
-| [Architecture Decisions (ADRs)](decisions.md) | Curated log of key architectural choices and rationale (`D1–D220`) |
+| [Architecture Decisions (ADRs)](decisions.md) | Curated log of key architectural choices and rationale (`D1–D221`) |
 
 ### 3. Security, APIs & Data Model
 *Review multi-tenant isolation, authentication, trust boundaries, HTTP contracts, and database design.*

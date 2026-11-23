@@ -24,7 +24,10 @@ All backend settings are one Pydantic `Settings` class in `backend/app/infrastru
 | `DATABASE_URL` | required | Neon PostgreSQL connection URL. The running app does not fall back to a local SQLite file |
 | `MODEL_REQUESTS_PER_MINUTE`, `MODEL_REQUESTS_PER_DAY` | `10`, `300` | How many requests to the routes that call the model (`/agent`, `/chat`, `/parse`; a receipt is read through `/agent`) each person may make per minute and per day (UTC); one more is a 429 (D194). Counted in memory, per server process |
 | `SKILLS_DIR` | `<project>/skills` | The Agent Skills folder (D208): one folder per skill with its `SKILL.md`, read once, at the first turn (restart to pick up an edited skill). A skill's `scripts/*.py` are run by the server with the backend's own Python (D209) |
-| `UPLOADS_DIR` | `<project>/backend/uploads` | The folder uploaded receipts are kept in, by random names (created on the first upload; git-ignored). It goes with the database: a copy of one needs a copy of the other |
+| `STORAGE_PROVIDER` | `b2` | Which `FileStore` adapter `bootstrap.py` builds for uploaded receipts (currently `b2`, Backblaze B2; D221) |
+| `B2_KEY_ID`, `B2_APPLICATION_KEY`, `B2_BUCKET_NAME` | not set | Backblaze B2 storage for uploaded receipts when `STORAGE_PROVIDER=b2` (required for receipt uploads and reads, D221). Until all three are set, receipt operations fail closed (no local fallback). Keep the bucket **private** and scope the application key to `readFiles`, `writeFiles`, `listFiles`, `deleteFiles` (and `listBuckets`, unless `B2_BUCKET_ID` is set or the key is restricted to that single bucket) |
+| `B2_BUCKET_ID` | not set | Optional Backblaze B2 bucket id; avoids a `b2_list_buckets` lookup when using a multi-bucket key |
+| `B2_PREFIX` | `receipts/` | Optional object-name prefix inside the Backblaze B2 bucket (normalized with trailing `/`, or empty for bucket root); stored `receipt_file.storage_key` values remain 32-hex UUIDs |
 
 ### Sign-in
 

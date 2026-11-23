@@ -1,8 +1,8 @@
 """Where uploaded files' bytes are kept, independent of the storage behind it: the FileStore port (core layer).
 
 The receipts module saves an uploaded receipt here and reads it back to send it to the model; its table keeps
-only the key. The composition root (bootstrap.py) picks the adapter: today infrastructure/files.LocalFileStore, a
-folder on disk (UPLOADS_DIR). A check passes its own, e.g. one that keeps files in memory.
+only the key. The composition root (bootstrap.py) picks the configured storage adapter, or a fail-closed
+unconfigured adapter when storage settings are missing. A check passes its own, e.g. one that keeps files in memory.
 """
 
 from typing import Protocol

@@ -1,6 +1,6 @@
 # Architecture Decision Records (ADRs)
 
-Key engineering decisions for **trackwise.ai**, organized by architectural concern. Early baseline decisions (`D1–D138`) are summarized first, followed by detailed records (`D139–D220`) governing the modular monolith, CQRS bus, AI protocols, security posture, and Next.js web application.
+Key engineering decisions for **trackwise.ai**, organized by architectural concern. Early baseline decisions (`D1–D138`) are summarized first, followed by detailed records (`D139–D221`) governing the modular monolith, CQRS bus, AI protocols, security posture, and Next.js web application.
 
 > Append new decisions with the next `D<n>` ID. When a newer choice refines or replaces an earlier one, annotate the earlier entry with **Updated by** or **Superseded by** rather than deleting history.
 
@@ -73,7 +73,7 @@ Early phases established the core stack, storage primitives, and initial UI/AI w
 - **Choice:** FastAPI dependencies validate request shapes and thread state before opening the SSE response stream (422 problem responses on invalid inputs). Post-tool assistant text preserves explicit paragraph breaks.
 
 ### D181, D182 & D183. Separated `receipts` module & non-tool multimodal extraction
-- **Choice:** Uploaded receipt bytes live behind `FileStore` (`core/files.py`), referenced by opaque `ReceiptId` rows (`receipt_file`, migration `0005`). Extraction calls `ask_for_json(attachments=...)` **with zero tools**, marking file content as untrusted data and presenting extracted values in an editable card before persistence.
+- **Choice:** Uploaded receipt bytes live behind `FileStore` (`core/files.py`), referenced by opaque `ReceiptId` rows (`receipt_file`, migration `0005`). Extraction calls `ask_for_json(attachments=...)` **with zero tools**, marking file content as untrusted data and presenting extracted values in an editable card before persistence (**Updated by D221**: `B2FileStore` replaced `LocalFileStore`).
 
 ### D195–D202 & D207. Standalone A2A agents (`agents/`) hosted in-process on `main`
 - **Choice:** Specialist capabilities (`receipt`, `currency`, `insights`) follow the official A2A protocol (`a2a-sdk`, Agent Cards at `/.well-known/agent-card.json`) over `core/agents.RemoteAgents` (`infrastructure/a2a/`). Shared `agents/agent_kit` provides bearer auth (`AgentGate`), `ForgetfulTaskStore` (strips file bytes, retains max 20 tasks in memory), and request limits.
@@ -127,7 +127,7 @@ Early phases established the core stack, storage primitives, and initial UI/AI w
 - **Choice:** Minor-unit integer paise (`BigInteger`) format identically on server (Babel CLDR) and browser (`Intl`). Both backend catalogs (`define_catalog` checked at startup for placeholder/key parity) and frontend `Translation<typeof en>` lazy chunks guarantee zero untranslated strings reach users.
 
 ### D171, D173 & D213. Living docstrings, pure seams & automated CI quality gates
-- **Choice:** Every module and public symbol carries role/contract docstrings, and `.github/workflows/ci.yml` + `backend/scripts/check.py` run 9 checks (`compileall`, `ruff` check/format, `pyright`, 13 architecture/security rules in `check_rules.py`, `tsc -b`, `oxlint`, `prettier`, and `next build`) across Python 3.11+ (tested on 3.14 & 3.15, **D214**).
+- **Choice:** Every module and public symbol carries role/contract docstrings, and `.github/workflows/ci.yml` + `backend/scripts/check.py` run 9 checks (`compileall`, `ruff` check/format, `pyright`, 14 architecture/security rules in `check_rules.py`, `tsc -b`, `oxlint`, `prettier`, and `next build`) across Python 3.11+ (tested on 3.14 & 3.15, **D214**).
 
 ### D188. Migration to Next.js 16 App Router
 - **Choice:** Replaced SPA Vite/React Router with Next.js App Router while retaining `features/*`, TanStack Query, i18next, and same-origin BFF proxying—enabling true server-rendered HTML and metadata routes for public pages alongside client workspace chunks.
@@ -137,3 +137,7 @@ Early phases established the core stack, storage primitives, and initial UI/AI w
 
 ### D219 & D220. Grouped frame, command palette, reports/categories pages & bilingual SaaS site
 - **Choice:** Added `/categories`, `/reports`, tabbed `/settings`, grouped sidebar navigation, `Ctrl/⌘ + K` Radix command palette, Next.js error boundaries (`D219`), moved the workspace dashboard to `/dashboard`, launched the server-rendered bilingual SaaS public site (`/`, `/features`, `/security`, `/faq`, `/privacy-policy`, `/terms-of-service`, `/contact` + `/hi/...`) with interactive animated Walkthrough preview, vector/adaptive favicons, SEO schema/sitemap/manifest, and implemented server-backed first-run onboarding (`CompleteWelcome`, migration `0012`) (`D220`).
+
+### D221. Pluggable cloud object storage behind `FileStore` (Backblaze B2 adapter; no local disk fallback)
+- **Choice:** Replaced `LocalFileStore` (`UPLOADS_DIR`) with `B2FileStore` (`infrastructure/storage/b2.py`, `b2_wire.py`) behind the provider-agnostic `FileStore` port, selected via `STORAGE_PROVIDER` in `bootstrap._FILE_STORES` (with `check_rules.py` rule 14 confining vendor references to `bootstrap.py` and `infrastructure/storage/`). When storage settings are unset (e.g. during contract export), `bootstrap._file_store()` injects fail-closed `UnconfiguredFileStore` (never writing to local disk); partial `B2_*` configuration fails validation at startup.
+- **Why:** Stores all uploaded receipts in a private, card-free 10 GB cloud bucket without adding SDK dependencies (`boto3`/`b2sdk`), leaking vendor details into domain modules/`web/`, or changing `receipt_file.storage_key` (keys remain 32-hex UUIDs, grouped in the bucket via `B2_PREFIX`). Swapping providers later only requires adding a new `infrastructure/storage/<provider>.py` adapter and registering it in `bootstrap._FILE_STORES`.

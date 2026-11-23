@@ -72,7 +72,7 @@ flowchart LR
         Skills["Sandboxed Skills: categorization · monthly-report"]
     end
 
-    Infra["Infrastructure: Gemini · OpenID Connect · Neon PostgreSQL · FileStore"]
+    Infra["Infrastructure: Gemini · OpenID Connect · Neon PostgreSQL · FileStore (Backblaze B2)"]
 
     Modules --> Agents
     Modules --> Skills
@@ -86,7 +86,7 @@ For deeper diagrams and boundary rules, see [How trackwise.ai Works](docs/how_tr
 
 ## Engineering Highlights
 
-1. **Enforced Boundaries (`backend/scripts/check_rules.py`):** 13 static rules verify layered imports (`core/` -> nowhere, `infrastructure/` & `web/` -> `core/` only), one-way module dependencies, zero cross-module table queries, injected clocks instead of `date.today()`, and mandatory `owner_id` filtering (zero unscoped `session.get()` calls on owned tables).
+1. **Enforced Boundaries (`backend/scripts/check_rules.py`):** 14 static rules verify layered imports (`core/` -> nowhere, `infrastructure/` & `web/` -> `core/` only), one-way module dependencies, zero cross-module table queries, injected clocks instead of `date.today()`, mandatory `owner_id` filtering (zero unscoped `session.get()` calls on owned tables), and strict isolation of LLM and file-storage vendor adapters.
 2. **Generated Full-Stack Contracts:** [`backend/scripts/export_contracts.py`](backend/scripts/export_contracts.py) exports FastAPI's OpenAPI specification (`web/openapi.json`) and shared enums/limits/A2UI/AG-UI constants (`contracts.gen.ts`), and `npm run gen:api` generates `schema.gen.ts` for compile-time typed `openapi-fetch` queries.
 3. **Untrusted Data & AI Guardrails:** Receipts and LLM extractions are treated as untrusted data (no tools allowed during image extraction, Pydantic `model_validate`, allow-listed categories/payment methods), A2UI trees enforce strict depth (`<= 12`), component count (`<= 300`), and safe client actions, and CSV exports sanitize formula triggers (`=`, `+`, `-`, `@`).
 4. **Full Localization (`en` / `hi`):** Both the React UI (`i18next` lazy namespaces typed against `en.ts`) and server-generated cards, tool chips, and RFC 9457 error details (`Accept-Language` + Babel CLDR money/date formatting) stay aligned.
@@ -101,9 +101,9 @@ For deeper diagrams and boundary rules, see [How trackwise.ai Works](docs/how_tr
 | **Product** | [Product Overview](docs/overview.md) | Workspace views, public pages, AI capabilities, and current scope |
 | **Product** | [How trackwise.ai Works](docs/how_trackwise_works.md) | Visual flowcharts for web UX, chat/approvals, receipts, A2A agents, and MCP |
 | **Product** | [Roadmap](docs/roadmap.md) | Completed phases and planned extensions (recurring expenses, multi-currency, billing) |
-| **Architecture** | [Architecture](docs/architecture.md) | Modular monolith layers, CQRS bus, vertical slices, feature slices, and 13 scans |
+| **Architecture** | [Architecture](docs/architecture.md) | Modular monolith layers, CQRS bus, vertical slices, feature slices, and 14 scans |
 | **Architecture** | [Assistant Architecture](docs/assistant_architecture.md) | AG-UI loop, A2UI surfaces, approvals, A2A delegation, and Agent Skills |
-| **Architecture** | [Architecture Decisions (ADRs)](docs/decisions.md) | Key technical choices and trade-offs (`D1–D220`) |
+| **Architecture** | [Architecture Decisions (ADRs)](docs/decisions.md) | Key technical choices and trade-offs (`D1–D221`) |
 | **Security** | [Security Architecture](docs/security.md) | BFF sessions, OIDC, BOLA/IDOR isolation, A2A/MCP hardening, A2UI safety, and CSP |
 | **API & Data** | [API Reference](docs/api_endpoints.md) | REST `/api/v1`, `/mcp`, OIDC routes, streaming chat, and RFC 9457 problems |
 | **API & Data** | [Database Schema](docs/database_schema.md) | 9 tables (`0001`–`0012`), `BigInteger` money storage, and module ownership |
@@ -122,7 +122,7 @@ For deeper diagrams and boundary rules, see [How trackwise.ai Works](docs/how_tr
 
 ```powershell
 Copy-Item .env.example .env
-# Populate DATABASE_URL, GEMINI_API_KEY, SESSION_ENCRYPTION_KEYS, and OIDC_* values in .env
+# Populate DATABASE_URL, GEMINI_API_KEY, SESSION_ENCRYPTION_KEYS, OIDC_*, and B2_* values in .env
 
 python -m venv .venv
 .\.venv\Scripts\pip.exe install -r requirements.txt
@@ -179,7 +179,7 @@ trackwise.ai/
 │   ├── scripts/                      # check.py (9 CI gates), check_rules.py, export_contracts.py
 │   └── app/
 │       ├── core/                     # CQRS bus, errors, money/month/clock primitives, ports
-│       ├── infrastructure/           # Gemini LLM, A2A client, OIDC, Fernet, Neon DB, FileStore
+│       ├── infrastructure/           # Gemini LLM, A2A client, OIDC, Fernet, Neon DB, FileStore (storage/b2)
 │       ├── web/                      # Auth deps, CSRF, BodySizeLimit, rate limits, security headers
 │       ├── modules/                  # accounts, assistant, budgets, categories, conversations,
 │       │                             # expenses, mcp, receipts, reports

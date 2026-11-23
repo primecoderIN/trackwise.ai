@@ -1,23 +1,25 @@
 """Settings and fixed values the whole backend reads (infrastructure).
 
-Values that differ between machines (the Gemini key and model, the database URL, the uploads folder, the sign-in
-provider and its keys) come from the environment or .env, into one Settings object that get_settings() reads on first
-use and keeps: importing this file reads nothing. Values that are part of the design (the API prefix and version, the
-MCP path) are constants instead: they change in code, together with the contract, never per machine. Read by db.py
-(the default engine), the composition root (which hands the Gemini key and model to the Gemini adapter, the uploads
-folder to the file store, and the OIDC_* settings, PUBLIC_URL and the session keys to sign-in), main.py (the
-constants), the migrations and the export script. docs/configuration.md lists every setting.
+Values that differ between machines (the Gemini key and model, the database URL, Backblaze B2 settings, the
+sign-in provider and its keys) come from the environment or .env, into one Settings object that get_settings() reads
+on first use and keeps: importing this file reads nothing. Values that are part of the design (the API prefix and
+version, the MCP path) are constants instead: they change in code, together with the contract, never per machine. Read
+by db.py (the default engine), the composition root (which hands the Gemini key and model to the Gemini adapter, the
+object-storage credentials to the FileStore adapter, and the OIDC_* settings, PUBLIC_URL and the session keys to
+sign-in), main.py (the constants), the migrations and the export script. docs/configuration.md lists every setting.
 """
 
 from functools import cache
 from pathlib import Path
+from typing import Self
 from urllib.parse import urlsplit
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import make_url
 from sqlalchemy.exc import ArgumentError
 
+from app.infrastructure.files import normalize_storage_prefix
 from app.infrastructure.identity.options import OidcLoginOption
 
 # This file is backend/app/infrastructure/config.py, so parents[2] is backend/ and its parent is the project folder.
@@ -36,6 +38,9 @@ MCP_PATH = "/mcp"
 POSTGRESQL_BACKEND = "postgresql"
 # The PostgreSQL driver pinned for the app's Neon connections.
 POSTGRESQL_DRIVER = "psycopg"
+# Supported file-storage backends; adding another provider means registering a builder in bootstrap._FILE_STORES.
+STORAGE_PROVIDERS = ("b2",)
+DEFAULT_STORAGE_PROVIDER = "b2"
 
 
 # Every setting that can differ between machines. pydantic-settings fills each field from the environment
@@ -59,9 +64,14 @@ class Settings(BaseSettings):
     model_requests_per_day: int = Field(default=300, ge=1)
     # The Neon/PostgreSQL connection string is required at runtime and must never appear in logs.
     database_url: SecretStr | None = None
-    # The folder uploaded files (receipts) are kept in, by random names. Git-ignored: it's your data, like the
-    # database.
-    uploads_dir: Path = BACKEND_DIR / "uploads"
+    # Object storage provider for uploaded receipts (required at runtime to upload/read receipts; D221).
+    # Defaults to "b2" (Backblaze B2); set B2_KEY_ID, B2_APPLICATION_KEY and B2_BUCKET_NAME together.
+    storage_provider: str = DEFAULT_STORAGE_PROVIDER
+    b2_key_id: str | None = None
+    b2_application_key: SecretStr | None = None
+    b2_bucket_name: str | None = None
+    b2_bucket_id: str | None = None
+    b2_prefix: str = "receipts/"
     # The Agent Skills the assistant may read (D208): one folder per skill, each with its SKILL.md. Part of the
     # repository; read once, at the first turn.
     skills_dir: Path = PROJECT_DIR / "skills"
@@ -122,6 +132,62 @@ class Settings(BaseSettings):
         if "openid" not in value.split():
             raise ValueError("OIDC_SCOPES must include 'openid'")
         return value
+
+    @field_validator("storage_provider")
+    @classmethod
+    def _valid_storage_provider(cls, value: str) -> str:
+        """Require a supported STORAGE_PROVIDER name (case-insensitive, trimmed)."""
+        cleaned = value.strip().lower()
+        if cleaned not in STORAGE_PROVIDERS:
+            raise ValueError(f"STORAGE_PROVIDER must be one of {', '.join(STORAGE_PROVIDERS)}")
+        return cleaned
+
+    @field_validator("b2_key_id", "b2_bucket_name", "b2_bucket_id")
+    @classmethod
+    def _valid_b2_name(cls, value: str | None) -> str | None:
+        """Trim storage identifiers/bucket names and reject blank strings or path separators."""
+        if value is None:
+            return None
+        cleaned = value.strip()
+        if not cleaned or "/" in cleaned or "\\" in cleaned or any(ch.isspace() for ch in cleaned):
+            raise ValueError("Storage identifiers and bucket names must be non-empty without slashes or spaces")
+        return cleaned
+
+    @field_validator("b2_prefix")
+    @classmethod
+    def _valid_b2_prefix(cls, value: str) -> str:
+        """Normalize B2_PREFIX to '' or '<prefix>/' and reject '..' or backslashes."""
+        return normalize_storage_prefix(value, setting_name="B2_PREFIX")
+
+    @model_validator(mode="after")
+    def _complete_b2_group(self) -> Self:
+        """Require B2_KEY_ID, B2_APPLICATION_KEY and B2_BUCKET_NAME together when any B2_* value is set."""
+        any_set = any(
+            value is not None
+            for value in (self.b2_key_id, self.b2_application_key, self.b2_bucket_name, self.b2_bucket_id)
+        )
+        if not any_set:
+            return self
+        missing = self.missing_for_b2()
+        if missing:
+            raise ValueError(
+                f"Incomplete Backblaze B2 configuration: set {', '.join(missing)} "
+                "(or leave all B2_* settings unset when B2 isn't configured yet)."
+            )
+        return self
+
+    def missing_for_b2(self) -> list[str]:
+        """The names of the Backblaze B2 settings still needed; empty when receipt storage can run."""
+        needed = {
+            "B2_KEY_ID": self.b2_key_id,
+            "B2_APPLICATION_KEY": self.b2_application_key,
+            "B2_BUCKET_NAME": self.b2_bucket_name,
+        }
+        return [name for name, value in needed.items() if value is None]
+
+    def b2_configured(self) -> bool:
+        """Whether Backblaze B2 settings are complete."""
+        return not self.missing_for_b2()
 
     def missing_for_sign_in(self) -> list[str]:
         """The names of the settings sign-in still needs; empty when it can work."""

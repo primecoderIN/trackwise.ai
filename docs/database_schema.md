@@ -65,7 +65,7 @@ erDiagram
     receipt_file {
         BIGINT id PK
         BIGINT owner_id "the person; indexed"
-        VARCHAR_32 storage_key "unique; the file is in UPLOADS_DIR"
+        VARCHAR_32 storage_key "unique; object key in Backblaze B2"
         VARCHAR_15 media_type "read from the file's bytes"
         INTEGER size_bytes
         DATETIME created_at "UTC, with time zone"
@@ -143,7 +143,7 @@ conversations, also without a key.
 | `conversation_message` | conversations | chat history, one row per message |
 | `pending_approval` | assistant | delete cards waiting for Approve or Cancel |
 | `pending_delegation` | assistant | A2A agent tasks waiting for the person's follow-up answer |
-| `receipt_file` | receipts | uploaded receipts (the files themselves are in `UPLOADS_DIR`, not the database) |
+| `receipt_file` | receipts | uploaded receipts (the files themselves are in Backblaze B2, not the database) |
 | `app_user` | accounts | the people who use trackwise.ai, by trackwise.ai's own id |
 | `user_identity` | accounts | how each person signs in: a provider (issuer) and their id there (subject) |
 | `user_session` | accounts | signed-in browsers: the hash of each cookie's key, and the session's lifetimes |
@@ -274,8 +274,8 @@ allows one overall budget per person (migration 0010; Postgres supports the same
 | `created_at` | DATETIME with time zone, not null | when it was uploaded (UTC) |
 
 **The bytes aren't in the database.** A receipt can be megabytes; the database keeps the row, and the file is kept in
-`UPLOADS_DIR` under its key (D181). The upload saves the file first and deletes it again if the row can't be added,
-so there's never a file without a row. Nothing deletes receipts yet.
+a private Backblaze B2 bucket under its key (D181, D221). The upload saves the file first and deletes it again if the
+row can't be added, so there's never a file without a row. Nothing deletes receipts yet.
 
 ## The accounts tables
 

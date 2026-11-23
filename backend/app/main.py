@@ -78,6 +78,8 @@ def create_app(services: Services | None = None) -> FastAPI:
     app.state.auth_quota = built.auth_quota
     if built.identity.issuer is None:
         logger.warning("Sign-in isn't configured, so nobody can sign in: every API route answers 401 (see OIDC_*).")
+    if not getattr(built.files, "configured", True):
+        logger.warning("Receipt file storage isn't configured, so receipt uploads and reads will fail.")
     _add_error_handling(app, https=built.https)
     # Registered before the modules' routes, so the OpenAPI document keeps /health first.
     _add_health_check(app, built.engine)

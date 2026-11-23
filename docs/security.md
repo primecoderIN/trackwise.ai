@@ -10,7 +10,7 @@ What protects trackwise.ai today, why, and what's still missing before it could 
 
 | Measure | How |
 |---|---|
-| Kept out of code and git | `DATABASE_URL`, `GEMINI_API_KEY`, `OIDC_CLIENT_SECRET` and `SESSION_ENCRYPTION_KEYS` live in `.env`, which is git-ignored; `.env.example` holds no real values. Personal access tokens are shown once and stored only as their SHA-256 |
+| Kept out of code and git | `DATABASE_URL`, `GEMINI_API_KEY`, `OIDC_CLIENT_SECRET`, `SESSION_ENCRYPTION_KEYS` and `B2_APPLICATION_KEY` live in `.env`, which is git-ignored; `.env.example` holds no real values. Personal access tokens are shown once and stored only as their SHA-256 |
 | Never printed | settings hold them as `SecretStr` (masked when printed); the key is passed to the Gemini client explicitly and nowhere else |
 | Never in the browser | the web app has no secrets; anything in a `NEXT_PUBLIC_` variable would ship to every visitor, so none is used; the Next.js server's own settings (`API_PROXY_TARGET`, `PUBLIC_URL`) aren't secrets either |
 | Checked before commits | each commit is checked so that the key's value doesn't appear in the staged changes, and no `.env` or `*.db` is staged |
@@ -143,7 +143,7 @@ behaving:
 | Risk | Defence |
 |---|---|
 | A file that isn't what it claims (a script named `.png`) | The type is read from the file's first bytes (its signature), never from its name or `Content-Type`; only JPEG, PNG, WEBP and PDF are kept |
-| A name like `../../app.py` reaching the disk | Files are stored under random keys (a UUID's hex digits) the server makes; a key that isn't one of those is refused before it becomes a path. The user's file name is never used |
+| A name like `../../app.py` reaching storage | Files are stored in Backblaze B2 under random keys (a UUID's hex digits) the server makes; a key that isn't one of those is refused before any remote request. The user's file name is never used |
 | A huge upload | `BodySizeLimitMiddleware` enforces request body byte limits on the stream before multipart spooling (a little over 5 MB for `POST /receipts`, 2 MB for other API routes), and the route itself reads at most one byte past 5 MB |
 | A file left without its row (or a row without its file) | The upload deletes the file again if the row can't be added; a row whose file has gone answers 404 "upload it again" |
 | The storage key reaching a client | Only the module sees it: the API's `ReceiptRead` has no such field (D180) |
@@ -246,6 +246,6 @@ Every backend and web dependency is pinned to an exact version (`requirements.tx
 | **Inline scripts allowed** | the pages' CSP allows `'unsafe-inline'` scripts (Next.js's bootstrap), so it can't stop an injected inline script | a nonce-based CSP, if the pages are rendered per request anyway (D193) |
 | **The mock exchange rates** | the currency agent's rates are made up (D203): an amount in another currency is stored at a rate that isn't real | a real rate provider (an exchange-rate API) behind `currency/rates.RateProvider` before relying on the INR amounts |
 | **The agents speak plain HTTP** (`multi-server` branch only) | its requests carry the key and a receipt; on one machine they never leave it, but across machines anyone on the path could read them | TLS (or mTLS) between the backend and the agent before they run on different machines, and a key that can be rotated without a restart |
-| **Uploaded files are never deleted** | receipts accumulate in `UPLOADS_DIR` | a retention rule, or deleting a receipt once its expense is saved |
+| **Uploaded files are never deleted** | receipts accumulate in the Backblaze B2 bucket | a retention rule, or deleting a receipt once its expense is saved |
 | **Database credentials** | a leaked `DATABASE_URL` grants database access | keep the Neon URL in secret settings, rotate its password if exposed, and use a least-privilege database role |
 | **No audit trail** | can't tell who changed what | record changes (who, when, before/after) once users exist |

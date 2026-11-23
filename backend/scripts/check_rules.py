@@ -62,6 +62,13 @@ LLM_PROVIDER_FILES = {
 }
 # The only backend infrastructure modules an agent's server.py may import (D196).
 ALLOWED_AGENT_INFRA = ("app.infrastructure.llm.gemini", "app.infrastructure.logging")
+# Where a file-storage vendor adapter may be referenced: only bootstrap.py and infrastructure/storage/ (D221).
+STORAGE_PROVIDER_PATTERN = re.compile(r"infrastructure\.storage\.|backblazeb2|\bB2FileStore\b|\bB2Config\b")
+STORAGE_PROVIDER_FILES = {
+    "backend/app/bootstrap.py",
+    "backend/app/infrastructure/storage/b2.py",
+    "backend/app/infrastructure/storage/b2_wire.py",
+}
 # No identity provider's name in the code (D185).
 PROVIDER_NAMES = re.compile(r"zitadel", re.IGNORECASE)
 # A person's data is read with its owner in the same statement (D190), never session.get(Table, id).
@@ -183,17 +190,18 @@ def module_rules() -> list[str]:
 
 def text_rules() -> list[str]:
     """4. Only a composition root picks the LLM provider; 8. no identity provider's name; 9. no session.get( on a
-    person's data."""
+    person's data; 14. only bootstrap.py picks the file-storage provider."""
     problems = []
     for path in python_files(APP, AGENTS, *ENTRY_SCRIPTS):
         if LLM_PROVIDER_PATTERN.search(path.read_text(encoding="utf-8")) and relative(path) not in LLM_PROVIDER_FILES:
             problems.append(f"{relative(path)} picks the LLM provider")
-    sources = [*python_files(APP, *ENTRY_SCRIPTS), *WEB_SRC.rglob("*.ts"), *WEB_SRC.rglob("*.tsx")]
-    problems += [
-        f"{relative(path)} names an identity provider"
-        for path in sources
-        if PROVIDER_NAMES.search(path.read_text(encoding="utf-8"))
-    ]
+    sources = [*python_files(APP, AGENTS, *ENTRY_SCRIPTS), *WEB_SRC.rglob("*.ts"), *WEB_SRC.rglob("*.tsx")]
+    for path in sources:
+        content = path.read_text(encoding="utf-8")
+        if PROVIDER_NAMES.search(content):
+            problems.append(f"{relative(path)} names an identity provider")
+        if STORAGE_PROVIDER_PATTERN.search(content) and relative(path) not in STORAGE_PROVIDER_FILES:
+            problems.append(f"{relative(path)} references a file-storage vendor adapter directly")
     for module in OWNED_DATA_MODULES:
         for path in python_files(MODULES / module):
             if relative(path) not in SESSION_GET_ALLOWED and SESSION_GET.search(path.read_text(encoding="utf-8")):
@@ -279,7 +287,7 @@ def import_rules() -> list[str]:
 RULES: list[tuple[str, Callable[[], list[str]]]] = [
     ("layers (1)", layer_rules),
     ("modules (2, 3, 13)", module_rules),
-    ("LLM provider, provider names, owners (4, 8, 9)", text_rules),
+    ("LLM provider, identity, owners, storage (4, 8, 9, 14)", text_rules),
     ("the assistant's layers (5)", assistant_rules),
     ("HTTP adapters and the A2A SDK (7, 12)", adapter_rules),
     ("agents (10)", agent_rules),

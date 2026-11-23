@@ -31,7 +31,7 @@ class ReceiptFiles:
         """One of `owner_id`'s receipts: its bytes and the media type read from them at upload.
 
         Raises NotFoundError (404) for a receipt they don't have (unknown, or another person's: the same answer,
-        D190), or one whose file is gone (the uploads folder was moved or emptied).
+        D190), or one whose file is gone from object storage.
         """
         stored = self.bus.ask(GetReceipt(owner_id=owner_id, receipt_id=receipt_id))
         try:

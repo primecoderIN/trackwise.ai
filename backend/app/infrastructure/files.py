@@ -1,53 +1,46 @@
-"""LocalFileStore: the FileStore port (core/files.py) as a folder on this machine (infrastructure, adapter).
+"""Provider-neutral storage key helpers and fail-closed UnconfiguredFileStore (infrastructure, adapter).
 
-The composition root (bootstrap.py) builds one on UPLOADS_DIR and hands it to the receipts module. Files are named
-by random keys, never by anything a user sent, and a key that isn't one of ours is refused before it becomes a path,
-so a request can't read or write outside the folder.
+No domain or HTTP layer depends on a specific storage vendor: every adapter implements core/files.FileStore,
+validates keys against KEY_PATTERN, and uses normalize_storage_prefix for optional object prefixes. When storage
+credentials are unset (for example during contract export or initial setup), bootstrap.py injects
+UnconfiguredFileStore so receipt operations fail closed without writing to local disk.
 """
 
-import os
 import re
-import uuid
-from pathlib import Path
+from collections.abc import Sequence
 
-# A key is a random UUID's 32 hex digits: nothing else may become a file name (no "..", no slashes).
+# A key is a random UUID's 32 hex digits: checked before making any remote request.
 KEY_PATTERN = re.compile(r"^[0-9a-f]{32}$")
 
 
-class LocalFileStore:
-    """Files in one folder, created on first save. Used by the receipts module, through the FileStore port."""
+def normalize_storage_prefix(prefix: str, *, setting_name: str = "prefix") -> str:
+    """Normalize an object prefix to '' or '<segment/...>/', rejecting '..' or backslashes."""
+    cleaned = prefix.strip().strip("/")
+    if not cleaned:
+        return ""
+    if "\\" in cleaned or ".." in cleaned.split("/"):
+        raise ValueError(f"{setting_name} must not contain backslashes or '..'")
+    return f"{cleaned}/"
 
-    def __init__(self, root: Path) -> None:
-        """Keep files in `root` (created when the first file is saved, not now: nothing happens at import)."""
-        self._root = root
 
-    def _path(self, key: str) -> Path:
-        """The file for `key`. Raises FileNotFoundError for a key this store can't have made."""
-        if not KEY_PATTERN.fullmatch(key):
-            raise FileNotFoundError(key)
-        return self._root / key
+class UnconfiguredFileStore:
+    """Refuses every FileStore operation when file storage settings are missing (fail closed)."""
+
+    # Checked by main.py at startup so missing storage settings emit a clear operator warning.
+    configured = False
+
+    def __init__(self, missing: Sequence[str]) -> None:
+        """Remember which storage settings are missing for the server error message."""
+        self._reason = f"File storage isn't configured: set {', '.join(missing)} in .env"
 
     def save(self, data: bytes) -> str:
-        """Atomically write `data` to a new file named by a random key, and return the key."""
-        self._root.mkdir(parents=True, exist_ok=True)
-        key = uuid.uuid4().hex
-        target = self._path(key)
-        staging = self._root / f".tmp-{key}"
-        try:
-            with open(staging, "xb") as file:
-                file.write(data)
-            os.replace(staging, target)
-        except BaseException:
-            staging.unlink(missing_ok=True)
-            raise
-        return key
+        """Raise RuntimeError: receipt bytes are never written without configured object storage."""
+        raise RuntimeError(self._reason)
 
     def read(self, key: str) -> bytes:
-        """The file's bytes. Raises FileNotFoundError if it's missing or the key isn't one of ours."""
-        return self._path(key).read_bytes()
+        """Raise RuntimeError: configured object storage is required to read receipts."""
+        raise RuntimeError(self._reason)
 
     def delete(self, key: str) -> None:
-        """Remove the file, if it's there (a malformed or missing key is a no-op, per FileStore)."""
-        if not KEY_PATTERN.fullmatch(key):
-            return
-        (self._root / key).unlink(missing_ok=True)
+        """Raise RuntimeError: configured object storage is required to delete receipts."""
+        raise RuntimeError(self._reason)

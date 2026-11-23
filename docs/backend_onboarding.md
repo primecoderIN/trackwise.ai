@@ -345,7 +345,7 @@ client = TestClient(create_app(services))      # the real routes, bus and MCP se
 ```
 
 `build()` also takes `tools=` (any `ExpenseTools`, bound per run with `acting_for`). It takes `files=` (any `FileStore`: `save`, `read`, `delete`); pass one when you use a
-copy of the database, or uploads land in the real `UPLOADS_DIR`. It takes `identity=` (any `IdentityProvider`,
+copy of the database, or uploads land in the real Backblaze B2 bucket. It takes `identity=` (any `IdentityProvider`,
 `core/identity.py`) and `sealer=` (any `Sealer`): with a fake provider, a check signs in through the real routes.
 Every module's route needs a session and `X-CSRF: 1`, so a check signs in first:
 

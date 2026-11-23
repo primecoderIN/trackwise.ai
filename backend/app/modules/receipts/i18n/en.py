@@ -26,6 +26,6 @@ EN: dict[ReceiptText, TextValue] = {
     ReceiptText.TOO_LARGE: "The file is larger than {max_mb} MB. Try a smaller photo or a shorter PDF.",
     ReceiptText.UNSUPPORTED_TYPE: "Only photos (JPEG, PNG or WEBP) and PDF files can be read as receipts.",
     ReceiptText.NOT_FOUND: "Receipt {receipt_id} not found",
-    # The row is there but its file isn't (the uploads folder was moved or emptied); where it was goes to the log.
+    # The row is there but its file isn't in object storage; where it was goes to the log.
     ReceiptText.FILE_MISSING: "The file for receipt {receipt_id} is missing. Upload it again.",
 }
