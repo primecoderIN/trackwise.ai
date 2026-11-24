@@ -28,8 +28,8 @@ class CategoryTotal(Totalled):
     expense_count: int
 
 
-# GetMonthlySummary's answer (GET /summary): one month's total in the base currency (INR, every expense counted
-# through its INR amount, D204), and the total for each category that had spending. The month is "YYYY-MM" text.
+# GetMonthlySummary's answer (GET /summary): one month's total in the base currency (USD, every expense counted
+# through its USD amount, D204, D223), and the total for each category that had spending. The month is "YYYY-MM" text.
 class MonthlySummary(Totalled):
     month: str = Field(pattern=YearMonth.PATTERN, examples=["2026-11"])
     currency: str
@@ -41,14 +41,14 @@ class MonthlySummary(Totalled):
 # Asked by GET /summary and by MCP's get_summary (for the month asked about and the one before). The
 # month is a YearMonth value, so the handler can work out where it ends.
 class GetMonthlySummary(Query[MonthlySummary]):
-    """One month's total of the owner's expenses in INR, and the total per category."""
+    """One month's total of the owner's expenses in USD, and the total per category."""
 
     owner_id: UserId
     month: YearMonth
 
 
 def get_monthly_summary(ctx: Context, query: GetMonthlySummary) -> MonthlySummary:
-    """One month of the owner's spending in INR: the total, and the total per category, biggest first.
+    """One month of the owner's spending in USD: the total, and the total per category, biggest first.
 
     The database groups by category and adds up (GROUP BY, COUNT, SUM); Python only names the
     categories, sorts the few groups and adds them up for the month. A category that no longer exists

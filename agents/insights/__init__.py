@@ -1,7 +1,7 @@
 """The insights agent: an A2A service, outside the monolith, that analyses a month of spending (Phase 25, part 2).
 
 Its own process on 127.0.0.1 (port INSIGHTS_AGENT_PORT, 9002 by default), started with `python -m insights`
-(run-agent.ps1 insights). One skill, analyze_spending: a client sends a person's expenses (in INR, without notes or
+(run-agent.ps1 insights). One skill, analyze_spending: a client sends a person's expenses (in USD, without notes or
 anything about the person) and perhaps a month and their question; the agent answers with an insights artifact:
 totals, trends, unusual spends and a month-end forecast, worked out by code, and 3 saving tips, written by Gemini in
 one call. Without a month, over several months, the task stops input-required asking which, and the client resumes

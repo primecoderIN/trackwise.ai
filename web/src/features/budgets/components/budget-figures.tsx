@@ -1,4 +1,4 @@
-// A component of the budgets feature: one budget's numbers: the bar, "₹4,200 of ₹5,000" and what's left (or how
+// A component of the budgets feature: one budget's numbers: the bar, "$420 of $500" and what's left (or how
 // much over); or, without a limit, only what was spent. Used by the overall card and the category rows.
 
 import { formatMoney } from "@/shared/lib/format"
@@ -19,7 +19,7 @@ interface BudgetFiguresProps {
   elapsedPercent?: string
 }
 
-/** The bar and the two figures under it, or "₹300 spent · No limit" for a line without a budget. */
+/** The bar and the two figures under it, or "$300 spent · No limit" for a line without a budget. */
 export function BudgetFigures({ line, currency, name, elapsedPercent }: BudgetFiguresProps) {
   const { t } = useTexts()
   const spent = formatMoney(line.spent, currency)

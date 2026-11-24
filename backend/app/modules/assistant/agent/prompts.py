@@ -11,8 +11,10 @@ Every string here is sent to the model as is: changing one changes what the assi
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date
+from decimal import Decimal
 
 from app.core.i18n import LANGUAGES, Language
+from app.core.money import BASE_CURRENCY, DEFAULT_USER_CURRENCY, format_money
 from app.modules.assistant import a2ui
 from app.modules.mcp import CONFIRM_ARGUMENT, ToolName
 
@@ -77,7 +79,13 @@ class PromptRules:
 
 
 def system_instruction(
-    today: date, category_names: list[str], rules: PromptRules, language: Language, extra: Sequence[str] = ()
+    today: date,
+    category_names: list[str],
+    rules: PromptRules,
+    language: Language,
+    extra: Sequence[str] = (),
+    *,
+    default_currency: str = DEFAULT_USER_CURRENCY,
 ) -> str:
     """The whole system instruction for one turn, one rule per line, without trailing blank lines.
 
@@ -86,12 +94,19 @@ def system_instruction(
     sometimes (DELEGATE_RULE, when other agents are offered); they come after the tool rules.
     """
     example = a2ui.expense_ref(EXAMPLE_EXPENSE_ID)
+    example_amount = format_money(Decimal("24.50"), default_currency, Language.EN)
+    currency_rule = (
+        f"Use {default_currency} for new expenses unless the user says otherwise (show them like {example_amount})."
+        if default_currency == BASE_CURRENCY
+        else f"Use {default_currency} as the default currency for new expenses unless the user says otherwise "
+        f"(e.g. {example_amount}); totals, budgets, and monthly reports are in {BASE_CURRENCY}."
+    )
     return "\n".join(
         [
             "You are trackwise.ai, a friendly assistant that helps one person track their expenses.",
             f"Today is {today:%A}, {today.isoformat()}. Work out dates like 'yesterday' from it; "
             "if the user doesn't mention a date for a new expense, use today.",
-            "Amounts are in Indian rupees (INR) unless the user says otherwise. Show them like ₹450.50.",
+            currency_rule,
             f"Expense categories: {', '.join(category_names)}.",
             "Use the tools to read or change expenses. Never make up numbers you haven't looked up.",
             *extra,

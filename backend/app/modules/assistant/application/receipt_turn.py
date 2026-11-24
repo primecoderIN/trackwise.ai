@@ -22,6 +22,7 @@ from uuid import uuid4
 from app.core.errors import ExternalServiceError
 from app.core.i18n import Language, text, translatable
 from app.core.llm import AssistantText, Message, UserText
+from app.core.money import DEFAULT_USER_CURRENCY
 from app.modules import expenses, receipts
 from app.modules.assistant import a2ui
 from app.modules.assistant.agent.events import (
@@ -63,6 +64,8 @@ def receipt_turn(
     message: str,
     today: date,
     language: Language,
+    *,
+    default_currency: str = DEFAULT_USER_CURRENCY,
 ) -> Iterator[AgentEvent]:
     """Read one of `owner_id`'s receipts and offer it as the expense form, pre-filled; the reply is in `language`.
 
@@ -93,7 +96,10 @@ def receipt_turn(
     logger.info("receipt %s offered as a form (%s)", receipt_id, "details found" if found else "nothing found")
     reply = text(language, ChatText.RECEIPT_READ if found else ChatText.RECEIPT_NOTHING_FOUND)
     yield TextDelta(reply)
-    yield FormRequested(form=a2ui.expense_form(values, category_names, today, language), source=a2ui.FormSource.RECEIPT)
+    yield FormRequested(
+        form=a2ui.expense_form(values, category_names, today, language, default_currency=default_currency),
+        source=a2ui.FormSource.RECEIPT,
+    )
     said.append(READ_SAID.format(values=json.dumps(values, ensure_ascii=False)))
     yield TurnFinished(reply=reply, messages=_stored(said, reply))
 
@@ -136,8 +142,8 @@ def _stored(said: list[str], reply: str) -> list[Message]:
 
 
 def _form_values(extraction: ReceiptExtraction, language: Language) -> dict[str, Any]:
-    """The form's starting values, from what the receipt says: "" for anything it doesn't (the form fills the
-    date and currency in with today and INR)."""
+    """The form's starting values, from what the receipt says: "" for anything it doesn't (the form fills a
+    missing date or currency with today and the user's default currency)."""
     values = {
         "amount": extraction.total,
         "currency": extraction.currency,

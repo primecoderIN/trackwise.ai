@@ -26,11 +26,11 @@ export interface ExpenseDraft {
   note: string
 }
 
-/** A blank draft for the Add dialog: dated `today` ("YYYY-MM-DD"), in DEFAULT_CURRENCY, with the default payment method. */
-export function emptyDraft(today: string): ExpenseDraft {
+/** A blank draft for the Add dialog: dated `today` ("YYYY-MM-DD"), in `defaultCurrency`, with the default payment method. */
+export function emptyDraft(today: string, defaultCurrency: string = DEFAULT_CURRENCY): ExpenseDraft {
   return {
     amount: "",
-    currency: DEFAULT_CURRENCY,
+    currency: defaultCurrency,
     merchant: "",
     category_id: "",
     spent_on: today,

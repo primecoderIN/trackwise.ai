@@ -43,7 +43,7 @@ def versus(total: Decimal, previous: Decimal, previous_month: date, language: La
     if total == previous:
         return text(language, ChatText.SUMMARY_SAME_AS, month=name), Trend.FLAT
     change = (total - previous) / previous * 100
-    # Small changes keep a decimal, so ₹10,040 vs ₹10,000 reads "+0.4%", not "Same as".
+    # Small changes keep a decimal, so $1,004 vs $1,000 reads "+0.4%", not "Same as".
     percent = f"{change:+.1f}%" if abs(change) < 1 else f"{round(change):+d}%"
     trend = Trend.UP if change > 0 else Trend.DOWN
     return text(language, ChatText.SUMMARY_CHANGE, change=percent, month=name), trend

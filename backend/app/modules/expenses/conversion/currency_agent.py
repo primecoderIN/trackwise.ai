@@ -50,17 +50,21 @@ class CurrencyAgentRates:
         self._agents = agents
 
     def to_base(self, currency: str, on: date) -> ExchangeRate:
-        """The currency agent's rate from `currency` to INR on `on`. Raises UnsupportedCurrencyError if it refuses the
+        """The currency agent's rate from `currency` to USD on `on`. Raises UnsupportedCurrencyError if it refuses the
         currency, RatesUnavailableError if it can't be asked or its answer can't be used."""
         request = {"amount": ONE_UNIT, "from_currency": currency, "to_currency": BASE_CURRENCY, "on": on.isoformat()}
         try:
             task = self._agents.send(CURRENCY_AGENT, SKILL_ID, [DataPart(data=request)], ARTIFACT_NAME)
         except AgentUnavailableError as exc:
-            raise RatesUnavailableError(translatable(ExpenseText.RATES_UNAVAILABLE, currency=currency)) from exc
+            raise RatesUnavailableError(
+                translatable(ExpenseText.RATES_UNAVAILABLE, currency=currency, base_currency=BASE_CURRENCY)
+            ) from exc
         if task.outcome == TaskOutcome.REJECTED:
             # The agent won't convert it (it has no rate for this currency); its reason goes to the log.
             logger.info("currency task %s rejected %s: %s", task.task_id, currency, task.message)
-            raise UnsupportedCurrencyError(translatable(ExpenseText.UNSUPPORTED_CURRENCY, currency=currency))
+            raise UnsupportedCurrencyError(
+                translatable(ExpenseText.UNSUPPORTED_CURRENCY, currency=currency, base_currency=BASE_CURRENCY)
+            )
         try:
             if task.outcome != TaskOutcome.COMPLETED or len(task.data) != 1:
                 raise ValueError(f"task {task.task_id} ended {task.outcome} with {len(task.data)} answers")
@@ -70,6 +74,8 @@ class CurrencyAgentRates:
             rate = ExchangeRate(currency=currency, rate=Decimal(answer.rate), rate_date=answer.rate_date)
         except (ValueError, ValidationError) as exc:
             logger.warning("currency agent's answer unusable: %s", exc)
-            raise RatesUnavailableError(translatable(ExpenseText.RATES_UNAVAILABLE, currency=currency)) from exc
+            raise RatesUnavailableError(
+                translatable(ExpenseText.RATES_UNAVAILABLE, currency=currency, base_currency=BASE_CURRENCY)
+            ) from exc
         logger.info("rate %s->%s on %s: %s (task %s)", currency, BASE_CURRENCY, on, rate.rate, task.task_id)
         return rate

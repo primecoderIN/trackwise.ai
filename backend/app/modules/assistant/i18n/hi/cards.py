@@ -51,7 +51,7 @@ CARDS: dict[ChatText, TextValue] = {
     ChatText.LIST_MORE: "{total} में से सबसे नए {shown} दिखाए जा रहे हैं",
     ChatText.FORM_TITLE: "खर्च जोड़ें",
     ChatText.FORM_AMOUNT: "राशि",
-    ChatText.FORM_CURRENCY: "मुद्रा (जैसे INR)",
+    ChatText.FORM_CURRENCY: "मुद्रा (जैसे {currency})",
     ChatText.FORM_CATEGORY: "श्रेणी",
     ChatText.FORM_MERCHANT: "व्यापारी",
     ChatText.FORM_DATE: "तारीख",

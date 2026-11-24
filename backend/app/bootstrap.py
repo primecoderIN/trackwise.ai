@@ -87,7 +87,8 @@ class Services:
     # The A2A agents (agents/: receipt, insights, currency), hosted in this process (D207), behind the RemoteAgents
     # port (D201): the assistant reads receipts and delegates, and the expenses recorder gets rates, through them.
     agents: RemoteAgents
-    # Saves expenses, converting an amount in another currency to INR first (D204): the REST routes and MCP share it.
+    # Saves expenses, converting an amount in another currency to base currency first (D204, D223): shared by REST
+    # and MCP.
     recorder: expenses.ExpenseRecorder
     # Monthly reports (D209): the REST routes and MCP's get_monthly_report share it.
     reports: reports.MonthlyReports

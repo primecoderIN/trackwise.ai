@@ -3,7 +3,7 @@
 Schemas check the *shape* of data (types, lengths, at most 2 decimal places). Business rules
 (amount > 0, the category must exist) live in domain/rules.py and the command handlers.
 
-Money: callers send and get rupees as a Decimal (`amount`, `total`); the table keeps whole paise
+Money: callers send and get major units as a Decimal (`amount`, `total`); the table keeps whole minor units
 (`amount_minor`, `total_minor`), never a float.
 
 Part of the module's contract layer, used by its slices (commands/, queries/), models.py, api.py and its table
@@ -48,10 +48,10 @@ class PaymentMethod(StrEnum):
 ExpenseId = RecordId
 # Every change raises it by one, so "the expense as I saw it" can be checked (optimistic concurrency).
 Version = Annotated[int, Field(ge=1)]
-# Rupees, as people type them (450.50). The handlers convert to paise for storage.
-# At most 12 digits, 2 of them after the point: a fraction of a paisa (450.505) is refused, never rounded
+# Major units, as people type them (24.50). The handlers convert to minor units for storage.
+# At most 12 digits, 2 of them after the point: a fraction of a cent (24.505) is refused, never rounded
 # away.
-Amount = Annotated[Decimal, Field(max_digits=12, decimal_places=2, examples=["450.50"])]
+Amount = Annotated[Decimal, Field(max_digits=12, decimal_places=2, examples=["24.50"])]
 Merchant = Annotated[str, Field(min_length=1, max_length=MAX_MERCHANT_LENGTH)]
 Note = Annotated[str, Field(max_length=MAX_NOTE_LENGTH)]
 

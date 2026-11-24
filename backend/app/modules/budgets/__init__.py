@@ -4,8 +4,8 @@ This file is the module's public interface. Other modules import ONLY the contra
 `app.modules.budgets`, and send them through the bus. Tables, handlers, the repository and the router stay private;
 the composition root (bootstrap.py) plugs them in through module.py.
 
-A budget is a standing monthly limit in INR: the same every month until it's changed. Spending comes from the
-expenses module's monthly summary (every currency at its INR amount, D204), category names from the categories
+A budget is a standing monthly limit in USD: the same every month until it's changed. Spending comes from the
+expenses module's monthly summary (every currency at its USD amount, D204, D223), category names from the categories
 module: this module stores only the limits. Every command and query names its owner (D190).
 
 Depends on: expenses, categories. Who uses it: the composition root (its routes), the web contract (BudgetState and

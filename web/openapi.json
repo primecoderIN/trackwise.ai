@@ -1882,7 +1882,7 @@
           "limit"
         ],
         "title": "BudgetChange",
-        "description": "A monthly limit, in rupees."
+        "description": "A monthly limit, in major units (USD)."
       },
       "BudgetLine": {
         "properties": {
@@ -2159,7 +2159,7 @@
             "minLength": 1,
             "title": "Message",
             "examples": [
-              "I spent 250 on lunch at Subway today, paid by UPI"
+              "I spent 25 on lunch at Subway today, paid by card"
             ]
           },
           "thread_id": {
@@ -2554,7 +2554,7 @@
                   }
                 ],
                 "examples": [
-                  "450.50"
+                  "24.50"
                 ]
               },
               {
@@ -2569,7 +2569,7 @@
                 "type": "string",
                 "pattern": "^[A-Z]{3}$",
                 "examples": [
-                  "INR"
+                  "USD"
                 ]
               },
               {
@@ -2786,7 +2786,7 @@
           "base_amount"
         ],
         "title": "ExpenseRead",
-        "description": "An expense as callers see it: everything stored, plus the amount in rupees for display."
+        "description": "An expense as callers see it: everything stored, plus the amount in major units for display."
       },
       "FileSource": {
         "properties": {
@@ -3182,16 +3182,16 @@
             ],
             "title": "Amount",
             "examples": [
-              "450.50"
+              "24.50"
             ]
           },
           "currency": {
             "type": "string",
             "pattern": "^[A-Z]{3}$",
             "title": "Currency",
-            "default": "INR",
+            "default": "USD",
             "examples": [
-              "INR"
+              "USD"
             ]
           },
           "category_id": {
@@ -3247,7 +3247,7 @@
             "minLength": 1,
             "title": "Text",
             "examples": [
-              "Paid 450.50 at Swiggy yesterday via GPay"
+              "Paid 24.50 at Corner Bistro yesterday by card"
             ]
           }
         },
@@ -3290,7 +3290,7 @@
           "currency": {
             "type": "string",
             "title": "Currency",
-            "description": "ISO 4217 code such as INR, USD or EUR. INR unless another currency is clearly stated."
+            "description": "ISO 4217 code (such as USD, EUR or GBP). USD unless another currency is clearly stated."
           },
           "category": {
             "anyOf": [
@@ -3331,7 +3331,7 @@
                 "type": "null"
               }
             ],
-            "description": "Only if the text says how it was paid (GPay, PhonePe and Paytm UPI are upi); otherwise null."
+            "description": "Only if the text says how it was paid (card, bank transfer, cash, wallet, or UPI apps like GPay/PhonePe/Paytm); otherwise null."
           },
           "note": {
             "anyOf": [

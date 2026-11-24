@@ -13,12 +13,12 @@ Every command and query about expenses names its owner (`owner_id`, a core.ids.U
 never visible to, or changeable by, anyone else (D190).
 
 Saving goes through ExpenseRecorder (application/record_expense.py), which converts an amount in another currency
-to INR first, through the ExchangeRates port (conversion/; the currency agent behind it, D204); every expense keeps
-both amounts.
+to the base currency first, through the ExchangeRates port (conversion/; the currency agent behind it, D204, D223);
+every expense keeps both amounts.
 
 Who uses it: the MCP server (the recorder for its add and update tools, the commands and queries behind the others),
 the assistant (PaymentMethod and payment_method_label for its forms, MAX_NOTE_LENGTH for a receipt's note) and
-seed.py (CreateExpense, in INR, and ListExpenses), and the reports module (ListExpenses for a month's report,
+seed.py (CreateExpense, in USD, and ListExpenses), and the reports module (ListExpenses for a month's report,
 MAX_MERCHANT_LENGTH to check the report's figures, payment_method_label for its downloads).
 """
 

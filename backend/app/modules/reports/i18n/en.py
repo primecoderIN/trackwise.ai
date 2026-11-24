@@ -28,14 +28,14 @@ class ReportText(StrEnum):
     BIGGEST_HEADING = "markdown.biggestHeading"
     AVERAGE_HEADING = "markdown.averageHeading"
     AVERAGE = "markdown.average"
-    IN_INR = "markdown.inInr"
+    BASE_CURRENCY_NOTE = "markdown.baseCurrencyNote"
     COLUMN_DATE = "columns.date"
     COLUMN_MERCHANT = "columns.merchant"
     COLUMN_CATEGORY = "columns.category"
     COLUMN_PAYMENT_METHOD = "columns.paymentMethod"
     COLUMN_AMOUNT = "columns.amount"
     COLUMN_CURRENCY = "columns.currency"
-    COLUMN_AMOUNT_INR = "columns.amountInInr"
+    COLUMN_BASE_AMOUNT = "columns.baseAmount"
     COLUMN_NOTE = "columns.note"
     COLUMN_SHARE = "columns.share"
     COLUMN_COUNT = "columns.count"
@@ -45,7 +45,7 @@ EN: dict[ReportText, TextValue] = {
     # The skill's script failed or answered something unusable; why goes to the server log (D180).
     ReportText.UNAVAILABLE: "The report couldn't be made right now. Try again in a moment.",
     ReportText.TOO_MANY_EXPENSES: "This month has too many expenses for a report (more than {limit}).",
-    # Markdown: {month} is "November 2026" (format_month); amounts are formatted money ("₹4,300.50").
+    # Markdown: {month} is "November 2026" (format_month); amounts are formatted money ("$4,300.50").
     ReportText.TITLE: "trackwise.ai report: {month}",
     ReportText.TOTAL: Plural(one="{total} spent, in {count} expense.", other="{total} spent, in {count} expenses."),
     ReportText.NOTHING_SPENT: "No expenses were recorded this month.",
@@ -60,7 +60,9 @@ EN: dict[ReportText, TextValue] = {
     ReportText.BIGGEST_HEADING: "Biggest expenses",
     ReportText.AVERAGE_HEADING: "Daily average",
     ReportText.AVERAGE: Plural(one="{average} a day, over {count} day.", other="{average} a day, over {count} days."),
-    ReportText.IN_INR: "Amounts are in Indian rupees: an expense in another currency counts at its amount in INR.",
+    ReportText.BASE_CURRENCY_NOTE: (
+        "Amounts are in {currency}: an expense in another currency counts at its amount in {currency}."
+    ),
     # Column names: the markdown report's tables and the CSV's first line.
     ReportText.COLUMN_DATE: "Date",
     ReportText.COLUMN_MERCHANT: "Merchant",
@@ -68,7 +70,7 @@ EN: dict[ReportText, TextValue] = {
     ReportText.COLUMN_PAYMENT_METHOD: "Payment method",
     ReportText.COLUMN_AMOUNT: "Amount",
     ReportText.COLUMN_CURRENCY: "Currency",
-    ReportText.COLUMN_AMOUNT_INR: "Amount in INR",
+    ReportText.COLUMN_BASE_AMOUNT: "Amount in {currency}",
     ReportText.COLUMN_NOTE: "Note",
     ReportText.COLUMN_SHARE: "Share",
     ReportText.COLUMN_COUNT: "Expenses",

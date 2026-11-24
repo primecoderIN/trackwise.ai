@@ -36,7 +36,7 @@ const en = {
     open: "Add expense",
     title: "Add expense",
     description: "Amounts are in {{currency}}, e.g. {{example}}.",
-    merchantExample: "Swiggy",
+    merchantExample: "Corner Bistro",
     noteExample: "Dinner",
     added: "Expense added",
   },

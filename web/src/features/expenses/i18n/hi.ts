@@ -36,7 +36,7 @@ const hi: Translation<typeof en> = {
     open: "खर्च जोड़ें",
     title: "खर्च जोड़ें",
     description: "राशि {{currency}} में लिखें, जैसे {{example}}।",
-    merchantExample: "Swiggy",
+    merchantExample: "Corner Bistro",
     noteExample: "रात का खाना",
     added: "खर्च जोड़ दिया गया",
   },

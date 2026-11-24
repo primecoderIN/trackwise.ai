@@ -15,6 +15,7 @@ from typing import Any, Protocol
 from app.core.clock import DEFAULT_TIMEZONE
 from app.core.errors import ExternalServiceError
 from app.core.llm import ToolSpec
+from app.core.money import DEFAULT_USER_CURRENCY
 
 
 class ToolsUnavailableError(ExternalServiceError):
@@ -33,7 +34,12 @@ class ToolOutput:
 class ExpenseTools(Protocol):
     """What the agent needs from the expense tools. Every method raises ToolsUnavailableError if unreachable."""
 
-    def acting_for(self, owner_id: int, timezone: str = DEFAULT_TIMEZONE) -> ExpenseTools:
+    def acting_for(
+        self,
+        owner_id: int,
+        timezone: str = DEFAULT_TIMEZONE,
+        default_currency: str = DEFAULT_USER_CURRENCY,
+    ) -> ExpenseTools:
         """The same tools, acting for one person: every call reads and changes only `owner_id`'s expenses."""
         ...
 

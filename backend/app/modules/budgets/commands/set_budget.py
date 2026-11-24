@@ -11,7 +11,7 @@ from app.core.cqrs import Command, Context
 from app.core.errors import BusinessRuleError
 from app.core.i18n import translatable
 from app.core.ids import UserId
-from app.core.money import rupees_to_paise
+from app.core.money import major_to_minor
 from app.modules import categories
 from app.modules.budgets.i18n import BudgetText
 from app.modules.budgets.persistence import repository
@@ -19,10 +19,10 @@ from app.modules.budgets.persistence.tables import Budget
 from app.modules.budgets.values import BudgetLimit
 
 
-# The body of the PUT routes: the new monthly limit, in rupees. Not a message: it has no owner (the server adds it,
-# D190), and unknown fields are refused.
+# The body of the PUT routes: the new monthly limit, in base currency major units. Not a message: it has no owner (the
+# server adds it, D190), and unknown fields are refused.
 class BudgetChange(BaseModel):
-    """A monthly limit, in rupees."""
+    """A monthly limit, in major units (USD)."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -40,13 +40,13 @@ class SetBudget(Command[int]):
 
 
 def set_budget(ctx: Context, command: SetBudget) -> int:
-    """Create or change the owner's budget for the command's scope, and return its id. The limit is stored in paise;
-    updated_at comes from the app's clock. Raises BusinessRuleError for a category that doesn't exist."""
+    """Create or change the owner's budget for the command's scope, and return its id. The limit is stored in minor
+    units; updated_at comes from the app's clock. Raises BusinessRuleError for a category that doesn't exist."""
     category_id = command.category_id
     # budget.category_id has no foreign key (each module owns its tables): this check keeps it pointing at a category.
     if category_id is not None and ctx.bus.ask(categories.GetCategory(category_id=category_id)) is None:
         raise BusinessRuleError(translatable(BudgetText.CATEGORY_MISSING, category_id=category_id))
-    limit_minor = rupees_to_paise(command.limit)
+    limit_minor = major_to_minor(command.limit)
     budget = repository.find(ctx.session, command.owner_id, category_id)
     if budget is None:
         budget = Budget(

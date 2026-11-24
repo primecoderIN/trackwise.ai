@@ -10,23 +10,22 @@ from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Protocol
 
-# Decimal places kept in a cross rate (USD -> EUR is worked out through INR): plenty for any amount the app holds.
+# Decimal places kept in a cross rate (EUR -> GBP is worked out through USD): plenty for any amount the app holds.
 RATE_PLACES = Decimal("1e-10")
 # Where MockRateProvider's rates come from, as the answer reports it.
 MOCK_SOURCE = "mock"
-# What 1 unit of each currency is worth in INR. MADE-UP VALUES for development, close to late-2026 levels but not
-# real quotes: never use them for real money. INR itself is 1.
-MOCK_INR_PER_UNIT: dict[str, Decimal] = {
-    "INR": Decimal("1"),
-    "USD": Decimal("84.50"),
-    "EUR": Decimal("89.80"),
-    "GBP": Decimal("106.90"),
-    "AED": Decimal("23.00"),
-    "SGD": Decimal("63.20"),
-    "AUD": Decimal("55.10"),
-    "CAD": Decimal("60.40"),
-    "CHF": Decimal("95.70"),
-    "JPY": Decimal("0.55"),
+# What 1 unit of each supported 2-decimal currency is worth in the base currency. MADE-UP VALUES for development, not
+# real quotes: never use them for real money. The base currency itself is 1.
+MOCK_BASE_RATES: dict[str, Decimal] = {
+    "USD": Decimal("1"),
+    "EUR": Decimal("1.06"),
+    "GBP": Decimal("1.27"),
+    "INR": Decimal("0.0118"),
+    "CAD": Decimal("0.71"),
+    "AUD": Decimal("0.65"),
+    "SGD": Decimal("0.75"),
+    "CHF": Decimal("1.13"),
+    "AED": Decimal("0.27"),
 }
 
 
@@ -52,12 +51,12 @@ class RateProvider(Protocol):
 
 
 class MockRateProvider:
-    """Fixed, made-up rates (MOCK_INR_PER_UNIT), the same on every day; any pair is worked out through INR."""
+    """Fixed, made-up rates (MOCK_BASE_RATES), the same on every day; any pair is worked out through the base rate."""
 
     def rate(self, from_currency: str, to_currency: str, on: date) -> Rate:
         """The mock rate for the pair, reported as of `on`. Raises UnsupportedCurrencyError for an unknown currency."""
         for currency in (from_currency, to_currency):
-            if currency not in MOCK_INR_PER_UNIT:
+            if currency not in MOCK_BASE_RATES:
                 raise UnsupportedCurrencyError(currency)
-        value = MOCK_INR_PER_UNIT[from_currency] / MOCK_INR_PER_UNIT[to_currency]
+        value = MOCK_BASE_RATES[from_currency] / MOCK_BASE_RATES[to_currency]
         return Rate(value=value.quantize(RATE_PLACES, rounding=ROUND_HALF_UP), as_of=on, source=MOCK_SOURCE)

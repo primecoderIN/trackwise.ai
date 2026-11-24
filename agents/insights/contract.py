@@ -6,7 +6,7 @@ expenses to look at) and reads one data artifact, `insights` (Insights). Without
 than one month, the task stops INPUT_REQUIRED asking which month; the client resumes the same task with one part: a
 line of text ("November", "2026-11", "last month") or MonthReply data.
 
-What the backend will send (Phase 25 part 3, the owner's choice): each expense's date, INR amount, category, merchant
+What the backend will send (Phase 25 part 3): each expense's date, USD amount, category, merchant
 and payment method; never a note, an id or anything about the person. Amounts travel as decimal strings.
 """
 
@@ -35,7 +35,7 @@ MonthText = Annotated[str, StringConstraints(pattern=YearMonth.PATTERN)]
 Text = Annotated[str, StringConstraints(min_length=1, max_length=MAX_TEXT_LENGTH)]
 
 
-# One expense, as the backend sends it: in INR, with nothing about the person.
+# One expense, as the backend sends it: in USD, with nothing about the person.
 class ExpenseRow(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 

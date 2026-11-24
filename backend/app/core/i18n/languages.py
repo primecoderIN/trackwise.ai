@@ -32,14 +32,14 @@ class LanguageInfo:
 
     # The language's name in English, as the model is told which language to reply in ("Hindi").
     english_name: str
-    # The CLDR locale numbers, money and dates are written in (Babel's form): "en_IN" groups digits as 1,25,000,
-    # like the web app's "en-IN".
+    # The CLDR locale numbers, money and dates are written in (Babel's form): "en_US" groups digits as 125,000,
+    # matching the web app's "en-US".
     locale: str
 
 
-# Every language. Both use India's conventions for numbers and dates (₹1,25,000.50), as the web app does.
+# Every language: English uses international USD-style formatting ("en_US"); Hindi keeps "hi_IN".
 LANGUAGES: dict[Language, LanguageInfo] = {
-    Language.EN: LanguageInfo(english_name="English", locale="en_IN"),
+    Language.EN: LanguageInfo(english_name="English", locale="en_US"),
     Language.HI: LanguageInfo(english_name="Hindi", locale="hi_IN"),
 }
 # A wiring check, kept under `python -O` too (an assert would be stripped): every Language needs its LanguageInfo.

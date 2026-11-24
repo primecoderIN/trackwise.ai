@@ -22,16 +22,16 @@ from pydantic import ValidationError
 
 from agent_kit.tasks import reject, start_task
 from app.core.clock import Clock
-from app.core.money import convert_minor, paise_to_rupees, rupees_to_paise
+from app.core.money import convert_minor, major_to_minor, minor_to_major
 from currency.contract import ARTIFACT_NAME, JSON_MEDIA_TYPE, ConversionAnswer, ConversionRequest, parse_text
 from currency.rates import RateProvider, UnsupportedCurrencyError
 
 logger = logging.getLogger(__name__)
 
 # Why a task ends without an answer (English, for the client's log; never shown to a person).
-WRONG_PARTS = "expected exactly one part: a ConversionRequest as data, or one line such as '4 USD to INR'"
+WRONG_PARTS = "expected exactly one part: a ConversionRequest as data, or one line such as '4 EUR to USD'"
 WRONG_DATA = "the data part isn't a ConversionRequest"
-WRONG_TEXT = "the text isn't a conversion, e.g. '4 USD to INR' or '4.50 EUR in INR on 2026-11-19'"
+WRONG_TEXT = "the text isn't a conversion, e.g. '4 EUR to USD' or '4.50 GBP in USD on 2026-11-19'"
 UNSUPPORTED = "unsupported currency: {currency}"
 
 
@@ -87,7 +87,7 @@ class CurrencyExecutor(AgentExecutor):
             rate = self._rates.rate(request.from_currency, request.to_currency, on)
         except UnsupportedCurrencyError as exc:
             raise RejectedRequest(UNSUPPORTED.format(currency=exc)) from exc
-        converted = convert_minor(rupees_to_paise(request.amount), rate.value)
+        converted = convert_minor(major_to_minor(request.amount), rate.value)
         return ConversionAnswer(
             amount=request.amount,
             from_currency=request.from_currency,
@@ -95,7 +95,7 @@ class CurrencyExecutor(AgentExecutor):
             rate=_plain(rate.value),
             rate_date=rate.as_of,
             # Money keeps its two decimals ("338.00"); only the rate is written without trailing zeros.
-            converted=str(paise_to_rupees(converted)),
+            converted=str(minor_to_major(converted)),
             source=rate.source,
         )
 

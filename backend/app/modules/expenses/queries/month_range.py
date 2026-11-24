@@ -16,7 +16,7 @@ from app.modules.expenses.persistence.tables import Expense
 def in_month_range(owner_id: int, start: date, end: date) -> tuple[Any, ...]:
     """`owner_id`'s expenses from `start` up to, not including, `end`: "before the next month" avoids month lengths.
 
-    Only that person's rows are ever added up (D190). Every currency counts, through its INR amount (D204); an
+    Only that person's rows are ever added up (D190). Every currency counts, through its USD amount (D204, D223); an
     expense in another currency saved before migration 0008 has none yet, so it's left out until it's converted.
     """
     return (

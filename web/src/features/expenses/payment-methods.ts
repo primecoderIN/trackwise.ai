@@ -15,9 +15,9 @@ import type { PaymentMethod } from "./api"
  */
 export const PAYMENT_METHODS: readonly PaymentMethod[] = paymentMethodValues
 /** What a new expense starts with in the Add dialog. */
-export const DEFAULT_PAYMENT_METHOD: PaymentMethod = "upi"
+export const DEFAULT_PAYMENT_METHOD: PaymentMethod = "card"
 
-/** The method's label for people, in the language on now: "upi" -> "UPI", "netbanking" -> "Net banking". */
+/** The method's label for people, in the language on now: "upi" -> "UPI", "netbanking" -> "Bank transfer". */
 export function paymentMethodLabel(method: PaymentMethod): string {
   return PAYMENT_METHOD_LABELS[currentLanguage()][method]
 }

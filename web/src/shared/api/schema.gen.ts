@@ -655,7 +655,7 @@ export interface components {
         };
         /**
          * BudgetChange
-         * @description A monthly limit, in rupees.
+         * @description A monthly limit, in major units (USD).
          */
         BudgetChange: {
             /**
@@ -752,7 +752,7 @@ export interface components {
         ChatRequest: {
             /**
              * Message
-             * @example I spent 250 on lunch at Subway today, paid by UPI
+             * @example I spent 25 on lunch at Subway today, paid by card
              */
             message: string;
             /** Thread Id */
@@ -928,7 +928,7 @@ export interface components {
         };
         /**
          * ExpenseRead
-         * @description An expense as callers see it: everything stored, plus the amount in rupees for display.
+         * @description An expense as callers see it: everything stored, plus the amount in major units for display.
          */
         ExpenseRead: {
             /** Id */
@@ -1122,13 +1122,13 @@ export interface components {
         NewExpense: {
             /**
              * Amount
-             * @example 450.50
+             * @example 24.50
              */
             amount: number | string;
             /**
              * Currency
-             * @default INR
-             * @example INR
+             * @default USD
+             * @example USD
              */
             currency?: string;
             /** Category Id */
@@ -1148,7 +1148,7 @@ export interface components {
         ParseRequest: {
             /**
              * Text
-             * @example Paid 450.50 at Swiggy yesterday via GPay
+             * @example Paid 24.50 at Corner Bistro yesterday by card
              */
             text: string;
         };
@@ -1170,7 +1170,7 @@ export interface components {
             amount: string | null;
             /**
              * Currency
-             * @description ISO 4217 code such as INR, USD or EUR. INR unless another currency is clearly stated.
+             * @description ISO 4217 code (such as USD, EUR or GBP). USD unless another currency is clearly stated.
              */
             currency: string;
             /**
@@ -1189,7 +1189,7 @@ export interface components {
              * @description The date of the expense. Work out words like 'yesterday' or 'last Friday' from today's date; use today if no date is mentioned.
              */
             spent_on: string;
-            /** @description Only if the text says how it was paid (GPay, PhonePe and Paytm UPI are upi); otherwise null. */
+            /** @description Only if the text says how it was paid (card, bank transfer, cash, wallet, or UPI apps like GPay/PhonePe/Paytm); otherwise null. */
             payment_method: components["schemas"]["PaymentMethod"] | null;
             /**
              * Note

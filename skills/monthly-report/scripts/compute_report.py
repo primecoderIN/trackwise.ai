@@ -5,10 +5,10 @@ Reads one JSON object on standard input and writes one on standard output, so it
     python scripts/compute_report.py < input.json
 
 Input:  {"month": "2026-11", "today": "2026-11-20",
-         "expenses": [{"spent_on": "2026-11-03", "amount": "450.50", "category": "Food", "merchant": "Swiggy",
+         "expenses": [{"spent_on": "2026-11-03", "amount": "24.50", "category": "Food", "merchant": "Corner Bistro",
                        "payment_method": "upi"}, ...]}
-        (the expenses of the month and of the month before, amounts in INR as decimal strings)
-Output: the figures (amounts as decimal strings, rounded half up to paise): total, previous_total, change_percent,
+        (the expenses of the month and of the month before, amounts in USD as decimal strings)
+Output: the figures (amounts as decimal strings, rounded half up to minor units): total, previous_total, change_percent,
         expense_count, daily_average (over the days so far, for the running month), by_category (with each one's
         share), by_payment_method, and the five biggest expenses.
 
@@ -26,7 +26,7 @@ from decimal import ROUND_HALF_UP, Decimal
 CENTS = Decimal("0.01")
 ONE_DECIMAL = Decimal("0.1")
 BIGGEST = 5
-CURRENCY = "INR"
+FALLBACK_CURRENCY = "USD"
 MAX_STDIN_BYTES = 10 * 1024 * 1024
 
 
@@ -80,7 +80,7 @@ def compute(data: dict) -> dict:
     biggest = sorted(rows, key=lambda row: (-Decimal(row["amount"]), row["spent_on"]))[:BIGGEST]
     return {
         "month": month,
-        "currency": CURRENCY,
+        "currency": str(data.get("currency") or FALLBACK_CURRENCY),
         "total": money(total),
         "previous_total": money(previous),
         "change_percent": percent(total - previous, previous),

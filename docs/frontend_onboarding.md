@@ -198,8 +198,8 @@ Never edit them. After a backend change: run `backend\scripts\export_contracts.p
   `npx shadcn@latest add <name>`). They're the only files the lint rules don't hold to app standards.
 - **Tailwind 4** with CSS variables (`app/index.css`); dark mode is a `dark` class on `<html>`, set before the first
   paint by a script generated from `shared/theme/theme-constants.ts`.
-- **Formatting** goes through `shared/lib/format.ts`, in the language's locale: `formatMoney("1250.5", "INR")` →
-  `₹1,250.50` (the currency's CLDR format, the same data as the backend's cards), `formatDate`, `formatMonth`.
+- **Formatting** goes through `shared/lib/format.ts`, in the language's locale: `formatMoney("1250.5", "USD")` →
+  `$1,250.50` (the currency's CLDR format, the same data as the backend's cards), `formatDate`, `formatMonth`.
 - **The server's language:** the API client and the assistant's stream send `Accept-Language` (the language on now),
   so error details, cards, chip labels and the assistant's replies come back in it.
 - **Every call carries `apiHeaders()`** (`shared/api/http.ts`): the language and `X-CSRF: 1`, without which the API

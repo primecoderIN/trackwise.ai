@@ -35,11 +35,11 @@ class Chart(A2uiModel):
     catalog_id: Literal[Catalog.INSIGHTS] = Field(default=Catalog.INSIGHTS, alias="@catalogId")
     chart_type: ChartType
     data: list[ChartPoint] = Field(min_length=1, max_length=MAX_CHART_POINTS)
-    unit: str | None = Field(default=None, max_length=MAX_UNIT_LENGTH)  # shown before values, e.g. "₹"
+    unit: str | None = Field(default=None, max_length=MAX_UNIT_LENGTH)  # shown before values, e.g. "$"
 
 
 class Stat(A2uiModel):
-    """One number worth noticing: "Spent in November: ₹9,265.85, +12% vs October"."""
+    """One number worth noticing: "Spent in November: $9,265.85, +12% vs October"."""
 
     id: ComponentId
     component: Literal["Stat"] = "Stat"

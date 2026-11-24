@@ -25,7 +25,7 @@ description: Builds a person's monthly spending report (totals against the month
 ## Tone
 
 Plain, calm and factual, like a good bank statement with one friendly line. No judgement ("you overspent"), no
-advice unless asked, no exclamation marks, no emojis. Amounts in rupees with the ₹ sign.
+advice unless asked, no exclamation marks, no emojis. Write amounts in the report's currency with its symbol or code.
 
 ## What the report contains (the downloads)
 

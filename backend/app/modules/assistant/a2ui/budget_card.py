@@ -36,7 +36,7 @@ _STATES = {
 
 
 def _overall(status: budgets.BudgetStatus, language: Language) -> Component:
-    """The overall budget as a Stat: "₹5,700.50 of ₹10,000.00", with its share used or how much over."""
+    """The overall budget as a Stat: "$5,700.50 of $10,000.00", with its share used or how much over."""
     t = partial(text, language)  # t(key, **values): a text in the request's language
     money = partial(format_money, currency=status.currency, language=language)
     line = status.overall
@@ -52,7 +52,7 @@ def _overall(status: budgets.BudgetStatus, language: Language) -> Component:
 
 
 def _categories(status: budgets.BudgetStatus, language: Language) -> list[Component]:
-    """A row per category with a limit: its name and share used, and "₹4,200 of ₹5,000". Empty if none has one."""
+    """A row per category with a limit: its name and share used, and "$4,200 of $5,000". Empty if none has one."""
     t = partial(text, language)  # t(key, **values): a text in the request's language
     money = partial(format_money, currency=status.currency, language=language)
     # Each category with a limit, its limit and state already known not to be None.

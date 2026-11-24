@@ -4,9 +4,9 @@ Part of the delegation. Only a skill listed here is offered to the model (AgentD
 cards really offer), because the server, not the model, decides what each agent is sent (D206):
 
 - insights / analyze_spending: the person's expenses for the three months up to the one asked about, each as its date,
-  INR amount, category, merchant and payment method (no note, id or anything about the person: the owner's choice),
+  USD amount, category, merchant and payment method (no note, id or anything about the person: the owner's choice),
   with the month (if the model passed one) and the request as the question;
-- currency / convert_currency: the model's request as one line of text ("4 USD to INR").
+- currency / convert_currency: the model's request as one line of text ("4 EUR to USD").
 
 Each answer is outside data: it's validated against the assistant's own view of it before the model sees it.
 """
@@ -143,7 +143,7 @@ class InsightsSkill:
         return [DataPart(data={key: value for key, value in data.items() if value is not None})]
 
     def _rows(self, owner_id: int, start: date, end: date) -> list[dict[str, str]]:
-        """The owner's expenses in [start, end] with an INR amount, as the agent's rows (no note, id or person)."""
+        """The owner's expenses in [start, end] with a USD amount, as the agent's rows (no note, id or person)."""
         names = {category.id: category.name for category in self.bus.ask(categories.ListCategories())}
         rows: list[dict[str, str]] = []
         while len(rows) < MAX_INSIGHT_ROWS:
@@ -181,7 +181,7 @@ class CurrencySkill:
     chip: str = ASK_CURRENCY
 
     def parts(self, request: DelegationRequest) -> list[Part]:
-        """The request as one line ("4 USD to INR"): the agent reads it; no personal data goes with it."""
+        """The request as one line ("4 EUR to USD"): the agent reads it; no personal data goes with it."""
         return [TextPart(text=request.request)]
 
     def answer(self, data: list[Any]) -> dict[str, Any] | None:

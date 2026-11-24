@@ -1,10 +1,10 @@
-"""Saving an expense, converted first when it isn't in INR: ExpenseRecorder.create and .update (D204).
+"""Saving an expense, converted first when it isn't in USD: ExpenseRecorder.create and .update (D204, D223).
 
 A use case (application layer) of the expenses module, and its public way to create and change expenses: POST and
 PATCH /expenses (api.py) and MCP's add_expense and update_expense use it. Not a handler: an amount in another
 currency needs a rate from the currency agent, a network call that mustn't happen inside the bus's unit of work. So
 the recorder asks ExchangeRates first, then sends CreateExpense or UpdateExpense with the rate; the handlers work out
-and store the INR amount (domain/base_amount.py). Expenses in INR need no rate and no call.
+and store the USD amount (domain/base_amount.py). Expenses in USD need no rate and no call.
 """
 
 from dataclasses import dataclass
@@ -20,7 +20,7 @@ from app.modules.expenses.queries.get_expense import GetExpense
 
 @dataclass(frozen=True)
 class ExpenseRecorder:
-    """Creates and changes expenses, with a rate for any amount not in INR. Needs the bus and the rates."""
+    """Creates and changes expenses, with a rate for any amount not in USD. Needs the bus and the rates."""
 
     bus: MessageBus
     rates: ExchangeRates
@@ -55,5 +55,5 @@ class ExpenseRecorder:
         self.bus.execute(UpdateExpense(owner_id=owner_id, expense_id=expense_id, changes=changes, rate=rate))
 
     def _rate(self, currency: str, on: date) -> ExchangeRate | None:
-        """The rate to INR for an amount in `currency` on `on`; None for INR, which needs none (and no call)."""
+        """The rate to USD for an amount in `currency` on `on`; None for USD, which needs none (and no call)."""
         return None if currency == BASE_CURRENCY else self.rates.to_base(currency, on)

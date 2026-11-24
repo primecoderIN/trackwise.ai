@@ -45,7 +45,12 @@ function CategoryRow({ line, currency }: { line: CategoryBudgetLine; currency: s
           <span className="font-medium">{line.category_name}</span>
           {line.state && <BudgetStateBadge state={line.state} />}
         </div>
-        <BudgetDialog scope={line.category_id} name={line.category_name} currentLimit={line.limit ?? null} />
+        <BudgetDialog
+          scope={line.category_id}
+          name={line.category_name}
+          currency={currency}
+          currentLimit={line.limit ?? null}
+        />
       </div>
       <BudgetFigures line={line} currency={currency} name={line.category_name} />
     </li>

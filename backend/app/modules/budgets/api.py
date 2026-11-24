@@ -40,7 +40,7 @@ def _only_query(*allowed: str) -> Any:
     return Depends(check)
 
 
-# GET /api/v1/budgets?month=2026-11: the month's spending (in INR) against the signed-in person's budgets: the overall
+# GET /api/v1/budgets?month=2026-11: the month's spending (in USD) against the signed-in person's budgets: the overall
 # line and one line per category. Without `month`, the current month in the user's time zone.
 @router.get("/budgets", dependencies=[_only_query("month")])
 def get_budget_status(
@@ -54,7 +54,7 @@ def get_budget_status(
     return bus.ask(GetBudgetStatus(owner_id=principal.user_id, month=which, today=today))
 
 
-# PUT /api/v1/budgets/overall: set the monthly limit for all spending together; the body is {"limit": "40000"}. 204.
+# PUT /api/v1/budgets/overall: set the monthly limit for all spending together; the body is {"limit": "2000"}. 204.
 # A limit of 0 or less, or with more than 2 decimals, is a 422.
 @router.put("/budgets/overall", status_code=204)
 def set_overall_budget(body: BudgetChange, principal: CurrentUserDep, bus: BusDep) -> None:

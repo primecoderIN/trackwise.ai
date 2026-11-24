@@ -29,9 +29,9 @@ def percent(part: int, whole: int) -> Decimal:
 
 
 def standing(spent_minor: int, limit_minor: int) -> Standing:
-    """Where `spent_minor` stands against `limit_minor` (both in paise; the limit is above zero).
+    """Where `spent_minor` stands against `limit_minor` (both in minor units; the limit is above zero).
 
-    The state is decided on exact paise, not the rounded percent: ₹8,000.01 against ₹8,000 is over the limit even
+    The state is decided on exact minor units, not the rounded percent: $800.01 against $800 is over the limit even
     though it rounds to 100.0%.
     """
     if spent_minor > limit_minor:

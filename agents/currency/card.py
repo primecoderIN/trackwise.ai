@@ -27,7 +27,7 @@ SKILL_DESCRIPTION = (
     "of text."
 )
 SKILL_TAGS = ["currency", "exchange-rate", "conversion"]
-SKILL_EXAMPLES = ["4 USD to INR", "120.50 EUR in INR on 2026-11-19"]
+SKILL_EXAMPLES = ["4 EUR to USD", "120.50 GBP in USD on 2026-11-19"]
 
 
 # What this agent's card says (agent_kit/card.py builds the rest).

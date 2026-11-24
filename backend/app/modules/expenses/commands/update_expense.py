@@ -13,7 +13,7 @@ from pydantic import BaseModel, ConfigDict, model_validator
 
 from app.core.cqrs import Command, Context
 from app.core.ids import UserId
-from app.core.money import CurrencyCode, rupees_to_paise
+from app.core.money import CurrencyCode, major_to_minor
 from app.modules.categories import CategoryId
 from app.modules.expenses.conversion.port import ExchangeRate
 from app.modules.expenses.domain.base_amount import base_amount_fields
@@ -59,7 +59,7 @@ class ExpenseChanges(BaseModel):
 # Change some fields of one of the owner's expenses (PATCH /expenses/{id}, MCP's update_expense, through the
 # recorder). The handler raises NotFoundError for a missing expense, or one that isn't the owner's (D190), and
 # BusinessRuleError for an amount <= 0, an unknown category, or a change to the amount, currency or date of an
-# expense in another currency without its `rate` (to INR, for the currency it ends up in); it raises the version by
+# expense in another currency without its `rate` (to USD, for the currency it ends up in); it raises the version by
 # one. There's no expected_version: an update applies to whatever is stored (last write wins); only deletes check it.
 class UpdateExpense(Command[None]):
     owner_id: UserId
@@ -79,10 +79,10 @@ def update_expense(ctx: Context, command: UpdateExpense) -> None:
     # Only the fields the caller actually sent; anything left out stays as it was.
     changes = command.changes.model_dump(exclude_unset=True)
     if "amount" in changes:
-        # Same rule and conversion as create_expense: rupees in, whole paise stored.
+        # Same rule and conversion as create_expense: major units in, whole minor units stored.
         amount = changes.pop("amount")
         require_positive_amount(amount)
-        changes["amount_minor"] = rupees_to_paise(amount)
+        changes["amount_minor"] = major_to_minor(amount)
     if "category_id" in changes:
         require_category_exists(ctx, changes["category_id"])
     reconvert = expense.base_amount_minor is None
@@ -90,7 +90,7 @@ def update_expense(ctx: Context, command: UpdateExpense) -> None:
         if field in CONVERTED_BY and getattr(expense, field) != value:
             reconvert = True
         setattr(expense, field, value)
-    # A new amount, currency or date (or a legacy row without an INR amount) gets a new base amount (D204).
+    # A new amount, currency or date (or a legacy row without a USD amount) gets a new base amount (D204, D223).
     if reconvert:
         conversion = base_amount_fields(expense.amount_minor, expense.currency, expense.spent_on, command.rate)
         for field, value in conversion.items():

@@ -1,5 +1,5 @@
 // The budgets feature's API calls and their types: the only file in this feature that talks to the backend. The
-// backend measures the month's spending against each budget (in INR), so the page gets small answers, never every
+// backend measures the month's spending against each budget (in USD), so the page gets small answers, never every
 // expense. Types come from the generated contract; calls go through the shared typed client. Used by queries.ts.
 
 import { api, unwrap, unwrapEmpty, type Schemas } from "@/shared/api/http"
@@ -21,7 +21,7 @@ export function getBudgetStatus(month: string, signal?: AbortSignal): Promise<Bu
   return unwrap(api.GET("/api/v1/budgets", { params: { query: { month } }, signal }))
 }
 
-/** Sets a budget's monthly limit (rupees, as typed: "8000"). Throws ApiError with the server's reason if refused. */
+/** Sets a budget's monthly limit (major units, as typed: "2000"). Throws ApiError with the server's reason if refused. */
 export function setBudget(scope: BudgetScope, limit: string): Promise<void> {
   const body = { limit }
   if (scope === null) return unwrapEmpty(api.PUT("/api/v1/budgets/overall", { body }))

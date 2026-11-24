@@ -16,6 +16,7 @@ from mcp.server.mcpserver import MCPServer
 
 from app.core.clock import Clock
 from app.core.cqrs import MessageBus
+from app.core.money import BASE_CURRENCY
 from app.modules import budgets, expenses, reports
 from app.modules.mcp.contracts import SERVER_NAME
 from app.modules.mcp.resources import register_resources
@@ -32,7 +33,7 @@ from app.modules.mcp.tools.update_expense import register_update_expense
 from app.modules.mcp.views import ExpenseViews
 
 # What the server tells a client about itself when it connects.
-INSTRUCTIONS = "Tools and resources for one person's expense tracker. Amounts are in rupees (INR) by default."
+INSTRUCTIONS = f"Tools and resources for one person's expense tracker. Amounts are in {BASE_CURRENCY} by default."
 
 # Adds one tool to the server. Every registrar takes the same arguments (the server and a ToolContext), so adding a
 # tool means writing a registrar and listing it below, without touching create_server.

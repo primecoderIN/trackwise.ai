@@ -1,6 +1,6 @@
 """The expenses module's exchange-rate port: what saving an expense in another currency needs, whoever provides it.
 
-Port. The recorder (application/record_expense.py) asks ExchangeRates for the rate to the base currency (INR) on the
+Port. The recorder (application/record_expense.py) asks ExchangeRates for the rate to the base currency (USD) on the
 expense's date, and sends it with CreateExpense or UpdateExpense, whose handlers store both amounts (D204). The
 composition root decides what's behind it, through module.py: currency_agent.CurrencyAgentRates, the currency agent
 (agents/currency) through the remote-agents port. A check passes a fake.
@@ -26,7 +26,7 @@ class UnsupportedCurrencyError(BusinessRuleError):
 
 
 # A rate to the base currency, as the handlers receive it inside a command: what 1 unit of `currency` was worth in
-# INR on `rate_date`. Part of CreateExpense and UpdateExpense, so frozen and checked like any message field.
+# USD on `rate_date`. Part of CreateExpense and UpdateExpense, so frozen and checked like any message field.
 class ExchangeRate(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 

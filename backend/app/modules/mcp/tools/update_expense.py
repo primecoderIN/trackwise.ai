@@ -3,8 +3,8 @@
 Part of the mcp adapter. register_update_expense adds the tool to a server; server.py calls it, in
 TOOL_REGISTRARS order. The tool only translates: it turns the fields given into the expenses module's
 UpdateExpense, sent through the expenses module's recorder (which converts a new amount, currency or date in
-another currency to INR first, D204), so MCP callers get exactly the REST API's rules (and the version is raised),
-then answers with the expense after the change (ExpenseUpdated) and the budgets the change pushed near or over
+another currency to the base currency first, D204), so MCP callers get exactly the REST API's rules (and the version
+is raised), then answers with the expense after the change (ExpenseUpdated) and the budgets the change pushed near or
 their limit (the budgets module's BudgetWatch).
 
 What clients see comes from the tool function: the SDK builds the input schema (titled
@@ -18,6 +18,7 @@ from mcp.server.mcpserver import MCPServer
 from pydantic import Field
 
 from app.core.errors import BusinessRuleError
+from app.core.money import DEFAULT_CURRENCY
 from app.modules import expenses
 from app.modules.mcp.caller import current_caller
 from app.modules.mcp.contracts import CLEAR_NOTE_ARGUMENT, EXPENSE_ID_ARGUMENT, ExpenseUpdated, ToolName
@@ -56,7 +57,7 @@ def register_update_expense(server: MCPServer, context: ToolContext) -> None:
         merchant: Annotated[str, Field(description="New merchant.")] = "",
         spent_on: Annotated[str, Field(description="New date as YYYY-MM-DD.")] = "",
         payment_method: Annotated[str, Field(description=f"New payment method: {PAYMENT_METHODS}.")] = "",
-        currency: Annotated[str, Field(description="New ISO currency code, e.g. INR.")] = "",
+        currency: Annotated[str, Field(description=f"New ISO currency code, e.g. {DEFAULT_CURRENCY}.")] = "",
         note: Annotated[str, Field(description="New note.")] = "",
         clear_note: Annotated[bool, Field(description="true to remove the note.")] = False,
     ) -> ExpenseUpdated:
@@ -87,7 +88,7 @@ def register_update_expense(server: MCPServer, context: ToolContext) -> None:
             checked = expenses.ExpenseChanges.model_validate(changes)
             # The month whose budgets can only go up: the new date's, or the expense's own (D211).
             day = checked.spent_on or views.find(owner, expense_id).spent_on
-            # Through the recorder: a new amount, currency or date is converted to INR again (D204).
+            # Through the recorder: a new amount, currency or date is converted to USD again (D204, D223).
             _, alerts = context.budget_watch.around(owner, day, lambda: recorder.update(owner, expense_id, checked))
             return ExpenseUpdated(updated=views.find(owner, expense_id), budget_alerts=alerts)
 

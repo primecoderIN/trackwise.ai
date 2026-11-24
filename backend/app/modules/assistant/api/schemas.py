@@ -21,14 +21,14 @@ MAX_NOTE_TEXT_LENGTH = 500
 # POST /parse's body: the note to read an expense from.
 class ParseRequest(BaseModel):
     text: str = Field(
-        min_length=1, max_length=MAX_NOTE_TEXT_LENGTH, examples=["Paid 450.50 at Swiggy yesterday via GPay"]
+        min_length=1, max_length=MAX_NOTE_TEXT_LENGTH, examples=["Paid 24.50 at Corner Bistro yesterday by card"]
     )
 
 
 # POST /chat's body: one message, and the conversation it belongs to.
 class ChatRequest(BaseModel):
     message: str = Field(
-        min_length=1, max_length=MAX_MESSAGE_LENGTH, examples=["I spent 250 on lunch at Subway today, paid by UPI"]
+        min_length=1, max_length=MAX_MESSAGE_LENGTH, examples=["I spent 25 on lunch at Subway today, paid by card"]
     )
     # Leave it out to start a new conversation; send the thread_id from a reply to continue that one.
     thread_id: ThreadId | None = None

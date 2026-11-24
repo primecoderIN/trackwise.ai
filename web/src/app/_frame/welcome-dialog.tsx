@@ -12,11 +12,12 @@ import { useCompleteWelcome } from "@/features/account"
 import { useAssistant } from "@/features/assistant"
 import { useSignedInUser } from "@/features/auth"
 import { useSetBudget } from "@/features/budgets"
-import { ACCOUNT, DEFAULT_CURRENCY } from "@/shared/api/contracts.gen"
+import { ACCOUNT, BASE_CURRENCY, DEFAULT_USER_CURRENCY } from "@/shared/api/contracts.gen"
 import { APP_NAME } from "@/shared/config/app"
 import { ROUTES } from "@/shared/config/routes"
 import { isLanguage, LANGUAGE_CODES, LANGUAGES, useLanguage } from "@/shared/i18n"
 import { messageOf } from "@/shared/lib/errors"
+import { formatMoney } from "@/shared/lib/format"
 import { Button } from "@/shared/ui/button"
 import { Checkbox } from "@/shared/ui/checkbox"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
@@ -47,8 +48,9 @@ export function WelcomeDialog({ onOpenChat }: { onOpenChat: () => void }) {
   const needsWelcome = user.welcomed_at == null || user.terms_version !== ACCOUNT.currentTermsVersion
   if (!needsWelcome || dismissedForUser === user.id) return null
 
+  const userCurrency = user.default_currency ?? DEFAULT_USER_CURRENCY
   const busy = completeWelcome.isPending || setBudget.isPending
-  const prompts = [t("welcome.prompt1"), t("welcome.prompt2")]
+  const prompts = [t("welcome.prompt1", { amount: formatMoney("25", userCurrency) }), t("welcome.prompt2")]
 
   function chooseLanguage(code: string) {
     if (!isLanguage(code) || code === language) return
@@ -103,7 +105,7 @@ export function WelcomeDialog({ onOpenChat }: { onOpenChat: () => void }) {
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="welcome-budget" className="text-sm font-medium">
-              {t("welcome.stepBudget", { currency: DEFAULT_CURRENCY })}
+              {t("welcome.stepBudget", { currency: BASE_CURRENCY })}
             </Label>
             <Input
               id="welcome-budget"

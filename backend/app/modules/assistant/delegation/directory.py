@@ -37,7 +37,7 @@ TOOL_DESCRIPTION = (
 SKILL_LINE = "- agent '{agent}', skill '{skill}': {name}. {description} Examples: {examples}"
 REQUEST_HELP = (
     "What to ask, in English: the user's question as they meant it, or for a conversion one line such as "
-    "'4 USD to INR' or '120 EUR to INR on 2026-11-19'."
+    "'4 EUR to USD' or '120 GBP to USD on 2026-11-19'."
 )
 MONTH_HELP = "Only if the user named the month to analyse: it as YYYY-MM. Leave it out otherwise."
 

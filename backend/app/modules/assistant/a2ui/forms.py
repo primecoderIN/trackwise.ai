@@ -19,7 +19,7 @@ from functools import partial
 from typing import Any
 
 from app.core.i18n import Language, text
-from app.core.money import CURRENCY_PATTERN, DEFAULT_CURRENCY
+from app.core.money import CURRENCY_PATTERN, DEFAULT_USER_CURRENCY
 from app.core.months import MAX_DATE, MIN_DATE
 from app.modules.assistant.a2ui.form_tool import DATA_ROOT, FIELDS, FORM_ARGUMENT, field_path
 from app.modules.assistant.a2ui.models import (
@@ -72,7 +72,11 @@ def _form_surface_id() -> str:
     return new_surface_id("expense_form")
 
 
-def _inputs(category_names: list[str], language: Language) -> list[Component]:
+def _inputs(
+    category_names: list[str],
+    language: Language,
+    default_currency: str = DEFAULT_USER_CURRENCY,
+) -> list[Component]:
     """The built-in form's title, one input per field and its Save button, labelled in `language`."""
     t = partial(text, language)  # t(key, **values): a text in the request's language
     categories = [ChoiceOption(label=name, value=name) for name in category_names]
@@ -80,7 +84,7 @@ def _inputs(category_names: list[str], language: Language) -> list[Component]:
     return [
         Text(id="title", text=t(ChatText.FORM_TITLE), variant="caption"),
         TextField(id="amount", label=t(ChatText.FORM_AMOUNT), value=_bind("amount"), variant="number"),
-        TextField(id="currency", label=t(ChatText.FORM_CURRENCY), value=_bind("currency")),
+        TextField(id="currency", label=t(ChatText.FORM_CURRENCY, currency=default_currency), value=_bind("currency")),
         ChoicePicker(id="category", label=t(ChatText.FORM_CATEGORY), options=categories, value=_bind("category")),
         TextField(id="merchant", label=t(ChatText.FORM_MERCHANT), value=_bind("merchant")),
         DateTimeInput(id="spent_on", label=t(ChatText.FORM_DATE), value=_bind("spent_on")),
@@ -101,10 +105,10 @@ def _inputs(category_names: list[str], language: Language) -> list[Component]:
     ]
 
 
-def _normalized_currency(value: Any) -> str:
-    """A 3-letter uppercase ISO currency code, or DEFAULT_CURRENCY ('INR') when missing or malformed."""
+def _normalized_currency(value: Any, default_currency: str = DEFAULT_USER_CURRENCY) -> str:
+    """A 3-letter uppercase ISO currency code, or `default_currency` when missing or malformed."""
     code = str(value).strip().upper() if isinstance(value, str) else ""
-    return code if re.fullmatch(CURRENCY_PATTERN, code) else DEFAULT_CURRENCY
+    return code if re.fullmatch(CURRENCY_PATTERN, code) else default_currency
 
 
 def _normalized_date(value: Any, today: date) -> str:
@@ -121,12 +125,11 @@ def _normalized_date(value: Any, today: date) -> str:
     return today.isoformat()
 
 
-def _data_model(values: dict[str, Any], today: date) -> dict[str, Any]:
-    """The built-in form's starting data: what was understood (no date means today, no currency INR), and "" or []
-    for the rest."""
+def _data_model(values: dict[str, Any], today: date, default_currency: str = DEFAULT_USER_CURRENCY) -> dict[str, Any]:
+    """The built-in form's starting data: fills missing date/currency with `today` and `default_currency`."""
     known = {key: value for key, value in values.items() if value}
     known["spent_on"] = _normalized_date(known.get("spent_on"), today)
-    known["currency"] = _normalized_currency(known.get("currency"))
+    known["currency"] = _normalized_currency(known.get("currency"), default_currency)
 
     def typed(field: str) -> str:
         """A text input's starting value: what was understood, or ""."""
@@ -141,15 +144,24 @@ def _data_model(values: dict[str, Any], today: date) -> dict[str, Any]:
 
 
 def expense_form(
-    values: dict[str, Any], category_names: list[str], today: date, language: Language
+    values: dict[str, Any],
+    category_names: list[str],
+    today: date,
+    language: Language,
+    *,
+    default_currency: str = DEFAULT_USER_CURRENCY,
 ) -> CreateSurfaceMessage:
     """The built-in form, labelled in `language` and pre-filled with `values` (whatever was understood)."""
     components = [
         Card(id=ROOT_ID, child="body"),
         Column(id="body", children=["title", *FIELDS, "save"]),
-        *_inputs(category_names, language),
+        *_inputs(category_names, language, default_currency),
     ]
-    surface = CreateSurface(surface_id=_form_surface_id(), components=components, data_model=_data_model(values, today))
+    surface = CreateSurface(
+        surface_id=_form_surface_id(),
+        components=components,
+        data_model=_data_model(values, today, default_currency),
+    )
     return CreateSurfaceMessage(create_surface=surface)
 
 
@@ -164,7 +176,9 @@ def _label_payment_options(components: list[Any], language: Language) -> None:
                     option.label = payment_method_label(methods[option.value], language)
 
 
-def _model_form(form: Any, today: date, language: Language) -> CreateSurfaceMessage:
+def _model_form(
+    form: Any, today: date, language: Language, default_currency: str = DEFAULT_USER_CURRENCY
+) -> CreateSurfaceMessage:
     """Turn the form the model wrote into a checked A2UI message (its payment options labelled in `language`), or
     raise ValueError saying why not."""
     data = json.loads(form) if isinstance(form, str) else form
@@ -204,22 +218,30 @@ def _model_form(form: Any, today: date, language: Language) -> CreateSurfaceMess
     if not isinstance(surface.data_model, dict) or not isinstance(surface.data_model.get(DATA_ROOT), dict):
         surface.data_model = {DATA_ROOT: {}}
     expense_data = surface.data_model[DATA_ROOT]
-    expense_data["currency"] = _normalized_currency(expense_data.get("currency"))
+    expense_data["currency"] = _normalized_currency(expense_data.get("currency"), default_currency)
     expense_data["spent_on"] = _normalized_date(expense_data.get("spent_on"), today)
     _label_payment_options(surface.components, language)
     return CreateSurfaceMessage(create_surface=surface)
 
 
 def expense_form_from_call(
-    arguments: dict[str, Any], category_names: list[str], today: date, language: Language
+    arguments: dict[str, Any],
+    category_names: list[str],
+    today: date,
+    language: Language,
+    *,
+    default_currency: str = DEFAULT_USER_CURRENCY,
 ) -> tuple[CreateSurfaceMessage, FormSource]:
     """The form for a show_expense_form call: the model's own if it passes the checks, else ours (in `language`)."""
     try:
-        return _model_form(arguments.get(FORM_ARGUMENT), today, language), FormSource.MODEL
+        return _model_form(arguments.get(FORM_ARGUMENT), today, language, default_currency), FormSource.MODEL
     except (ValueError, TypeError) as exc:  # ValueError includes JSON and Pydantic validation errors
         logger.warning("the model's form was rejected, sending the built-in one instead: %s", str(exc)[:500])
         values = {field: arguments.get(field) for field in FIELDS}
-        return expense_form(values, category_names, today, language), FormSource.FALLBACK
+        return (
+            expense_form(values, category_names, today, language, default_currency=default_currency),
+            FormSource.FALLBACK,
+        )
 
 
 def describe_action(action: UserAction) -> str:

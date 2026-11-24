@@ -83,14 +83,11 @@ export function CategoriesPage() {
     </div>
   )
 
+  const headerDescription = t("page.description", { currency: summary.data?.currency ?? DEFAULT_CURRENCY })
   if (!rows || !summary.data) {
     return (
       <div className="flex flex-col gap-4">
-        <PageHeader
-          title={t("page.title")}
-          description={t("page.description", { currency: DEFAULT_CURRENCY })}
-          actions={monthControls}
-        />
+        <PageHeader title={t("page.title")} description={headerDescription} actions={monthControls} />
         {failed ? (
           <SectionError
             title={t("page.loadFailed")}
@@ -113,11 +110,7 @@ export function CategoriesPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader
-        title={t("page.title")}
-        description={t("page.description", { currency: DEFAULT_CURRENCY })}
-        actions={monthControls}
-      />
+      <PageHeader title={t("page.title")} description={headerDescription} actions={monthControls} />
       {failed && <RefreshNotice message={messageOf(failed.error)} onRetry={retry} retrying={retrying} />}
       {rows.length === 0 ? (
         <Card>

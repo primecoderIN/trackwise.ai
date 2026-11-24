@@ -1,8 +1,8 @@
 """GetBudgetStatus: a month's spending against a person's budgets. The query, its handler and its answer.
 
 A slice of the budgets module's read side; it never changes anything. module.py registers the handler with the bus.
-The month's spending comes from the expenses module's GetMonthlySummary (in INR, every currency counted through its
-INR amount, D204) and the category names from the categories module's ListCategories, both through the bus; only
+The month's spending comes from the expenses module's GetMonthlySummary (in USD, every currency counted through its
+USD amount, D204, D223) and the category names from the categories module's ListCategories, both through the bus; only
 the limits are read from this module's own table. Asked by GET /budgets (the Budgets page and the Dashboard's
 budget card) and, in part 2, by the assistant. The answer is a REST response, so notes about it are `#` comments.
 """
@@ -15,7 +15,7 @@ from sqlmodel import col, select
 
 from app.core.cqrs import Context, Query
 from app.core.ids import UserId
-from app.core.money import BASE_CURRENCY, paise_to_rupees
+from app.core.money import BASE_CURRENCY, minor_to_major
 from app.core.months import YearMonth
 from app.modules import categories, expenses
 from app.modules.budgets.domain.rules import month_elapsed_percent, standing
@@ -60,14 +60,14 @@ class GetBudgetStatus(Query[BudgetStatus]):
 
 
 def _line(spent_minor: int, limit_minor: int | None) -> BudgetLine:
-    """Spending against a limit (or no limit), in rupees."""
+    """Spending against a limit (or no limit), in major units."""
     if limit_minor is None:
-        return BudgetLine(spent=paise_to_rupees(spent_minor))
+        return BudgetLine(spent=minor_to_major(spent_minor))
     result = standing(spent_minor, limit_minor)
     return BudgetLine(
-        spent=paise_to_rupees(spent_minor),
-        limit=paise_to_rupees(limit_minor),
-        remaining=paise_to_rupees(result.remaining_minor),
+        spent=minor_to_major(spent_minor),
+        limit=minor_to_major(limit_minor),
+        remaining=minor_to_major(result.remaining_minor),
         used_percent=result.used_percent,
         state=result.state,
     )

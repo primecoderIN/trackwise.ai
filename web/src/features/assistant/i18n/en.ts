@@ -30,7 +30,7 @@ const en = {
   },
   suggestions: {
     foodThisMonth: "How much did I spend on food this month?",
-    addLunch: "Add 250 for lunch at Subway today, paid by UPI",
+    addLunch: "Add {{amount}} for lunch at Subway today, paid by card",
     biggestExpenses: "What were my 3 biggest expenses this month?",
   },
   chips: {

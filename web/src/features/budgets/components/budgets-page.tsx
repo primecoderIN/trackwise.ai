@@ -36,7 +36,7 @@ export function BudgetsPage() {
     <div className="flex flex-col gap-4">
       <PageHeader
         title={t("page.title")}
-        description={t("page.description", { currency: DEFAULT_CURRENCY })}
+        description={t("page.description", { currency: status.data?.currency ?? DEFAULT_CURRENCY })}
         actions={
           <div className="flex items-center gap-1">
             <Button

@@ -32,7 +32,7 @@
 | **Expense & Budget Workspace** | KPI Dashboard (`/dashboard`), paginated/filtered ledger (`/expenses`), shared categories breakdown (`/categories`), overall & per-category monthly limits with live 80%/100% alert notices (`/budgets`), CSV/Markdown monthly exports (`/reports`), `Ctrl/⌘ + K` command palette, and server-stored onboarding welcome & terms acceptance. |
 | **Streaming AI Assistant** | Natural-language expense logging, editable confirmation forms, DB-persisted delete approvals, streaming AG-UI timeline, interactive A2UI spending charts/cards, and conversation history synced with workspace queries. |
 | **Receipt Scanning** | Multipart upload validated by magic bytes -> delegated to the `receipt` A2A agent -> structured extraction presented as an editable card before any row is saved. |
-| **Multi-Currency & Insights** | All expenses store original currency plus server-computed `BigInteger` INR (`base_amount_minor`) via the `currency` A2A agent; spending recommendations come from deterministic aggregations + the `insights` A2A agent. |
+| **Multi-Currency & Insights** | Expenses store original currency (`default_currency` from user DB settings when omitted) plus server-computed `BigInteger` base-currency amounts (`base_amount_minor`, `USD`, D223) via the `currency` A2A agent; spending recommendations come from deterministic aggregations + the `insights` A2A agent. |
 | **External MCP Clients** | Standard MCP tools exposed over stdio or Streamable HTTP with `Origin` validation and revocable Personal Access Tokens (`spw_` prefix, SHA-256 hashed) managed in `/settings`. |
 
 ---

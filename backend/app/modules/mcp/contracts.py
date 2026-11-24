@@ -61,16 +61,16 @@ class ResourceUri(StrEnum):
 
 # How every tool and the "recent" resource show an expense (views.to_view builds it from ExpenseRead).
 class ExpenseView(BaseModel):
-    """An expense as the tools show it: the category by name, the amount in rupees."""
+    """An expense as the tools show it: the category by name, the amount in major units."""
 
     model_config = ConfigDict(frozen=True)
 
     id: int
     amount: Decimal
     currency: str
-    # The same amount in INR (D204): what totals count. Equal to `amount` for INR; null only for an expense in another
-    # currency saved before it could be converted. The name says the currency, for the model reading it.
-    amount_in_inr: Decimal | None
+    # The same amount in the base currency (D204): what totals count. Equal to `amount` when already in the base
+    # currency; null only for an expense in another currency saved before it could be converted.
+    base_amount: Decimal | None
     category: str
     merchant: str
     note: str | None

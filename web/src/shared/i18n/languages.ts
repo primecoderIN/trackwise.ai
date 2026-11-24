@@ -14,7 +14,7 @@ type ServerLanguage = (typeof SERVER_LANGUAGES)[number]
 export interface LanguageInfo {
   /** The language's name in itself ("हिन्दी"), so people can find their own language in the menu. */
   name: string
-  /** The BCP 47 locale numbers, money and dates are written in (Intl): "en-IN" groups digits as 1,25,000. */
+  /** The BCP 47 locale numbers, money and dates are written in (Intl): "en-US" groups digits as 125,000. */
   locale: string
   /** Which way its text runs: <html dir> follows it. (Right-to-left layouts aren't supported yet.) */
   dir: "ltr" | "rtl"
@@ -28,15 +28,15 @@ export interface LanguageInfo {
 /**
  * Every language, by its code (a BCP 47 tag: "en", or "pt-BR" for a regional variant): exactly the server's, so a
  * language the web offers is one the server can write in (a missing or extra one fails the build). English is the
- * language the texts are written in. Both languages use India's conventions for numbers and dates (₹1,25,000.50),
- * which suit the app's rupee amounts.
+ * language the texts are written in. English uses US conventions for numbers and dates ($125,000.50), while Hindi
+ * keeps Indian conventions (₹1,25,000.50).
  */
 export const LANGUAGES = {
   en: {
     name: "English",
-    locale: "en-IN",
+    locale: "en-US",
     dir: "ltr",
-    loadDatePickerLocale: () => import("react-day-picker/locale/en-IN").then((module) => module.enIN),
+    loadDatePickerLocale: () => import("react-day-picker/locale/en-US").then((module) => module.enUS),
   },
   hi: {
     name: "हिन्दी",

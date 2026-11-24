@@ -2,7 +2,7 @@
 
 A slice of the expenses module's write side. module.py registers the handler with the bus; callers send the
 command and never call the handler directly: the recorder (application/record_expense.py, behind POST /expenses and
-MCP's add_expense), which fetches the rate for an amount in another currency first, and seed.py (INR only). The
+MCP's add_expense), which fetches the rate for an amount in another currency first, and seed.py (USD only). The
 handler applies the business rules (domain/rules.py, domain/base_amount.py), then stages the row through
 persistence/repository.py. The bus commits; the handler never does.
 """
@@ -11,7 +11,7 @@ from pydantic import BaseModel, ConfigDict
 
 from app.core.cqrs import Command, Context
 from app.core.ids import UserId
-from app.core.money import DEFAULT_CURRENCY, CurrencyCode, rupees_to_paise
+from app.core.money import DEFAULT_CURRENCY, CurrencyCode, major_to_minor
 from app.modules.categories import CategoryId
 from app.modules.expenses.conversion.port import ExchangeRate
 from app.modules.expenses.domain.base_amount import base_amount_fields
@@ -23,7 +23,7 @@ from app.modules.expenses.values import Amount, Merchant, Note, PaymentMethod, S
 
 # The new expense's fields, and the body of POST /expenses. Not a message: it has no owner, which the server adds
 # from the session (CreateExpense), so a body can never name someone else (D190). Unknown fields are refused (a typo
-# like "merchnat", or an "owner_id", is a 422); stray spaces are stripped ("Swiggy " would never match a filter).
+# like "merchnat", or an "owner_id", is a 422); stray spaces are stripped ("Corner Bistro " would never match a filter).
 class NewExpense(BaseModel):
     """A new expense. Also the body of POST /expenses."""
 
@@ -40,7 +40,7 @@ class NewExpense(BaseModel):
 
 # Sent by the recorder (POST /expenses, MCP's add_expense) and seed.py. Beyond the shape NewExpense checks, the
 # handler refuses an amount <= 0, a category that doesn't exist, or an amount in another currency without its `rate`
-# (to INR, for that currency), with a BusinessRuleError (create_expense, below).
+# (to USD, for that currency), with a BusinessRuleError (create_expense, below).
 class CreateExpense(Command[int]):
     """Record an expense for `owner_id`. Returns its id."""
 
@@ -53,14 +53,14 @@ def create_expense(ctx: Context, command: CreateExpense) -> int:
     """Record a new expense for the command's owner and return its id.
 
     Raises BusinessRuleError if the amount isn't above zero, the category doesn't exist (categories are shared by
-    everyone), or an amount in another currency came without its rate. The amount arrives in rupees (or the currency's
-    units) and is stored as whole minor units, beside its INR amount (D204); created_at comes from the app's clock
+    everyone), or an amount in another currency came without its rate. The amount arrives in major units
+    and is stored as whole minor units, beside its USD amount (D204, D223); created_at comes from the app's clock
     (UTC).
     """
     new = command.expense
     require_positive_amount(new.amount)
     require_category_exists(ctx, new.category_id)
-    amount_minor = rupees_to_paise(new.amount)
+    amount_minor = major_to_minor(new.amount)
     # Every other field has the same name in NewExpense and the table, so they're copied across as is.
     fields = new.model_dump(exclude={"amount"})
     fields |= base_amount_fields(amount_minor, new.currency, new.spent_on, command.rate)

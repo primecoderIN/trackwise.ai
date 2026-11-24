@@ -16,7 +16,7 @@ define_catalog(BudgetText, {Language.EN: EN, Language.HI: HI})
 
 
 def alert_text(alert: BudgetAlert, language: Language) -> str:
-    """One alert as a sentence in `language`: "Food budget: 84.0% used (₹4,200.00 of ₹5,000.00)". Budgets are in INR,
+    """One alert as a sentence in `language`: "Food budget: 84.0% used ($420.00 of $500.00)". Budgets are in USD,
     like every total (D204)."""
     values = {
         "name": alert.category if alert.category is not None else text(language, BudgetText.OVERALL_NAME),

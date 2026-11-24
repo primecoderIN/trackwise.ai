@@ -16,7 +16,7 @@ from app.modules.expenses.i18n import ExpenseText
 
 
 def require_positive_amount(amount: Decimal) -> None:
-    """Raise BusinessRuleError unless the amount (in rupees) is above zero."""
+    """Raise BusinessRuleError unless the amount (in major units) is above zero."""
     # A business rule, not a format rule: zero or negative amounts aren't expenses.
     if amount <= 0:
         raise BusinessRuleError(translatable(ExpenseText.AMOUNT_NOT_POSITIVE))

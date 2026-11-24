@@ -18,7 +18,7 @@ Unauthenticated visitors land on a server-rendered, SEO-optimized public website
 
 All signed-in routes sit inside a unified frame with light/dark theme switching, live English/Hindi UI switching, and a zero-dependency **Command Palette (`Ctrl/⌘ + K`)** for keyboard navigation and quick expense entry:
 
-- **Dashboard (`/dashboard`):** Monthly total spend in normalized INR (`₹`), percentage comparison against the previous month, transaction counts, category breakdown bar/list, payment-method distribution, and daily spending charts. Month switching lets users review historical periods seamlessly.
+- **Dashboard (`/dashboard`):** Monthly total spend in normalized base currency (`USD`, D223), percentage comparison against the previous month, transaction counts, category breakdown bar/list, payment-method distribution, and daily spending charts. Month switching lets users review historical periods seamlessly.
 - **Expenses Ledger (`/expenses`):** Server-paginated, filterable table (by month, category, merchant search, payment method, and date range) with inline add/edit dialogs supporting multi-currency entry, optimistic concurrency checks on edits/deletes, and instant budget threshold toast notices on save.
 - **Monthly Budgets (`/budgets`):** Set an overall monthly budget and/or per-category monthly caps. Progress bars highlight approaching (`>= 80%`) and exceeded (`> 100%`) limits, and saving/editing an expense from **any** surface (UI, Assistant, or MCP) triggers localized budget alerts when thresholds cross.
 - **Categories (`/categories`):** View all 8 curated categories (`Food`, `Transport`, `Shopping`, `Bills`, `Entertainment`, `Health`, `Travel`, `Other`) with monthly spending summaries and icons.
@@ -38,7 +38,7 @@ Docked beside every workspace view (`AssistantProvider` over **AG-UI** Server-Se
 - **Conversational Logging & Search:** Understands casual Hinglish/English prompts (*"Paid 420 via UPI at Swiggy today"* or *"Show food spends this month"*), renders live progress chips (*"Saving expense…"*) in the active language, and syncs frontend queries immediately on completion.
 - **Rich Interactive Cards (A2UI):** Renders validated spending breakdown charts, KPI stat strips, budget progress meters, editable confirmation forms (for ambiguous entries or scanned receipts), and two-step **database-backed delete approvals** (adds/edits execute directly; deletes always require explicit human approval).
 - **Multi-Modal Receipt Extraction:** Uploading an image/PDF in chat or via upload routes stores bytes separately from SQL and routes them to the isolated `receipt` A2A specialist agent (`extract_receipt`). Extracted merchant, amount, currency, date, category, and payment method appear inside an editable form—nothing is saved until confirmed.
-- **Multi-Currency Conversion (`currency` agent):** Non-INR expenses query exact historical exchange rates (`convert_currency`) on save so original currency is preserved alongside normalized `BigInteger` paise totals (`base_amount_minor`).
+- **Multi-Currency Conversion (`currency` agent):** Expenses in another currency query exchange rates (`convert_currency`) on save so original currency is preserved alongside normalized `BigInteger` base-currency totals (`base_amount_minor`).
 - **Spending Insights (`insights` agent) & Agent Skills:** Combines deterministic server-computed aggregates with contextual AI recommendations (`analyze_spending`) and curated Agent Skills (`categorization` guidelines and `monthly-report` isolated `python -I` calculations).
 
 ---

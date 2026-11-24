@@ -133,8 +133,8 @@ function dataColumns({ categoryName, t }: Pick<ExpenseColumnOptions, "categoryNa
       header: sortableHeader(t("fields.category")),
       sortFn: sortFn_alphanumeric,
     }),
-    // Sort by the INR amount in paise (D204), so $4 and ₹100 compare by what they're worth; an expense not converted
-    // yet sorts by its own amount. Shown in its own currency, with the INR amount under it.
+    // Sort by the USD amount in minor units (D204, D223), so €4 and $10 compare by what they're worth; an expense not converted
+    // yet sorts by its own amount. Shown in its own currency, with the USD amount under it.
     columnHelper.accessor((expense) => expense.base_amount_minor ?? expense.amount_minor, {
       id: "amount",
       header: sortableHeader(t("fields.amount"), "end"),

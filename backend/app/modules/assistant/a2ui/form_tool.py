@@ -7,6 +7,7 @@ forms.py builds and checks the form itself from the same fields.
 
 from app.core.i18n import DEFAULT_LANGUAGE
 from app.core.llm import ToolSpec
+from app.core.money import DEFAULT_CURRENCY
 from app.modules.assistant.a2ui.models import ROOT_ID, ActionName
 from app.modules.expenses import PaymentMethod, payment_method_label
 from app.modules.mcp import ToolName
@@ -19,7 +20,7 @@ DATA_ROOT = "expense"
 # data model, its Save context and the tool's arguments are all built from it.
 FIELD_DESCRIPTIONS = {
     "amount": "Amount as a plain number string, e.g. '250'.",
-    "currency": "ISO 4217 currency code of the amount, e.g. 'INR' (the usual one) or 'USD'.",
+    "currency": f"ISO 4217 currency code of the amount, e.g. '{DEFAULT_CURRENCY}'.",
     "category": "Category name.",
     "merchant": "The shop, company or person paid.",
     "spent_on": "Date as YYYY-MM-DD.",

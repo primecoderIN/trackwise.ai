@@ -4,7 +4,7 @@ Its own process on 127.0.0.1 (port CURRENCY_AGENT_PORT, 9003 by default), starte
 (run-agent.ps1 currency). One skill, convert_currency: a client sends an amount, two currencies and a day (as data,
 or one line of text) and gets a conversion artifact. No model is involved. The rates come from a RateProvider:
 MockRateProvider, fixed made-up rates, until a real API is plugged in (D203). The backend's expenses module asks it
-for the rate of any expense not in INR, to store both amounts (D204).
+for the rate of any expense not in the base currency (USD, D223), to store both amounts (D204).
 
 - contract.py: what travels on the wire (the skill's id, the request, the answer, the text form);
 - rates.py: the RateProvider interface and the mock behind it;

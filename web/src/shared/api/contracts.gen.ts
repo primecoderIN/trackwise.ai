@@ -5,7 +5,9 @@ export const API_PREFIX = "/api/v1" as const
 
 export const PROBLEM_JSON = "application/problem+json" as const
 
-export const DEFAULT_CURRENCY = "INR" as const
+export const DEFAULT_CURRENCY = "USD" as const
+
+export const BASE_CURRENCY = "USD" as const
 
 export const DEFAULT_USER_CURRENCY = "USD" as const
 
@@ -18,8 +20,7 @@ export const SUPPORTED_CURRENCIES = [
   "AUD",
   "SGD",
   "CHF",
-  "AED",
-  "JPY"
+  "AED"
 ] as const
 
 export const DEFAULT_TIMEZONE = "UTC" as const
@@ -34,7 +35,7 @@ export const PAYMENT_METHOD_LABELS = {
     "cash": "Cash",
     "upi": "UPI",
     "card": "Card",
-    "netbanking": "Net banking",
+    "netbanking": "Bank transfer",
     "wallet": "Wallet",
     "other": "Other"
   },
@@ -42,7 +43,7 @@ export const PAYMENT_METHOD_LABELS = {
     "cash": "नकद",
     "upi": "UPI",
     "card": "कार्ड",
-    "netbanking": "नेट बैंकिंग",
+    "netbanking": "बैंक ट्रांसफ़र",
     "wallet": "वॉलेट",
     "other": "अन्य"
   }

@@ -8,8 +8,8 @@ import type { paths } from "@/shared/api/schema.gen"
 import { api, unwrap, unwrapEmpty, type Schemas } from "@/shared/api/http"
 
 /**
- * One stored expense as the API sends it. `amount` is the money as text ("450.50"), for display;
- * `amount_minor` is the same amount in paise, a whole number (exact, and what the table sorts by).
+ * One stored expense as the API sends it. `amount` is the money as text ("24.50"), for display;
+ * `amount_minor` is the same amount in minor units, a whole number (exact, and what the table sorts by).
  */
 export type Expense = Schemas["ExpenseRead"]
 /** A save's answer (POST, PATCH): the expense as stored, and what the server noticed about the save (D212). */

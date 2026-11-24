@@ -1,9 +1,9 @@
 """The currency agent's wire contract: the skill's id, what a request carries, and the shape of the answer.
 
 Contract layer of the currency agent. The executor reads requests and writes answers with it; the card names the
-skill. A client sends one data part (ConversionRequest) or one line of text ("4 USD to INR", "4.50 usd in inr on
+skill. A client sends one data part (ConversionRequest) or one line of text ("4 EUR to USD", "4.50 eur in usd on
 2026-11-19", parsed by parse_text), and reads one data artifact, `conversion` (ConversionAnswer). The backend's
-expenses module asks for 1 unit of a currency in INR on an expense's date, and works out the amount itself (D204).
+expenses module asks for 1 unit of a currency in USD on an expense's date, and works out the amount itself (D204/D223).
 
 Amounts and rates travel as decimal strings: a JSON number could be read as a float, and money is never a float.
 """
@@ -74,7 +74,7 @@ class ConversionAnswer(BaseModel):
 
 
 def parse_text(line: str) -> ConversionRequest | None:
-    """The ConversionRequest a line of text asks for ("4 USD to INR on 2026-11-19"), or None if it isn't one."""
+    """The ConversionRequest a line of text asks for ("4 EUR to USD on 2026-11-19"), or None if it isn't one."""
     match = TEXT_REQUEST.match(line)
     if match is None:
         return None

@@ -20,7 +20,7 @@ KEY_SETTING = "INSIGHTS_AGENT_KEY"
 
 SKILL_NAME = "Analyse spending"
 SKILL_DESCRIPTION = (
-    "Analyses one month of a person's expenses (in INR) and answers with an insights data artifact: the month's total "
+    "Analyses one month of a person's expenses (in USD) and answers with an insights data artifact: the month's total "
     "and the previous month's, each category's trend, unusual spends, a month-end forecast for the running month, and "
     "3 saving tips. Send one data part {today, month?, question?, expenses: [{spent_on, amount, category, merchant, "
     "payment_method}]}. Without a month, if the expenses span several months, the task stops input-required asking "

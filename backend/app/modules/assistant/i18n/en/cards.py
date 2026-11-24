@@ -57,7 +57,7 @@ CARDS: dict[ChatText, TextValue] = {
     ChatText.LIST_MORE: "Showing the newest {shown} of {total}",
     ChatText.FORM_TITLE: "Add an expense",
     ChatText.FORM_AMOUNT: "Amount",
-    ChatText.FORM_CURRENCY: "Currency (e.g. INR)",
+    ChatText.FORM_CURRENCY: "Currency (e.g. {currency})",
     ChatText.FORM_CATEGORY: "Category",
     ChatText.FORM_MERCHANT: "Merchant",
     ChatText.FORM_DATE: "Date",

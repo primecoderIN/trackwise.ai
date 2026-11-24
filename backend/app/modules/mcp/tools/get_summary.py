@@ -14,6 +14,7 @@ from typing import Annotated
 from mcp.server.mcpserver import MCPServer
 from pydantic import Field
 
+from app.core.money import BASE_CURRENCY
 from app.core.months import YearMonth
 from app.modules import expenses
 from app.modules.mcp.caller import current_caller
@@ -31,9 +32,11 @@ def register_get_summary(server: MCPServer, context: ToolContext) -> None:
     @server.tool(
         name=ToolName.GET_SUMMARY,
         annotations=READS_ONLY,
-        description="Get one month's total spending in INR (expenses in other currencies count at their INR amount) "
-        "and the total for each category, biggest first, plus the previous month's total for comparison. "
-        'Use it for questions like "where did my money go?".',
+        description=(
+            f"Get one month's total spending in {BASE_CURRENCY} (expenses in other currencies count at their "
+            f"{BASE_CURRENCY} amount) and the total for each category, biggest first, plus the previous month's "
+            'total for comparison. Use it for questions like "where did my money go?".'
+        ),
     )
     def get_summary(
         month: Annotated[str, Field(description="The month as YYYY-MM, e.g. '2026-11'.", pattern=YearMonth.PATTERN)],

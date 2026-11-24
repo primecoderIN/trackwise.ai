@@ -41,10 +41,13 @@ export function DashboardPage() {
   const { failed, retrying, retry } = queryGroupStatus([summary, trend, recent, categories])
 
   const header = (
-    <PageHeader title={t("page.title")} description={t("page.description", { currency: DEFAULT_CURRENCY })} />
+    <PageHeader
+      title={t("page.title")}
+      description={t("page.description", { currency: summary.data?.currency ?? DEFAULT_CURRENCY })}
+    />
   )
 
-  // Nothing to show yet: a skeleton while loading, or the error if loading failed. Showing ₹0 when the
+  // Nothing to show yet: a skeleton while loading, or the error if loading failed. Showing $0 when the
   // backend is unreachable would be misleading, so say what happened instead.
   if (!summary.data || !trend.data || !recent.data || !categories.data) {
     return (

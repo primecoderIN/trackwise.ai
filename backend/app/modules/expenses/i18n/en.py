@@ -31,17 +31,19 @@ EN: dict[ExpenseText, TextValue] = {
     ExpenseText.CHANGED_SINCE_SHOWN: (
         "Expense {expense_id} has changed since it was shown (version {current}, not {expected}); nothing was deleted."
     ),
-    # Saving an amount in another currency (D204): the currency agent has no rate for {currency} (a code, e.g. "XYZ").
+    # Saving an amount in another currency (D204, D223): no rate for {currency} into {base_currency}.
     ExpenseText.UNSUPPORTED_CURRENCY: (
-        "trackwise.ai can't convert {currency} to INR yet. Enter the amount in INR instead."
+        "trackwise.ai can't convert {currency} to {base_currency} yet. Enter the amount in {base_currency} instead."
     ),
     # The currency agent can't be asked (or answered something unusable); why goes to the server log (D180).
     ExpenseText.RATES_UNAVAILABLE: (
         "Currency conversion isn't available right now, so an amount in {currency} can't be saved. "
-        "Try again in a moment, or enter it in INR."
+        "Try again in a moment, or enter it in {base_currency}."
     ),
     # An amount in {currency} arrived without its rate, or with one for another currency (it changed meanwhile).
-    ExpenseText.RATE_MISSING: "The amount in {currency} couldn't be converted to INR. Try saving it again.",
+    ExpenseText.RATE_MISSING: (
+        "The amount in {currency} couldn't be converted to {base_currency}. Try saving it again."
+    ),
 }
 
 # How each payment method is written for people. The keys are the methods themselves (a StrEnum).
@@ -49,7 +51,7 @@ PAYMENT_METHODS_EN: dict[PaymentMethod, TextValue] = {
     PaymentMethod.CASH: "Cash",
     PaymentMethod.UPI: "UPI",
     PaymentMethod.CARD: "Card",
-    PaymentMethod.NETBANKING: "Net banking",
+    PaymentMethod.NETBANKING: "Bank transfer",
     PaymentMethod.WALLET: "Wallet",
     PaymentMethod.OTHER: "Other",
 }

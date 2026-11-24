@@ -14,6 +14,7 @@ from mcp.server.mcpserver import MCPServer
 from pydantic import Field
 
 from app.core.clock import clock_today
+from app.core.money import BASE_CURRENCY
 from app.core.months import YearMonth
 from app.modules import budgets
 from app.modules.mcp.caller import current_caller, current_timezone
@@ -32,10 +33,13 @@ def register_get_budgets(server: MCPServer, context: ToolContext) -> None:
     @server.tool(
         name=ToolName.GET_BUDGETS,
         annotations=READS_ONLY,
-        description="Get the user's monthly budgets and how a month's spending (in INR) compares: the overall budget "
-        "and one line per category, each with spent and, when it has a limit, limit, remaining (negative when "
-        "over), used_percent and state (on_track; near_limit from 80%; over_limit). Also how much of the month "
-        "has gone by. Use it for questions like 'how are my budgets?' or 'can I still spend on food?'.",
+        description=(
+            f"Get the user's monthly budgets and how a month's spending (in {BASE_CURRENCY}) compares: "
+            "the overall budget and one line per category, each with spent and, when it has a limit, limit, "
+            "remaining (negative when over), used_percent and state (on_track; near_limit from 80%; over_limit). "
+            "Also how much of the month has gone by. Use it for questions like 'how are my budgets?' or 'can I "
+            "still spend on food?'."
+        ),
     )
     def get_budgets(
         month: Annotated[

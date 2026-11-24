@@ -5,7 +5,7 @@
 
 import { currentLanguageInfo } from "@/shared/i18n"
 
-// The Intl locale of the language on now ("en-IN", "hi-IN").
+// The Intl locale of the language on now ("en-US", "hi-IN").
 function locale(): string {
   return currentLanguageInfo().locale
 }
@@ -28,7 +28,7 @@ export function formatCount(value: number): string {
 // formatter is the slow part.
 const amountFormats = new Map<string, Intl.NumberFormat>()
 
-/** 125000.5 -> "1,25,000.50" (Indian grouping). Number() is fine for *display*: exact values stay in paise. */
+/** 125000.5 -> "125,000.50" (in English). Number() is fine for *display*: exact values stay in minor units. */
 export function formatAmount(value: number | string): string {
   const current = locale()
   let format = amountFormats.get(current)
@@ -59,7 +59,7 @@ export function formatRate(value: string): string {
 const moneyFormats = new Map<string, Intl.NumberFormat>()
 
 /**
- * "125000.5", "INR" -> "₹1,25,000.50"; "USD" -> "$1,250.50": the currency's CLDR format in the language's locale.
+ * "125000.5", "USD" -> "$125,000.50"; "EUR" -> "€1,250.50": the currency's CLDR format in the language's locale.
  * The backend's format_money writes amounts from the same CLDR data, so the chat's cards and the pages agree.
  */
 export function formatMoney(amount: number | string, currency: string): string {
@@ -80,7 +80,7 @@ export function formatMoney(amount: number | string, currency: string): string {
 // Compact currency formatters, one per locale and currency, made on first use (an axis formats every tick).
 const compactFormats = new Map<string, Intl.NumberFormat>()
 
-/** A short money label for chart axes: 125000 -> "₹1.3L" style. */
+/** A short money label for chart axes: 125000 -> "$125K" style. */
 export function formatCompactMoney(amount: number, currency: string): string {
   const current = locale()
   const cacheKey = `${current}|${currency}`

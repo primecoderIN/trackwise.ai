@@ -24,7 +24,7 @@ const CATEGORY_AXIS_WIDTH = 96
 export function CategoryChart({ summary }: { summary: MonthlySummary }) {
   const { t } = useTexts()
   const config = useSpentConfig()
-  // Recharts draws numbers: the API's rupee string ("450.50") becomes 450.5, for the chart only.
+  // Recharts draws numbers: the API's amount string ("24.50") becomes 24.5, for the chart only.
   const rows = summary.by_category.map((c) => ({ name: c.category_name, total: Number(c.total) }))
 
   // Horizontal bars: category names stay readable even with many categories.

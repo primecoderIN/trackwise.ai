@@ -36,7 +36,7 @@ class Expense(SQLModel, table=True):
     # Whose expense it is: SpendWise's user id (core.ids.UserId), a plain id with no foreign key, since the users
     # table belongs to the accounts module. Every read and change filters on it (D190).
     owner_id: int = Field(sa_type=BigInt)
-    # Whole paise, never a float of rupees: 450.50 rupees is stored as 45050.
+    # Whole minor units, never a float: $24.50 is stored as 2450.
     amount_minor: int = Field(sa_type=BigInt)
     currency: str = Field(default=DEFAULT_CURRENCY, max_length=CURRENCY_LENGTH)
     # Just the id, with no database foreign key: the categories table belongs to another
@@ -46,7 +46,7 @@ class Expense(SQLModel, table=True):
     note: str | None = Field(default=None, max_length=MAX_NOTE_LENGTH)
     # Indexed with the owner (OWNER_DAY_INDEX): "my expenses this month" is the most common query.
     spent_on: date
-    # A PaymentMethod value ("upi"), stored as plain text; the contract's enum checks it on the way in.
+    # A PaymentMethod value ("card"), stored as plain text; the contract's enum checks it on the way in.
     payment_method: str = Field(max_length=PAYMENT_METHOD_LENGTH)
     # Always UTC, stored with its time zone; converting to the user's time zone is the frontend's job.
     # create_expense sets it from the app's injected clock. No default on purpose: a row made without it
@@ -54,9 +54,9 @@ class Expense(SQLModel, table=True):
     created_at: datetime = Field(sa_type=DateTime(timezone=True))
     # Raised by one on every change (optimistic concurrency): see DeleteExpense.expected_version.
     version: int = Field(default=1)
-    # The same amount in the base currency, INR (D204, migration 0008): whole paise, the rate it was converted at
-    # (exact, as text: "84.5"; "1" for INR) and the rate's date. Totals add these up across currencies. Null only for
-    # an expense in another currency saved before 0008 (it's converted the next time its amount, currency or date
+    # The same amount in the base currency (D204, D223, migration 0008): whole minor units, the rate it was converted
+    # at (exact, as text: "1.08"; "1" when currency matches) and the rate's date. Totals add these up across
+    # currencies. Null only for an expense in another currency saved before 0008 (it's converted the next time its
     # changes); domain/base_amount.py fills them in.
     base_amount_minor: int | None = Field(default=None, sa_type=BigInt)
     exchange_rate: str | None = Field(default=None, max_length=RATE_LENGTH)

@@ -37,7 +37,7 @@ class Budget(SQLModel, table=True):
     # The category the budget is for, or None for the overall budget (the whole month's spending). Just the id, with
     # no foreign key: categories belong to another module, checked through its queries.
     category_id: int | None = Field(default=None, sa_type=BigInt)
-    # The monthly limit, in whole paise (INR): the same every month until it's changed.
+    # The monthly limit, in whole minor units (USD): the same every month until it's changed.
     limit_minor: int = Field(sa_type=BigInt)
     # When the limit was last set, in UTC, from the app's clock.
     updated_at: datetime = Field(sa_type=DateTime(timezone=True))

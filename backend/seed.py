@@ -17,7 +17,7 @@ from decimal import Decimal
 
 from app import bootstrap
 from app.core.cqrs import MessageBus
-from app.core.money import DEFAULT_CURRENCY, format_money, paise_to_rupees
+from app.core.money import DEFAULT_CURRENCY, format_money, minor_to_major
 from app.infrastructure import migrations
 
 # Only the modules' contracts, sent through the bus, exactly like any other caller.
@@ -34,20 +34,20 @@ DEFAULT_CATEGORIES = [
     ("Other", "tag"),
 ]
 
-# (days ago, rupees, category, merchant, payment method, note)
-# Rupees are strings so they become exact Decimals, never floats. The expenses
-# handlers convert them to paise, exactly as they do for the API.
+# (days ago, amount, category, merchant, payment method, note)
+# Amounts are strings so they become exact Decimals, never floats. The expenses
+# handlers convert them to minor units, exactly as they do for the API.
 SAMPLE_EXPENSES = [
-    (1, "450.50", "Food", "Swiggy", expenses.PaymentMethod.UPI, "Dinner"),
-    (2, "220.00", "Transport", "Uber", expenses.PaymentMethod.UPI, None),
-    (3, "1899.00", "Shopping", "Amazon", expenses.PaymentMethod.CARD, "Headphones"),
-    (5, "1250.75", "Bills", "BESCOM", expenses.PaymentMethod.NETBANKING, "Electricity bill"),
-    (6, "600.00", "Entertainment", "BookMyShow", expenses.PaymentMethod.CARD, "Movie tickets"),
-    (8, "385.20", "Health", "Apollo Pharmacy", expenses.PaymentMethod.CASH, None),
-    (10, "2340.00", "Travel", "IRCTC", expenses.PaymentMethod.UPI, "Train to Mysuru"),
-    (12, "1120.40", "Food", "BigBasket", expenses.PaymentMethod.UPI, "Groceries"),
-    (15, "299.00", "Bills", "Jio", expenses.PaymentMethod.WALLET, "Mobile recharge"),
-    (20, "150.00", "Other", "Local tailor", expenses.PaymentMethod.CASH, None),
+    (1, "24.50", "Food", "Corner Bistro", expenses.PaymentMethod.CARD, "Dinner"),
+    (2, "18.40", "Transport", "Uber", expenses.PaymentMethod.CARD, None),
+    (3, "79.99", "Shopping", "Amazon", expenses.PaymentMethod.CARD, "Headphones"),
+    (5, "85.50", "Bills", "City Electric", expenses.PaymentMethod.NETBANKING, "Electricity bill"),
+    (6, "32.00", "Entertainment", "AMC Theatres", expenses.PaymentMethod.CARD, "Movie tickets"),
+    (8, "28.50", "Health", "City Pharmacy", expenses.PaymentMethod.CASH, None),
+    (10, "64.00", "Travel", "Amtrak", expenses.PaymentMethod.NETBANKING, "Train ticket"),
+    (12, "58.20", "Food", "Whole Foods", expenses.PaymentMethod.CARD, "Groceries"),
+    (15, "45.00", "Bills", "T-Mobile", expenses.PaymentMethod.WALLET, "Mobile plan"),
+    (20, "22.00", "Other", "Local tailor", expenses.PaymentMethod.CASH, None),
 ]
 
 
@@ -85,9 +85,9 @@ def seed_samples(bus: MessageBus, owner_id: int, category_ids: dict[str, int], t
         return
     by_key = {name.casefold(): category_id for name, category_id in category_ids.items()}
     with bus.unit_of_work():
-        for days_ago, rupees, category, merchant, method, note in SAMPLE_EXPENSES:
+        for days_ago, amount_text, category, merchant, method, note in SAMPLE_EXPENSES:
             new = expenses.NewExpense(
-                amount=Decimal(rupees),
+                amount=Decimal(amount_text),
                 category_id=by_key[category.casefold()],
                 merchant=merchant,
                 note=note,
@@ -100,9 +100,9 @@ def seed_samples(bus: MessageBus, owner_id: int, category_ids: dict[str, int], t
     print(f"Seeded {len(saved)} expenses:")
     for e in saved:
         amount = format_money(e.amount, e.currency)
-        print(f"  {e.spent_on}  {amount:>12}  (stored as {e.amount_minor:>6} paise)  {e.merchant}")
+        print(f"  {e.spent_on}  {amount:>12}  (stored as {e.amount_minor:>6} minor)  {e.merchant}")
     total = sum(e.amount_minor for e in saved)
-    print(f"  Total: {format_money(paise_to_rupees(total), DEFAULT_CURRENCY)} (stored as {total} paise)")
+    print(f"  Total: {format_money(minor_to_major(total), DEFAULT_CURRENCY)} (stored as {total} minor)")
 
 
 def main() -> None:

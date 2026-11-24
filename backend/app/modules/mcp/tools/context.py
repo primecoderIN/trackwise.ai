@@ -16,7 +16,7 @@ from app.modules.mcp.views import ExpenseViews
 @dataclass(frozen=True)
 class ToolContext:
     """The bus (commands and queries), the views (an expense as tools show it, category names to ids), the
-    recorder, which saves expenses (converting an amount in another currency to INR first, D204), the monthly
+    recorder, which saves expenses (converting an amount in another currency to USD first, D204, D223), the monthly
     reports, which the monthly-report skill's script works out (D209), and the clock (today's month, for the
     budget tools), and the budget watch (the alerts add_expense and update_expense answer, D211)."""
 

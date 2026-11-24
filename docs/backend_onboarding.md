@@ -113,7 +113,7 @@ from app.modules.expenses.persistence.tables import Expense
 from app.modules.expenses.values import Merchant
 
 
-# GetMerchantTotal's answer: total_minor + a computed rupee `total` (from Totalled), per merchant.
+# GetMerchantTotal's answer: total_minor + a computed major-unit `total` (from Totalled), per merchant.
 class MerchantTotal(Totalled):
     merchant: str
     expense_count: int
@@ -316,12 +316,12 @@ A text only the model reads (a prompt, a tool's description or result) stays Eng
 |---|---|
 | today / now | `ctx.clock.today()`, `ctx.clock.now()` in handlers; `ClockDep` in routes. Never `date.today()` |
 | a month like `2026-11` | `YearMonth.parse()`, `.first_day()`, `.shift(n)`, `str()` (`core/months.py`) |
-| money | `rupees_to_paise`, `paise_to_rupees`, `format_money(amount, currency, language)` (`core/money.py`); never `float` |
+| money | `major_to_minor`, `minor_to_major`, `format_money(amount, currency, language)` (`core/money.py`); never `float` |
 | a day or a month for people | `format_day`, `format_month` (`core/i18n`), in the request's language; never `strftime` |
 | an id from a client | `RecordId` (bodies, `core/ids.py`), `IdPath` (URL paths, `web/dependencies.py`) |
 | currency codes | `CurrencyCode` / `CURRENCY_PATTERN` |
 | an expense's fields | `ExpenseId`, `Amount`, `Merchant`, `Note`, `Version`, `PaymentMethod` and the limits (`expenses/values.py`) |
-| a total in paise and rupees | subclass `Totalled` (`expenses/models.py`): `total_minor` plus a computed `total` |
+| a total in minor and major units | subclass `Totalled` (`expenses/models.py`): `total_minor` plus a computed `total` |
 | "this month, in this currency" | `in_month_range(start, end, currency)` (`expenses/queries/month_range.py`) |
 | an expense rule | `require_positive_amount`, `require_category_exists` (`expenses/domain/rules.py`) |
 | an MCP tool's pieces | `tool_errors()`, `given()`, `READS_ONLY` / `ADDS_DATA` / `CHANGES_DATA`, `ExpenseIdArg` (`mcp/tools/support.py`) |
@@ -370,7 +370,7 @@ client_factory=...)` takes a fake SDK client. A fake model only needs the method
   - every file starts with a module docstring: what it's for, its layer (contract, handler, adapter, port...), who
     uses it;
   - every function, method and class has a docstring: what it's for, what it returns and raises, the rule it enforces;
-  - business rules are explained where they're applied, saying **why** (money in paise, versions, approvals...);
+  - business rules are explained where they're applied, saying **why** (money in minor units, versions, approvals...);
   - **except docstrings that are data:** Pydantic models (commands, queries, results, tables), enums, FastAPI route
     functions and MCP tools get `#` comments above them instead. Pydantic, FastAPI and the MCP SDK copy those
     docstrings into JSON schemas: the OpenAPI document, the MCP tools' schemas, and the schema Gemini answers
@@ -410,7 +410,7 @@ Automated tests aren't part of the repository yet. Until they are, before asking
 - [ ] Inputs validated by contract types; business rules raise `BusinessRuleError` with a catalogued text
 - [ ] Texts for people come from the module's `i18n/` catalog, in every language; texts for the model stay English
 - [ ] No literal names, keys or limits that already exist elsewhere
-- [ ] Time from the clock, money in paise
+- [ ] Time from the clock, money in minor units
 - [ ] New files, functions and rules documented (a docstring, or a `#` comment on schema classes, routes and tools)
 - [ ] A migration for every table change, with a working downgrade
 - [ ] User data not logged at INFO

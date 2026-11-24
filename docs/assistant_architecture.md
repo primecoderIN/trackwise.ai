@@ -156,7 +156,7 @@ sequenceDiagram
     M-->>A: ExpenseSaved (structured)
     A-->>B: TOOL_CALL_RESULT ok, STATE_SNAPSHOT, CUSTOM a2ui (card)
     A->>G: … + the tool result
-    G-->>A: "Saved ₹250 at Subway." (piece by piece)
+    G-->>A: "Saved $25.00 at Subway." (piece by piece)
     A-->>B: TEXT_MESSAGE_START / CONTENT… / END
     A-->>B: RUN_FINISHED
 ```
@@ -196,8 +196,8 @@ catalog, money and dates through CLDR):
 | `list_expenses` | up to 10 rows, "Showing the newest 10 of N" |
 | `get_summary` | the insight card: "Spent in November" with "+12% vs October", the biggest category, a donut of the top 4 + "Everything else" |
 | `get_monthly_report` | the report card (D209): "Spent in November" with "+330% vs October", the daily average, each category with its share and count, the biggest expense, and **Download CSV** / **Download report (.md)**, which run the browser's `downloadReport` function (no message to the agent) |
-| `get_budgets` / `set_budget` | the budget card (D211): the overall budget ("₹5,700.50 of ₹10,000.00", "57.0% used · on track" or "Over by ..."), each category with a limit and its share used, how much of the month has gone by |
-| `add_expense` / `update_expense` with `budget_alerts` | the expense card, with the alerts as its footer: "Food budget: 84.0% used (₹4,200.00 of ₹5,000.00)" |
+| `get_budgets` / `set_budget` | the budget card (D211): the overall budget ("$570.05 of $1,000.00", "57.0% used · on track" or "Over by ..."), each category with a limit and its share used, how much of the month has gone by |
+| `add_expense` / `update_expense` with `budget_alerts` | the expense card, with the alerts as its footer: "Food budget: 84.0% used ($420.00 of $500.00)" |
 | a delete in the web panel | the approval card: the expense, "Nothing is deleted unless you press Approve", **Approve** / **Cancel** |
 
 **Forms** (`a2ui/forms.py`): when details are missing, the model calls `show_expense_form` with an A2UI form it wrote,
@@ -205,7 +205,7 @@ plus what it understood. The server validates it (allowed components only, valid
 `save_expense` buttons); if it doesn't pass, a built-in form pre-filled with the same values is sent instead. Inputs
 bind to `/expense/<field>` in the data model, two-way, in the browser only. **Save** sends an A2UI `action` with the
 form's values in `forwardedProps`; the server writes them as the next message, labelled as data, and the model calls
-`add_expense`. The fields: amount, currency (INR unless known), category, merchant, date, payment method, note.
+`add_expense`. The fields: amount, currency (user's `default_currency` from DB unless known), category, merchant, date, payment method, note.
 
 **A receipt attached in the chat** (Phase 21, D183) is the third way a form appears. The browser uploads the file (`POST
 /receipts`), then sends the run with an AG-UI `image` or `document` part pointing at it (`{"type": "file", "value":
@@ -269,7 +269,7 @@ trackwise.ai agent with `delegate_to_agent(agent, skill, request, month?)`.
 
 1. **The tool's description**, built at startup from the agents' Agent Cards: each offered skill's name, description
    and examples ("Analyses one month of a person's expenses… trends, unusual spends, a month-end forecast and 3 saving
-   tips"; "Converts an amount from one currency to another… '4 USD to INR'").
+   tips"; "Converts an amount from one currency to another… '4 EUR to USD'").
 2. **The system instruction's rule** (`prompts.DELEGATE_RULE`): delegate when a request matches a listed skill
    (analysing spending, converting currencies); use the expense tools to record, find, change or total expenses; never
    put expenses or personal details in the request.
@@ -277,8 +277,8 @@ trackwise.ai agent with `delegate_to_agent(agent, skill, request, month?)`.
    there; the server checks the pair again.
 
 So "how much did I spend on food?" stays with `get_summary` (a total), "where did my money go, and how can I save?"
-goes to `insights`, and "how much is 4 dollars in rupees?" goes to `currency`. The model chooses *which*; the server
-decides *what is sent*: for insights, the person's last three months of expenses (date, INR amount, category,
+goes to `insights`, and "how much is 4 euros in dollars?" goes to `currency`. The model chooses *which*; the server
+decides *what is sent*: for insights, the person's last three months of expenses (date, base-currency amount, category,
 merchant, payment method; never a note, an id or who they are), for currency, the request's one line.
 
 **When the agent asks something.** If the insights agent stops input-required ("Which month should I analyse?"), the

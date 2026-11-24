@@ -22,6 +22,7 @@ from app.core.cqrs import MessageBus
 from app.core.errors import NotFoundError
 from app.core.i18n import Language, translatable
 from app.core.llm import ToolCallingModel
+from app.core.money import DEFAULT_USER_CURRENCY
 from app.core.skills import SkillLibrary
 from app.modules import conversations, receipts
 from app.modules.assistant.agent.agent import Agent
@@ -106,6 +107,7 @@ class Assistant:
         *,
         is_user_text: bool = True,
         timezone: str = DEFAULT_TIMEZONE,
+        default_currency: str = DEFAULT_USER_CURRENCY,
     ) -> Iterator[AgentEvent]:
         """Answer one message in the owner's thread on `surface`, saving the turn when it finishes. Yields its
         events.
@@ -126,9 +128,9 @@ class Assistant:
         text = yield from delegator.resume(text, can_resume=is_user_text)
         # Beside the expense tools: other agents to delegate to, and the skills to read (each offers nothing if empty).
         extensions = (delegator, SkillTool(self.skills))
-        tools = self.tools.acting_for(owner_id, timezone=timezone)
+        tools = self.tools.acting_for(owner_id, timezone=timezone, default_currency=default_currency)
         agent = Agent(llm=self.llm, tools=tools, extensions=extensions)
-        for event in agent.run(text, today, history, surface, language):
+        for event in agent.run(text, today, history, surface, language, default_currency=default_currency):
             if isinstance(event, TurnFinished):
                 self._save(owner_id, thread_id, turn, event)
             yield event
@@ -143,6 +145,7 @@ class Assistant:
         *,
         is_user_text: bool = True,
         timezone: str = DEFAULT_TIMEZONE,
+        default_currency: str = DEFAULT_USER_CURRENCY,
     ) -> Iterator[AgentEvent]:
         """Answer one of the owner's messages in the web panel, in `language`. A thread they don't have yet starts
         a new conversation, even if another person uses the same id: threads are per person (D190).
@@ -152,7 +155,15 @@ class Assistant:
         """
         panel = WebPanel(request_approval=lambda expense: self._request_approval(owner_id, thread_id, expense))
         return self._answer(
-            owner_id, thread_id, text, today, panel, language, is_user_text=is_user_text, timezone=timezone
+            owner_id,
+            thread_id,
+            text,
+            today,
+            panel,
+            language,
+            is_user_text=is_user_text,
+            timezone=timezone,
+            default_currency=default_currency,
         )
 
     def read_receipt(
@@ -165,6 +176,7 @@ class Assistant:
         language: Language,
         *,
         timezone: str = DEFAULT_TIMEZONE,
+        default_currency: str = DEFAULT_USER_CURRENCY,
     ) -> Iterator[AgentEvent]:
         """A receipt attached in the web panel (with `message`, possibly empty): read it and offer it as the expense
         form, pre-filled, saving the turn when it finishes. No agent loop: a person confirms the form first.
@@ -173,9 +185,11 @@ class Assistant:
         be reached or can't read it (receipt_turn.py).
         """
         turn = self._next_turn(owner_id, thread_id)
-        tools = self.tools.acting_for(owner_id, timezone=timezone)
+        tools = self.tools.acting_for(owner_id, timezone=timezone, default_currency=default_currency)
         files, reader = self.receipt_files, self.receipt_reader
-        for event in receipt_turn(files, reader, tools, owner_id, receipt_id, message, today, language):
+        for event in receipt_turn(
+            files, reader, tools, owner_id, receipt_id, message, today, language, default_currency=default_currency
+        ):
             if isinstance(event, TurnFinished):
                 self._save(owner_id, thread_id, turn, event)
             yield event
@@ -189,6 +203,7 @@ class Assistant:
         language: Language,
         *,
         timezone: str = DEFAULT_TIMEZONE,
+        default_currency: str = DEFAULT_USER_CURRENCY,
     ) -> Iterator[AgentEvent]:
         """Approve or Cancel on a delete card. WHAT gets deleted is the server's snapshot of that card.
 
@@ -200,7 +215,7 @@ class Assistant:
         card = self.bus.execute(TakeApproval(owner_id=owner_id, thread_id=thread_id, approval_id=approval_id))
         try:
             turn = self._next_turn(owner_id, thread_id)
-            tools = self.tools.acting_for(owner_id, timezone=timezone)
+            tools = self.tools.acting_for(owner_id, timezone=timezone, default_currency=default_currency)
             events = list(approval_turn(card.expense if card else None, approved, tools, language))
             finished = events[-1]
             assert isinstance(finished, TurnFinished)
@@ -224,6 +239,7 @@ class Assistant:
         language: Language,
         *,
         timezone: str = DEFAULT_TIMEZONE,
+        default_currency: str = DEFAULT_USER_CURRENCY,
     ) -> tuple[str, TurnFinished]:
         """POST /chat: the whole reply at once, in text only. Unlike AG-UI, the server names threads here.
 
@@ -237,7 +253,16 @@ class Assistant:
             # A typo'd id should be an error, not a silent new conversation.
             raise NotFoundError(translatable(conversations.ConversationText.THREAD_NOT_FOUND, thread_id=thread_id))
         finished = None
-        for event in self._answer(owner_id, thread_id, message, today, TextChat(), language, timezone=timezone):
+        for event in self._answer(
+            owner_id,
+            thread_id,
+            message,
+            today,
+            TextChat(),
+            language,
+            timezone=timezone,
+            default_currency=default_currency,
+        ):
             if isinstance(event, TurnFinished):
                 finished = event
         if finished is None:  # can't happen: the agent always ends with one

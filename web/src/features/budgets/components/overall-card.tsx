@@ -24,7 +24,7 @@ export function OverallCard({ status }: { status: BudgetStatus }) {
         </CardTitle>
         <CardDescription>{t("overall.description", { month: formatMonth(status.month) })}</CardDescription>
         <CardAction>
-          <BudgetDialog scope={null} name={name} currentLimit={overall.limit ?? null} />
+          <BudgetDialog scope={null} name={name} currency={status.currency} currentLimit={overall.limit ?? null} />
         </CardAction>
       </CardHeader>
       <CardContent className="grid gap-2">

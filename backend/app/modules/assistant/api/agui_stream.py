@@ -41,6 +41,7 @@ from ag_ui.core import (
 from app.core.clock import DEFAULT_TIMEZONE
 from app.core.errors import AppError, ExternalServiceError
 from app.core.i18n import Language, text
+from app.core.money import DEFAULT_USER_CURRENCY
 from app.modules.assistant import a2ui
 from app.modules.assistant.agent.events import (
     AgentEvent,
@@ -75,6 +76,7 @@ def _events_for(
     language: Language,
     *,
     timezone: str = DEFAULT_TIMEZONE,
+    default_currency: str = DEFAULT_USER_CURRENCY,
 ) -> Iterator[AgentEvent]:
     """Which use case this run is, for `owner_id` (the signed-in person): a decision on a delete card, a receipt to
     read, or a message (typed, or a form's Save)."""
@@ -82,12 +84,25 @@ def _events_for(
     if request.decision is not None:
         approved = request.decision.name == a2ui.ActionName.APPROVE_DELETE
         return assistant.decide(
-            owner_id, thread, request.decision.surface_id, approved=approved, language=language, timezone=timezone
+            owner_id,
+            thread,
+            request.decision.surface_id,
+            approved=approved,
+            language=language,
+            timezone=timezone,
+            default_currency=default_currency,
         )
     assert request.text is not None  # read_request sets exactly one of the two
     if request.receipt_id is not None:
         return assistant.read_receipt(
-            owner_id, thread, request.receipt_id, request.text, today, language, timezone=timezone
+            owner_id,
+            thread,
+            request.receipt_id,
+            request.text,
+            today,
+            language,
+            timezone=timezone,
+            default_currency=default_currency,
         )
     # AG-UI clients name their threads themselves, so an id the person doesn't have yet starts a new conversation.
     return assistant.run_turn(
@@ -98,6 +113,7 @@ def _events_for(
         language,
         is_user_text=not request.is_form_submission,
         timezone=timezone,
+        default_currency=default_currency,
     )
 
 
@@ -196,6 +212,7 @@ def stream(
     language: Language,
     *,
     timezone: str = DEFAULT_TIMEZONE,
+    default_currency: str = DEFAULT_USER_CURRENCY,
 ) -> Iterator[BaseEvent]:
     """The whole AG-UI run for a checked request from `owner_id`: RUN_STARTED, the translated events, then
     RUN_FINISHED.
@@ -206,7 +223,9 @@ def stream(
     yield RunStartedEvent(thread_id=request.thread_id, run_id=request.run_id)
     writer = _Writer(request.data_version, language)
     try:
-        for event in _events_for(request, owner_id, assistant, today, language, timezone=timezone):
+        for event in _events_for(
+            request, owner_id, assistant, today, language, timezone=timezone, default_currency=default_currency
+        ):
             yield from writer.write(event)
     # RUN_ERROR ends the run. The client keeps whatever text already arrived and shows the error. Its code is the
     # problem kind (AppError.slug, as in a problem's "type"), never a class name.

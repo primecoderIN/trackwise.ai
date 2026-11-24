@@ -3,7 +3,7 @@
 - cqrs.py: Command, Query, and the MessageBus that runs them (also the unit of work);
 - errors.py: the expected errors handlers raise (NotFoundError, BusinessRuleError, ExternalServiceError);
 - ids.py: the rules for record ids (RecordId, MAX_ID);
-- clock.py, months.py, money.py: today's date, calendar months, and rupees <-> paise;
+- clock.py, months.py, money.py: today's date, calendar months, and major <-> minor currency units;
 - llm/: the language-model port (port.py) and provider-neutral messages (messages.py).
 
 Core does no I/O and imports no framework, no module, and neither infrastructure/ nor web/, so everything else can

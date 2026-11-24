@@ -12,19 +12,19 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, computed_field
 
-from app.core.money import paise_to_rupees
+from app.core.money import minor_to_major
 from app.modules.expenses.values import PaymentMethod
 
 
 # What GetExpense and ListExpenses return, and the REST API's expense object. Built straight from a table
 # row (from_attributes); frozen, so nobody can change stored data through it.
 class ExpenseRead(BaseModel):
-    """An expense as callers see it: everything stored, plus the amount in rupees for display."""
+    """An expense as callers see it: everything stored, plus the amount in major units for display."""
 
     model_config = ConfigDict(from_attributes=True, frozen=True)
 
     id: int
-    # Paise: the exact stored value, safe for arithmetic.
+    # Minor units: the exact stored value, safe for arithmetic.
     amount_minor: int
     currency: str
     category_id: int
@@ -34,10 +34,10 @@ class ExpenseRead(BaseModel):
     payment_method: PaymentMethod
     created_at: datetime
     version: int
-    # The same amount in INR, in paise (D204): equal to amount_minor for an expense in INR; null only for an expense in
-    # another currency saved before it could be converted.
+    # The same amount in the base currency, in minor units (D204, D223): equal to amount_minor when currency matches;
+    # null only for an expense in another currency saved before it could be converted.
     base_amount_minor: int | None
-    # What 1 unit of `currency` was worth in INR ("84.5"; "1" for INR), and the day that rate is for.
+    # What 1 unit of `currency` was worth in USD ("1.08"; "1" for USD), and the day that rate is for.
     exchange_rate: Decimal | None
     rate_date: date | None
 
@@ -47,13 +47,13 @@ class ExpenseRead(BaseModel):
     @property
     def amount(self) -> Decimal:
         # Worked out from amount_minor every time, so the two can never disagree.
-        return paise_to_rupees(self.amount_minor)
+        return minor_to_major(self.amount_minor)
 
-    # The INR amount in rupees, worked out the same way (null with base_amount_minor).
+    # The USD amount in dollars, worked out the same way (null with base_amount_minor).
     @computed_field
     @property
     def base_amount(self) -> Decimal | None:
-        return None if self.base_amount_minor is None else paise_to_rupees(self.base_amount_minor)
+        return None if self.base_amount_minor is None else minor_to_major(self.base_amount_minor)
 
 
 # What POST /expenses and PATCH /expenses/{id} answer: the expense as stored, and what the app noticed about the save
@@ -73,13 +73,13 @@ class ExpenseList(BaseModel):
 # The shared base of every total: CategoryTotal and MonthlySummary (queries/get_monthly_summary.py) and
 # MonthTotal (queries/get_monthly_trend.py). Never sent on its own, only through the classes built on it.
 class Totalled(BaseModel):
-    """A total in paise, plus the same total in rupees, worked out from it."""
+    """A total in minor units, plus the same total in major units, worked out from it."""
 
     total_minor: int
 
-    # Rupees for display, computed from total_minor so the two never disagree. (A comment, not a
+    # Major units for display, computed from total_minor so the two never disagree. (A comment, not a
     # docstring: a computed field's docstring becomes its description in the schema.)
     @computed_field
     @property
     def total(self) -> Decimal:
-        return paise_to_rupees(self.total_minor)
+        return minor_to_major(self.total_minor)

@@ -17,6 +17,7 @@ from mcp.server.mcpserver import MCPServer
 from pydantic import Field
 
 from app.core.clock import clock_today
+from app.core.money import BASE_CURRENCY
 from app.core.months import YearMonth
 from app.modules import reports
 from app.modules.mcp.caller import current_caller, current_timezone
@@ -32,10 +33,13 @@ def register_get_monthly_report(server: MCPServer, context: ToolContext) -> None
     @server.tool(
         name=ToolName.GET_MONTHLY_REPORT,
         annotations=READS_ONLY,
-        description="Get one month's spending report, in INR: the total against the previous month (change_percent "
-        "is null when the previous month had nothing), the totals and shares by category and by payment method, "
-        "the five biggest expenses and the daily average. The figures are worked out by trackwise.ai, never by you. "
-        "The user sees them as a report card with buttons to download the report as CSV or markdown.",
+        description=(
+            f"Get one month's spending report, in {BASE_CURRENCY}: the total against the previous month "
+            "(change_percent is null when the previous month had nothing), the totals and shares by category and "
+            "by payment method, the five biggest expenses and the daily average. The figures are worked out by "
+            "trackwise.ai, never by you. The user sees them as a report card with buttons to download the report as "
+            "CSV or markdown."
+        ),
     )
     def get_monthly_report(
         month: Annotated[str, Field(description="The month as YYYY-MM, e.g. '2026-11'.", pattern=YearMonth.PATTERN)],

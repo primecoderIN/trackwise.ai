@@ -32,7 +32,7 @@ const hi: Translation<typeof en> = {
   },
   suggestions: {
     foodThisMonth: "इस महीने मैंने खाने पर कितना खर्च किया?",
-    addLunch: "आज Subway पर लंच के 250 जोड़ें, भुगतान UPI से किया",
+    addLunch: "आज Subway पर लंच के {{amount}} जोड़ें, भुगतान कार्ड से किया",
     biggestExpenses: "इस महीने मेरे 3 सबसे बड़े खर्च कौन-से थे?",
   },
   chips: {

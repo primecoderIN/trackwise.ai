@@ -83,11 +83,14 @@ class ReceiptExtraction(BaseModel):
         description='The final amount paid, as a plain number string without symbols or commas, e.g. "1250.50".'
     )
     currency: str | None = Field(
-        description="The ISO 4217 code of the amounts, from the symbol or text on the receipt (₹ or Rs is INR)."
+        description=(
+            "The ISO 4217 code of the amounts, from the symbol or text on the receipt "
+            "($ is USD, € is EUR, £ is GBP, ₹ or Rs is INR)."
+        )
     )
     # The allowed payment methods are added to the schema per request (the client's list).
     payment_method: str | None = Field(
-        description="Only if the receipt says how it was paid (a card, UPI, cash...); otherwise null."
+        description="Only if the receipt says how it was paid (a card, bank transfer, UPI, cash...); otherwise null."
     )
     # The allowed category names are added to the schema per request (the client's list).
     category: str | None = Field(description="The best matching category from the allowed list, or null.")

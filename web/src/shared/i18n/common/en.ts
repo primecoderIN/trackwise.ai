@@ -35,7 +35,7 @@ const en = {
     sidebarTitle: "Sidebar",
     sidebarDescription: "Displays the mobile sidebar.",
   },
-  // An amount in another currency also shows its INR amount, the one totals count (shared/components/money.tsx).
+  // An amount in another currency also shows its USD amount, the one totals count (shared/components/money.tsx).
   money: {
     inBase: "≈ {{amount}}",
     inBaseLabel: "{{amount}} in {{currency}}, at {{rate}} on {{date}}",

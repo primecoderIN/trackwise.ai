@@ -35,7 +35,7 @@ def create_router(reports: MonthlyReports) -> APIRouter:
     router = APIRouter(tags=[TAG])
 
     # GET /api/v1/reports/monthly/{month}: the month's figures (the monthly-report skill's script works them out, in
-    # INR): the total against the month before, by category, by payment method, the biggest expenses, the daily
+    # USD): the total against the month before, by category, by payment method, the biggest expenses, the daily
     # average. 502 if the report can't be made right now.
     @router.get("/reports/monthly/{month}", dependencies=[REPORTS_QUOTA])
     def get_monthly_report(month: MonthPath, principal: CurrentUserDep, clock: ClockDep) -> MonthlyReport:

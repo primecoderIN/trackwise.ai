@@ -3,7 +3,6 @@
 
 import { useId } from "react"
 
-import { DEFAULT_CURRENCY } from "@/shared/api/contracts.gen"
 import { LabeledField } from "@/shared/components/labeled-field"
 import { Button } from "@/shared/ui/button"
 import {
@@ -27,12 +26,14 @@ interface BudgetDialogProps {
   scope: BudgetScope
   /** What the budget is for, as people read it: a category's name, or "all spending". */
   name: string
-  /** The limit now (rupees, "8000.00"), or null when there's none. */
+  /** Currency budgets are measured in (from BudgetStatus). */
+  currency: string
+  /** The limit now (major units, "2000.00"), or null when there's none. */
   currentLimit: string | null
 }
 
 /** The button (its name says which budget, for screen readers) and the dialog: the limit, Save, and Remove. */
-export function BudgetDialog({ scope, name, currentLimit }: BudgetDialogProps) {
+export function BudgetDialog({ scope, name, currency, currentLimit }: BudgetDialogProps) {
   const { t } = useTexts()
   const id = useId()
   const editor = useBudgetEditor(scope, currentLimit)
@@ -50,7 +51,7 @@ export function BudgetDialog({ scope, name, currentLimit }: BudgetDialogProps) {
         <form onSubmit={editor.onSubmit} className="grid gap-4">
           <DialogHeader>
             <DialogTitle>{t("dialog.title", { name })}</DialogTitle>
-            <DialogDescription>{t("dialog.description", { currency: DEFAULT_CURRENCY })}</DialogDescription>
+            <DialogDescription>{t("dialog.description", { currency })}</DialogDescription>
           </DialogHeader>
           <LabeledField id={id} label={t("dialog.limit")}>
             <Input id={id} inputMode="decimal" value={editor.limit} onChange={(e) => editor.setLimit(e.target.value)} />

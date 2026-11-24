@@ -46,7 +46,7 @@ def create_router(recorder: ExpenseRecorder, watcher: SaveWatcher) -> APIRouter:
     router = APIRouter(tags=[TAG])
 
     # POST /api/v1/expenses: record an expense for the signed-in person; the body is NewExpense. A malformed body is a
-    # 422 "validation" problem; an amount <= 0, an unknown category or a currency that can't be converted to INR, a
+    # 422 "validation" problem; an amount <= 0, an unknown category or a currency that can't be converted to USD, a
     # 422 "business-rule" one; the currency agent unavailable for an amount in another currency, a 502.
     @router.post("/expenses", status_code=201)
     def create_expense(
@@ -58,14 +58,22 @@ def create_router(recorder: ExpenseRecorder, watcher: SaveWatcher) -> APIRouter:
         response: Response,
     ) -> SavedExpense:
         owner = principal.user_id
-        expense_id, notices = watcher.watch(owner, body.spent_on, lambda: recorder.create(owner, body), language)
+        # Use the caller's DB default currency when a REST request omits `currency`.
+        expense_input = (
+            body
+            if "currency" in body.model_fields_set
+            else body.model_copy(update={"currency": principal.default_currency})
+        )
+        expense_id, notices = watcher.watch(
+            owner, expense_input.spent_on, lambda: recorder.create(owner, expense_input), language
+        )
         # 201 Created says where the new resource lives (url_for.path includes the /api/v1 prefix).
         response.headers["Location"] = request.url_for(get_expense.__name__, expense_id=expense_id).path
         saved = bus.ask(GetExpense(owner_id=owner, expense_id=expense_id))
         return SavedExpense(**dict(saved), notices=notices)
 
     # PATCH /api/v1/expenses/{id}: change only the fields sent ("note": null clears the note); every update raises the
-    # expense's version, and a new amount, currency or date converts it to INR again. Answers with the expense as it
+    # expense's version, and a new amount, currency or date converts it to USD again. Answers with the expense as it
     # is now; 404 if it isn't the person's; the conversion's errors as for POST.
     @router.patch("/expenses/{expense_id}")
     def update_expense(
@@ -120,7 +128,7 @@ def _only_query(*allowed: str) -> Any:
 
 
 # GET /api/v1/summary?month=2026-11: one month's total of the signed-in person's expenses and per-category totals,
-# added up in the database, in INR: every expense counts through its INR amount, whatever its currency (D204).
+# added up in the database, in USD: every expense counts through its USD amount, whatever its currency (D204, D223).
 @_reads.get("/summary", dependencies=[_only_query("month")])
 def monthly_summary(
     principal: CurrentUserDep,
@@ -131,7 +139,7 @@ def monthly_summary(
 
 
 # GET /api/v1/summary/trend?months=6: the Dashboard chart's monthly totals, oldest first, with 0 for a
-# month without spending; in INR, like the summary.
+# month without spending; in USD, like the summary.
 @_reads.get("/summary/trend", dependencies=[_only_query("months")])
 def monthly_trend(
     principal: CurrentUserDep,

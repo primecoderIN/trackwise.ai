@@ -10,7 +10,7 @@ are generated from it).
 |---|---|
 | **Base URL** | `http://127.0.0.1:8000/api/v1` for every REST route. `/health` and `/mcp/` stay at the root. A breaking change gets `/api/v2`. The web app reaches the same routes on its own origin (`http://localhost:5173/api/v1`, through the dev server's proxy, D184). |
 | **Format** | JSON in and out. Field names are `snake_case` (AG-UI's stream uses `camelCase`, as its spec does). |
-| **Money** | Requests take rupees as a decimal string (`"450.50"`, at most 2 decimals). Responses give both `amount_minor` (paise, an integer: exact, for arithmetic) and `amount` (rupees, a string: for display). |
+| **Money** | Requests take major-unit decimals as a string (`"24.50"`, at most 2 decimals). Responses give both `amount_minor` (integer minor units, exact, for arithmetic) and `amount` (string: for display). |
 | **Dates** | `YYYY-MM-DD`; months `YYYY-MM` (years 1900–2099); timestamps ISO 8601 in UTC. |
 | **Ids** | positive integers up to 2⁶³−1; larger ones are a 422, not a crash. |
 | **Language** | send `Accept-Language` (`hi`, `hi-IN,hi;q=0.9,en;q=0.5`): error `detail`s, and `/chat`'s and `/agent`'s texts (cards, chip labels, fixed replies, the model's reply), come in the best language the server speaks (English, Hindi), else English. Data (category names, merchants, notes) is never translated; problem `title`s stay English. |
@@ -234,28 +234,29 @@ one yet); names are unique ignoring letter case.
 ```json
 {
   "id": 14,
-  "amount_minor": 45050,
-  "amount": "450.50",
-  "currency": "INR",
+  "amount_minor": 2450,
+  "amount": "24.50",
+  "currency": "USD",
   "category_id": 1,
-  "merchant": "Swiggy",
+  "merchant": "Corner Bistro",
   "note": "Dinner",
   "spent_on": "2026-11-12",
-  "payment_method": "upi",
+  "payment_method": "card",
   "created_at": "2026-11-13T09:14:02.511Z",
   "version": 1,
-  "base_amount_minor": 45050,
-  "base_amount": "450.50",
+  "base_amount_minor": 2450,
+  "base_amount": "24.50",
   "exchange_rate": "1",
   "rate_date": "2026-11-12"
 }
 ```
 
 - `payment_method`: one of `cash`, `upi`, `card`, `netbanking`, `wallet`, `other`.
-- **Every expense is also kept in INR** (Phase 25, D204): `base_amount` (and `base_amount_minor`), the `exchange_rate`
-  it was converted at (a decimal string; `"1"` for INR) and the rate's day `rate_date`. A $4.00 coffee on 19 Nov:
-  `"amount": "4.00", "currency": "USD", "base_amount": "338.00", "exchange_rate": "84.5", "rate_date": "2026-11-19"`.
-  All three are `null` only for an expense in another currency saved before Phase 25 (it's converted when edited).
+- **Every expense is also kept in the system base currency (`USD`, D204/D223):** `base_amount` (and `base_amount_minor`),
+  the `exchange_rate` it was converted at (a decimal string; `"1"` for `BASE_CURRENCY`) and the rate's day `rate_date`.
+  A €4.00 coffee on 19 Nov: `"amount": "4.00", "currency": "EUR", "base_amount": "4.24", "exchange_rate": "1.06",
+  "rate_date": "2026-11-19"`. All three are `null` only for an expense in another currency saved before Phase 25
+  (it's converted when edited).
 - `version` goes up by one on every change (optimistic concurrency: see the MCP `delete_expense` tool).
 
 ### `POST /api/v1/expenses`
@@ -263,18 +264,18 @@ one yet); names are unique ignoring letter case.
 Records an expense for the signed-in person. **201 Created** with the expense, and
 `Location: /api/v1/expenses/{id}`. The body is `NewExpense`; it has no owner (the session decides). The answer is a
 `SavedExpense`: the expense, plus `notices`, what the app noticed about the save, written for the person in the
-request's language: today, a budget the save pushed near (80%) or over its limit ("Food budget: 84.0% used (₹4,200.00
-of ₹5,000.00)", D212). Usually empty; the web app shows each as a warning toast.
+request's language: today, a budget the save pushed near (80%) or over its limit ("Food budget: 84.0% used ($420.00
+of $500.00)", D212). Usually empty; the web app shows each as a warning toast.
 
 ```json
 {
-  "amount": "450.50",
+  "amount": "24.50",
   "category_id": 1,
-  "merchant": "Swiggy",
+  "merchant": "Corner Bistro",
   "spent_on": "2026-11-12",
-  "payment_method": "upi",
+  "payment_method": "card",
   "note": "Dinner",
-  "currency": "INR"
+  "currency": "USD"
 }
 ```
 
@@ -286,7 +287,7 @@ of ₹5,000.00)", D212). Usually empty; the web app shows each as a warning toas
 | `spent_on` | required date |
 | `payment_method` | required; one of the six |
 | `note` | optional; up to 500 characters |
-| `currency` | optional; three capital letters, default `INR`. Any other currency is converted to INR by the currency agent before saving (D204): **422** `business-rule` if it has no rate for it ("trackwise.ai can't convert XYZ to INR yet"), **502** if it can't be reached; nothing is saved |
+| `currency` | optional; three capital letters, defaulting to the caller's persisted `default_currency` (`USD` by default). Any other currency is converted to `BASE_CURRENCY` by the currency agent before saving (D204): **422** `business-rule` if it has no rate for it ("trackwise.ai can't convert XYZ to USD yet"), **502** if it can't be reached; nothing is saved |
 
 ### `GET /api/v1/expenses`
 
@@ -320,7 +321,7 @@ and its `notices`, as for POST (the month checked is the new date's, or the expe
 {"amount": "300", "note": null}
 ```
 
-- Same rules as creating. A new `amount`, `currency` or `spent_on` converts the expense to INR again (other fields don't
+- Same rules as creating. A new `amount`, `currency` or `spent_on` converts the expense to `BASE_CURRENCY` again (other fields don't
   call the currency agent). `note` is the only field that can be `null` (it clears the note); `null` for any other field
   is a 422 ("leave a field out to keep it as it is").
 
@@ -332,15 +333,15 @@ Deletes for good. **204 No Content**, or 404. (The web app asks "are you sure?" 
 
 ### `GET /api/v1/summary?month=2026-11`
 
-One month's spending in INR, biggest category first. Every expense counts, at its INR amount, whatever its currency
-(D204; the `currency` parameter of D32 is gone).
+One month's spending in `BASE_CURRENCY` (`USD`), biggest category first. Every expense counts, at its base-currency
+amount, whatever its currency (D204/D223; the `currency` parameter of D32 is gone).
 
 ```json
 {
-  "month": "2026-11", "currency": "INR",
-  "expense_count": 12, "total_minor": 1024585, "total": "10245.85",
+  "month": "2026-11", "currency": "USD",
+  "expense_count": 12, "total_minor": 102458, "total": "1024.58",
   "by_category": [
-    {"category_id": 1, "category_name": "Food", "expense_count": 5, "total_minor": 377090, "total": "3770.90"}
+    {"category_id": 1, "category_name": "Food", "expense_count": 5, "total_minor": 37709, "total": "377.09"}
   ]
 }
 ```
@@ -350,32 +351,32 @@ A category that no longer exists shows as `"Unknown"`.
 ### `GET /api/v1/summary/trend?months=6`
 
 Totals for the last `months` months (1–24, default 6), ending with the current month, oldest first. Months with no
-spending are included with 0, so a chart has no gaps. In INR, like the summary.
+spending are included with 0, so a chart has no gaps. In `BASE_CURRENCY`, like the summary.
 
 ```json
-{"currency": "INR", "months": [{"month": "2026-06", "expense_count": 0, "total_minor": 0, "total": "0.00"}]}
+{"currency": "USD", "months": [{"month": "2026-06", "expense_count": 0, "total_minor": 0, "total": "0.00"}]}
 ```
 
 ## Budgets
 
-A person's monthly limits, overall and per category (D210): each is a standing amount in INR, the same every month
-until it's changed. Spending is the month's summary (every expense at its INR amount).
+A person's monthly limits, overall and per category (D210): each is a standing amount in `BASE_CURRENCY` (`USD`), the
+same every month until it's changed. Spending is the month's summary (every expense at its base-currency amount).
 
 ### `GET /api/v1/budgets?month=2026-11`
 
-The month's spending against the budgets; without `month`, the current month. `month_elapsed_percent` is how much of
-the month has gone by (100 for a past month, 0 for a future one). Every category has a line: those with a limit first
-(most used first), then the others by spending. A line without a limit has only `spent`; `remaining` is negative once
-over. `state` is `on_track` (below 80% of the limit), `near_limit` (80% up to the limit) or `over_limit`.
+The month's spending against the budgets; without `month`, the current month in the caller's time zone. `month_elapsed_percent`
+is how much of the month has gone by (100 for a past month, 0 for a future one). Every category has a line: those with a
+limit first (most used first), then the others by spending. A line without a limit has only `spent`; `remaining` is
+negative once over. `state` is `on_track` (below 80% of the limit), `near_limit` (80% up to the limit) or `over_limit`.
 
 ```json
 {
-  "month": "2026-11", "currency": "INR", "month_elapsed_percent": "66.7",
-  "overall": {"spent": "5700.50", "limit": "10000.00", "remaining": "4299.50", "used_percent": "57.0", "state": "on_track"},
+  "month": "2026-11", "currency": "USD", "month_elapsed_percent": "66.7",
+  "overall": {"spent": "570.05", "limit": "1000.00", "remaining": "429.95", "used_percent": "57.0", "state": "on_track"},
   "categories": [
-    {"category_id": 3, "category_name": "Transport", "spent": "1200.50", "limit": "1000.00", "remaining": "-200.50",
-     "used_percent": "120.1", "state": "over_limit"},
-    {"category_id": 2, "category_name": "Travel", "spent": "300.00", "limit": null, "remaining": null,
+    {"category_id": 3, "category_name": "Transport", "spent": "120.50", "limit": "100.00", "remaining": "-20.50",
+     "used_percent": "120.5", "state": "over_limit"},
+    {"category_id": 2, "category_name": "Travel", "spent": "30.00", "limit": null, "remaining": null,
      "used_percent": null, "state": null}
   ]
 }
@@ -383,7 +384,7 @@ over. `state` is `on_track` (below 80% of the limit), `near_limit` (80% up to th
 
 ### `PUT /api/v1/budgets/overall`, `PUT /api/v1/budgets/categories/{category_id}`
 
-Set (or change) a monthly limit: `{"limit": "8000"}`, above 0, at most two decimals. **204 No Content**. A bad limit or
+Set (or change) a monthly limit: `{"limit": "2000"}`, above 0, at most two decimals. **204 No Content**. A bad limit or
 an unknown field is a 422; a category that doesn't exist is a 422 `business-rule` problem.
 
 ### `DELETE /api/v1/budgets/overall`, `DELETE /api/v1/budgets/categories/{category_id}`
@@ -393,21 +394,22 @@ Remove a limit. **204**, or 404 if there was none (another person's budgets are 
 ## Reports
 
 A person's monthly report (D209). The figures are worked out by the monthly-report skill's script, which the server
-runs on the person's own expenses (in INR, like the summary); the answer is checked before it's sent.
+runs on the person's own expenses (in `BASE_CURRENCY`, like the summary); the answer is checked before it's sent.
 
 ### `GET /api/v1/reports/monthly/{month}`
 
 `month` is `YYYY-MM` (422 otherwise). The month's total against the month before (`change_percent` is null when the
 month before had nothing), the daily average (over the days so far, for the running month), the totals by category
-and by payment method with their share, biggest first, and the five biggest expenses. Amounts are rupees, as strings.
+and by payment method with their share, biggest first, and the five biggest expenses. Amounts are major-unit decimals,
+as strings.
 
 ```json
 {
-  "month": "2026-11", "currency": "INR", "total": "4300.50", "previous_total": "1000.00", "change_percent": "330.1",
-  "expense_count": 4, "days_counted": 20, "daily_average": "215.03",
-  "by_category": [{"category": "Food", "total": "3650.50", "count": 3, "share_percent": "84.9"}],
-  "by_payment_method": [{"payment_method": "upi", "total": "3850.00", "count": 3, "share_percent": "89.5"}],
-  "biggest": [{"spent_on": "2026-11-12", "merchant": "Swiggy", "category": "Food", "amount": "1950.00"}]
+  "month": "2026-11", "currency": "USD", "total": "430.05", "previous_total": "100.00", "change_percent": "330.1",
+  "expense_count": 4, "days_counted": 20, "daily_average": "21.50",
+  "by_category": [{"category": "Food", "total": "365.05", "count": 3, "share_percent": "84.9"}],
+  "by_payment_method": [{"payment_method": "card", "total": "385.00", "count": 3, "share_percent": "89.5"}],
+  "biggest": [{"spent_on": "2026-11-12", "merchant": "Corner Bistro", "category": "Food", "amount": "195.00"}]
 }
 ```
 
@@ -421,7 +423,7 @@ The report as a file to save, in the request's language (`Accept-Language`), sen
 
 | `format` | File |
 |---|---|
-| `csv` | `text/csv`: every expense of the month, oldest first: date, merchant, category, payment method, amount, currency, amount in INR, note. UTF-8 with a byte order mark; text from the person's data that starts with `=`, `+`, `-` or `@` gets a leading `'`, so a spreadsheet never runs it |
+| `csv` | `text/csv`: every expense of the month, oldest first: date, merchant, category, payment method, amount, currency, amount in `{currency}`, note. UTF-8 with a byte order mark; text from the person's data that starts with `=`, `+`, `-` or `@` gets a leading `'`, so a spreadsheet never runs it |
 | `md` | `text/markdown`: the report: the total, compared with the month before, by category, by payment method, the biggest expenses, the daily average |
 
 Errors as for the figures; another `format` is a 422.
@@ -463,18 +465,18 @@ agent's job now, reached only through the chat.
 Reads a short note into an expense, **without saving it**. Needs the Gemini key.
 
 ```json
-{"text": "Paid 450.50 at Swiggy yesterday via GPay"}
+{"text": "Paid 24.50 at Corner Bistro yesterday by card"}
 ```
 
 ```json
 {
-  "expense": {"amount": "450.50", "currency": "INR", "category": "Food", "merchant": "Swiggy",
-              "spent_on": "2026-11-12", "payment_method": "upi", "note": null},
+  "expense": {"amount": "24.50", "currency": "USD", "category": "Food", "merchant": "Corner Bistro",
+              "spent_on": "2026-11-12", "payment_method": "card", "note": null},
   "missing_fields": []
 }
 ```
 
-`missing_fields` lists what `POST /expenses` needs that the note didn't say. `text`: 1–500 characters.
+`missing_fields` lists what `POST /expenses` needs that the note didn't say (currency defaults to the caller's DB `default_currency`). `text`: 1–500 characters.
 
 ### `POST /api/v1/chat`
 
@@ -490,7 +492,7 @@ in words.
 ```json
 {
   "thread_id": "9f1c…",
-  "reply": "You spent ₹3,770.90 on food in November.",
+  "reply": "You spent $377.09 on food in November.",
   "tool_calls": [{"name": "get_summary", "arguments": {"month": "2026-11"}, "ok": true}]
 }
 ```
@@ -584,9 +586,9 @@ change only that person's expenses. Every tool returns a typed result: its JSON 
 | `delete_expense` | destructive | `expense_id`, `confirmed` (must be exactly `true`), `expected_version?` | `{deleted: ExpenseView}` |
 | `get_monthly_report` | read-only | `month` (YYYY-MM) | the month's report, as `GET /reports/monthly/{month}` (D209) |
 | `get_budgets` | read-only | `month?` (YYYY-MM; empty: this month) | the budgets' status, as `GET /budgets` (D211) |
-| `set_budget` | adds data | `limit` (rupees), `category?` (name; empty: overall) | this month's budgets' status |
+| `set_budget` | adds data | `limit` (major units), `category?` (name; empty: overall) | this month's budgets' status |
 
-- `ExpenseView`: `id`, `amount` (rupees), `currency`, `category` (name), `merchant`, `note`, `spent_on`,
+- `ExpenseView`: `id`, `amount` (major units), `currency`, `base_amount` (major units in `BASE_CURRENCY`, nullable), `category` (name), `merchant`, `note`, `spent_on`,
   `payment_method`, `version`.
 - `BudgetAlert`: `category` (null for the overall budget), `state` (`near_limit` or `over_limit`), `spent`, `limit`,
   `used_percent`: a budget the save moved near (80%) or over its monthly limit (D211; empty when none).

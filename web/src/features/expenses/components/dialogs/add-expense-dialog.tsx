@@ -6,6 +6,7 @@ import { Plus } from "lucide-react"
 import { useState, type FormEvent } from "react"
 import { toast } from "sonner"
 
+import { useSignedInUser } from "@/features/auth"
 import { CategorySelect } from "@/features/categories"
 import { DEFAULT_CURRENCY } from "@/shared/api/contracts.gen"
 import { LabeledField } from "@/shared/components/labeled-field"
@@ -32,11 +33,9 @@ import { useExpenseDraft, type ExpenseDraftState } from "../../use-expense-draft
 import { PaymentMethodSelect } from "../fields/payment-method-select"
 
 // A blank draft dated today. A function, so "today" is worked out each time the form starts again, not once.
-const blankDraft = () => emptyDraft(todayIso())
-
 // An amount as it's typed in (the description and the Amount placeholder show it). Not translated: the backend
 // reads amounts written this way, whatever the language.
-const EXAMPLE_AMOUNT = "450.50"
+const EXAMPLE_AMOUNT = "24.50"
 
 /**
  * The Add expense button and its dialog. Save is enabled once the required fields are filled in (the backend
@@ -52,17 +51,19 @@ export function AddExpenseDialog({
   onOpenChange?: (next: boolean) => void
 } = {}) {
   const { t } = useTexts()
+  const defaultCurrency = useSignedInUser().data?.default_currency ?? DEFAULT_CURRENCY
   // Whether the dialog is open; the draft lives in useExpenseDraft, so closing the dialog keeps it.
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
   const open = controlledOpen ?? uncontrolledOpen
   const setOpen = controlledOnOpenChange ?? setUncontrolledOpen
-  const { draft, setField, reset } = useExpenseDraft(blankDraft)
+  const { draft, setField, reset } = useExpenseDraft(() => emptyDraft(todayIso(), defaultCurrency))
   const create = useCreateExpense()
 
   function handleOpenChange(next: boolean) {
     if (!next && create.isPending) return
     if (next && draft.amount === "" && draft.merchant === "" && draft.note === "") {
       setField("spent_on", todayIso())
+      setField("currency", defaultCurrency)
     }
     setOpen(next)
   }
@@ -96,11 +97,11 @@ export function AddExpenseDialog({
           <DialogHeader>
             <DialogTitle>{t("add.title")}</DialogTitle>
             <DialogDescription>
-              {t("add.description", { currency: draft.currency || DEFAULT_CURRENCY, example: EXAMPLE_AMOUNT })}
+              {t("add.description", { currency: draft.currency || defaultCurrency, example: EXAMPLE_AMOUNT })}
             </DialogDescription>
           </DialogHeader>
 
-          <AddExpenseFields draft={draft} setField={setField} />
+          <AddExpenseFields draft={draft} setField={setField} defaultCurrency={defaultCurrency} />
 
           <DialogFooter>
             <DialogClose asChild>
@@ -120,7 +121,11 @@ export function AddExpenseDialog({
 
 // The form's fields, between its header and its buttons. Amount, currency and date share a row, as do category and
 // payment method; each control's id ties it to its label.
-function AddExpenseFields({ draft, setField }: Pick<ExpenseDraftState, "draft" | "setField">) {
+function AddExpenseFields({
+  draft,
+  setField,
+  defaultCurrency,
+}: Pick<ExpenseDraftState, "draft" | "setField"> & { defaultCurrency: string }) {
   const { t } = useTexts()
   return (
     <>
@@ -139,7 +144,7 @@ function AddExpenseFields({ draft, setField }: Pick<ExpenseDraftState, "draft" |
             id="add-currency"
             maxLength={3}
             className="uppercase"
-            placeholder={DEFAULT_CURRENCY}
+            placeholder={defaultCurrency}
             value={draft.currency}
             onChange={(event) => setField("currency", event.target.value.toUpperCase())}
           />

@@ -5,6 +5,9 @@
 import { Loader2 } from "lucide-react"
 import { useEffect, useRef } from "react"
 
+import { useSignedInUser } from "@/features/auth"
+import { DEFAULT_CURRENCY } from "@/shared/api/contracts.gen"
+import { formatMoney } from "@/shared/lib/format"
 import { Button } from "@/shared/ui/button"
 import { ScrollArea } from "@/shared/ui/scroll-area"
 
@@ -38,21 +41,28 @@ function isWaiting(last: ChatMessage | undefined): boolean {
 // What an empty conversation shows: a short hint and a few messages to try.
 function Suggestions({ sending, onSuggestion }: Pick<ChatTranscriptProps, "sending" | "onSuggestion">) {
   const { t } = useTexts()
+  const userCurrency = useSignedInUser().data?.default_currency ?? DEFAULT_CURRENCY
+  const exampleAmount = formatMoney("25", userCurrency)
+  const labelFor = (suggestion: (typeof SUGGESTIONS)[number]) =>
+    suggestion === "addLunch" ? t("suggestions.addLunch", { amount: exampleAmount }) : t(`suggestions.${suggestion}`)
   return (
     <div className="flex flex-col gap-2 py-4 text-sm text-muted-foreground">
       <p>{t("transcript.hint")}</p>
-      {SUGGESTIONS.map((suggestion) => (
-        <Button
-          key={suggestion}
-          variant="outline"
-          size="sm"
-          className="h-auto justify-start py-1.5 text-left whitespace-normal"
-          onClick={() => onSuggestion(t(`suggestions.${suggestion}`))}
-          disabled={sending}
-        >
-          {t(`suggestions.${suggestion}`)}
-        </Button>
-      ))}
+      {SUGGESTIONS.map((suggestion) => {
+        const text = labelFor(suggestion)
+        return (
+          <Button
+            key={suggestion}
+            variant="outline"
+            size="sm"
+            className="h-auto justify-start py-1.5 text-left whitespace-normal"
+            onClick={() => onSuggestion(text)}
+            disabled={sending}
+          >
+            {text}
+          </Button>
+        )
+      })}
     </div>
   )
 }

@@ -17,7 +17,7 @@ erDiagram
     expense {
         BIGINT id PK
         BIGINT owner_id "the person; indexed with spent_on"
-        BIGINT amount_minor "paise"
+        BIGINT amount_minor "minor units (scaled by 100)"
         VARCHAR_3 currency
         BIGINT category_id "indexed, no foreign key"
         VARCHAR_100 merchant
@@ -26,7 +26,7 @@ erDiagram
         VARCHAR_20 payment_method
         DATETIME created_at "UTC, with time zone"
         INTEGER version "starts at 1"
-        BIGINT base_amount_minor "INR paise, nullable"
+        BIGINT base_amount_minor "base-currency minor units, nullable"
         VARCHAR_32 exchange_rate "nullable"
         DATE rate_date "nullable"
     }
@@ -43,7 +43,7 @@ erDiagram
         BIGINT id PK
         BIGINT owner_id "the person; unique with category_id"
         BIGINT category_id "nullable: null is the overall budget"
-        BIGINT limit_minor "paise, monthly"
+        BIGINT limit_minor "minor units, monthly"
         DATETIME updated_at "UTC"
     }
     pending_approval {
@@ -169,8 +169,8 @@ conversations, also without a key.
 |---|---|---|
 | `id` | INTEGER, primary key | shown everywhere as `#14` |
 | `owner_id` | INTEGER, not null | whose expense it is (trackwise.ai's user id, no foreign key: D13). Every read and change filters on it (D190); the index `ix_expense_owner_id_spent_on` (owner_id, spent_on) serves "my expenses this month" |
-| `amount_minor` | INTEGER, not null | **whole paise**: ₹450.50 is `45050`. Never a float |
-| `currency` | VARCHAR(3), not null | ISO 4217 code, default `INR` |
+| `amount_minor` | INTEGER, not null | **whole minor units**: `$24.50` is `2450`. Never a float |
+| `currency` | VARCHAR(3), not null | ISO 4217 code, default `USD` (`DEFAULT_CURRENCY`) |
 | `category_id` | INTEGER, not null | index `ix_expense_category_id`. **No foreign key**: the expenses module asks the categories module whether the category exists |
 | `merchant` | VARCHAR(100), not null | trimmed of spaces |
 | `note` | VARCHAR(500), nullable | |
@@ -178,8 +178,8 @@ conversations, also without a key.
 | `payment_method` | VARCHAR(20), not null | `cash`, `upi`, `card`, `netbanking`, `wallet` or `other` |
 | `created_at` | DATETIME with time zone, not null | UTC, set from the app's clock |
 | `version` | INTEGER, not null, default 1 | raised by one on every update: **optimistic concurrency** |
-| `base_amount_minor` | INTEGER, nullable | the same amount in INR, whole paise (D204): what totals add up. Equal to `amount_minor` for INR |
-| `exchange_rate` | VARCHAR(32), nullable | the rate it was converted at, exactly, as text (`"84.5"`; `"1"` for INR) |
+| `base_amount_minor` | INTEGER, nullable | the same amount in `BASE_CURRENCY` (`USD`, D204/D223), whole minor units: what totals add up. Equal to `amount_minor` for `BASE_CURRENCY` |
+| `exchange_rate` | VARCHAR(32), nullable | the rate it was converted at, exactly, as text (`"1.06"`; `"1"` for `BASE_CURRENCY`) |
 | `rate_date` | DATE, nullable | the day the rate is for (the expense's date, or the nearest earlier day the rates have) |
 
 The three are null only for an expense in another currency saved before migration 0008: it's left out of totals
@@ -213,9 +213,9 @@ the user, and nothing can slip in between the check and the delete.
 What `content` looks like for each kind:
 
 ```json
-{"kind": "user_text", "text": "Add 250 for lunch at Subway"}
-{"kind": "assistant_text", "text": "Saved ₹250 at Subway."}
-{"kind": "tool_call", "call_id": "c1", "name": "add_expense", "arguments": {"amount": "250", "merchant": "Subway"}}
+{"kind": "user_text", "text": "Add 25 USD for lunch at Subway"}
+{"kind": "assistant_text", "text": "Saved $25.00 at Subway."}
+{"kind": "tool_call", "call_id": "c1", "name": "add_expense", "arguments": {"amount": "25", "merchant": "Subway"}}
 {"kind": "tool_result", "call_id": "c1", "name": "add_expense", "output": "{…}", "is_error": false}
 {"kind": "reasoning", "provider": "gemini", "opaque": {"signature": "c2ln…"}}
 ```
@@ -258,7 +258,7 @@ limits are stored: what was spent always comes from the `expense` table, through
 | `id` | INTEGER, primary key | |
 | `owner_id` | INTEGER, not null | whose budget (D190); every read and change names it |
 | `category_id` | INTEGER, nullable | the category (no foreign key, checked through the categories module), or null for the overall budget |
-| `limit_minor` | INTEGER, not null | the monthly limit in paise (INR), the same every month until changed; above 0 |
+| `limit_minor` | INTEGER, not null | the monthly limit in base-currency minor units (`USD`, D223), the same every month until changed; above 0 |
 | `updated_at` | DATETIME with time zone, not null | when the limit was last set (UTC) |
 
 **One budget per scope.** A unique index `uq_budget_owner_id_category_id` on `(owner_id, category_id)`; since SQL
@@ -359,7 +359,7 @@ Each attempt is read and deleted in one step when the provider sends the browser
   category exists), and readers handle a missing one (`"Unknown"`).
 - **Transactions come from the bus.** Handlers never commit; the bus commits once per command and rolls back on error.
   Repositories only stage changes.
-- **Money in paise, time in UTC.** Integers for money, `Decimal` for conversions; timestamps stored with their time
+- **Money in minor units, time in UTC.** Integers for money, `Decimal` for conversions; timestamps stored with their time
   zone, converted for display by the web app.
 
 ## Migrations

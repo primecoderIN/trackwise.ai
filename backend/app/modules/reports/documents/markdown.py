@@ -101,7 +101,7 @@ def _breakdowns(report: MonthlyReport, language: Language, money: Callable[[Deci
 def report_markdown(report: MonthlyReport, language: Language) -> str:
     """The report as a markdown document, in `language`: the month's total, the comparison with the month before, then
     (for a month with expenses) the spending by category and by payment method, the biggest expenses and the daily
-    average, and a closing note that amounts are in INR."""
+    average, and a closing note that amounts are in USD."""
     t = partial(text, language)  # t(key, **values): a text in `language`
     money: Callable[[Decimal], str] = partial(format_money, currency=report.currency, language=language)
     month = YearMonth.parse(report.month)
@@ -124,5 +124,5 @@ def report_markdown(report: MonthlyReport, language: Language) -> str:
     ]
     if report.expense_count:
         lines += _breakdowns(report, language, money)
-    lines += [f"_{t(ReportText.IN_INR)}_", ""]
+    lines += [f"_{t(ReportText.BASE_CURRENCY_NOTE, currency=report.currency)}_", ""]
     return "\n".join(lines)

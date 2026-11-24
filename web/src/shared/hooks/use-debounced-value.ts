@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react"
 
 /**
- * The value, but only once it has stopped changing for `delay` ms: typing "swiggy" asks the API once,
+ * The value, but only once it has stopped changing for `delay` ms: typing "bistro" asks the API once,
  * not six times. The first render returns `value` itself.
  */
 export function useDebouncedValue<T>(value: T, delay: number): T {

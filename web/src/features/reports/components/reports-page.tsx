@@ -90,7 +90,7 @@ export function ReportsPage() {
     <div className="flex flex-col gap-4">
       <PageHeader
         title={t("page.title")}
-        description={t("page.description", { currency: DEFAULT_CURRENCY })}
+        description={t("page.description", { currency: report.data?.currency ?? DEFAULT_CURRENCY })}
         actions={actions}
       />
       {report.data ? (

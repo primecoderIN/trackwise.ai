@@ -14,7 +14,7 @@ import type { MonthlyTrend } from "../api"
 import { useTexts } from "../i18n"
 import { useSpentConfig } from "./chart-config"
 
-// Room for the money labels beside the chart ("₹1.3L"), in pixels.
+// Room for the money labels beside the chart ("$1.3K"), in pixels.
 const MONEY_AXIS_WIDTH = 56
 
 /**

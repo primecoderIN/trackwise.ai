@@ -16,6 +16,7 @@ from mcp.server.mcpserver import MCPServer
 from pydantic import Field
 
 from app.core.clock import clock_today
+from app.core.money import BASE_CURRENCY
 from app.core.months import YearMonth
 from app.modules import budgets
 from app.modules.mcp.caller import current_caller, current_timezone
@@ -33,12 +34,14 @@ def register_set_budget(server: MCPServer, context: ToolContext) -> None:
     @server.tool(
         name=ToolName.SET_BUDGET,
         annotations=ADDS_DATA,
-        description="Set the user's monthly budget (a spending limit in INR that applies every month until changed): "
-        "for one category, or with no category for all spending together. Replaces that budget's old limit. "
-        "Answers with this month's budgets, which the user sees as a card.",
+        description=(
+            f"Set the user's monthly budget (a spending limit in {BASE_CURRENCY} that applies every month until "
+            "changed): for one category, or with no category for all spending together. Replaces that budget's old "
+            "limit. Answers with this month's budgets, which the user sees as a card."
+        ),
     )
     def set_budget(
-        limit: Annotated[str | float, Field(description="The monthly limit in rupees, e.g. '8000'.")],
+        limit: Annotated[str | float, Field(description=f"The monthly limit in {BASE_CURRENCY}, e.g. '2000'.")],
         category: Annotated[
             str, Field(description=f"Category name (see {ResourceUri.CATEGORIES}); leave empty for the overall budget.")
         ] = "",

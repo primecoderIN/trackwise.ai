@@ -11,8 +11,8 @@ from typing import Annotated
 
 from pydantic import Field
 
-# A monthly limit in rupees (INR, like every total, D204): above zero, at most 12 digits, 2 after the point, like an
-# expense's amount. A fraction of a paisa is refused, never rounded away.
+# A monthly limit in the base currency (D204, D223): above zero, at most 12 digits, 2 after the point, like an
+# expense's amount. A fraction of a minor unit is refused, never rounded away.
 BudgetLimit = Annotated[Decimal, Field(gt=0, max_digits=12, decimal_places=2, examples=["8000.00"])]
 
 # A budget is "near its limit" from this share of it on, and "over" once spending passes it. The assistant warns when

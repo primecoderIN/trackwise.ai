@@ -20,7 +20,7 @@ from app.core.cqrs import MessageBus
 from app.core.errors import BusinessRuleError, ExternalServiceError
 from app.core.i18n import Language, translatable
 from app.core.ids import UserId
-from app.core.money import paise_to_rupees
+from app.core.money import BASE_CURRENCY, minor_to_major
 from app.core.months import YearMonth
 from app.core.skills import SkillLibrary, SkillNotFoundError, SkillScriptError
 from app.modules import categories, expenses
@@ -79,7 +79,7 @@ class MonthlyReports:
         data = self._read(owner, month)
         if form is ReportFormat.CSV:
             in_month = [row for row in data.rows if YearMonth.of(row.spent_on) == month]
-            content = expenses_csv(in_month, data.names, language)
+            content = expenses_csv(in_month, data.names, language, BASE_CURRENCY)
         else:
             content = report_markdown(self._run_script(month, data, today=today), language)
         return ReportFile(f"{FILE_NAME_PREFIX}-{month}.{form.value}", MEDIA_TYPES[form], content)
@@ -106,16 +106,17 @@ class MonthlyReports:
         return _Month(rows, names)
 
     def _run_script(self, month: YearMonth, data: _Month, *, today: date | None = None) -> MonthlyReport:
-        """Run the skill's script on the expenses that have an INR amount, and check its answer."""
-        # Every currency counts through its INR amount (D204); one saved before it could be converted has none yet,
+        """Run the skill's script on the expenses that have a base-currency amount, and check its answer."""
+        # Every currency counts through its base-currency amount (D204); one saved before conversion has none yet,
         # so it's left out, as in the monthly summary. No notes: the figures don't need them.
         payload = {
             "month": str(month),
+            "currency": BASE_CURRENCY,
             "today": (today or self._clock.today()).isoformat(),
             "expenses": [
                 {
                     "spent_on": row.spent_on.isoformat(),
-                    "amount": str(paise_to_rupees(row.base_amount_minor)),
+                    "amount": str(minor_to_major(row.base_amount_minor)),
                     "category": data.names.get(row.category_id, categories.UNKNOWN_CATEGORY),
                     "merchant": row.merchant,
                     "payment_method": row.payment_method.value,

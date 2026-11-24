@@ -59,7 +59,9 @@ def create_router(assistant: Assistant, parser: ExpenseParser) -> APIRouter:
     def parse_expense(body: ParseRequest, principal: CurrentUserDep, clock: ClockDep) -> ParseResponse:
         # Suggests an expense from the text but saves nothing. No categories yet is a 422 (BusinessRuleError);
         # a model that fails or answers in the wrong shape is a 502 (LlmError).
-        return parser.parse(body.text, clock_today(clock, principal.timezone))
+        return parser.parse(
+            body.text, clock_today(clock, principal.timezone), default_currency=principal.default_currency
+        )
 
     # One message in, the whole reply out as one JSON body: no streaming, no cards or buttons.
     @router.post("/chat", dependencies=[MODEL_QUOTA])
@@ -71,7 +73,13 @@ def create_router(assistant: Assistant, parser: ExpenseParser) -> APIRouter:
         owner = principal.user_id
         today = clock_today(clock, principal.timezone)
         thread_id, finished = assistant.chat(
-            owner, body.message, body.thread_id, today, language, timezone=principal.timezone
+            owner,
+            body.message,
+            body.thread_id,
+            today,
+            language,
+            timezone=principal.timezone,
+            default_currency=principal.default_currency,
         )
         return ChatResponse(thread_id=thread_id, reply=finished.reply, tool_calls=finished.tool_calls)
 
@@ -91,7 +99,13 @@ def create_router(assistant: Assistant, parser: ExpenseParser) -> APIRouter:
         # The run acts for the signed-in person: their thread, their cards, their expenses (D190, D191).
         today = clock_today(clock, principal.timezone)
         for event in agui_stream.stream(
-            request, principal.user_id, assistant, today, language, timezone=principal.timezone
+            request,
+            principal.user_id,
+            assistant,
+            today,
+            language,
+            timezone=principal.timezone,
+            default_currency=principal.default_currency,
         ):
             # AG-UI's JSON (camelCase field names) as the event's `data:` line.
             yield ServerSentEvent(raw_data=event.model_dump_json(by_alias=True, exclude_none=True))

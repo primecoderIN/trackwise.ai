@@ -81,7 +81,7 @@ These are deliberate design values, each defined once, next to the code it gover
 | `DEFAULT_TREND_MONTHS = 6`, `MAX_TREND_MONTHS = 24` | `expenses/values.py` | the trend's length |
 | `MAX_MESSAGE_LENGTH = 2000` | `assistant/api/schemas.py` | one chat message (also the web text box's limit) |
 | `MAX_RECEIPT_MB = 5`, `ReceiptMediaType` (JPEG, PNG, WEBP, PDF), `MAX_LINE_ITEMS = 50` | `receipts/values.py` | what may be uploaded as a receipt, and how many lines the model may list |
-| `DEFAULT_CURRENCY = "INR"`, `CURRENCY_SYMBOLS` (a chart's unit) | `core/money.py` | the currency assumed; amounts are written in their currency's CLDR format (Babel) |
+| `DEFAULT_CURRENCY = "USD"`, `BASE_CURRENCY`, `DEFAULT_USER_CURRENCY`, `SUPPORTED_CURRENCIES`, `CURRENCY_SYMBOLS` (a chart's unit) | `core/money.py` | the default/base currency (`USD`) and supported 2-decimal currencies; amounts are written in their currency's CLDR format (Babel) |
 | the server's languages (English, Hindi), each one's CLDR locale and English name (for the model) | `core/i18n/languages.py` | which `Accept-Language` the server answers in; the web app's table is typed against them |
 | Log level `INFO` for `app.*` | `infrastructure/logging.py` | message text and tool arguments appear only at `DEBUG` |
 | `SESSION_IDLE = 1 day`, `SESSION_LIFETIME = 14 days`, `RENEW_AFTER = 12 h` | `accounts/values.py` | when a session ends unused, when it ends anyway, how often its renewal is written |
@@ -150,8 +150,8 @@ agents as services, and also reads `RECEIPT_AGENT_URL`/`KEY`, `INSIGHTS_AGENT_UR
 
 Fixed in code: the host (`agent_kit/settings.HOST`), the receipt agent's largest file (5 MB,
 `contract.MAX_RECEIPT_BYTES`) and request (`agent_kit/http.request_limit`), how many tasks an agent remembers
-(`agent_kit/task_store.MAX_KEPT_TASKS`, 20), and the currency agent's mock rates (`currency/rates.MOCK_INR_PER_UNIT`:
-made-up values, D203).
+(`agent_kit/task_store.MAX_KEPT_TASKS`, 20), and the currency agent's mock rates (`currency/rates.MOCK_BASE_RATES`:
+made-up values, D203/D223).
 
 ## Run-time options
 

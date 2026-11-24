@@ -63,7 +63,7 @@ backend/
       sealing.py         Sealer: the port for keeping a secret text unreadable where it's stored (seal, unseal)
       sql.py             rows_affected: how many rows a DELETE or UPDATE touched
       months.py          YearMonth: "2026-11", its range and arithmetic
-      money.py           rupees <-> paise, CURRENCY_PATTERN, format_money (CLDR, in a language's locale)
+      money.py           major <-> minor units, SUPPORTED_CURRENCIES, BASE_CURRENCY, format_money (CLDR)
       i18n/              Language and Accept-Language negotiation, define_catalog / text / Plural / Translatable
                          (texts for people, checked at startup), format_day and format_month (Babel's CLDR data)
       llm/               the LLM port (port.py: StructuredOutputModel, ToolCallingModel, LanguageModel = both,
@@ -249,7 +249,7 @@ at the database level. Instead, `CreateExpense`'s handler asks `categories.GetCa
 | Module | Contract (`from app.modules import <name>`) | Used by |
 |---|---|---|
 | `categories` | `CategoryRead`, `CreateCategory`, `ListCategories`, `GetCategory`, `FindCategoryByName`, `CategoryId`, `MAX_NAME_LENGTH`, `UNKNOWN_CATEGORY`, `CategoryText` (its texts' keys, e.g. `NO_CATEGORIES_YET`) | expenses, mcp, assistant, seed |
-| `expenses` | `ExpenseRecorder` (saves an expense, fetching the rate to INR first for another currency, D204; the way REST and MCP save), `ExchangeRate`, `ExchangeRates`, `UnsupportedCurrencyError`, `RatesUnavailableError`, `ExpenseRead` (with the INR amount, rate and date), `ExpenseList`, `CreateExpense`, `UpdateExpense` + `ExpenseChanges`, `DeleteExpense` (with `expected_version`), `GetExpense`, `ListExpenses`, `GetMonthlySummary`, `GetMonthlyTrend` (+ their result types), `ExpenseId`, `MAX_LIST_LIMIT`, `MAX_NOTE_LENGTH`, `PaymentMethod`, `payment_method_label(method, language)`, `ExpenseText` | mcp, assistant (`PaymentMethod`, labels, the note's limit), seed |
+| `expenses` | `ExpenseRecorder` (saves an expense, fetching the rate to `BASE_CURRENCY` first for another currency, D204/D223; the way REST and MCP save), `ExchangeRate`, `ExchangeRates`, `UnsupportedCurrencyError`, `RatesUnavailableError`, `ExpenseRead` (with the base-currency amount, rate and date), `ExpenseList`, `CreateExpense`, `UpdateExpense` + `ExpenseChanges`, `DeleteExpense` (with `expected_version`), `GetExpense`, `ListExpenses`, `GetMonthlySummary`, `GetMonthlyTrend` (+ their result types), `ExpenseId`, `MAX_LIST_LIMIT`, `MAX_NOTE_LENGTH`, `PaymentMethod`, `payment_method_label(method, language)`, `ExpenseText` | mcp, assistant (`PaymentMethod`, labels, the note's limit), seed |
 | `conversations` | `AppendTurn`, `GetLastTurn`, `GetHistory`, `GetThread`, `ThreadRead`, `ThreadId`, `THREAD_ID_MAX_LENGTH`, `ConversationText` (e.g. `THREAD_NOT_FOUND`) | assistant |
 | `mcp` | `ToolName`, `ResourceUri`, `SERVER_NAME`, `acting_for` and `act_for_process` (who a request acts for, D191), the argument names (`EXPENSE_ID_ARGUMENT`, `CONFIRM_ARGUMENT`, `EXPECTED_VERSION_ARGUMENT`, `CLEAR_NOTE_ARGUMENT`), the typed results (`ExpenseView`, `ExpenseSaved`, `MonthSpending`, ...). The server itself (`create_server`, `create_http_app`) comes from `mcp/module.py`, for the composition root only | assistant |
 | `receipts` | `ReceiptFiles` (an owner's receipt file: `content(owner_id, receipt_id)` → `ReceiptContent`, bytes and media type), `ReceiptContent`, `ReceiptRead`, `ReceiptId`, `ReceiptMediaType`, `MAX_RECEIPT_BYTES`, `ReceiptText`. Its `module.py` gives the composition root `create_files(bus, files)` and `create_router(bus, files)` | the assistant (sends a receipt attached in the chat to the receipt agent), the export script |
@@ -464,7 +464,7 @@ its own service on the port below; `run-agent.ps1 <name>` runs one alone on eith
 |---|---|---|---|---|
 | `agents/receipt` (Phase 24) | 9001 | `extract_receipt` | Gemini, one call | the assistant, for a receipt attached in the chat |
 | `agents/insights` (Phase 25) | 9002 | `analyze_spending` | Gemini, one call (the tips; the numbers are code) | the assistant, when the model delegates to it (D206); it may stop input-required to ask which month (D205) |
-| `agents/currency` (Phase 25) | 9003 | `convert_currency` | none: a `RateProvider` (mock rates for now, D203) | the expenses module, to store every expense in INR too (D204) |
+| `agents/currency` (Phase 25) | 9003 | `convert_currency` | none: a `RateProvider` (mock rates for now, D203) | the expenses module, to store every expense in the base currency (`USD`, D204/D223) |
 
 **What they share is the agent kit** (`agents/agent_kit/`, D202): `AgentGate` (the key check, the request limit,
 no-store), `ForgetfulTaskStore`, `start_task`/`reject`/`fail`, the settings rules (one `.env`, `127.0.0.1` only, keys of

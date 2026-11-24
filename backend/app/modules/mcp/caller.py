@@ -18,6 +18,7 @@ from contextvars import ContextVar
 from app.core.clock import DEFAULT_TIMEZONE
 from app.core.errors import AuthenticationError
 from app.core.identity import TokenCaller
+from app.core.money import DEFAULT_USER_CURRENCY
 
 CallerIdentity = int | TokenCaller
 # Answers the caller's user id (or TokenCaller with account preferences), asked on every tool call: None once
@@ -99,3 +100,9 @@ def current_timezone() -> str:
     """The IANA time zone name for the current MCP caller, defaulting to 'UTC'."""
     resolved = _resolved_caller()
     return DEFAULT_TIMEZONE if isinstance(resolved, int) else resolved.timezone
+
+
+def current_currency() -> str:
+    """The ISO 4217 default currency code for the current MCP caller."""
+    resolved = _resolved_caller()
+    return DEFAULT_USER_CURRENCY if isinstance(resolved, int) else resolved.default_currency

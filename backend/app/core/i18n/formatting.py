@@ -1,7 +1,7 @@
 """Money, days and months written for people, in a language's conventions (core layer).
 
 Babel's CLDR data, the same data the browser's Intl uses, so a card the server builds and a page the web app draws
-write the same value the same way (₹1,25,000.50, "13 नव॰ 2026", "नवंबर 2026"). Used by the assistant's cards and by
+write the same value the same way ($125,000.50, "13 नव॰ 2026", "नवंबर 2026"). Used by the assistant's cards and by
 core/money.py's format_money.
 """
 

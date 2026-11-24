@@ -2,9 +2,9 @@
 
 Part of the mcp adapter. register_add_expense adds the tool to a server; server.py calls it, in
 TOOL_REGISTRARS order. The tool only translates: it turns its arguments into the expenses module's
-NewExpense, saved through the expenses module's recorder (which converts an amount in another currency to INR
-first, D204), so MCP callers get exactly the REST API's rules (amount > 0, the category must exist, a currency that
-can be converted), then answers with the saved expense (ExpenseSaved) and the budgets it pushed near or over their
+NewExpense, saved through the expenses module's recorder (which converts an amount in another currency to the base
+currency first, D204), so MCP callers get exactly the REST API's rules (amount > 0, the category must exist, a currency
+that can be converted), then answers with the saved expense (ExpenseSaved) and the budgets it pushed near or over their
 limit (the budgets module's BudgetWatch).
 
 What clients see comes from the tool function: the SDK builds the input schema (titled
@@ -17,12 +17,15 @@ from typing import Annotated
 from mcp.server.mcpserver import MCPServer
 from pydantic import Field
 
-from app.core.money import CURRENCY_PATTERN, DEFAULT_CURRENCY
+from app.core.money import BASE_CURRENCY, CURRENCY_PATTERN, DEFAULT_USER_CURRENCY
 from app.modules import expenses
-from app.modules.mcp.caller import current_caller
+from app.modules.mcp.caller import current_caller, current_currency
 from app.modules.mcp.contracts import ExpenseSaved, ResourceUri, ToolName
 from app.modules.mcp.tools.context import ToolContext
 from app.modules.mcp.tools.support import ADDS_DATA, BUDGET_ALERTS_NOTE, PAYMENT_METHODS, given, tool_errors
+
+# Accept either a 3-letter ISO currency code or "" (which uses the caller's configured default currency).
+CURRENCY_OR_EMPTY = f"({CURRENCY_PATTERN})|^$"
 
 
 def register_add_expense(server: MCPServer, context: ToolContext) -> None:
@@ -33,7 +36,7 @@ def register_add_expense(server: MCPServer, context: ToolContext) -> None:
     """
     views, recorder = context.views, context.recorder
 
-    # Records an expense. The command validates the amount (rupees, at most 2 decimals, stored as paise)
+    # Records an expense. The command validates the amount (major units, at most 2 decimals, stored as minor units)
     # and the date; the handler refuses an amount <= 0 or a category that doesn't exist.
     @server.tool(
         name=ToolName.ADD_EXPENSE,
@@ -52,10 +55,13 @@ def register_add_expense(server: MCPServer, context: ToolContext) -> None:
         currency: Annotated[
             str,
             Field(
-                description="ISO currency code. INR unless stated otherwise; another currency is also stored in INR.",
-                pattern=CURRENCY_PATTERN,
+                description=(
+                    "ISO currency code; leave empty for the caller's default currency "
+                    f"(default {DEFAULT_USER_CURRENCY}). Other currencies are also stored in {BASE_CURRENCY}."
+                ),
+                pattern=CURRENCY_OR_EMPTY,
             ),
-        ] = DEFAULT_CURRENCY,
+        ] = "",
     ) -> ExpenseSaved:
         with tool_errors():
             if isinstance(amount, bool):
@@ -66,7 +72,7 @@ def register_add_expense(server: MCPServer, context: ToolContext) -> None:
             new = expenses.NewExpense.model_validate(
                 {
                     "amount": str(amount),
-                    "currency": currency,
+                    "currency": given(currency) or current_currency(),
                     "category_id": views.category_id(category),
                     "merchant": merchant,
                     "note": given(note),

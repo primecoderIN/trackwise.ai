@@ -30,6 +30,7 @@ from app.core.llm import (
     ToolSpec,
     UserText,
 )
+from app.core.money import DEFAULT_USER_CURRENCY
 from app.modules.assistant import a2ui
 from app.modules.assistant.agent.events import AgentEvent, FormRequested, TextDelta, ToolCallSummary, TurnFinished
 from app.modules.assistant.agent.prompts import system_instruction
@@ -130,7 +131,14 @@ class Agent:
     extensions: Sequence[Extension] = ()
 
     def run(
-        self, message: str, today: date, history: list[Message], surface: Surface, language: Language
+        self,
+        message: str,
+        today: date,
+        history: list[Message],
+        surface: Surface,
+        language: Language,
+        *,
+        default_currency: str = DEFAULT_USER_CURRENCY,
     ) -> Iterator[AgentEvent]:
         """Answer one user message, as events: TextDelta pieces, tool events, cards and forms, and finally a
         TurnFinished with the whole reply, the tools used and the messages to store.
@@ -142,7 +150,7 @@ class Agent:
         logger.info("user message (%d characters, %d earlier messages)", len(message), len(history))
         logger.debug("  message: %s", message)
         try:
-            setup = self._prepare(today, surface, language)
+            setup = self._prepare(today, surface, language, default_currency=default_currency)
         except ToolsUnavailableError as exc:
             # Without tools the model could only guess, so answer honestly without asking it.
             logger.warning("tools unavailable, not calling the model: %s", exc)
@@ -150,7 +158,14 @@ class Agent:
             return
         yield from self._steps(turn, history, setup, language)
 
-    def _prepare(self, today: date, surface: Surface, language: Language) -> _Setup:
+    def _prepare(
+        self,
+        today: date,
+        surface: Surface,
+        language: Language,
+        *,
+        default_currency: str = DEFAULT_USER_CURRENCY,
+    ) -> _Setup:
         """What this turn offers the model: the tools (the surface's choice of them, then the extensions'), the system
         instruction, and the calls handled in place. Raises ToolsUnavailableError if the tools can't be listed."""
         # What the assistant can do comes from the tools, not from this code.
@@ -159,9 +174,16 @@ class Agent:
         specs = surface.tool_specs(tool_specs) + [spec for extension in self.extensions for spec in extension.specs()]
         # The extensions' rules only when they offer something: without them the instruction is as before.
         extra = [rule for extension in self.extensions for rule in extension.rules()]
-        instruction = system_instruction(today, category_names, surface.prompt_rules(category_names), language, extra)
+        instruction = system_instruction(
+            today,
+            category_names,
+            surface.prompt_rules(category_names),
+            language,
+            extra,
+            default_currency=default_currency,
+        )
         # The form is shown on either surface: a model may ask for one even where the tool wasn't offered.
-        form = partial(_show_form, category_names, today, language)
+        form = partial(_show_form, category_names, today, language, default_currency)
         handlers: dict[str, CallHandler] = {a2ui.SHOW_FORM_TOOL_NAME: form, **surface.call_handlers(self.tools)}
         for extension in self.extensions:
             handlers.update(extension.handlers())
@@ -219,14 +241,20 @@ class Agent:
 
 
 def _show_form(
-    category_names: list[str], today: date, language: Language, call: ToolCall
+    category_names: list[str],
+    today: date,
+    language: Language,
+    default_currency: str,
+    call: ToolCall,
 ) -> Generator[AgentEvent, None, CallOutcome]:
     """show_expense_form: put a form on screen, and end the turn after this step.
 
     The model's own form if it passes the checks, else the built-in one, in `language`. Not a tool the agent ran,
     so no summary; the model is told the form is on screen.
     """
-    form, source = a2ui.expense_form_from_call(call.arguments, category_names, today, language)
+    form, source = a2ui.expense_form_from_call(
+        call.arguments, category_names, today, language, default_currency=default_currency
+    )
     logger.info("  form shown (%s)", source)
     yield FormRequested(form=form, source=source)
     result = ToolResult(call_id=call.call_id, name=call.name, output=FORM_ON_SCREEN)

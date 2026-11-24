@@ -14,7 +14,7 @@ from app.modules.mcp.contracts import ExpenseView
 
 
 def to_view(expense: expenses.ExpenseRead, names: dict[int, str]) -> ExpenseView:
-    """The expense as the tools show it: the category by name, the amount in rupees.
+    """The expense as the tools show it: the category by name, the amount in major units.
 
     `names` maps category ids to names. A category that isn't in it (it no longer exists) is shown as
     categories.UNKNOWN_CATEGORY, as the rest of the app does.
@@ -23,7 +23,7 @@ def to_view(expense: expenses.ExpenseRead, names: dict[int, str]) -> ExpenseView
         id=expense.id,
         amount=expense.amount,
         currency=expense.currency,
-        amount_in_inr=expense.base_amount,
+        base_amount=expense.base_amount,
         category=names.get(expense.category_id, categories.UNKNOWN_CATEGORY),
         merchant=expense.merchant,
         note=expense.note,

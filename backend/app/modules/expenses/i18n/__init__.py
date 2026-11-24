@@ -15,7 +15,7 @@ define_catalog(PaymentMethod, {Language.EN: PAYMENT_METHODS_EN, Language.HI: PAY
 
 
 def payment_method_label(method: PaymentMethod, language: Language) -> str:
-    """How `method` is written for people in `language`: "upi" -> "UPI", "netbanking" -> "Net banking"."""
+    """How `method` is written for people in `language`: "upi" -> "UPI", "netbanking" -> "Bank transfer"."""
     return text(language, method)
 
 
