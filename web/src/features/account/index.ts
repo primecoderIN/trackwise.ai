@@ -7,7 +7,7 @@ import { lazyWithRetry } from "@/shared/lib/lazy-with-retry"
 
 import { accountTexts } from "./i18n"
 
-export { accountKeys, useCompleteWelcome } from "./queries"
+export { accountKeys, useCompleteWelcome, useUpdatePreferences } from "./queries"
 
 /**
  * The Settings page, loaded only when it's first shown, together with its texts (in the language on now), so it's

@@ -27,11 +27,18 @@ const hi: Translation<typeof en> = {
   },
   preferences: {
     title: "प्राथमिकताएँ",
-    description: "इस ब्राउज़र पर trackwise.ai में इस्तेमाल होने वाली भाषा और थीम चुनें।",
+    description: "अपनी भाषा, डिफ़ॉल्ट मुद्रा, टाइमज़ोन और थीम चुनें।",
     languageTitle: "भाषा",
     languageDescription: "मेन्यू, पेज, त्रुटि संदेश और सहायक के जवाब इसी भाषा में दिखेंगे।",
+    currencyTitle: "डिफ़ॉल्ट मुद्रा",
+    currencyDescription:
+      "नया खर्च जोड़ते समय या सहायक से बात करते समय पहले से चुनी होती है। कुल योग और बजट {{baseCurrency}} में ट्रैक होते हैं।",
+    timezoneTitle: "टाइमज़ोन",
+    timezoneDescription: "आज की तारीख़, मासिक सारांश, बजट और रिपोर्ट के लिए उपयोग किया जाता है।",
+    useBrowserTimezone: "ब्राउज़र टाइमज़ोन उपयोग करें ({{zone}})",
     themeTitle: "थीम",
-    themeDescription: "लाइट और डार्क मोड के बीच बदलें, या अपने डिवाइस का अनुसरण करें।",
+    themeDescription: "लाइट और डार्क मोड के बीच बदलें, या अपने डिवाइस का अनुसरण करें (इस ब्राउज़र पर सहेजा जाता है)।",
+    saved: "प्राथमिकताएँ सहेजी गईं।",
   },
   sessions: {
     title: "आप कहाँ साइन इन हैं",

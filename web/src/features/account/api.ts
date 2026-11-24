@@ -17,6 +17,10 @@ export type NewAccessToken = Schemas["NewAccessToken"]
 export type TokenLifetime = NonNullable<NewAccessToken["lifetime_days"]>
 /** The body of POST /account/welcome: records welcome completion and the accepted terms version. */
 export type WelcomeAcceptance = Schemas["WelcomeAcceptance"]
+/** The body of PATCH /account/preferences: partial update of language, default currency, or timezone. */
+export type UserPreferencesChange = Schemas["UserPreferencesChange"]
+/** The updated account details returned by PATCH /account/preferences. */
+export type CurrentUser = Schemas["CurrentUser"]
 
 /** The person's live sessions, most recently used first. Throws ApiError if it fails. */
 export function listSessions(signal?: AbortSignal): Promise<Session[]> {
@@ -51,4 +55,9 @@ export function revokeAccessToken(id: number): Promise<void> {
 /** Records that the signed-in person finished the first-run welcome flow and accepted the terms. */
 export function completeWelcome(body: WelcomeAcceptance): Promise<void> {
   return unwrapEmpty(api.POST("/api/v1/account/welcome", { body }))
+}
+
+/** Updates the signed-in person's preferred language, default currency, and/or timezone. */
+export function updatePreferences(body: UserPreferencesChange): Promise<CurrentUser> {
+  return unwrap(api.PATCH("/api/v1/account/preferences", { body }))
 }

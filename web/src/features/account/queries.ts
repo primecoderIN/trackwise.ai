@@ -14,6 +14,7 @@ import {
   revokeAccessToken,
   signOutOtherSessions,
   signOutSession,
+  updatePreferences,
 } from "./api"
 
 // The root of every account key, so marking it out of date reaches them all.
@@ -67,4 +68,9 @@ export function useRevokeAccessToken() {
 /** Records welcome completion and terms acceptance on the person's account. */
 export function useCompleteWelcome() {
   return useMutation({ mutationFn: completeWelcome, meta: CHANGES_ACCOUNT })
+}
+
+/** Updates the person's saved language, default currency, or timezone preferences. */
+export function useUpdatePreferences() {
+  return useMutation({ mutationFn: updatePreferences, meta: CHANGES_ACCOUNT })
 }

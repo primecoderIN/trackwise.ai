@@ -14,21 +14,24 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu"
 
-import { isLanguage, LANGUAGE_CODES, LANGUAGES } from "./languages"
+import { isLanguage, LANGUAGE_CODES, LANGUAGES, type Language } from "./languages"
 import { useLanguage } from "./use-language"
 
 /**
  * The language menu. The chosen language is marked (a radio item, announced as checked). Choosing one loads its
- * texts if needed, redraws the app in it and saves the choice; if they can't be loaded, a toast says so and nothing
+ * texts if needed, redraws the app in it, saves the choice locally, and optionally notifies `onSelect` (so the
+ * signed-in app frame can also persist it on the account). If texts can't be loaded, a toast says so and nothing
  * changes.
  */
-export function LanguageMenu() {
+export function LanguageMenu({ onSelect }: { onSelect?: (language: Language) => void }) {
   const { t } = useTranslation()
   const { language, setLanguage } = useLanguage()
 
   const choose = (value: string) => {
     if (!isLanguage(value) || value === language) return
-    setLanguage(value).catch(() => toast.error(t("language.loadFailed", { language: LANGUAGES[value].name })))
+    setLanguage(value)
+      .then(() => onSelect?.(value))
+      .catch(() => toast.error(t("language.loadFailed", { language: LANGUAGES[value].name })))
   }
 
   // Each name carries its own lang attribute, so a screen reader reads "हिन्दी" as Hindi, whatever the page's language.

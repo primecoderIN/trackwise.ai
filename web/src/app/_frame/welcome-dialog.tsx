@@ -1,74 +1,97 @@
-// The first-run welcome dialog (Phase 29): shown once after a person's first sign-in (or when the current terms
-// version hasn't been accepted yet), and stored on the server with the account (`welcomed_at`, `terms_version`, D192).
-// Steps: choose the language, set an optional overall monthly budget, optionally try a sentence in the assistant, and
-// accept the Terms of Service and Privacy Policy. Part of app/_frame/.
+// The first-run welcome dialog (Phase 29 + globalization): shown once after a person's first sign-in (or when the
+// current terms version hasn't been accepted yet), and persisted on the server (`welcomed_at`, `terms_version`,
+// `preferred_language`, `default_currency`, `timezone`). Part of app/_frame/.
 
-import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
 import { useCompleteWelcome } from "@/features/account"
 import { useAssistant } from "@/features/assistant"
-import { useSignedInUser } from "@/features/auth"
+import { useSignedInUser, type SignedInUser } from "@/features/auth"
 import { useSetBudget } from "@/features/budgets"
-import { ACCOUNT, BASE_CURRENCY, DEFAULT_USER_CURRENCY } from "@/shared/api/contracts.gen"
+import { ACCOUNT, DEFAULT_USER_CURRENCY } from "@/shared/api/contracts.gen"
 import { APP_NAME } from "@/shared/config/app"
-import { ROUTES } from "@/shared/config/routes"
-import { isLanguage, LANGUAGE_CODES, LANGUAGES, useLanguage } from "@/shared/i18n"
+import { DEFAULT_LANGUAGE, isLanguage, LANGUAGES, useLanguage, type Language } from "@/shared/i18n"
+import { isSupportedCurrency, type SupportedCurrency } from "@/shared/lib/currencies"
 import { messageOf } from "@/shared/lib/errors"
 import { formatMoney } from "@/shared/lib/format"
+import { detectBrowserTimezone } from "@/shared/lib/timezones"
 import { Button } from "@/shared/ui/button"
-import { Checkbox } from "@/shared/ui/checkbox"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
-import { Input } from "@/shared/ui/input"
-import { Label } from "@/shared/ui/label"
 
 import { useTexts } from "../_i18n"
+import { WelcomeExtrasSteps, WelcomeLanguageStep, WelcomeRegionStep, WelcomeTermsConsent } from "./welcome-steps"
 
-/**
- * First-run welcome flow dialog: opens automatically when the signed-in user hasn't completed onboarding or accepted
- * the current terms version yet.
- */
-export function WelcomeDialog({ onOpenChat }: { onOpenChat: () => void }) {
+function initialWelcomeLanguage(user: SignedInUser): Language {
+  return user.welcomed_at != null && isLanguage(user.preferred_language) ? user.preferred_language : DEFAULT_LANGUAGE
+}
+
+function initialWelcomeCurrency(user: SignedInUser): SupportedCurrency {
+  return isSupportedCurrency(user.default_currency) ? user.default_currency : DEFAULT_USER_CURRENCY
+}
+
+function initialWelcomeTimezone(user: SignedInUser): string {
+  return user.welcomed_at != null && user.timezone ? user.timezone : detectBrowserTimezone()
+}
+
+function WelcomeDialogBody({
+  user,
+  onOpenChat,
+  onDismiss,
+}: {
+  user: SignedInUser
+  onOpenChat: () => void
+  onDismiss: () => void
+}) {
   const { t } = useTexts()
   const { t: tCommon } = useTranslation()
-  const user = useSignedInUser().data
   const { language, setLanguage } = useLanguage()
   const completeWelcome = useCompleteWelcome()
   const setBudget = useSetBudget()
   const assistant = useAssistant()
 
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>(() => initialWelcomeLanguage(user))
+  const [selectedCurrency, setSelectedCurrency] = useState<SupportedCurrency>(() => initialWelcomeCurrency(user))
+  const [selectedTimezone, setSelectedTimezone] = useState<string>(() => initialWelcomeTimezone(user))
   const [budgetLimit, setBudgetLimit] = useState("")
-  const [selectedPrompt, setSelectedPrompt] = useState<string | null>(null)
+  const [selectedPromptIndex, setSelectedPromptIndex] = useState<number | null>(null)
   const [termsAccepted, setTermsAccepted] = useState(true)
-  const [dismissedForUser, setDismissedForUser] = useState<number | null>(null)
+  const alignedInitial = useRef(false)
 
-  if (!user) return null
-  const needsWelcome = user.welcomed_at == null || user.terms_version !== ACCOUNT.currentTermsVersion
-  if (!needsWelcome || dismissedForUser === user.id) return null
+  useEffect(() => {
+    if (alignedInitial.current) return
+    alignedInitial.current = true
+    if (language !== selectedLanguage) void setLanguage(selectedLanguage).catch(() => undefined)
+  }, [language, selectedLanguage, setLanguage])
 
-  const userCurrency = user.default_currency ?? DEFAULT_USER_CURRENCY
   const busy = completeWelcome.isPending || setBudget.isPending
-  const prompts = [t("welcome.prompt1", { amount: formatMoney("25", userCurrency) }), t("welcome.prompt2")]
+  const prompts = [t("welcome.prompt1", { amount: formatMoney("25", selectedCurrency) }), t("welcome.prompt2")]
 
-  function chooseLanguage(code: string) {
-    if (!isLanguage(code) || code === language) return
+  function chooseLanguage(code: Language) {
+    setSelectedLanguage(code)
+    if (code === language) return
     setLanguage(code).catch(() => toast.error(tCommon("language.loadFailed", { language: LANGUAGES[code].name })))
   }
 
   async function handleFinish(skipExtras: boolean) {
-    if (!termsAccepted || busy || !user) return
+    if (!termsAccepted || busy) return
     try {
       const trimmedBudget = budgetLimit.trim()
       if (!skipExtras && trimmedBudget !== "" && Number(trimmedBudget) > 0) {
         await setBudget.mutateAsync({ scope: null, limit: trimmedBudget })
       }
-      await completeWelcome.mutateAsync({ terms_version: ACCOUNT.currentTermsVersion })
-      setDismissedForUser(user.id)
-      if (!skipExtras && selectedPrompt) {
+      await completeWelcome.mutateAsync({
+        terms_version: ACCOUNT.currentTermsVersion,
+        preferred_language: selectedLanguage,
+        default_currency: selectedCurrency,
+        timezone: selectedTimezone,
+      })
+      onDismiss()
+      const chosenPrompt = selectedPromptIndex !== null ? prompts[selectedPromptIndex] : null
+      if (!skipExtras && chosenPrompt) {
         onOpenChat()
-        assistant.send(selectedPrompt)
+        assistant.send(chosenPrompt)
       }
     } catch (error) {
       toast.error(messageOf(error))
@@ -77,95 +100,29 @@ export function WelcomeDialog({ onOpenChat }: { onOpenChat: () => void }) {
 
   return (
     <Dialog open>
-      <DialogContent showCloseButton={false} className="sm:max-w-lg">
+      <DialogContent showCloseButton={false} className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t("welcome.title", { app: APP_NAME })}</DialogTitle>
           <DialogDescription>{t("welcome.description")}</DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-4 py-1">
-          <fieldset className="flex flex-col gap-1.5">
-            <legend className="text-sm font-medium">{t("welcome.stepLanguage")}</legend>
-            <div className="flex flex-wrap gap-2 pt-1">
-              {LANGUAGE_CODES.map((code) => (
-                <Button
-                  key={code}
-                  type="button"
-                  variant={language === code ? "default" : "outline"}
-                  size="sm"
-                  lang={code}
-                  aria-pressed={language === code}
-                  onClick={() => chooseLanguage(code)}
-                >
-                  {LANGUAGES[code].name}
-                </Button>
-              ))}
-            </div>
-          </fieldset>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="welcome-budget" className="text-sm font-medium">
-              {t("welcome.stepBudget", { currency: BASE_CURRENCY })}
-            </Label>
-            <Input
-              id="welcome-budget"
-              inputMode="decimal"
-              placeholder={t("welcome.budgetPlaceholder")}
-              value={budgetLimit}
-              onChange={(event) => setBudgetLimit(event.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">{t("welcome.budgetHint")}</p>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <p className="text-sm font-medium">{t("welcome.stepAssistant")}</p>
-            <p className="text-xs text-muted-foreground">{t("welcome.assistantHint")}</p>
-            <div className="flex flex-col gap-1.5">
-              {prompts.map((prompt) => {
-                const active = selectedPrompt === prompt
-                return (
-                  <button
-                    key={prompt}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => setSelectedPrompt(active ? null : prompt)}
-                    className={`rounded-md border px-3 py-2 text-left text-xs transition-colors ${
-                      active ? "border-primary bg-primary/10 font-medium" : "hover:bg-accent/50"
-                    }`}
-                  >
-                    “{prompt}”
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          <div className="flex items-start gap-2 rounded-md border bg-muted/30 p-3">
-            <Checkbox
-              id="welcome-terms"
-              checked={termsAccepted}
-              onCheckedChange={(checked) => setTermsAccepted(checked === true)}
-            />
-            <div className="grid gap-1 leading-none">
-              <Label htmlFor="welcome-terms" className="text-xs font-normal leading-snug">
-                {t("welcome.termsLabel", { version: ACCOUNT.currentTermsVersion })}
-              </Label>
-              <div className="flex gap-3 text-xs text-muted-foreground">
-                <Link
-                  href={language === "hi" ? ROUTES.termsHi : ROUTES.terms}
-                  className="underline hover:text-foreground"
-                >
-                  {t("welcome.viewTerms")}
-                </Link>
-                <Link
-                  href={language === "hi" ? ROUTES.privacyHi : ROUTES.privacy}
-                  className="underline hover:text-foreground"
-                >
-                  {t("welcome.viewPrivacy")}
-                </Link>
-              </div>
-            </div>
-          </div>
+          <WelcomeLanguageStep selected={selectedLanguage} disabled={busy} onSelect={chooseLanguage} />
+          <WelcomeRegionStep
+            currency={selectedCurrency}
+            timezone={selectedTimezone}
+            disabled={busy}
+            onCurrencyChange={setSelectedCurrency}
+            onTimezoneChange={setSelectedTimezone}
+          />
+          <WelcomeExtrasSteps
+            budgetLimit={budgetLimit}
+            prompts={prompts}
+            selectedPromptIndex={selectedPromptIndex}
+            onBudgetChange={setBudgetLimit}
+            onSelectPrompt={setSelectedPromptIndex}
+          />
+          <WelcomeTermsConsent language={selectedLanguage} accepted={termsAccepted} onChange={setTermsAccepted} />
         </div>
 
         <DialogFooter>
@@ -183,5 +140,27 @@ export function WelcomeDialog({ onOpenChat }: { onOpenChat: () => void }) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  )
+}
+
+/**
+ * First-run welcome flow dialog: opens automatically when the signed-in user hasn't completed onboarding or accepted
+ * the current terms version yet.
+ */
+export function WelcomeDialog({ onOpenChat }: { onOpenChat: () => void }) {
+  const user = useSignedInUser().data
+  const [dismissedForUser, setDismissedForUser] = useState<number | null>(null)
+
+  if (!user) return null
+  const needsWelcome = user.welcomed_at == null || user.terms_version !== ACCOUNT.currentTermsVersion
+  if (!needsWelcome || dismissedForUser === user.id) return null
+
+  return (
+    <WelcomeDialogBody
+      key={user.id}
+      user={user}
+      onOpenChat={onOpenChat}
+      onDismiss={() => setDismissedForUser(user.id)}
+    />
   )
 }

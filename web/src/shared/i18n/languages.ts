@@ -67,32 +67,16 @@ export function isLanguage(value: unknown): value is Language {
   return typeof value === "string" && Object.hasOwn(LANGUAGES, value)
 }
 
-// The app's language for one of the browser's language tags: an exact match first ("pt-BR"), then its base language
-// ("hi-IN" -> "hi"), ignoring letter case.
-function matchTag(tag: string): Language | undefined {
-  const wanted = tag.toLowerCase()
-  const base = wanted.split("-")[0]
-  return (
-    LANGUAGE_CODES.find((code) => code.toLowerCase() === wanted) ??
-    LANGUAGE_CODES.find((code) => code.toLowerCase() === base)
-  )
-}
-
 /**
- * The language to start in: the one saved from the language menu; otherwise the first of the browser's preferred
- * languages the app speaks; otherwise DEFAULT_LANGUAGE. Never throws (old browsers may lack navigator.languages).
+ * The language to start in: the one previously saved in localStorage; otherwise DEFAULT_LANGUAGE ("en") so first-run
+ * onboarding starts predictably in English. Never throws if storage is blocked.
  */
 export function initialLanguage(): Language {
   try {
     const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY)
     if (isLanguage(saved)) return saved
   } catch {
-    // Storage blocked: fall through to the browser's preference.
-  }
-  const preferred = navigator.languages?.length ? navigator.languages : [navigator.language]
-  for (const tag of preferred) {
-    const match = typeof tag === "string" ? matchTag(tag) : undefined
-    if (match) return match
+    // Storage blocked: fall back to DEFAULT_LANGUAGE.
   }
   return DEFAULT_LANGUAGE
 }

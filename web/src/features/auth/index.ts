@@ -8,7 +8,7 @@
 
 import { lazyWithRetry } from "@/shared/lib/lazy-with-retry"
 
-export { isSignedOut } from "./api"
+export { isSignedOut, type SignedInUser } from "./api"
 export { AuthGate } from "./components/auth-gate"
 export { UserAvatar } from "./components/user-avatar"
 export { UserMenu } from "./components/user-menu"

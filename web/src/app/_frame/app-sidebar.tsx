@@ -4,11 +4,14 @@
 import { Wallet } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { toast } from "sonner"
 
+import { useUpdatePreferences } from "@/features/account"
 import { UserMenu } from "@/features/auth"
 import { APP_NAME } from "@/shared/config/app"
 import { ROUTES } from "@/shared/config/routes"
-import { LanguageMenu } from "@/shared/i18n"
+import { LanguageMenu, type Language } from "@/shared/i18n"
+import { messageOf } from "@/shared/lib/errors"
 import { ModeToggle } from "@/shared/theme"
 import {
   Sidebar,
@@ -34,6 +37,11 @@ import { MENU_GROUPS } from "./pages"
 export function AppSidebar() {
   const pathname = usePathname()
   const { t } = useTexts()
+  const updatePreferences = useUpdatePreferences()
+
+  function persistLanguage(next: Language) {
+    updatePreferences.mutate({ preferred_language: next }, { onError: (error) => toast.error(messageOf(error)) })
+  }
 
   return (
     <Sidebar collapsible="icon">
@@ -76,7 +84,7 @@ export function AppSidebar() {
         <div className="flex items-center justify-between gap-1 group-data-[collapsible=icon]:flex-col">
           <UserMenu />
           <div className="flex items-center gap-0.5">
-            <LanguageMenu />
+            <LanguageMenu onSelect={persistLanguage} />
             <ModeToggle />
           </div>
         </div>

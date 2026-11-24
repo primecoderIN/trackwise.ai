@@ -10,7 +10,7 @@ Unauthenticated visitors land on a server-rendered, SEO-optimized public website
 
 - **Marketing Routes:** `/` (Home + Interactive Walkthrough Player), `/how-it-works`, `/features`, `/faq`, `/contact`, and their Hindi counterparts under `/hi/...`. `/privacy-policy` and `/terms-of-service` remain accessible from onboarding consent and sign-in; `/security` permanently redirects to `/faq`.
 - **Interactive Product Walkthrough:** Embedded animated preview demonstrating chat expense logging, receipt scan confirmation, delete safety prompts, and monthly budget/report exports.
-- **First-Run Workspace Welcome:** After signing in via OpenID Connect, new users complete a one-time onboarding dialog stored on the server (`CompleteWelcome`): selecting preferred language (`en` / `hi`), optionally setting an initial monthly overall budget, accepting the current terms version, and optionally trying a starter assistant prompt. Signed-in visitors returning to `/` see an **Open Dashboard** button right in the header/hero.
+- **First-Run Workspace Welcome:** After signing in via OpenID Connect, new users complete a one-time onboarding dialog stored on the server (`CompleteWelcome`): selecting preferred language (`en` pre-selected / `hi`), default currency (`SUPPORTED_CURRENCIES`), searchable IANA timezone (auto-detected from the browser, falling back to `UTC`), optionally setting an initial monthly overall budget, accepting the current terms version, and optionally trying a starter assistant prompt. Signed-in visitors returning to `/` see an **Open Dashboard** button right in the header/hero.
 
 ---
 
@@ -25,7 +25,7 @@ All signed-in routes sit inside a unified frame with light/dark theme switching,
 - **Reports (`/reports`):** Structured monthly summary featuring total spend, month-over-month delta, daily average, category and payment breakdowns, largest expenses, and one-click **CSV** (formula-injection sanitized) or **Markdown** downloads.
 - **Settings (`/settings`):** Organized into four tabs:
   - **Profile:** Connected OIDC identity details.
-  - **Preferences:** Persistent language (`English` / `हिन्दी`) and theme selection.
+  - **Preferences:** Account-persisted language (`English` / `हिन्दी`), default currency, and searchable IANA timezone (`PATCH /api/v1/account/preferences`), plus browser-local theme selection.
   - **Security:** Session visibility and sign-out controls.
   - **Developer:** Manage scoped **Personal Access Tokens (`spw_...`)** with selectable expiration (`30`, `90`, `365` days) and instant revocation for MCP clients.
 
@@ -35,7 +35,7 @@ All signed-in routes sit inside a unified frame with light/dark theme switching,
 
 Docked beside every workspace view (`AssistantProvider` over **AG-UI** Server-Sent Events), the assistant collaborates across user finances without hiding edits:
 
-- **Conversational Logging & Search:** Understands casual Hinglish/English prompts (*"Paid 420 via UPI at Swiggy today"* or *"Show food spends this month"*), renders live progress chips (*"Saving expense…"*) in the active language, and syncs frontend queries immediately on completion.
+- **Conversational Logging & Search:** Understands natural-language prompts across languages (*"Spent $18.50 on lunch at Corner Bistro today by card"* or *"Show food spends this month"*), renders live progress chips (*"Saving expense…"*) in the active language, and syncs frontend queries immediately on completion.
 - **Rich Interactive Cards (A2UI):** Renders validated spending breakdown charts, KPI stat strips, budget progress meters, editable confirmation forms (for ambiguous entries or scanned receipts), and two-step **database-backed delete approvals** (adds/edits execute directly; deletes always require explicit human approval).
 - **Multi-Modal Receipt Extraction:** Uploading an image/PDF in chat or via upload routes stores bytes separately from SQL and routes them to the isolated `receipt` A2A specialist agent (`extract_receipt`). Extracted merchant, amount, currency, date, category, and payment method appear inside an editable form—nothing is saved until confirmed.
 - **Multi-Currency Conversion (`currency` agent):** Expenses in another currency query exchange rates (`convert_currency`) on save so original currency is preserved alongside normalized `BigInteger` base-currency totals (`base_amount_minor`).

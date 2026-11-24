@@ -23,11 +23,18 @@ const en = {
   },
   preferences: {
     title: "Preferences",
-    description: "Choose the language and theme used across trackwise.ai on this browser.",
+    description: "Choose your language, default currency, timezone, and theme.",
     languageTitle: "Language",
     languageDescription: "Menus, pages, error messages and assistant replies appear in this language.",
+    currencyTitle: "Default currency",
+    currencyDescription:
+      "Pre-selected when adding expenses or asking the assistant. Totals and budgets are tracked in {{baseCurrency}}.",
+    timezoneTitle: "Timezone",
+    timezoneDescription: "Used for today's date, monthly summaries, budgets, and reports.",
+    useBrowserTimezone: "Use browser timezone ({{zone}})",
     themeTitle: "Theme",
-    themeDescription: "Switch between light and dark mode, or follow your device.",
+    themeDescription: "Switch between light and dark mode, or follow your device (saved on this browser).",
+    saved: "Preferences saved.",
   },
   sessions: {
     title: "Where you're signed in",

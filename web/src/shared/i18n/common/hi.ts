@@ -44,6 +44,16 @@ const hi: Translation<typeof en> = {
     change: "भाषा बदलें",
     loadFailed: "{{language}} में नहीं बदला जा सका। अपना कनेक्शन जाँचकर फिर से कोशिश करें।",
   },
+  currency: {
+    choose: "मुद्रा चुनें",
+  },
+  timezone: {
+    choose: "टाइमज़ोन चुनें",
+    searchPlaceholder: "शहर या क्षेत्र खोजें…",
+    searchLabel: "टाइमज़ोन खोजें",
+    listLabel: "टाइमज़ोन",
+    empty: "कोई मेल खाता टाइमज़ोन नहीं मिला।",
+  },
 }
 
 export default hi

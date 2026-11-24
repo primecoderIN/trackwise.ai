@@ -23,6 +23,7 @@ import { useTexts } from "../_i18n"
 import { AppSidebar } from "./app-sidebar"
 import { CommandPalette } from "./command-palette"
 import { currentPageFor } from "./pages"
+import { useSyncUserLanguage } from "./use-sync-user-language"
 import { WelcomeDialog } from "./welcome-dialog"
 
 function Page({ children }: { children: ReactNode }) {
@@ -81,6 +82,7 @@ function TopBar({ chatOpen, onToggleChat, onOpenPalette }: TopBarProps) {
  * palette trigger, the current page, the welcome flow dialog, and the assistant's chat panel on the right.
  */
 export function AppLayout({ children }: { children: ReactNode }) {
+  useSyncUserLanguage()
   const [chatOpen, setChatOpen] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const isMobile = useIsMobile()

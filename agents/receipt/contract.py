@@ -63,8 +63,8 @@ class ReadingRequest(BaseModel):
 class LineItem(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    description: str = Field(description="The item as printed, e.g. 'Paneer tikka x2'.")
-    amount: DecimalText = Field(description='The line\'s price as a plain number string, e.g. "240.00", or null.')
+    description: str = Field(description="The item as printed, e.g. 'Latte x2'.")
+    amount: DecimalText = Field(description='The line\'s price as a plain number string, e.g. "12.50", or null.')
 
 
 # The answer, as the model fills it and as the artifact carries it. Its JSON schema is sent to the model, so the
@@ -80,7 +80,7 @@ class ReceiptExtraction(BaseModel):
     )
     tax: DecimalText = Field(description="The total tax (GST, VAT...) as a plain number string, or null.")
     total: DecimalText = Field(
-        description='The final amount paid, as a plain number string without symbols or commas, e.g. "1250.50".'
+        description='The final amount paid, as a plain number string without symbols or commas, e.g. "48.50".'
     )
     currency: str | None = Field(
         description=(

@@ -59,8 +59,8 @@ class ParsedExpense(BaseModel):
     )
     payment_method: PaymentMethod | None = Field(
         description=(
-            "Only if the text says how it was paid "
-            "(card, bank transfer, cash, wallet, or UPI apps like GPay/PhonePe/Paytm); otherwise null."
+            "Only if the text says how it was paid (card, bank transfer, cash, digital wallet like Apple Pay/PayPal, "
+            "or UPI apps like GPay/PhonePe); otherwise null."
         )
     )
     note: str | None = Field(description="A few words on what was bought, or null.")

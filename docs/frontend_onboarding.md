@@ -188,7 +188,7 @@ is signed in (`GET /auth/user`, the auth feature's `useSignedInUser`) and gets a
 | File | Holds | Use it for |
 |---|---|---|
 | `shared/api/schema.gen.ts` | every route's types, plus enum value lists (`paymentMethodValues`) | `Schemas["ExpenseRead"]`, `paths`, enums |
-| `shared/api/contracts.gen.ts` | `API_PREFIX`, `LANGUAGES` (the server's), `LIMITS` (including `receiptBytes`), `RECEIPT_MEDIA_TYPES`, `PAYMENT_METHOD_LABELS` (by language), `A2UI` (catalogs, components, chart types, actions, client functions), `REPORT_FORMATS`, `MONTH_PATTERN`, `AGUI` (event names, metadata keys, `receiptProvider`) | any value the backend also uses |
+| `shared/api/contracts.gen.ts` | `API_PREFIX`, `DEFAULT_CURRENCY`, `BASE_CURRENCY`, `DEFAULT_USER_CURRENCY`, `SUPPORTED_CURRENCIES`, `DEFAULT_TIMEZONE`, `LANGUAGES` (the server's), `LIMITS` (including `receiptBytes`), `RECEIPT_MEDIA_TYPES`, `PAYMENT_METHOD_LABELS` (by language), `A2UI` (catalogs, components, chart types, actions, client functions), `REPORT_FORMATS`, `MONTH_PATTERN`, `AGUI` (event names, metadata keys, `receiptProvider`), `AUTH`, `ACCOUNT` | any value the backend also uses |
 
 Never edit them. After a backend change: run `backend\scripts\export_contracts.py`, then `npm run gen:api`.
 

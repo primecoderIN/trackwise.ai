@@ -123,7 +123,7 @@ Values the backend and the web app must agree on are **generated from the backen
 | File | Holds | Regenerate with |
 |---|---|---|
 | `web/openapi.json` | the REST API's OpenAPI document | `.\.venv\Scripts\python.exe backend\scripts\export_contracts.py` |
-| `web/src/shared/api/contracts.gen.ts` | API prefix, problem media type, currency, payment-method labels, limits, budget states, A2UI catalogs / components / chart types / actions / client functions, AG-UI event names and keys, sign-in's header, page, query parameters and failure codes (`AUTH`), access token limits (`ACCOUNT`) | the same script |
+| `web/src/shared/api/contracts.gen.ts` | API prefix, problem media type, currencies (`DEFAULT_CURRENCY`, `BASE_CURRENCY`, `DEFAULT_USER_CURRENCY`, `SUPPORTED_CURRENCIES`), `DEFAULT_TIMEZONE`, languages, payment-method labels, limits, budget states, A2UI catalogs / components / chart types / actions / client functions, AG-UI event names and keys, sign-in's header, page, query parameters and failure codes (`AUTH`), access token limits (`ACCOUNT`) | the same script |
 | `web/src/shared/api/schema.gen.ts` | TypeScript types for every route, plus enum value lists | `npm run gen:api` in `web/` (openapi-typescript 7.13, run through `npx`) |
 
 Run both after changing an API, a label or a limit, and commit the results with the change. A forgotten

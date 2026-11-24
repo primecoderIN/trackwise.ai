@@ -44,6 +44,16 @@ const en = {
     change: "Change language",
     loadFailed: "Couldn't switch to {{language}}. Check your connection and try again.",
   },
+  currency: {
+    choose: "Choose currency",
+  },
+  timezone: {
+    choose: "Choose timezone",
+    searchPlaceholder: "Search city or region…",
+    searchLabel: "Search timezones",
+    listLabel: "Timezones",
+    empty: "No matching timezones.",
+  },
 }
 
 export default en
