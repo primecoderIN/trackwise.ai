@@ -25,7 +25,7 @@ from app.core.cqrs import MessageBus
 from app.core.errors import BusinessRuleError
 from app.core.i18n import translatable
 from app.core.llm import DecimalText, LlmError, StructuredOutputModel, restrict_to_choices
-from app.core.money import CURRENCY_PATTERN, DEFAULT_CURRENCY, DEFAULT_USER_CURRENCY
+from app.core.money import CURRENCY_PATTERN, DEFAULT_USER_CURRENCY
 from app.modules import categories
 from app.modules.assistant.i18n import ChatText
 from app.modules.expenses import PaymentMethod
@@ -47,7 +47,8 @@ class ParsedExpense(BaseModel):
     )
     currency: str = Field(
         description=(
-            f"ISO 4217 code (such as USD, EUR or GBP). {DEFAULT_CURRENCY} unless another currency is clearly stated."
+            "ISO 4217 code (such as USD, EUR or GBP). "
+            "Use the default currency from the instructions unless another currency is clearly stated."
         )
     )
     # The allowed category names are added to the schema per request (see _response_schema below).

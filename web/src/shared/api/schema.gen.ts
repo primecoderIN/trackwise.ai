@@ -1170,7 +1170,7 @@ export interface components {
             amount: string | null;
             /**
              * Currency
-             * @description ISO 4217 code (such as USD, EUR or GBP). USD unless another currency is clearly stated.
+             * @description ISO 4217 code (such as USD, EUR or GBP). Use the default currency from the instructions unless another currency is clearly stated.
              */
             currency: string;
             /**
@@ -1189,7 +1189,7 @@ export interface components {
              * @description The date of the expense. Work out words like 'yesterday' or 'last Friday' from today's date; use today if no date is mentioned.
              */
             spent_on: string;
-            /** @description Only if the text says how it was paid (card, bank transfer, cash, wallet, or UPI apps like GPay/PhonePe/Paytm); otherwise null. */
+            /** @description Only if the text says how it was paid (card, bank transfer, cash, digital wallet like Apple Pay/PayPal, or UPI apps like GPay/PhonePe); otherwise null. */
             payment_method: components["schemas"]["PaymentMethod"] | null;
             /**
              * Note

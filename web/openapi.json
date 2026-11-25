@@ -3290,7 +3290,7 @@
           "currency": {
             "type": "string",
             "title": "Currency",
-            "description": "ISO 4217 code (such as USD, EUR or GBP). USD unless another currency is clearly stated."
+            "description": "ISO 4217 code (such as USD, EUR or GBP). Use the default currency from the instructions unless another currency is clearly stated."
           },
           "category": {
             "anyOf": [
@@ -3331,7 +3331,7 @@
                 "type": "null"
               }
             ],
-            "description": "Only if the text says how it was paid (card, bank transfer, cash, wallet, or UPI apps like GPay/PhonePe/Paytm); otherwise null."
+            "description": "Only if the text says how it was paid (card, bank transfer, cash, digital wallet like Apple Pay/PayPal, or UPI apps like GPay/PhonePe); otherwise null."
           },
           "note": {
             "anyOf": [

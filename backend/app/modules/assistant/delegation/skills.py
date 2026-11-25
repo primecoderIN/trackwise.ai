@@ -19,6 +19,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from app.core.agents import DataPart, Part, TextPart
 from app.core.cqrs import MessageBus
+from app.core.money import BASE_CURRENCY
 from app.core.months import YearMonth
 from app.modules import categories, expenses
 
@@ -82,6 +83,7 @@ class _Insights(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     month: str = Field(max_length=MAX_TEXT)
+    currency: str = Field(default=BASE_CURRENCY, max_length=MAX_TEXT)
     total: str = Field(max_length=MAX_TEXT)
     previous_total: str = Field(max_length=MAX_TEXT)
     expense_count: int

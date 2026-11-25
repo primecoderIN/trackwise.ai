@@ -33,7 +33,10 @@ from app.modules.mcp.tools.update_expense import register_update_expense
 from app.modules.mcp.views import ExpenseViews
 
 # What the server tells a client about itself when it connects.
-INSTRUCTIONS = f"Tools and resources for one person's expense tracker. Amounts are in {BASE_CURRENCY} by default."
+INSTRUCTIONS = (
+    f"Tools and resources for one person's expense tracker. Totals, budgets, and reports are in {BASE_CURRENCY}; "
+    "new expenses default to the caller's configured currency."
+)
 
 # Adds one tool to the server. Every registrar takes the same arguments (the server and a ToolContext), so adding a
 # tool means writing a registrar and listing it below, without touching create_server.
