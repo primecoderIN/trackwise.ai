@@ -3,6 +3,7 @@
 // session there and at the provider (D186), so the page unloads and nothing of the session stays in memory.
 
 import { LogOut } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 import { reportUnexpected } from "@/shared/lib/errors"
 import { Button } from "@/shared/ui/button"
@@ -15,7 +16,6 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu"
 
-import { useTexts } from "../i18n"
 import { useSignedInUser } from "../queries"
 import { ownSitePath } from "../sign-in-urls"
 import { broadcastSessionChange } from "../use-session-sync"
@@ -38,7 +38,7 @@ function signOut(logoutUrl: string): void {
 
 /** The person's picture and name; opened, their email and Sign out. Nothing while nobody is signed in. */
 export function UserMenu() {
-  const { t } = useTexts()
+  const t = useTranslations("auth")
   const user = useSignedInUser().data
   if (!user) return null
   const name = user.name ?? user.email ?? t("userMenu.you")

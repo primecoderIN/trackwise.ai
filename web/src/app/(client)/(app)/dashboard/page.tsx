@@ -6,6 +6,7 @@ import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
 import { privatePage } from "@/app/_seo/seo"
+import { MessageScope } from "@/app/_shell/message-scope"
 import { DashboardPage } from "@/app/_views/client-pages"
 
 /** The tab's title in the active language, kept out of search engines. */
@@ -16,5 +17,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /** The Dashboard page. */
 export default function Dashboard() {
-  return <DashboardPage />
+  return (
+    <MessageScope namespaces={["dashboard", "categories"]}>
+      <DashboardPage />
+    </MessageScope>
+  )
 }

@@ -5,6 +5,7 @@ import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
 import { privatePage } from "@/app/_seo/seo"
+import { MessageScope } from "@/app/_shell/message-scope"
 import { CategoriesPage } from "@/app/_views/client-pages"
 
 /** The tab's title in the active language, kept out of search engines. */
@@ -15,5 +16,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /** The Categories page. */
 export default function Categories() {
-  return <CategoriesPage />
+  return (
+    <MessageScope namespaces={["categories"]}>
+      <CategoriesPage />
+    </MessageScope>
+  )
 }

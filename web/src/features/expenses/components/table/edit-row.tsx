@@ -4,6 +4,7 @@
 // feature's i18n namespace.
 
 import { Check, X } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { useState, type KeyboardEvent } from "react"
 
 import { CategorySelect } from "@/features/categories"
@@ -13,7 +14,6 @@ import { TableCell, TableRow } from "@/shared/ui/table"
 
 import type { Expense, ExpenseChanges } from "../../api"
 import { changesBetween, draftOf, isComplete } from "../../expense-form"
-import { useTexts } from "../../i18n"
 import { useExpenseDraft, type ExpenseDraftState } from "../../use-expense-draft"
 import { PaymentMethodSelect } from "../fields/payment-method-select"
 
@@ -37,7 +37,7 @@ interface EditRowProps {
  * you changed.
  */
 export function EditRow({ expense: current, saving, onSave, onCancel }: EditRowProps) {
-  const { t } = useTexts()
+  const t = useTranslations("expenses")
   // The expense as it was when editing started. If the list reloads meanwhile (say the assistant changed
   // this expense), Save still compares the draft with what you started from, so it only sends the fields
   // YOU changed, and never quietly undoes someone else's change.
@@ -103,7 +103,7 @@ interface EditFieldCellsProps extends Pick<ExpenseDraftState, "draft" | "setFiel
 // visible label, so each is named for screen readers with the expense's id, one whole text per field (in Hindi the
 // words around the id change with the field). Merchant takes the focus, because you just pressed Edit on this row.
 function EditFieldCells({ draft, setField, id }: EditFieldCellsProps) {
-  const { t } = useTexts()
+  const t = useTranslations("expenses")
   return (
     <>
       <TableCell>

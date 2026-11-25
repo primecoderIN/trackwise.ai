@@ -4,18 +4,19 @@
 // the spending is that month's).
 
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { DEFAULT_CURRENCY } from "@/shared/api/contracts.gen"
 import { PageHeader } from "@/shared/components/page-header"
 import { RefreshNotice } from "@/shared/components/refresh-notice"
 import { SectionError } from "@/shared/components/section-error"
-import { messageOf } from "@/shared/lib/errors"
-import { currentMonth, formatMonth } from "@/shared/lib/format"
+import { currentMonth } from "@/shared/lib/format"
+import { useFormatters } from "@/shared/lib/use-formatters"
+import { useMessageOf } from "@/shared/lib/use-message-of"
 import { Button } from "@/shared/ui/button"
 import { Skeleton } from "@/shared/ui/skeleton"
 
-import { useTexts } from "../i18n"
 import { MAX_MONTH, MIN_MONTH, shiftMonth } from "../month"
 import { useBudgetStatus } from "../queries"
 import { CategoryBudgets } from "./category-budgets"
@@ -26,7 +27,9 @@ import { OverallCard } from "./overall-card"
  * failed reload keeps the figures on screen with a "couldn't refresh" notice.
  */
 export function BudgetsPage() {
-  const { t } = useTexts()
+  const t = useTranslations("budgets")
+  const messageOf = useMessageOf()
+  const { formatMonth } = useFormatters()
   const [month, setMonth] = useState(currentMonth)
   const status = useBudgetStatus(month)
   const retry = () => void status.refetch()

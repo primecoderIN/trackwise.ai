@@ -3,6 +3,7 @@
 
 import { ChevronLeft, ChevronRight, Tags } from "lucide-react"
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 import { useMemo, useState } from "react"
 
 import { DEFAULT_CURRENCY } from "@/shared/api/contracts.gen"
@@ -11,28 +12,22 @@ import { PageHeader } from "@/shared/components/page-header"
 import { RefreshNotice } from "@/shared/components/refresh-notice"
 import { SectionError } from "@/shared/components/section-error"
 import { ROUTES } from "@/shared/config/routes"
-import { messageOf } from "@/shared/lib/errors"
-import {
-  currentMonth,
-  formatCount,
-  formatMoney,
-  formatMonth,
-  MAX_MONTH,
-  MIN_MONTH,
-  shiftMonth,
-} from "@/shared/lib/format"
+import { currentMonth, MAX_MONTH, MIN_MONTH, shiftMonth } from "@/shared/lib/format"
 import { queryGroupStatus } from "@/shared/lib/query-status"
+import { useFormatters } from "@/shared/lib/use-formatters"
+import { useMessageOf } from "@/shared/lib/use-message-of"
 import { Button } from "@/shared/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 import { Skeleton } from "@/shared/ui/skeleton"
 
 import { categoryIcon } from "../category-icons"
-import { useTexts } from "../i18n"
 import { useCategories, useCategoryMonthlySummary } from "../queries"
 
 /** The Categories page: shared categories with each one's icon and monthly spend. */
 export function CategoriesPage() {
-  const { t } = useTexts()
+  const t = useTranslations("categories")
+  const messageOf = useMessageOf()
+  const { formatMoney, formatMonth } = useFormatters()
   const [month, setMonth] = useState(currentMonth)
   const categories = useCategories()
   const summary = useCategoryMonthlySummary(month)
@@ -134,7 +129,6 @@ export function CategoriesPage() {
                       <CardDescription>
                         {t("card.expenses", {
                           count: expenseCount,
-                          formattedCount: formatCount(expenseCount),
                           month: monthLabel,
                         })}
                       </CardDescription>

@@ -4,10 +4,9 @@
 
 import type { SortDirection } from "@tanstack/react-table"
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 import { Button } from "@/shared/ui/button"
-
-import { useTexts } from "../../i18n"
 
 interface SortButtonProps {
   /** The column's title, already translated: shown on the button and in its label ("Sort by Date"). */
@@ -20,7 +19,7 @@ interface SortButtonProps {
 
 /** A column header you can click to sort; the arrow shows the current direction (both ways while unsorted). */
 export function SortButton({ title, sorted, onClick }: SortButtonProps) {
-  const { t } = useTexts()
+  const t = useTranslations("expenses")
   const Icon = sorted === "asc" ? ArrowUp : sorted === "desc" ? ArrowDown : ArrowUpDown
   return (
     <Button

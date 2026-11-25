@@ -2,21 +2,44 @@
 // Allows layouts and routes to send only the translation namespaces each client subtree actually uses.
 
 import { loadAppNamespace } from "@/app/_i18n"
+import { loadAccountMessages } from "@/features/account/i18n"
+import { loadAuthMessages } from "@/features/auth/i18n"
+import { loadBudgetsMessages } from "@/features/budgets/i18n"
+import { loadCategoriesMessages } from "@/features/categories/i18n"
+import { loadDashboardMessages } from "@/features/dashboard/i18n"
+import { loadExpensesMessages } from "@/features/expenses/i18n"
+import { loadReportsMessages } from "@/features/reports/i18n"
 import { loadCommonMessages, type Language } from "@/shared/i18n"
 
 import type { AppMessages } from "./global"
 
-/** Baseline namespaces required across interactive app shell, sign-in, and error boundaries. */
-export const BOOT_MESSAGE_NAMESPACES = ["common", "app"] as const
+/** Union of every typed message namespace key. */
+export type AppNamespace = keyof AppMessages
+
+/** Baseline namespaces required on public layouts (`[lang]`) for shared chrome and errors. */
+export const BOOT_MESSAGE_NAMESPACES = ["common", "app"] as const satisfies readonly AppNamespace[]
+
+/** Baseline namespaces required across interactive sign-in and workspace shells. */
+export const WORKSPACE_MESSAGE_NAMESPACES = ["common", "app", "auth"] as const satisfies readonly AppNamespace[]
 
 /** Loads the typed message catalogs needed for `locale` (called per request in `src/i18n/request.ts`). */
 export async function loadAppMessages(locale: Language): Promise<AppMessages> {
-  const [common, app] = await Promise.all([loadCommonMessages(locale), loadAppNamespace(locale)])
-  return { common, app }
+  const [common, app, auth, account, budgets, categories, dashboard, expenses, reports] = await Promise.all([
+    loadCommonMessages(locale),
+    loadAppNamespace(locale),
+    loadAuthMessages(locale),
+    loadAccountMessages(locale),
+    loadBudgetsMessages(locale),
+    loadCategoriesMessages(locale),
+    loadDashboardMessages(locale),
+    loadExpensesMessages(locale),
+    loadReportsMessages(locale),
+  ])
+  return { common, app, auth, account, budgets, categories, dashboard, expenses, reports }
 }
 
 /** Selects a subset of loaded namespaces to serialize across a route's `<NextIntlClientProvider>`. */
-export function pickMessages<K extends keyof AppMessages>(
+export function pickMessages<K extends AppNamespace>(
   messages: AppMessages | Record<string, unknown>,
   namespaces: readonly K[],
 ): Partial<AppMessages> {

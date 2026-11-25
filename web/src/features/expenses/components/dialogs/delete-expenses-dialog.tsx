@@ -2,11 +2,12 @@
 // runs the delete and reports what happened. Used by the Expenses page, which opens it from the table's buttons.
 // Its texts (and the toasts' counts, in each language's plural forms) come from the feature's i18n namespace.
 
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { toast } from "sonner"
 
-import { messageOf } from "@/shared/lib/errors"
-import { formatDate, formatMoney } from "@/shared/lib/format"
+import { useFormatters } from "@/shared/lib/use-formatters"
+import { useMessageOf } from "@/shared/lib/use-message-of"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +20,6 @@ import {
 } from "@/shared/ui/alert-dialog"
 
 import type { Expense } from "../../api"
-import { useTexts } from "../../i18n"
 import { useDeleteExpenses } from "../../queries"
 
 interface DeleteExpensesDialogProps {
@@ -36,7 +36,9 @@ interface DeleteExpensesDialogProps {
  * couldn't be (with the first reason): a partial success shows both.
  */
 export function DeleteExpensesDialog({ expenses, onClose }: DeleteExpensesDialogProps) {
-  const { t } = useTexts()
+  const t = useTranslations("expenses")
+  const messageOf = useMessageOf()
+  const { formatDate, formatMoney } = useFormatters()
   const remove = useDeleteExpenses()
   // What the dialog shows. It keeps the last list while it fades out after closing, so the text doesn't
   // flash "Delete 0 expenses?" (React's "adjust state when a prop changes" pattern, during render).

@@ -3,17 +3,16 @@
 
 import { ReceiptText } from "lucide-react"
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 
 import { useCategoryName } from "@/features/categories"
 import type { Expense } from "@/features/expenses"
 import { EmptyState } from "@/shared/components/empty-state"
-import { ROUTES } from "@/shared/config/routes"
 import { ExpenseMoney } from "@/shared/components/money"
-import { formatDate } from "@/shared/lib/format"
+import { ROUTES } from "@/shared/config/routes"
+import { useFormatters } from "@/shared/lib/use-formatters"
 import { Button } from "@/shared/ui/button"
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
-
-import { useTexts } from "../i18n"
 
 /**
  * "Recent expenses": the newest few, each with its merchant, category, date and amount, and a "View all" link to the
@@ -21,7 +20,8 @@ import { useTexts } from "../i18n"
  * and offers a link to add one.
  */
 export function RecentExpenses({ expenses }: { expenses: Expense[] }) {
-  const { t } = useTexts()
+  const t = useTranslations("dashboard")
+  const { formatDate } = useFormatters()
   const categoryName = useCategoryName()
 
   return (

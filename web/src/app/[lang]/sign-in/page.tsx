@@ -8,6 +8,7 @@ import { Suspense } from "react"
 
 import { publicPage } from "@/app/_seo/seo"
 import { ClientRoot } from "@/app/_shell/client-root"
+import { MessageScope } from "@/app/_shell/message-scope"
 import { SignInPage } from "@/app/_views/client-pages"
 import { ROUTES } from "@/shared/config/routes"
 import { isLanguage } from "@/shared/i18n/languages"
@@ -26,10 +27,12 @@ export default async function SignIn({ params }: { params: Promise<{ lang: strin
   if (!isLanguage(lang)) notFound()
   setRequestLocale(lang)
   return (
-    <ClientRoot>
-      <Suspense fallback={null}>
-        <SignInPage />
-      </Suspense>
-    </ClientRoot>
+    <MessageScope namespaces={["auth"]}>
+      <ClientRoot>
+        <Suspense fallback={null}>
+          <SignInPage />
+        </Suspense>
+      </ClientRoot>
+    </MessageScope>
   )
 }

@@ -1,7 +1,7 @@
-// Temporary legacy boot namespaces still waiting on i18next during feature migration (`auth`).
-// `common` and `app` are now loaded per request by `next-intl`; this file disappears once features complete migration.
+// Temporary empty legacy namespace list while only the lazy assistant chat panel still boots through i18next.
+// Removed completely once the assistant feature migrates onto next-intl.
 
-import { authTexts } from "@/features/auth"
+import type { AnyNamespace } from "@/shared/i18n"
 
-/** Remaining boot namespace loaded by the temporary i18next bridge. */
-export const BOOT_NAMESPACES = [authTexts] as const
+/** Legacy boot namespaces for `initI18n`. */
+export const BOOT_NAMESPACES: readonly AnyNamespace[] = []

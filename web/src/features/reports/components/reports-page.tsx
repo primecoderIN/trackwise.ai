@@ -3,6 +3,7 @@
 // D209). Part of the reports feature (Phase 28).
 
 import { ChevronLeft, ChevronRight, Download, FileBarChart } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -12,21 +13,23 @@ import { PageHeader } from "@/shared/components/page-header"
 import { RefreshNotice } from "@/shared/components/refresh-notice"
 import { SectionError } from "@/shared/components/section-error"
 import { ROUTES } from "@/shared/config/routes"
-import { messageOf } from "@/shared/lib/errors"
-import { currentMonth, formatMonth, MAX_MONTH, MIN_MONTH, shiftMonth } from "@/shared/lib/format"
+import { currentMonth, MAX_MONTH, MIN_MONTH, shiftMonth } from "@/shared/lib/format"
 import { saveFile } from "@/shared/lib/save-file"
+import { useFormatters } from "@/shared/lib/use-formatters"
+import { useMessageOf } from "@/shared/lib/use-message-of"
 import { Button } from "@/shared/ui/button"
 import { Card, CardContent } from "@/shared/ui/card"
 import { Skeleton } from "@/shared/ui/skeleton"
 
 import { fetchMonthlyReportFile, type ReportFormat } from "../api"
-import { useTexts } from "../i18n"
 import { useMonthlyReport } from "../queries"
 import { ReportBreakdowns, ReportStatCards } from "./report-sections"
 
 /** The Reports page: monthly summary, comparison with last month, breakdowns and file downloads. */
 export function ReportsPage() {
-  const { t } = useTexts()
+  const t = useTranslations("reports")
+  const messageOf = useMessageOf()
+  const { formatMonth } = useFormatters()
   const [month, setMonth] = useState(currentMonth)
   const [downloading, setDownloading] = useState<ReportFormat | null>(null)
   const report = useMonthlyReport(month)

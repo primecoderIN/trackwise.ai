@@ -3,12 +3,12 @@
 // app/(client)/(app)/settings/page.tsx. Everything on it is the person's own (D190).
 
 import { KeyRound, Shield, SlidersHorizontal, User, type LucideIcon } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { PageHeader } from "@/shared/components/page-header"
 import { Button } from "@/shared/ui/button"
 
-import { useTexts } from "../i18n"
 import { PreferencesCard } from "./preferences-card"
 import { ProfileCard } from "./profile-card"
 import { SessionsCard } from "./sessions/sessions-card"
@@ -25,7 +25,7 @@ const SECTIONS: { id: SettingsSection; icon: LucideIcon }[] = [
 
 /** The Settings page: a shared header, a section tab bar, and the chosen section's card. */
 export function SettingsPage() {
-  const { t } = useTexts()
+  const t = useTranslations("account")
   const [section, setSection] = useState<SettingsSection>("profile")
 
   return (

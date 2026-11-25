@@ -2,8 +2,8 @@
 // browser-local theme selection. Part of the account feature (components/). Used by settings-page.tsx.
 
 import { Monitor, Moon, Sun, type LucideIcon } from "lucide-react"
-import { useMemo } from "react"
 import { useTranslations } from "next-intl"
+import { useMemo } from "react"
 import { toast } from "sonner"
 
 import { useSignedInUser } from "@/features/auth"
@@ -12,14 +12,13 @@ import { CurrencySelect } from "@/shared/components/currency-select"
 import { TimezonePicker } from "@/shared/components/timezone-picker"
 import { isLanguage, LANGUAGE_CODES, LANGUAGES, useLanguage } from "@/shared/i18n"
 import { isSupportedCurrency, type SupportedCurrency } from "@/shared/lib/currencies"
-import { messageOf } from "@/shared/lib/errors"
 import { detectBrowserTimezone } from "@/shared/lib/timezones"
+import { useMessageOf } from "@/shared/lib/use-message-of"
 import { useTheme, type Theme } from "@/shared/theme"
 import { Button } from "@/shared/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 import { Label } from "@/shared/ui/label"
 
-import { useTexts } from "../i18n"
 import { useUpdatePreferences } from "../queries"
 
 const THEME_CHOICES: { theme: Theme; icon: LucideIcon }[] = [
@@ -43,7 +42,7 @@ function CurrencyAndTimezoneFields({
   onCurrencyChange: (next: SupportedCurrency) => void
   onTimezoneChange: (next: string) => void
 }) {
-  const { t } = useTexts()
+  const t = useTranslations("account")
   return (
     <div className="grid gap-6 sm:grid-cols-2">
       <div className="flex flex-col gap-2">
@@ -97,8 +96,9 @@ function CurrencyAndTimezoneFields({
 
 /** Preferences card: choose account language, default currency, timezone, and browser theme. */
 export function PreferencesCard() {
-  const { t } = useTexts()
+  const t = useTranslations("account")
   const tCommon = useTranslations("common")
+  const messageOf = useMessageOf()
   const user = useSignedInUser().data
   const { language, setLanguage } = useLanguage()
   const { theme, setTheme } = useTheme()

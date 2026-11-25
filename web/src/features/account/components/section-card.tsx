@@ -7,7 +7,7 @@ import type { ReactNode } from "react"
 
 import { RefreshNotice } from "@/shared/components/refresh-notice"
 import { SectionError } from "@/shared/components/section-error"
-import { messageOf } from "@/shared/lib/errors"
+import { useMessageOf } from "@/shared/lib/use-message-of"
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 import { Skeleton } from "@/shared/ui/skeleton"
 
@@ -29,6 +29,7 @@ interface SectionCardProps<T> {
 
 /** The card, in whichever state the query is in. */
 export function SectionCard<T>({ title, description, query, loadFailed, action, children }: SectionCardProps<T>) {
+  const messageOf = useMessageOf()
   const retry = () => void query.refetch()
   // Nothing to show and it failed: say so in place of the card. An empty list here would be a lie.
   if (query.data === undefined && query.isError) {

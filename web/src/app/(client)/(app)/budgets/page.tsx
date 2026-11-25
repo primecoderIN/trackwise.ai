@@ -5,7 +5,7 @@ import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
 import { privatePage } from "@/app/_seo/seo"
-
+import { MessageScope } from "@/app/_shell/message-scope"
 import { BudgetsPage } from "@/app/_views/client-pages"
 
 /** The tab's title in the active language, kept out of search engines. */
@@ -16,5 +16,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /** The Budgets page. */
 export default function Budgets() {
-  return <BudgetsPage />
+  return (
+    <MessageScope namespaces={["budgets"]}>
+      <BudgetsPage />
+    </MessageScope>
+  )
 }

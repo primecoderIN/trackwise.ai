@@ -2,16 +2,16 @@
 // (components/tokens/). Used by tokens-card.tsx. The token itself is never here: the server only ever sent it once.
 
 import { KeyRound } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { toast } from "sonner"
 
-import { messageOf } from "@/shared/lib/errors"
-import { formatDateTime } from "@/shared/lib/format"
+import { useFormatters } from "@/shared/lib/use-formatters"
+import { useMessageOf } from "@/shared/lib/use-message-of"
 import { Badge } from "@/shared/ui/badge"
 import { Button } from "@/shared/ui/button"
 
 import type { AccessToken } from "../../api"
-import { useTexts } from "../../i18n"
 import { useRevokeAccessToken } from "../../queries"
 import { ConfirmDialog } from "../confirm-dialog"
 
@@ -20,7 +20,9 @@ import { ConfirmDialog } from "../confirm-dialog"
  * first: apps using the token stop working at once, and it can't be brought back.
  */
 export function TokenRow({ token }: { token: AccessToken }) {
-  const { t } = useTexts()
+  const t = useTranslations("account")
+  const messageOf = useMessageOf()
+  const { formatDateTime } = useFormatters()
   const revoke = useRevokeAccessToken()
   const [confirming, setConfirming] = useState(false)
   const dates = { created: formatDateTime(token.created_at), expires: formatDateTime(token.expires_at) }

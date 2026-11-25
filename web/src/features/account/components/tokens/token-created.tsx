@@ -3,14 +3,13 @@
 // closes. The token is never written to browser storage or a log: it lives in this dialog's memory only.
 
 import { Copy } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 
 import { LabeledField } from "@/shared/components/labeled-field"
 import { Button } from "@/shared/ui/button"
 import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
 import { Input } from "@/shared/ui/input"
-
-import { useTexts } from "../../i18n"
 
 interface TokenCreatedProps {
   /** The new token, as the server sent it. */
@@ -21,7 +20,7 @@ interface TokenCreatedProps {
 
 /** The token in a read-only box (focusing it selects it all), a Copy button, and Done. */
 export function TokenCreated({ token, onDone }: TokenCreatedProps) {
-  const { t } = useTexts()
+  const t = useTranslations("account")
 
   // The clipboard can refuse (an insecure page, a denied permission): then the person copies it by hand.
   async function copy() {

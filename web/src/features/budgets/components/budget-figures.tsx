@@ -1,10 +1,11 @@
 // A component of the budgets feature: one budget's numbers: the bar, "$420 of $500" and what's left (or how
 // much over); or, without a limit, only what was spent. Used by the overall card and the category rows.
 
-import { formatMoney } from "@/shared/lib/format"
+import { useTranslations } from "next-intl"
+
+import { useFormatters } from "@/shared/lib/use-formatters"
 
 import type { BudgetLine } from "../api"
-import { useTexts } from "../i18n"
 import { BudgetMeter } from "./budget-meter"
 
 // The sign the API puts in front of a negative amount (what's left, once over the limit).
@@ -21,7 +22,8 @@ interface BudgetFiguresProps {
 
 /** The bar and the two figures under it, or "$300 spent · No limit" for a line without a budget. */
 export function BudgetFigures({ line, currency, name, elapsedPercent }: BudgetFiguresProps) {
-  const { t } = useTexts()
+  const t = useTranslations("budgets")
+  const { formatMoney } = useFormatters()
   const spent = formatMoney(line.spent, currency)
   if (line.limit == null || line.remaining == null || line.used_percent == null || line.state == null) {
     return <p className="text-sm text-muted-foreground">{t("line.spentNoLimit", { amount: spent })}</p>

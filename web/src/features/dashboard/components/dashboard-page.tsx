@@ -3,17 +3,18 @@
 // trend, the newest expenses and the category names together, and lays out the stat cards, the budget card (which
 // loads on its own), the two charts and the recent list.
 
+import { useTranslations } from "next-intl"
+
 import { useCategories } from "@/features/categories"
 import { useExpenses } from "@/features/expenses"
 import { DEFAULT_CURRENCY, LIMITS } from "@/shared/api/contracts.gen"
 import { PageHeader } from "@/shared/components/page-header"
 import { RefreshNotice } from "@/shared/components/refresh-notice"
 import { SectionError } from "@/shared/components/section-error"
-import { messageOf } from "@/shared/lib/errors"
 import { currentMonth } from "@/shared/lib/format"
 import { queryGroupStatus } from "@/shared/lib/query-status"
+import { useMessageOf } from "@/shared/lib/use-message-of"
 
-import { useTexts } from "../i18n"
 import { useMonthlySummary, useMonthlyTrend } from "../queries"
 import { BudgetCard } from "./budget-card"
 import { CategoryChart } from "./category-chart"
@@ -31,7 +32,8 @@ const RECENT_COUNT = 5
  * Once loaded, a failed reload keeps the numbers on screen with a "couldn't refresh" notice.
  */
 export function DashboardPage() {
-  const { t } = useTexts()
+  const t = useTranslations("dashboard")
+  const messageOf = useMessageOf()
   // Small requests, sent at the same time. The backend does the adding up and sends back only totals
   // and 5 rows, not every expense. Each one reloads by itself when the data changes.
   const summary = useMonthlySummary(currentMonth())

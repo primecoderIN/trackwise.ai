@@ -3,6 +3,7 @@
 // come from the feature's i18n namespace.
 
 import { Search, X } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 import { ANY_CATEGORY, CategorySelect } from "@/features/categories"
 import { LabeledField } from "@/shared/components/labeled-field"
@@ -10,7 +11,6 @@ import { Button } from "@/shared/ui/button"
 import { Input } from "@/shared/ui/input"
 
 import type { ExpenseFilters } from "../../api"
-import { useTexts } from "../../i18n"
 
 interface FiltersBarProps {
   /** The filters as they are now (the page's state). */
@@ -28,7 +28,7 @@ interface FiltersBarProps {
  * (undefined), never sent as "".
  */
 export function FiltersBar({ filters, onChange }: FiltersBarProps) {
-  const { t } = useTexts()
+  const t = useTranslations("expenses")
   // Change one filter, keep the others.
   const set = (changes: Partial<ExpenseFilters>) => onChange({ ...filters, ...changes })
   // Is any filter set? Then "Clear filters" shows.

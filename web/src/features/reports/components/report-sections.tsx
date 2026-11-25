@@ -1,26 +1,29 @@
 // The breakdown cards on the Reports page: spending by category, spending by payment method, and the month's biggest
 // expenses. Part of the reports feature (components/).
 
+import { useTranslations } from "next-intl"
+
 import { PAYMENT_METHOD_LABELS } from "@/shared/api/contracts.gen"
-import { currentLanguage } from "@/shared/i18n"
-import { formatCount, formatDate, formatMoney, formatMonth } from "@/shared/lib/format"
+import { useLanguage } from "@/shared/i18n"
+import { useFormatters } from "@/shared/lib/use-formatters"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 
 import type { MonthlyReport } from "../api"
-import { useTexts } from "../i18n"
 
 /** The summary stat cards at the top of a monthly report: total spent, comparison with last month, and daily average. */
 export function ReportStatCards({ report }: { report: MonthlyReport }) {
-  const { t } = useTexts()
+  const t = useTranslations("reports")
+  const { formatMoney } = useFormatters()
   const prevFormatted = formatMoney(report.previous_total, report.currency)
-  const changeNum = report.change_percent !== null ? Number(report.change_percent) : null
+  const changePercent = report.change_percent
+  const changeNum = changePercent !== null ? Number(changePercent) : null
   const changeLine =
-    changeNum === null
+    changeNum === null || changePercent === null
       ? t("stats.noPrevious")
       : changeNum > 0
-        ? t("stats.changeUp", { percent: report.change_percent, amount: prevFormatted })
+        ? t("stats.changeUp", { percent: changePercent, amount: prevFormatted })
         : changeNum < 0
-          ? t("stats.changeDown", { percent: report.change_percent, amount: prevFormatted })
+          ? t("stats.changeDown", { percent: changePercent, amount: prevFormatted })
           : t("stats.changeSame", { amount: prevFormatted })
 
   return (
@@ -31,7 +34,7 @@ export function ReportStatCards({ report }: { report: MonthlyReport }) {
           <CardTitle className="text-2xl tabular-nums">{formatMoney(report.total, report.currency)}</CardTitle>
         </CardHeader>
         <CardContent className="text-xs text-muted-foreground">
-          {t("stats.expenses", { count: report.expense_count, formattedCount: formatCount(report.expense_count) })}
+          {t("stats.expenses", { count: report.expense_count })}
         </CardContent>
       </Card>
       <Card>
@@ -58,9 +61,11 @@ export function ReportStatCards({ report }: { report: MonthlyReport }) {
 
 /** The category and payment-method breakdown cards, plus the month's biggest individual expenses. */
 export function ReportBreakdowns({ report }: { report: MonthlyReport }) {
-  const { t } = useTexts()
+  const t = useTranslations("reports")
+  const { language } = useLanguage()
+  const { formatDate, formatMoney, formatMonth } = useFormatters()
   const monthLabel = formatMonth(report.month)
-  const labels = PAYMENT_METHOD_LABELS[currentLanguage()]
+  const labels = PAYMENT_METHOD_LABELS[language]
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">

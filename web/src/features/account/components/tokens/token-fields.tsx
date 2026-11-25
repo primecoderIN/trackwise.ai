@@ -1,6 +1,7 @@
 // The "new access token" form: a name and how long the token should work. Part of the account feature
 // (components/tokens/). Used by create-token-dialog.tsx, which owns the draft and sends it.
 
+import { useTranslations } from "next-intl"
 import type { FormEvent } from "react"
 
 import { ACCOUNT } from "@/shared/api/contracts.gen"
@@ -11,7 +12,6 @@ import { Input } from "@/shared/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
 
 import type { NewAccessToken } from "../../api"
-import { useTexts } from "../../i18n"
 import { isComplete, isTokenLifetime, TOKEN_LIFETIMES } from "../../token-form"
 
 interface TokenFieldsProps {
@@ -30,7 +30,7 @@ interface TokenFieldsProps {
  * what can be sent is what the server accepts; the server still checks both.
  */
 export function TokenFields({ draft, onChange, onSubmit, creating }: TokenFieldsProps) {
-  const { t } = useTexts()
+  const t = useTranslations("account")
   // The Select reports plain text: only a lifetime on offer is taken.
   function setLifetime(value: string) {
     const days = Number(value)

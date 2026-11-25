@@ -2,19 +2,20 @@
 // Dashboard page.
 
 import { ReceiptText, TrendingUp, Wallet } from "lucide-react"
+import { useTranslations } from "next-intl"
 
-import { formatCount, formatMoney, formatMonth } from "@/shared/lib/format"
+import { useFormatters } from "@/shared/lib/use-formatters"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 
 import type { MonthlySummary } from "../api"
-import { useTexts } from "../i18n"
 
 /**
  * Three headline numbers for the current month, all straight from the backend's summary: the total spent, how many
  * expenses (and categories used), and the top category with its total.
  */
 export function StatCards({ summary }: { summary: MonthlySummary }) {
-  const { t } = useTexts()
+  const t = useTranslations("dashboard")
+  const { formatCount, formatMoney, formatMonth } = useFormatters()
   const top = summary.by_category[0] // the list comes biggest first
   const monthName = formatMonth(summary.month)
 

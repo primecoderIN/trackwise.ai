@@ -2,10 +2,10 @@
 // Used by CategorySelect; public (index.ts): the expenses table and the Dashboard use the list and the names.
 
 import { useQuery } from "@tanstack/react-query"
+import { useTranslations } from "next-intl"
 import { useCallback, useMemo } from "react"
 
 import { getCategoryMonthlySummary, listCategories } from "./api"
-import { useTexts } from "./i18n"
 
 /**
  * TanStack Query keys: what a cached answer is filed under. Invalidating `all` (as a change to categories or expenses
@@ -44,7 +44,7 @@ export function useCategoryMonthlySummary(month: string) {
  */
 export function useCategoryName(): (categoryId: number) => string {
   const { data } = useCategories()
-  const { t } = useTexts()
+  const t = useTranslations("categories")
   // A Map, built once per answer, so each lookup is direct rather than a search through the list.
   const names = useMemo(() => (data ? new Map(data.map((category) => [category.id, category.name])) : null), [data])
   return useCallback((categoryId: number) => (names ? (names.get(categoryId) ?? t("unknown")) : ""), [names, t])

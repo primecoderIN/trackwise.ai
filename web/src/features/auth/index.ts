@@ -12,12 +12,11 @@ export { isSignedOut, type SignedInUser } from "./api"
 export { AuthGate } from "./components/auth-gate"
 export { UserAvatar } from "./components/user-avatar"
 export { UserMenu } from "./components/user-menu"
-export { authTexts } from "./i18n"
 export { authKeys, useSignedInUser } from "./queries"
 
 /**
- * The sign-in page, loaded only when it's first shown (its texts are already in: they load at boot). Draw it inside a
- * <Suspense> (its route file does). If its code fails to load, the root error boundary shows it.
+ * The sign-in page, loaded only when it's first shown (its `auth` messages come from next-intl's route provider).
+ * Draw it inside a <Suspense> (its route file does). If its code fails to load, the route error boundary shows it.
  */
 export const SignInPage = lazyWithRetry(async () => {
   const { SignInPage: page } = await import("./components/sign-in-page")

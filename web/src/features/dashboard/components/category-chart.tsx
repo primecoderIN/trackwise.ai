@@ -2,16 +2,16 @@
 // (shadcn charts over Recharts). Used by the Dashboard page.
 
 import { BarChart3 } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { Bar, BarChart, XAxis, YAxis } from "recharts"
 
 import { EmptyState } from "@/shared/components/empty-state"
 import { ROUTES } from "@/shared/config/routes"
-import { formatMoney, formatMonth } from "@/shared/lib/format"
+import { useFormatters } from "@/shared/lib/use-formatters"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/shared/ui/chart"
 
 import type { MonthlySummary } from "../api"
-import { useTexts } from "../i18n"
 import { useSpentConfig } from "./chart-config"
 
 // Room for the category names beside the bars, in pixels.
@@ -22,7 +22,8 @@ const CATEGORY_AXIS_WIDTH = 96
  * the amount on hover. With nothing spent yet, it says so and offers a link to add an expense.
  */
 export function CategoryChart({ summary }: { summary: MonthlySummary }) {
-  const { t } = useTexts()
+  const t = useTranslations("dashboard")
+  const { formatMoney, formatMonth } = useFormatters()
   const config = useSpentConfig()
   // Recharts draws numbers: the API's amount string ("24.50") becomes 24.5, for the chart only.
   const rows = summary.by_category.map((c) => ({ name: c.category_name, total: Number(c.total) }))

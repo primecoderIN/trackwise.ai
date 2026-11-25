@@ -3,10 +3,9 @@
 // come from the feature's i18n namespace. Used by expenses-table.tsx.
 
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 import { Button } from "@/shared/ui/button"
-
-import { useTexts } from "../../i18n"
 
 // What goes between the count line's parts.
 const PART_SEPARATOR = " · "
@@ -45,7 +44,7 @@ export function ExpensesToolbar({
   deleting,
   onDeleteSelected,
 }: ExpensesToolbarProps) {
-  const { t } = useTexts()
+  const t = useTranslations("expenses")
   const showingText =
     offset > 0 && shown > 0
       ? t("toolbar.showingRange", { from: offset + 1, to: offset + shown })

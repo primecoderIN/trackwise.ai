@@ -5,6 +5,7 @@
 import { Wallet } from "lucide-react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useEffect } from "react"
 
 import { AUTH } from "@/shared/api/contracts.gen"
@@ -12,11 +13,10 @@ import { SectionError } from "@/shared/components/section-error"
 import { APP_NAME } from "@/shared/config/app"
 import { localizedPath, ROUTES } from "@/shared/config/routes"
 import { LanguageMenu, useLanguage } from "@/shared/i18n"
-import { messageOf } from "@/shared/lib/errors"
+import { useMessageOf } from "@/shared/lib/use-message-of"
 import { ModeToggle } from "@/shared/theme"
 import { Card, CardContent, CardDescription, CardHeader } from "@/shared/ui/card"
 
-import { useTexts } from "../i18n"
 import { useLoginOptions, useSignedInUser } from "../queries"
 import { afterSignIn, failureText } from "../sign-in-urls"
 import { useSessionSync } from "../use-session-sync"
@@ -30,7 +30,8 @@ import { SignInOptions } from "./sign-in-options"
  * If the ways to sign in can't be loaded, that takes the card's place, with Try again.
  */
 export function SignInPage() {
-  const { t } = useTexts()
+  const t = useTranslations("auth")
+  const messageOf = useMessageOf()
   const { language } = useLanguage()
   const params = useSearchParams()
   const router = useRouter()

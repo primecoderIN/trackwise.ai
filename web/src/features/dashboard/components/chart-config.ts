@@ -1,11 +1,10 @@
 // A part of the dashboard feature: the shared configuration of its two charts. Used by category-chart.tsx and
 // trend-chart.tsx.
 
+import { useTranslations } from "next-intl"
 import { useMemo } from "react"
 
 import type { ChartConfig } from "@/shared/ui/chart"
-
-import { useTexts } from "../i18n"
 
 /**
  * shadcn charts: the config names each data series and its colour. ChartContainer turns `total`
@@ -15,6 +14,6 @@ import { useTexts } from "../i18n"
  * is returned until the language changes, so the chart doesn't rebuild its styles on every render.
  */
 export function useSpentConfig() {
-  const { t } = useTexts()
+  const t = useTranslations("dashboard")
   return useMemo(() => ({ total: { label: t("charts.spent"), color: "var(--primary)" } }) satisfies ChartConfig, [t])
 }

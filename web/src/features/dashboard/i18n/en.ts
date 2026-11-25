@@ -1,26 +1,21 @@
 // The "dashboard" namespace's English texts: everything the dashboard feature shows, grouped by area. Part of
 // the dashboard feature (i18n/). The source other languages translate (hi.ts); index.ts defines the namespace.
 
-/**
- * The dashboard feature's texts, in English. {{name}} marks a value filled in when the text is shown. A key ending in
- * _zero, _one or _other is one form of a counted text: t("stats.categoriesUsed", { count }) picks the form.
- */
+/** The dashboard feature's texts, in English. `{name}` marks an ICU placeholder or plural rule. */
 const en = {
   page: {
     title: "Dashboard",
-    description: "Your spending at a glance (amounts in {{currency}}).",
+    description: "Your spending at a glance (amounts in {currency}).",
     loadFailed: "Couldn't load the dashboard",
   },
   stats: {
-    spentIn: "Spent in {{month}}",
+    spentIn: "Spent in {month}",
     noExpensesThisMonth: "No expenses yet this month",
     totalOfMonth: "Total of this month's expenses",
     expensesThisMonth: "Expenses this month",
-    categoriesUsed_one: "{{count}} category used",
-    categoriesUsed_other: "{{count}} categories used",
+    categoriesUsed: "{count, plural, one {# category used} other {# categories used}}",
     topCategory: "Top category",
-    topAcross_one: "{{amount}} across {{count}} expense",
-    topAcross_other: "{{amount}} across {{count}} expenses",
+    topAcross: "{count, plural, one {{amount} across # expense} other {{amount} across # expenses}}",
     nothingSpent: "Nothing spent yet",
   },
   byCategory: {
@@ -29,17 +24,14 @@ const en = {
   },
   trend: {
     title: "Monthly trend",
-    lastMonths_one: "Last {{count}} month",
-    lastMonths_other: "Last {{count}} months",
-    empty_one: "No spending in the last {{count}} month.",
-    empty_other: "No spending in the last {{count}} months.",
+    lastMonths: "{count, plural, one {Last # month} other {Last # months}}",
+    empty: "{count, plural, one {No spending in the last # month.} other {No spending in the last # months.}}",
   },
   recent: {
     title: "Recent expenses",
-    latest_zero: "The latest you recorded",
-    latest_one: "The latest {{count}} you recorded",
-    latest_other: "The latest {{count}} you recorded",
-    categoryAndDate: "{{category}} · {{date}}",
+    latest:
+      "{count, plural, =0 {The latest you recorded} one {The latest # you recorded} other {The latest # you recorded}}",
+    categoryAndDate: "{category} · {date}",
     viewAll: "View all",
     empty: "No expenses yet.",
   },
@@ -50,12 +42,12 @@ const en = {
     title: "Budget",
     description: "This month against your limits",
     open: "Open Budgets",
-    spentOf: "{{spent}} of {{limit}}",
-    meter: "Overall: {{percent}}% of the limit used",
-    today: "Today: {{percent}}% of the month",
+    spentOf: "{spent} of {limit}",
+    meter: "Overall: {percent}% of the limit used",
+    today: "Today: {percent}% of the month",
     noLimit: "No overall limit yet.",
-    attention_one: "{{count}} category is near or over its limit",
-    attention_other: "{{count}} categories are near or over their limits",
+    attention:
+      "{count, plural, one {# category is near or over its limit} other {# categories are near or over their limits}}",
     allOnTrack: "Every category with a limit is on track",
     loadFailed: "Couldn't load your budgets.",
   },

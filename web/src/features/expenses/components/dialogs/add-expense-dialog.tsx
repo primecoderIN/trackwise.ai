@@ -3,6 +3,7 @@
 // from the feature's i18n namespace.
 
 import { Plus } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { useState, type FormEvent } from "react"
 import { toast } from "sonner"
 
@@ -10,8 +11,8 @@ import { useSignedInUser } from "@/features/auth"
 import { CategorySelect } from "@/features/categories"
 import { DEFAULT_CURRENCY } from "@/shared/api/contracts.gen"
 import { LabeledField } from "@/shared/components/labeled-field"
-import { messageOf } from "@/shared/lib/errors"
 import { todayIso } from "@/shared/lib/format"
+import { useMessageOf } from "@/shared/lib/use-message-of"
 import { Button } from "@/shared/ui/button"
 import {
   Dialog,
@@ -26,7 +27,6 @@ import {
 import { Input } from "@/shared/ui/input"
 
 import { emptyDraft, isComplete, toNewExpense } from "../../expense-form"
-import { useTexts } from "../../i18n"
 import { useCreateExpense } from "../../queries"
 import { showSaveNotices } from "../../save-notices"
 import { useExpenseDraft, type ExpenseDraftState } from "../../use-expense-draft"
@@ -50,7 +50,8 @@ export function AddExpenseDialog({
   open?: boolean
   onOpenChange?: (next: boolean) => void
 } = {}) {
-  const { t } = useTexts()
+  const t = useTranslations("expenses")
+  const messageOf = useMessageOf()
   const defaultCurrency = useSignedInUser().data?.default_currency ?? DEFAULT_CURRENCY
   // Whether the dialog is open; the draft lives in useExpenseDraft, so closing the dialog keeps it.
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
@@ -126,7 +127,7 @@ function AddExpenseFields({
   setField,
   defaultCurrency,
 }: Pick<ExpenseDraftState, "draft" | "setField"> & { defaultCurrency: string }) {
-  const { t } = useTexts()
+  const t = useTranslations("expenses")
   return (
     <>
       <div className="grid grid-cols-[1fr_5.5rem_1fr] gap-3">

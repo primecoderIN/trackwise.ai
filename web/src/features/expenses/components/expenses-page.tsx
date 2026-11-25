@@ -5,6 +5,7 @@
 
 import { ReceiptText } from "lucide-react"
 import { useSearchParams } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { LIMITS } from "@/shared/api/contracts.gen"
@@ -13,11 +14,10 @@ import { PageHeader } from "@/shared/components/page-header"
 import { RefreshNotice } from "@/shared/components/refresh-notice"
 import { SectionError } from "@/shared/components/section-error"
 import { useDebouncedValue } from "@/shared/hooks/use-debounced-value"
-import { messageOf } from "@/shared/lib/errors"
+import { useMessageOf } from "@/shared/lib/use-message-of"
 import { Card, CardContent } from "@/shared/ui/card"
 
 import type { Expense, ExpenseFilters } from "../api"
-import { useTexts } from "../i18n"
 import { useExpenses } from "../queries"
 import { AddExpenseDialog } from "./dialogs/add-expense-dialog"
 import { DeleteExpensesDialog } from "./dialogs/delete-expenses-dialog"
@@ -38,7 +38,8 @@ const NO_EXPENSES: Expense[] = []
  * stay and a "couldn't refresh" notice appears above them.
  */
 export function ExpensesPage() {
-  const { t } = useTexts()
+  const t = useTranslations("expenses")
+  const messageOf = useMessageOf()
   const searchParams = useSearchParams()
   const addParam = searchParams.get("add")
   const [addOpen, setAddOpen] = useState(() => addParam === "1")

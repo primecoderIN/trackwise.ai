@@ -1,20 +1,13 @@
-// The "categories" namespace: the categories feature's texts (the category dropdown). Part of the categories feature
-// (i18n/). Its components read them with useTexts(). A page that draws CategorySelect loads them with its own
-// (the Expenses page's lazy loader), through categoriesTexts in the feature's index.ts.
+// The "categories" namespace: typed by en.ts and loaded per request via next-intl (`useTranslations("categories")`).
 
-import { defineNamespace } from "@/shared/i18n"
+import type { Language } from "@/shared/i18n"
 
-import type en from "./en"
+import en from "./en"
 
-/** The categories feature's texts: each language's file is fetched when first needed. */
-export const categoriesTexts = defineNamespace("categories", { en: () => import("./en"), hi: () => import("./hi") })
+/** Shape of the "categories" message catalog. */
+export type CategoriesTexts = typeof en
 
-/** The categories feature's texts in a component: `const { t } = useTexts()`, then t("select.loading"), typed. */
-export const useTexts = categoriesTexts.useTexts
-
-// Gives this namespace's keys their types (a misspelt key is a compile error).
-declare module "i18next" {
-  interface ResourceNamespaceMap {
-    categories: typeof en
-  }
+/** Loads the "categories" message catalog for `language`. */
+export async function loadCategoriesMessages(language: Language): Promise<CategoriesTexts> {
+  return language === "hi" ? (await import("./hi")).default : en
 }

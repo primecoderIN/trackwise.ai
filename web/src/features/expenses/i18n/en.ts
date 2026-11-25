@@ -2,10 +2,7 @@
 // the expenses feature (i18n/). The source other languages translate (hi.ts); index.ts defines the namespace.
 // Not here: what the backend sends (payment-method labels, category names, its error messages) and user data.
 
-/**
- * The expenses feature's texts, in English. {{name}} marks a value filled in when the text is shown; a key ending
- * in _one / _other is one text in two plural forms, picked by `count`.
- */
+/** The expenses feature's texts, in English. `{name}` marks an ICU placeholder or plural rule. */
 const en = {
   page: {
     title: "Expenses",
@@ -35,7 +32,7 @@ const en = {
   add: {
     open: "Add expense",
     title: "Add expense",
-    description: "Amounts are in {{currency}}, e.g. {{example}}.",
+    description: "Amounts are in {currency}, e.g. {example}.",
     merchantExample: "Corner Bistro",
     noteExample: "Dinner",
     added: "Expense added",
@@ -50,12 +47,10 @@ const en = {
   },
   // The count line above the table; its parts are joined with " · ".
   toolbar: {
-    count_one: "{{count}} expense",
-    count_other: "{{count}} expenses",
-    showingNewest: "showing the newest {{shown}}",
-    showingRange: "showing {{from}}–{{to}}",
-    selected_one: "{{count}} selected",
-    selected_other: "{{count}} selected",
+    count: "{count, plural, one {# expense} other {# expenses}}",
+    showingNewest: "showing the newest {shown}",
+    showingRange: "showing {from}–{to}",
+    selected: "{count, plural, one {# selected} other {# selected}}",
     deleteSelected: "Delete selected",
     previousPage: "Previous page",
     nextPage: "Next page",
@@ -66,37 +61,34 @@ const en = {
     noMatches: "No expenses match these filters.",
     emptyTitle: "No expenses recorded yet",
     emptyDescription: "Add your first expense here or ask the assistant in the chat panel.",
-    sortBy: "Sort by {{column}}",
+    sortBy: "Sort by {column}",
     selectAll: "Select all",
-    selectRow: "Select #{{id}}",
+    selectRow: "Select #{id}",
     actions: "Actions",
-    editRow: "Edit #{{id}}",
-    deleteRow: "Delete #{{id}}",
+    editRow: "Edit #{id}",
+    deleteRow: "Delete #{id}",
   },
   // The inline edit row: each control's name for screen readers, its buttons, and the toast after a save.
   edit: {
-    date: "Date of #{{id}}",
-    merchant: "Merchant of #{{id}}",
-    category: "Category of #{{id}}",
-    amount: "Amount of #{{id}}",
-    currency: "Currency of #{{id}}",
-    paymentMethod: "Payment method of #{{id}}",
-    note: "Note of #{{id}}",
-    save: "Save changes to #{{id}}",
-    cancel: "Cancel editing #{{id}}",
+    date: "Date of #{id}",
+    merchant: "Merchant of #{id}",
+    category: "Category of #{id}",
+    amount: "Amount of #{id}",
+    currency: "Currency of #{id}",
+    paymentMethod: "Payment method of #{id}",
+    note: "Note of #{id}",
+    save: "Save changes to #{id}",
+    cancel: "Cancel editing #{id}",
     updated: "Expense updated",
   },
   // The "are you sure?" dialog before a delete, and the toasts after it.
   delete: {
     titleOne: "Delete this expense?",
-    titleSeveral_one: "Delete {{count}} expense?",
-    titleSeveral_other: "Delete {{count}} expenses?",
-    describeOne: "{{merchant}}, {{amount}} on {{date}}. This can't be undone.",
+    titleSeveral: "{count, plural, one {Delete # expense?} other {Delete # expenses?}}",
+    describeOne: "{merchant}, {amount} on {date}. This can't be undone.",
     describeSeveral: "This can't be undone.",
-    deleted_one: "Expense deleted",
-    deleted_other: "{{count}} expenses deleted",
-    failed_one: "Couldn't delete {{count}}: {{reason}}",
-    failed_other: "Couldn't delete {{count}}: {{reason}}",
+    deleted: "{count, plural, one {Expense deleted} other {# expenses deleted}}",
+    failed: "{count, plural, one {Couldn't delete #: {reason}} other {Couldn't delete #: {reason}}}",
   },
 }
 

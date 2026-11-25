@@ -2,19 +2,19 @@
 // was spent, and its own Set or Change limit button. Used by the Budgets page.
 
 import { PiggyBank } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 import { EmptyState } from "@/shared/components/empty-state"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 
 import type { BudgetStatus, CategoryBudgetLine } from "../api"
-import { useTexts } from "../i18n"
 import { BudgetDialog } from "./budget-dialog"
 import { BudgetFigures } from "./budget-figures"
 import { BudgetStateBadge } from "./budget-state-badge"
 
 /** Every category, in the server's order (budgeted first, closest to its limit at the top). */
 export function CategoryBudgets({ status }: { status: BudgetStatus }) {
-  const { t } = useTexts()
+  const t = useTranslations("budgets")
   return (
     <Card>
       <CardHeader>

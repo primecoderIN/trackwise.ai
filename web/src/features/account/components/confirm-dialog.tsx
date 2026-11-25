@@ -1,6 +1,8 @@
 // "Are you sure?" before something that ends access: revoking a token, signing every other browser out. Part of the
 // account feature (components/). Used by the token row and the sessions card.
 
+import { useTranslations } from "next-intl"
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,8 +13,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/shared/ui/alert-dialog"
-
-import { useTexts } from "../i18n"
 
 interface ConfirmDialogProps {
   open: boolean
@@ -30,7 +30,7 @@ interface ConfirmDialogProps {
 
 /** The question, with Cancel and a destructive confirm button. */
 export function ConfirmDialog({ open, onClose, title, description, confirmLabel, onConfirm }: ConfirmDialogProps) {
-  const { t } = useTexts()
+  const t = useTranslations("account")
   return (
     <AlertDialog open={open} onOpenChange={(next) => !next && onClose()}>
       <AlertDialogContent>

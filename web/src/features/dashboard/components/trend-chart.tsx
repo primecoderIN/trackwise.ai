@@ -2,16 +2,16 @@
 // (shadcn charts over Recharts). Used by the Dashboard page.
 
 import { TrendingUp } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
 
 import { EmptyState } from "@/shared/components/empty-state"
 import { ROUTES } from "@/shared/config/routes"
-import { formatCompactMoney, formatMoney, formatMonth } from "@/shared/lib/format"
+import { useFormatters } from "@/shared/lib/use-formatters"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/shared/ui/chart"
 
 import type { MonthlyTrend } from "../api"
-import { useTexts } from "../i18n"
 import { useSpentConfig } from "./chart-config"
 
 // Room for the money labels beside the chart ("$1.3K"), in pixels.
@@ -22,7 +22,8 @@ const MONEY_AXIS_WIDTH = 56
  * full month and amount on hover. If nothing was spent in any of them, it says so and offers a link to add one.
  */
 export function TrendChart({ trend }: { trend: MonthlyTrend }) {
-  const { t } = useTexts()
+  const t = useTranslations("dashboard")
+  const { formatCompactMoney, formatMoney, formatMonth } = useFormatters()
   const config = useSpentConfig()
   // How many months the chart covers: the backend sends every one, so this is the trend's length.
   const count = trend.months.length

@@ -5,26 +5,21 @@ import type { Translation } from "@/shared/i18n"
 
 import type en from "./en"
 
-/**
- * The dashboard feature's texts, in Hindi. Same keys as en.ts; {{name}} placeholders stay as they are. Hindi's "one"
- * form also covers 0 (CLDR), except where a _zero text exists.
- */
+/** The dashboard feature's texts, in Hindi. Same keys as en.ts; ICU placeholders and plural forms match en.ts. */
 const hi: Translation<typeof en> = {
   page: {
     title: "डैशबोर्ड",
-    description: "आपके खर्च पर एक नज़र (राशि {{currency}} में)।",
+    description: "आपके खर्च पर एक नज़र (राशि {currency} में)।",
     loadFailed: "डैशबोर्ड लोड नहीं हो सका",
   },
   stats: {
-    spentIn: "{{month}} में खर्च किए गए",
+    spentIn: "{month} में खर्च किए गए",
     noExpensesThisMonth: "इस महीने अभी तक कोई खर्च नहीं",
     totalOfMonth: "इस महीने के सभी खर्चों का कुल योग",
     expensesThisMonth: "इस महीने के खर्च",
-    categoriesUsed_one: "{{count}} श्रेणी इस्तेमाल हुई",
-    categoriesUsed_other: "{{count}} श्रेणियाँ इस्तेमाल हुईं",
+    categoriesUsed: "{count, plural, one {# श्रेणी इस्तेमाल हुई} other {# श्रेणियाँ इस्तेमाल हुईं}}",
     topCategory: "सबसे बड़ी श्रेणी",
-    topAcross_one: "{{count}} खर्च में कुल {{amount}}",
-    topAcross_other: "{{count}} खर्चों में कुल {{amount}}",
+    topAcross: "{count, plural, one {# खर्च में कुल {amount}} other {# खर्चों में कुल {amount}}}",
     nothingSpent: "अभी तक कुछ खर्च नहीं हुआ",
   },
   byCategory: {
@@ -33,17 +28,14 @@ const hi: Translation<typeof en> = {
   },
   trend: {
     title: "मासिक रुझान",
-    lastMonths_one: "पिछला {{count}} महीना",
-    lastMonths_other: "पिछले {{count}} महीने",
-    empty_one: "पिछले {{count}} महीने में कोई खर्च नहीं हुआ।",
-    empty_other: "पिछले {{count}} महीनों में कोई खर्च नहीं हुआ।",
+    lastMonths: "{count, plural, one {पिछला # महीना} other {पिछले # महीने}}",
+    empty: "{count, plural, one {पिछले # महीने में कोई खर्च नहीं हुआ।} other {पिछले # महीनों में कोई खर्च नहीं हुआ।}}",
   },
   recent: {
     title: "हाल के खर्च",
-    latest_zero: "आपके दर्ज किए गए सबसे नए खर्च",
-    latest_one: "आपका दर्ज किया गया सबसे नया {{count}} खर्च",
-    latest_other: "आपके दर्ज किए गए सबसे नए {{count}} खर्च",
-    categoryAndDate: "{{category}} · {{date}}",
+    latest:
+      "{count, plural, =0 {आपके दर्ज किए गए सबसे नए खर्च} one {आपका दर्ज किया गया सबसे नया # खर्च} other {आपके दर्ज किए गए सबसे नए # खर्च}}",
+    categoryAndDate: "{category} · {date}",
     viewAll: "सभी देखें",
     empty: "अभी कोई खर्च नहीं है।",
   },
@@ -54,12 +46,12 @@ const hi: Translation<typeof en> = {
     title: "बजट",
     description: "इस महीने का खर्च आपकी सीमाओं के मुकाबले",
     open: "बजट खोलें",
-    spentOf: "{{limit}} में से {{spent}}",
-    meter: "कुल: सीमा का {{percent}}% इस्तेमाल हुआ",
-    today: "आज: महीने का {{percent}}%",
+    spentOf: "{limit} में से {spent}",
+    meter: "कुल: सीमा का {percent}% इस्तेमाल हुआ",
+    today: "आज: महीने का {percent}%",
     noLimit: "अभी कोई कुल सीमा नहीं है।",
-    attention_one: "{{count}} श्रेणी अपनी सीमा के पास या उससे ज़्यादा है",
-    attention_other: "{{count}} श्रेणियाँ अपनी सीमा के पास या उससे ज़्यादा हैं",
+    attention:
+      "{count, plural, one {# श्रेणी अपनी सीमा के पास या उससे ज़्यादा है} other {# श्रेणियाँ अपनी सीमा के पास या उससे ज़्यादा हैं}}",
     allOnTrack: "सीमा वाली हर श्रेणी ठीक चल रही है",
     loadFailed: "आपके बजट लोड नहीं हो सके।",
   },

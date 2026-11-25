@@ -9,7 +9,7 @@ import type { ReactNode } from "react"
 
 import { SITE_VIEWPORT, siteMetadata } from "@/app/_seo/seo"
 import { ClientRoot } from "@/app/_shell/client-root"
-import { BOOT_MESSAGE_NAMESPACES, pickMessages } from "@/i18n/messages"
+import { pickMessages, WORKSPACE_MESSAGE_NAMESPACES } from "@/i18n/messages"
 import { DEFAULT_LANGUAGE, isLanguage, LANGUAGES } from "@/shared/i18n/languages"
 import { THEME_BOOT_SCRIPT } from "@/shared/theme/theme-constants"
 
@@ -33,7 +33,7 @@ export default async function ClientLayout({ children }: { children: ReactNode }
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
       </head>
       <body>
-        <NextIntlClientProvider locale={lang} messages={pickMessages(messages, BOOT_MESSAGE_NAMESPACES)}>
+        <NextIntlClientProvider locale={lang} messages={pickMessages(messages, WORKSPACE_MESSAGE_NAMESPACES)}>
           <ClientRoot>{children}</ClientRoot>
         </NextIntlClientProvider>
       </body>

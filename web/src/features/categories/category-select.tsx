@@ -2,9 +2,10 @@
 // query. Public (index.ts): the expenses feature uses it in its Add dialog, edit row and filters. Its placeholder
 // texts come from the feature's i18n namespace; the category names are data from the backend.
 
+import { useTranslations } from "next-intl"
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
 
-import { useTexts } from "./i18n"
 import { useCategories } from "./queries"
 
 /**
@@ -32,7 +33,7 @@ interface CategorySelectProps {
  * the categories by name. While they load it says "Loading…"; if they can't be loaded it says so and is disabled.
  */
 export function CategorySelect({ value, onChange, id, className, ariaLabel, anyLabel }: CategorySelectProps) {
-  const { t } = useTexts()
+  const t = useTranslations("categories")
   const { data: categories = [], isPending, isError } = useCategories()
   // Say why the list is empty, instead of an empty dropdown that can't be filled in.
   const placeholder = isError ? t("select.loadFailed") : isPending ? t("select.loading") : t("select.choose")

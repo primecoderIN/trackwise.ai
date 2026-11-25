@@ -2,16 +2,16 @@
 // but this one. Part of the account feature (components/sessions/). Used by sessions-card.tsx.
 
 import { Monitor } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 
-import { messageOf } from "@/shared/lib/errors"
-import { formatDateTime } from "@/shared/lib/format"
+import { useFormatters } from "@/shared/lib/use-formatters"
+import { useMessageOf } from "@/shared/lib/use-message-of"
 import { Badge } from "@/shared/ui/badge"
 import { Button } from "@/shared/ui/button"
 
 import type { Session } from "../../api"
 import { deviceOf } from "../../device-name"
-import { useTexts } from "../../i18n"
 import { useSignOutSession } from "../../queries"
 
 /**
@@ -20,7 +20,9 @@ import { useSignOutSession } from "../../queries"
  * signs out at the identity provider.
  */
 export function SessionRow({ session }: { session: Session }) {
-  const { t } = useTexts()
+  const t = useTranslations("account")
+  const messageOf = useMessageOf()
+  const { formatDateTime } = useFormatters()
   const signOut = useSignOutSession()
   const { browser, system } = deviceOf(session.user_agent)
   const device =

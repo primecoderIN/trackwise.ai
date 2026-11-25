@@ -2,11 +2,12 @@
 // in" that opens the provider's own page. Part of the auth feature (components/). Used by sign-in-page.tsx. Each button
 // is a link: signing in is a navigation to the backend, which sends the browser on to the provider.
 
+import { useTranslations } from "next-intl"
+
 import { Button } from "@/shared/ui/button"
 import { Skeleton } from "@/shared/ui/skeleton"
 
 import type { LoginOption } from "../api"
-import { useTexts } from "../i18n"
 import { loginUrl } from "../sign-in-urls"
 
 // How many placeholder buttons show while the options load (most setups offer one or two).
@@ -21,7 +22,7 @@ interface SignInOptionsProps {
 
 /** The ways to sign in, each a link to the backend's login route. */
 export function SignInOptions({ options, returnTo }: SignInOptionsProps) {
-  const { t } = useTexts()
+  const t = useTranslations("auth")
   if (options === undefined) {
     return (
       // <output> is announced politely by screen readers (its role is "status").

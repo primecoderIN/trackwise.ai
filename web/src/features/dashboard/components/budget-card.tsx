@@ -9,18 +9,18 @@ import { BudgetMeter, useBudgetStatus, type BudgetStatus } from "@/features/budg
 import { BUDGETS } from "@/shared/api/contracts.gen"
 import { RefreshNotice } from "@/shared/components/refresh-notice"
 import { ROUTES } from "@/shared/config/routes"
-import { messageOf } from "@/shared/lib/errors"
-import { currentMonth, formatMoney } from "@/shared/lib/format"
+import { currentMonth } from "@/shared/lib/format"
+import { useFormatters } from "@/shared/lib/use-formatters"
+import { useMessageOf } from "@/shared/lib/use-message-of"
 import { Button } from "@/shared/ui/button"
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 import { Skeleton } from "@/shared/ui/skeleton"
 
-import { useTexts } from "../i18n"
-
 /** The card: a skeleton while loading, a short note with retry if it failed, otherwise the summary. */
 export function BudgetCard({ month = currentMonth() }: { month?: string }) {
-  const { t } = useTexts()
+  const t = useTranslations("dashboard")
   const tCommon = useTranslations("common")
+  const messageOf = useMessageOf()
   const status = useBudgetStatus(month)
   const retry = () => void status.refetch()
   return (
@@ -57,7 +57,8 @@ export function BudgetCard({ month = currentMonth() }: { month?: string }) {
 
 /** The overall bar and figures (or "No overall limit yet"), then how many categories are near or over. */
 function BudgetSummary({ status }: { status: BudgetStatus }) {
-  const { t } = useTexts()
+  const t = useTranslations("dashboard")
+  const { formatMoney } = useFormatters()
   const { overall, currency } = status
   const money = (amount: string) => formatMoney(amount, currency)
   const budgeted = status.categories.filter((line) => line.state != null)

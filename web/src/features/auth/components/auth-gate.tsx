@@ -5,7 +5,7 @@
 
 import type { ReactNode } from "react"
 
-import { messageOf } from "@/shared/lib/errors"
+import { useMessageOf } from "@/shared/lib/use-message-of"
 
 import { useSignedInUser } from "../queries"
 import { useSessionBoundary } from "../use-session-boundary"
@@ -18,6 +18,7 @@ import { SessionCheckFailed, SessionChecking } from "./session-screens"
  * unless the answer is someone else: then the page reloads for them.
  */
 export function AuthGate({ children }: { children: ReactNode }) {
+  const messageOf = useMessageOf()
   const user = useSignedInUser()
   const leaving = useSessionBoundary(user.data)
 

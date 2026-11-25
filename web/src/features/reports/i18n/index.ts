@@ -1,18 +1,13 @@
-// The "reports" namespace: the reports feature's texts. Part of the reports feature (i18n/). Its components read them
-// with useTexts(); the Reports page's lazy loader in index.ts loads them with its code.
+// The "reports" namespace: typed by en.ts and loaded per request via next-intl (`useTranslations("reports")`).
 
-import { defineNamespace } from "@/shared/i18n"
+import type { Language } from "@/shared/i18n"
 
-import type en from "./en"
+import en from "./en"
 
-/** The reports feature's texts: each language's file is fetched when first needed. */
-export const reportsTexts = defineNamespace("reports", { en: () => import("./en"), hi: () => import("./hi") })
+/** Shape of the "reports" message catalog. */
+export type ReportsTexts = typeof en
 
-/** The reports feature's texts in a component: `const { t } = useTexts()`. */
-export const useTexts = reportsTexts.useTexts
-
-declare module "i18next" {
-  interface ResourceNamespaceMap {
-    reports: typeof en
-  }
+/** Loads the "reports" message catalog for `language`. */
+export async function loadReportsMessages(language: Language): Promise<ReportsTexts> {
+  return language === "hi" ? (await import("./hi")).default : en
 }

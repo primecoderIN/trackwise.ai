@@ -2,14 +2,13 @@
 // check" with a way to try again. Part of the auth feature (components/). Used by auth-gate.tsx.
 
 import { LoaderCircle } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 import { SectionError } from "@/shared/components/section-error"
 
-import { useTexts } from "../i18n"
-
 /** While it's asked who is signed in (or the sign-in page is on its way): a spinner, announced to screen readers. */
 export function SessionChecking() {
-  const { t } = useTexts()
+  const t = useTranslations("auth")
   return (
     // <output> is announced politely by screen readers (its role is "status").
     <output className="flex min-h-svh items-center justify-center text-muted-foreground">
@@ -30,7 +29,7 @@ interface SessionCheckFailedProps {
 
 /** Who is signed in couldn't be asked (not "nobody": the question failed). Say so, and offer to try again. */
 export function SessionCheckFailed({ message, onRetry, retrying }: SessionCheckFailedProps) {
-  const { t } = useTexts()
+  const t = useTranslations("auth")
   return (
     <div className="flex min-h-svh items-center justify-center p-4">
       <div className="w-full max-w-md">

@@ -3,13 +3,13 @@
 // which draws the open row as an EditRow and gives `start` to the columns' Edit buttons. Its toast's text comes
 // from the feature's i18n namespace.
 
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { toast } from "sonner"
 
-import { messageOf } from "@/shared/lib/errors"
+import { useMessageOf } from "@/shared/lib/use-message-of"
 
 import type { ExpenseChanges } from "../../api"
-import { useTexts } from "../../i18n"
 import { useSavingExpenseIds, useUpdateExpense } from "../../queries"
 import { showSaveNotices } from "../../save-notices"
 
@@ -33,7 +33,8 @@ export interface ExpenseEditor {
  * open with what you typed, ready to fix.
  */
 export function useExpenseEditor(): ExpenseEditor {
-  const { t } = useTexts()
+  const t = useTranslations("expenses")
+  const messageOf = useMessageOf()
   const [editingId, setEditingId] = useState<number | null>(null)
   const update = useUpdateExpense()
   const savingIds = useSavingExpenseIds()

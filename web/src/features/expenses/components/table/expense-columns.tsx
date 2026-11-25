@@ -15,15 +15,15 @@ import {
   type SortDirection,
 } from "@tanstack/react-table"
 import { Pencil, Trash2 } from "lucide-react"
+import type { useTranslations } from "next-intl"
 
 import { ExpenseMoney } from "@/shared/components/money"
-import { formatDate } from "@/shared/lib/format"
+import type { Language } from "@/shared/i18n"
 import { Badge } from "@/shared/ui/badge"
 import { Button } from "@/shared/ui/button"
 import { Checkbox } from "@/shared/ui/checkbox"
 
 import type { Expense } from "../../api"
-import type { useTexts } from "../../i18n"
 import { paymentMethodLabel } from "../../payment-methods"
 import { SortButton } from "./sort-button"
 
@@ -65,16 +65,19 @@ export function sortableHeader(title: string, align?: "end") {
   }
 }
 
-// The expenses namespace's t function, as useTexts() gives it.
-type ExpensesT = ReturnType<typeof useTexts>["t"]
+// The expenses namespace's t function, as `useTranslations("expenses")` gives it.
+type ExpensesT = ReturnType<typeof useTranslations<"expenses">>
 
 /** What the columns need from the table around them. */
 export interface ExpenseColumnOptions {
   /**
-   * The feature's texts (useTexts' t), in the language on now: column titles and the controls' labels. Each
-   * language change brings a new t, so the table rebuilds the columns in that language.
+   * The feature's texts (`useTranslations("expenses")`), in the active language: column titles and control labels.
    */
   t: ExpensesT
+  /** Active UI language for payment-method labels. */
+  language: Language
+  /** Locale-aware date formatter bound via `useFormatters()`. */
+  formatDate: (value: string | Date) => string
   /** A category's name by id (the Category column shows and sorts by it). */
   categoryName: (id: number) => string
   /** A delete is running: every Delete button is disabled meanwhile. */
@@ -108,7 +111,12 @@ function selectColumn(t: ExpensesT) {
 }
 
 // The expense's own fields, in display order. Sorting happens in the browser, within the rows already loaded.
-function dataColumns({ categoryName, t }: Pick<ExpenseColumnOptions, "categoryName" | "t">) {
+function dataColumns({
+  categoryName,
+  formatDate,
+  language,
+  t,
+}: Pick<ExpenseColumnOptions, "categoryName" | "formatDate" | "language" | "t">) {
   return columnHelper.columns([
     // The id as "#14": the assistant shows ids the same way, so you can say "delete #14".
     columnHelper.accessor("id", {
@@ -153,7 +161,7 @@ function dataColumns({ categoryName, t }: Pick<ExpenseColumnOptions, "categoryNa
     }),
     columnHelper.accessor("payment_method", {
       header: t("fields.paidWith"),
-      cell: ({ getValue }) => <Badge variant="secondary">{paymentMethodLabel(getValue())}</Badge>,
+      cell: ({ getValue }) => <Badge variant="secondary">{paymentMethodLabel(getValue(), language)}</Badge>,
       enableSorting: false,
     }),
     columnHelper.accessor("note", {

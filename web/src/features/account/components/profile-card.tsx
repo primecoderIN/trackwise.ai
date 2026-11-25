@@ -2,15 +2,16 @@
 // (components/). The person comes from the auth feature (the same answer the top bar's menu shows), and nothing here
 // can be edited: the profile is the identity provider's, refreshed at each sign-in.
 
-import { UserAvatar, useSignedInUser } from "@/features/auth"
-import { formatDate } from "@/shared/lib/format"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
+import { useTranslations } from "next-intl"
 
-import { useTexts } from "../i18n"
+import { UserAvatar, useSignedInUser } from "@/features/auth"
+import { useFormatters } from "@/shared/lib/use-formatters"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 
 /** The signed-in person's picture, name and email. Nothing while nobody is signed in (the page is behind the gate). */
 export function ProfileCard() {
-  const { t } = useTexts()
+  const t = useTranslations("account")
+  const { formatDate } = useFormatters()
   const user = useSignedInUser().data
   if (!user) return null
   const name = user.name ?? user.email ?? t("profile.you")

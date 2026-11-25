@@ -1,13 +1,13 @@
 // The state behind a budget's limit dialog: whether it's open, the limit being typed, and saving or removing it.
 // Part of the budgets feature; used by BudgetDialog (components/budget-dialog.tsx).
 
+import { useTranslations } from "next-intl"
 import { useState, type FormEvent } from "react"
 import { toast } from "sonner"
 
-import { messageOf } from "@/shared/lib/errors"
+import { useMessageOf } from "@/shared/lib/use-message-of"
 
 import type { BudgetScope } from "./api"
-import { useTexts } from "./i18n"
 import { useRemoveBudget, useSetBudget } from "./queries"
 
 /**
@@ -16,7 +16,8 @@ import { useRemoveBudget, useSetBudget } from "./queries"
  * reloads by itself: the mutations declare that budgets changed.
  */
 export function useBudgetEditor(scope: BudgetScope, currentLimit: string | null) {
-  const { t } = useTexts()
+  const t = useTranslations("budgets")
+  const messageOf = useMessageOf()
   const [open, setOpen] = useState(false)
   const [limit, setLimit] = useState("")
   const save = useSetBudget()

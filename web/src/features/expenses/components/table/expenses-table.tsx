@@ -5,13 +5,15 @@
 // from the feature's i18n namespace. Used by the Expenses page.
 
 import { flexRender, useTable, type Row, type RowSelectionState } from "@tanstack/react-table"
+import { useTranslations } from "next-intl"
 import { useCallback, useMemo, useState } from "react"
 
 import { useCategoryName } from "@/features/categories"
+import { useLanguage } from "@/shared/i18n"
+import { useFormatters } from "@/shared/lib/use-formatters"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table"
 
 import type { Expense } from "../../api"
-import { useTexts } from "../../i18n"
 import { useIsDeletingExpenses } from "../../queries"
 import { EditRow } from "./edit-row"
 import { ariaSortOf, expenseColumns, expenseTableFeatures } from "./expense-columns"
@@ -64,7 +66,9 @@ export function ExpensesTable({
   pageSize,
   onOffsetChange,
 }: ExpensesTableProps) {
-  const { t } = useTexts()
+  const t = useTranslations("expenses")
+  const { language } = useLanguage()
+  const { formatDate } = useFormatters()
   const editor = useExpenseEditor()
   // A delete is running (the confirmation dialog started it): its rows can't be deleted twice meanwhile.
   const deleting = useIsDeletingExpenses()
@@ -86,11 +90,10 @@ export function ExpensesTable({
   )
 
   // useMemo keeps the same columns between renders, rebuilding them only when their inputs change, as TanStack
-  // recommends. onDelete is the page's state setter, so it's stable too; t changes only with the language, which
-  // rebuilds the columns in it.
+  // recommends. onDelete is the page's state setter, so it's stable too; t/language change only with locale.
   const columns = useMemo(
-    () => expenseColumns({ t, categoryName, deleting, onEdit, onDelete }),
-    [t, categoryName, deleting, onEdit, onDelete],
+    () => expenseColumns({ t, language, formatDate, categoryName, deleting, onEdit, onDelete }),
+    [t, language, formatDate, categoryName, deleting, onEdit, onDelete],
   )
 
   const table = useTable({
@@ -155,7 +158,7 @@ interface ExpenseRowsProps {
 // says "Loading…" or that nothing matches the filters. getAllCells, not getVisibleCells: v9 only has
 // getVisibleCells with the column-visibility feature, which this table doesn't use.
 function ExpenseRows({ rows, columnCount, loading, editor }: ExpenseRowsProps) {
-  const { t } = useTexts()
+  const t = useTranslations("expenses")
   return (
     <TableBody>
       {rows.length === 0 ? (

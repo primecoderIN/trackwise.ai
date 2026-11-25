@@ -1,6 +1,7 @@
 // A component of the budgets feature: the "Set limit" / "Change limit" button and the dialog it opens, where a
 // budget's monthly limit is typed, changed or removed. Used by the overall card and the category rows.
 
+import { useTranslations } from "next-intl"
 import { useId } from "react"
 
 import { LabeledField } from "@/shared/components/labeled-field"
@@ -18,7 +19,6 @@ import {
 import { Input } from "@/shared/ui/input"
 
 import type { BudgetScope } from "../api"
-import { useTexts } from "../i18n"
 import { useBudgetEditor } from "../use-budget-editor"
 
 interface BudgetDialogProps {
@@ -34,7 +34,7 @@ interface BudgetDialogProps {
 
 /** The button (its name says which budget, for screen readers) and the dialog: the limit, Save, and Remove. */
 export function BudgetDialog({ scope, name, currency, currentLimit }: BudgetDialogProps) {
-  const { t } = useTexts()
+  const t = useTranslations("budgets")
   const id = useId()
   const editor = useBudgetEditor(scope, currentLimit)
   const hasLimit = currentLimit !== null

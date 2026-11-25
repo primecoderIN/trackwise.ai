@@ -5,10 +5,7 @@ import type { Translation } from "@/shared/i18n"
 
 import type en from "./en"
 
-/**
- * The expenses feature's texts, in Hindi. Same keys as en.ts; {{name}} placeholders stay as they are. Hindi's "one"
- * plural form covers 0 and 1, and its "other" form the rest.
- */
+/** The expenses feature's texts, in Hindi. Same keys as en.ts; ICU placeholders and plural forms match en.ts. */
 const hi: Translation<typeof en> = {
   page: {
     title: "खर्च",
@@ -35,7 +32,7 @@ const hi: Translation<typeof en> = {
   add: {
     open: "खर्च जोड़ें",
     title: "खर्च जोड़ें",
-    description: "राशि {{currency}} में लिखें, जैसे {{example}}।",
+    description: "राशि {currency} में लिखें, जैसे {example}।",
     merchantExample: "Corner Bistro",
     noteExample: "रात का खाना",
     added: "खर्च जोड़ दिया गया",
@@ -49,12 +46,10 @@ const hi: Translation<typeof en> = {
     clear: "फ़िल्टर साफ़ करें",
   },
   toolbar: {
-    count_one: "{{count}} खर्च",
-    count_other: "{{count}} खर्च",
-    showingNewest: "सबसे नए {{shown}} दिखाए जा रहे हैं",
-    showingRange: "{{from}}–{{to}} दिखाए जा रहे हैं",
-    selected_one: "{{count}} चुना गया",
-    selected_other: "{{count}} चुने गए",
+    count: "{count, plural, one {# खर्च} other {# खर्च}}",
+    showingNewest: "सबसे नए {shown} दिखाए जा रहे हैं",
+    showingRange: "{from}–{to} दिखाए जा रहे हैं",
+    selected: "{count, plural, one {# चुना गया} other {# चुने गए}}",
     deleteSelected: "चुने गए हटाएँ",
     previousPage: "पिछला पेज",
     nextPage: "अगला पेज",
@@ -64,35 +59,32 @@ const hi: Translation<typeof en> = {
     noMatches: "इन फ़िल्टर से मेल खाता कोई खर्च नहीं है।",
     emptyTitle: "अभी कोई खर्च दर्ज नहीं है",
     emptyDescription: "अपना पहला खर्च यहाँ जोड़ें या चैट पैनल में सहायक से कहें।",
-    sortBy: "{{column}} के अनुसार क्रम से लगाएँ",
+    sortBy: "{column} के अनुसार क्रम से लगाएँ",
     selectAll: "सभी चुनें",
-    selectRow: "#{{id}} चुनें",
+    selectRow: "#{id} चुनें",
     actions: "कार्रवाइयाँ",
-    editRow: "#{{id}} बदलें",
-    deleteRow: "#{{id}} हटाएँ",
+    editRow: "#{id} बदलें",
+    deleteRow: "#{id} हटाएँ",
   },
   edit: {
-    date: "#{{id}} की तारीख",
-    merchant: "#{{id}} का व्यापारी",
-    category: "#{{id}} की श्रेणी",
-    amount: "#{{id}} की राशि",
-    currency: "#{{id}} की मुद्रा",
-    paymentMethod: "#{{id}} के भुगतान का तरीका",
-    note: "#{{id}} का नोट",
-    save: "#{{id}} के बदलाव सहेजें",
-    cancel: "#{{id}} को बदलना रद्द करें",
+    date: "#{id} की तारीख",
+    merchant: "#{id} का व्यापारी",
+    category: "#{id} की श्रेणी",
+    amount: "#{id} की राशि",
+    currency: "#{id} की मुद्रा",
+    paymentMethod: "#{id} के भुगतान का तरीका",
+    note: "#{id} का नोट",
+    save: "#{id} के बदलाव सहेजें",
+    cancel: "#{id} को बदलना रद्द करें",
     updated: "खर्च बदल दिया गया",
   },
   delete: {
     titleOne: "यह खर्च हटाएँ?",
-    titleSeveral_one: "{{count}} खर्च हटाएँ?",
-    titleSeveral_other: "{{count}} खर्च हटाएँ?",
-    describeOne: "{{merchant}}, {{date}} को {{amount}}। यह कार्रवाई वापस नहीं ली जा सकती।",
+    titleSeveral: "{count, plural, one {# खर्च हटाएँ?} other {# खर्च हटाएँ?}}",
+    describeOne: "{merchant}, {date} को {amount}। यह कार्रवाई वापस नहीं ली जा सकती।",
     describeSeveral: "यह कार्रवाई वापस नहीं ली जा सकती।",
-    deleted_one: "खर्च हटा दिया गया",
-    deleted_other: "{{count}} खर्च हटा दिए गए",
-    failed_one: "{{count}} खर्च हटाया नहीं जा सका: {{reason}}",
-    failed_other: "{{count}} खर्च हटाए नहीं जा सके: {{reason}}",
+    deleted: "{count, plural, one {खर्च हटा दिया गया} other {# खर्च हटा दिए गए}}",
+    failed: "{count, plural, one {# खर्च हटाया नहीं जा सका: {reason}} other {# खर्च हटाए नहीं जा सके: {reason}}}",
   },
 }
 

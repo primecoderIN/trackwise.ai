@@ -5,18 +5,18 @@ import type { Translation } from "@/shared/i18n"
 
 import type en from "./en"
 
-/** The budgets feature's texts, in Hindi. Same keys as en.ts; {{name}} placeholders stay as they are. */
+/** The budgets feature's texts, in Hindi. Same keys as en.ts; `{name}` placeholders stay as they are. */
 const hi: Translation<typeof en> = {
   page: {
     title: "बजट",
-    description: "{{currency}} में मासिक सीमाएँ, जो बदलने तक हर महीने एक जैसी रहती हैं।",
+    description: "{currency} में मासिक सीमाएँ, जो बदलने तक हर महीने एक जैसी रहती हैं।",
     loadFailed: "आपके बजट लोड नहीं हो सके",
     previousMonth: "पिछला महीना",
     nextMonth: "अगला महीना",
   },
   overall: {
     title: "कुल",
-    description: "{{month}} में आपका सारा खर्च",
+    description: "{month} में आपका सारा खर्च",
     noLimit: "अभी कोई कुल सीमा नहीं है। महीना कैसा चल रहा है, यह देखने के लिए एक सीमा तय करें।",
   },
   categories: {
@@ -25,12 +25,12 @@ const hi: Translation<typeof en> = {
     empty: "अभी कोई श्रेणी नहीं है।",
   },
   line: {
-    spentOf: "{{limit}} में से {{spent}}",
-    left: "{{amount}} बाकी",
-    over: "{{amount}} ज़्यादा",
-    spentNoLimit: "{{amount}} खर्च हुए · कोई सीमा नहीं",
-    meter: "{{name}}: सीमा का {{percent}}% इस्तेमाल हुआ",
-    today: "आज: महीने का {{percent}}%",
+    spentOf: "{limit} में से {spent}",
+    left: "{amount} बाकी",
+    over: "{amount} ज़्यादा",
+    spentNoLimit: "{amount} खर्च हुए · कोई सीमा नहीं",
+    meter: "{name}: सीमा का {percent}% इस्तेमाल हुआ",
+    today: "आज: महीने का {percent}%",
   },
   states: {
     on_track: "ठीक चल रहा है",
@@ -40,11 +40,11 @@ const hi: Translation<typeof en> = {
   dialog: {
     set: "सीमा तय करें",
     change: "सीमा बदलें",
-    setFor: "{{name}} के लिए सीमा तय करें",
-    changeFor: "{{name}} की सीमा बदलें",
+    setFor: "{name} के लिए सीमा तय करें",
+    changeFor: "{name} की सीमा बदलें",
     overallName: "सारा खर्च",
-    title: "{{name}} के लिए मासिक सीमा",
-    description: "{{currency}} में। यह बदलने तक हर महीने लागू रहती है।",
+    title: "{name} के लिए मासिक सीमा",
+    description: "{currency} में। यह बदलने तक हर महीने लागू रहती है।",
     limit: "मासिक सीमा",
     save: "सेव करें",
     saving: "सेव हो रहा है…",

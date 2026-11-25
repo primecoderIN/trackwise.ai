@@ -2,15 +2,15 @@
 // once. Part of the account feature (components/tokens/). Used by tokens-card.tsx.
 
 import { Plus } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { useState, type FormEvent } from "react"
 import { toast } from "sonner"
 
-import { messageOf } from "@/shared/lib/errors"
+import { useMessageOf } from "@/shared/lib/use-message-of"
 import { Button } from "@/shared/ui/button"
 import { Dialog, DialogContent, DialogTrigger } from "@/shared/ui/dialog"
 
 import type { NewAccessToken } from "../../api"
-import { useTexts } from "../../i18n"
 import { useCreateAccessToken } from "../../queries"
 import { BLANK_TOKEN } from "../../token-form"
 import { TokenCreated } from "./token-created"
@@ -22,7 +22,8 @@ import { TokenFields } from "./token-fields"
  * doesn't close the dialog, so it isn't lost by accident before it's copied.
  */
 export function CreateTokenDialog() {
-  const { t } = useTexts()
+  const t = useTranslations("account")
+  const messageOf = useMessageOf()
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState<NewAccessToken>(BLANK_TOKEN)
   const [token, setToken] = useState<string | null>(null)

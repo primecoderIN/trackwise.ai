@@ -5,7 +5,7 @@ import type { Translation } from "@/shared/i18n"
 
 import type en from "./en"
 
-/** The account feature's texts, in Hindi. Same keys as en.ts; {{name}} placeholders stay as they are. */
+/** The account feature's texts, in Hindi. Same keys as en.ts; ICU placeholders and plural forms match en.ts. */
 const hi: Translation<typeof en> = {
   page: {
     title: "सेटिंग्स",
@@ -23,7 +23,7 @@ const hi: Translation<typeof en> = {
     description: "आपका नाम, ईमेल और तस्वीर उस खाते से आते हैं जिससे आप साइन इन करते हैं।",
     you: "आपका खाता",
     noEmail: "कोई ईमेल पता नहीं",
-    termsAccepted: "शर्तें और गोपनीयता ({{version}}) {{date}} को स्वीकार की गईं",
+    termsAccepted: "शर्तें और गोपनीयता ({version}) {date} को स्वीकार की गईं",
   },
   preferences: {
     title: "प्राथमिकताएँ",
@@ -32,10 +32,10 @@ const hi: Translation<typeof en> = {
     languageDescription: "मेन्यू, पेज, त्रुटि संदेश और सहायक के जवाब इसी भाषा में दिखेंगे।",
     currencyTitle: "डिफ़ॉल्ट मुद्रा",
     currencyDescription:
-      "नया खर्च जोड़ते समय या सहायक से बात करते समय पहले से चुनी होती है। कुल योग और बजट {{baseCurrency}} में ट्रैक होते हैं।",
+      "नया खर्च जोड़ते समय या सहायक से बात करते समय पहले से चुनी होती है। कुल योग और बजट {baseCurrency} में ट्रैक होते हैं।",
     timezoneTitle: "टाइमज़ोन",
     timezoneDescription: "आज की तारीख़, मासिक सारांश, बजट और रिपोर्ट के लिए उपयोग किया जाता है।",
-    useBrowserTimezone: "ब्राउज़र टाइमज़ोन उपयोग करें ({{zone}})",
+    useBrowserTimezone: "ब्राउज़र टाइमज़ोन उपयोग करें ({zone})",
     themeTitle: "थीम",
     themeDescription: "लाइट और डार्क मोड के बीच बदलें, या अपने डिवाइस का अनुसरण करें (इस ब्राउज़र पर सहेजा जाता है)।",
     saved: "प्राथमिकताएँ सहेजी गईं।",
@@ -44,12 +44,12 @@ const hi: Translation<typeof en> = {
     title: "आप कहाँ साइन इन हैं",
     description: "आपके खाते में साइन इन हर ब्राउज़र। इस ब्राउज़र से साइन आउट करने के लिए ऊपर दाईं ओर का मेन्यू इस्तेमाल करें।",
     loadFailed: "यह लोड नहीं हो सका कि आप कहाँ साइन इन हैं",
-    deviceOn: "{{system}} पर {{browser}}",
+    deviceOn: "{system} पर {browser}",
     unknownDevice: "अज्ञात ब्राउज़र",
     thisBrowser: "यह ब्राउज़र",
-    times: "साइन इन {{signedIn}} · पिछली गतिविधि {{lastActive}}",
+    times: "साइन इन {signedIn} · पिछली गतिविधि {lastActive}",
     signOut: "साइन आउट करें",
-    signOutLabel: "{{device}} से साइन आउट करें, साइन इन {{signedIn}}",
+    signOutLabel: "{device} से साइन आउट करें, साइन इन {signedIn}",
     signedOut: "वह ब्राउज़र साइन आउट हो गया है।",
     signOutOthers: "बाकी सब जगह से साइन आउट करें",
     signOutOthersTitle: "बाकी सब जगह से साइन आउट करें?",
@@ -64,15 +64,15 @@ const hi: Translation<typeof en> = {
     loadFailed: "आपके एक्सेस टोकन लोड नहीं हो सके",
     none: "अभी कोई एक्सेस टोकन नहीं है।",
     create: "नया टोकन",
-    endsWith: "अंत में {{hint}}",
-    dates: "बनाया गया {{created}} · समाप्ति {{expires}}",
-    lastUsed: "पिछला उपयोग {{when}}",
+    endsWith: "अंत में {hint}",
+    dates: "बनाया गया {created} · समाप्ति {expires}",
+    lastUsed: "पिछला उपयोग {when}",
     neverUsed: "कभी उपयोग नहीं हुआ",
     expired: "समाप्त",
     revoke: "रद्द करें",
-    revokeLabel: "टोकन {{name}} रद्द करें",
+    revokeLabel: "टोकन {name} रद्द करें",
     revokeTitle: "यह टोकन रद्द करें?",
-    revokeDescription: "“{{name}}” का उपयोग करने वाले ऐप्स तुरंत काम करना बंद कर देंगे। इसे वापस नहीं किया जा सकता।",
+    revokeDescription: "“{name}” का उपयोग करने वाले ऐप्स तुरंत काम करना बंद कर देंगे। इसे वापस नहीं किया जा सकता।",
     revoked: "टोकन रद्द कर दिया गया है।",
   },
   newToken: {
@@ -81,8 +81,7 @@ const hi: Translation<typeof en> = {
     name: "नाम",
     nameExample: "जैसे डेस्कटॉप असिस्टेंट",
     lifetime: "इतने समय बाद समाप्त",
-    days_one: "{{count}} दिन",
-    days_other: "{{count}} दिन",
+    days: "{count, plural, one {# दिन} other {# दिन}}",
     create: "टोकन बनाएँ",
     creating: "बनाया जा रहा है…",
     createdTitle: "अपना टोकन अभी कॉपी करें",

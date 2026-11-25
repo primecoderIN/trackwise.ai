@@ -4,7 +4,7 @@
 
 import { PAYMENT_METHOD_LABELS } from "@/shared/api/contracts.gen"
 import { paymentMethodValues } from "@/shared/api/schema.gen"
-import { currentLanguage } from "@/shared/i18n"
+import type { Language } from "@/shared/i18n"
 
 import type { PaymentMethod } from "./api"
 
@@ -17,9 +17,9 @@ export const PAYMENT_METHODS: readonly PaymentMethod[] = paymentMethodValues
 /** What a new expense starts with in the Add dialog. */
 export const DEFAULT_PAYMENT_METHOD: PaymentMethod = "card"
 
-/** The method's label for people, in the language on now: "upi" -> "UPI", "netbanking" -> "Bank transfer". */
-export function paymentMethodLabel(method: PaymentMethod): string {
-  return PAYMENT_METHOD_LABELS[currentLanguage()][method]
+/** The method's label for people, in `language`: "upi" -> "UPI", "netbanking" -> "Bank transfer". */
+export function paymentMethodLabel(method: PaymentMethod, language: Language): string {
+  return PAYMENT_METHOD_LABELS[language][method]
 }
 
 /** Whether a string (like a dropdown's value) is one of the methods; if so, TypeScript treats it as one. */
