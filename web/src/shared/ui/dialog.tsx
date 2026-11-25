@@ -1,7 +1,9 @@
+"use client"
+
 import * as React from "react"
 import { cn } from "cn"
 import { Dialog as DialogPrimitive } from "radix-ui"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 import { Button } from "@/shared/ui/button"
 import { XIcon } from "lucide-react"
@@ -54,7 +56,7 @@ function DialogContent({
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
 }) {
-  const { t } = useTranslation()
+  const t = useTranslations("common")
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -103,7 +105,7 @@ function DialogFooter({
 }: React.ComponentProps<"div"> & {
   showCloseButton?: boolean
 }) {
-  const { t } = useTranslation()
+  const t = useTranslations("common")
   return (
     <div
       data-slot="dialog-footer"

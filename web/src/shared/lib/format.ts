@@ -1,21 +1,19 @@
-// Shared display helpers: money, dates and months, written the way people read them in the language on now
-// (each language's locale is in shared/i18n/languages.ts). They only format values; no arithmetic happens here.
-// Part of shared/lib. Used by every page and dialog that shows an amount or a date, and by the assistant's cards and
-// date inputs. A component re-renders when the language changes, so its next call uses the new locale.
+// Shared display helpers: money, dates and months, formatted via Intl for a given BCP 47 locale tag.
+// Part of shared/lib. React components use `useFormatters()` so formatting stays synchronized with `next-intl`'s locale.
 
-import { currentLanguageInfo } from "@/shared/i18n"
+import { DEFAULT_LANGUAGE, isLanguage, LANGUAGES } from "@/shared/i18n/languages"
 
-// The Intl locale of the language on now ("en-US", "hi-IN").
-function locale(): string {
-  return currentLanguageInfo().locale
+// Temporary default locale when non-hook callers omit `locale` during feature migration.
+function defaultLocale(): string {
+  const docLang = typeof document !== "undefined" ? document.documentElement.lang : undefined
+  return LANGUAGES[isLanguage(docLang) ? docLang : DEFAULT_LANGUAGE].locale
 }
 
 // Whole-number formatters, one per locale, made on first use.
 const countFormats = new Map<string, Intl.NumberFormat>()
 
-/** 1250 -> "1,250" (in the current language's locale and digit grouping). */
-export function formatCount(value: number): string {
-  const current = locale()
+/** 1250 -> "1,250" (in the given locale's digit grouping). */
+export function formatCount(value: number, current = defaultLocale()): string {
   let format = countFormats.get(current)
   if (!format) {
     format = new Intl.NumberFormat(current, { maximumFractionDigits: 0 })
@@ -29,8 +27,7 @@ export function formatCount(value: number): string {
 const amountFormats = new Map<string, Intl.NumberFormat>()
 
 /** 125000.5 -> "125,000.50" (in English). Number() is fine for *display*: exact values stay in minor units. */
-export function formatAmount(value: number | string): string {
-  const current = locale()
+export function formatAmount(value: number | string, current = defaultLocale()): string {
   let format = amountFormats.get(current)
   if (!format) {
     format = new Intl.NumberFormat(current, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -45,8 +42,7 @@ const rateFormats = new Map<string, Intl.NumberFormat>()
 const MAX_RATE_DECIMALS = 10
 
 /** "84.5" -> "84.5", "0.0118343195" -> "0.0118343195": an exchange rate, with only the decimals it has. */
-export function formatRate(value: string): string {
-  const current = locale()
+export function formatRate(value: string, current = defaultLocale()): string {
   let format = rateFormats.get(current)
   if (!format) {
     format = new Intl.NumberFormat(current, { maximumFractionDigits: MAX_RATE_DECIMALS })
@@ -59,11 +55,10 @@ export function formatRate(value: string): string {
 const moneyFormats = new Map<string, Intl.NumberFormat>()
 
 /**
- * "125000.5", "USD" -> "$125,000.50"; "EUR" -> "€1,250.50": the currency's CLDR format in the language's locale.
+ * "125000.5", "USD" -> "$125,000.50"; "EUR" -> "€1,250.50": the currency's CLDR format in the given locale.
  * The backend's format_money writes amounts from the same CLDR data, so the chat's cards and the pages agree.
  */
-export function formatMoney(amount: number | string, currency: string): string {
-  const current = locale()
+export function formatMoney(amount: number | string, currency: string, current = defaultLocale()): string {
   const cacheKey = `${current}|${currency}`
   let format = moneyFormats.get(cacheKey)
   if (!format) {
@@ -71,7 +66,7 @@ export function formatMoney(amount: number | string, currency: string): string {
       format = new Intl.NumberFormat(current, { style: "currency", currency })
       moneyFormats.set(cacheKey, format)
     } catch {
-      return `${currency} ${formatAmount(amount)}`
+      return `${currency} ${formatAmount(amount, current)}`
     }
   }
   return format.format(Number(amount))
@@ -81,8 +76,7 @@ export function formatMoney(amount: number | string, currency: string): string {
 const compactFormats = new Map<string, Intl.NumberFormat>()
 
 /** A short money label for chart axes: 125000 -> "$125K" style. */
-export function formatCompactMoney(amount: number, currency: string): string {
-  const current = locale()
+export function formatCompactMoney(amount: number, currency: string, current = defaultLocale()): string {
   const cacheKey = `${current}|${currency}`
   let format = compactFormats.get(cacheKey)
   if (!format) {
@@ -90,7 +84,7 @@ export function formatCompactMoney(amount: number, currency: string): string {
       format = new Intl.NumberFormat(current, { style: "currency", currency, notation: "compact" })
       compactFormats.set(cacheKey, format)
     } catch {
-      return `${currency} ${formatAmount(amount)}`
+      return `${currency} ${formatAmount(amount, current)}`
     }
   }
   return format.format(amount)
@@ -121,19 +115,19 @@ export function isoDate(day: Date): string {
 }
 
 /** "2026-11-13" (or a Date) -> "13 Nov 2026"; text that isn't a date -> "". */
-export function formatDate(value: string | Date): string {
+export function formatDate(value: string | Date, current = defaultLocale()): string {
   const day = value instanceof Date ? value : parseIsoDate(value)
-  return day ? day.toLocaleDateString(locale(), { day: "numeric", month: "short", year: "numeric" }) : ""
+  return day ? day.toLocaleDateString(current, { day: "numeric", month: "short", year: "numeric" }) : ""
 }
 
 /**
  * A moment with its time zone ("2026-11-15T10:30:00Z", as the API sends timestamps) -> "15 Nov 2026, 4:00 pm", in this
  * device's time zone; text that isn't a moment -> "".
  */
-export function formatDateTime(value: string): string {
+export function formatDateTime(value: string, current = defaultLocale()): string {
   const moment = new Date(value)
   if (Number.isNaN(moment.getTime())) return ""
-  return moment.toLocaleString(locale(), {
+  return moment.toLocaleString(current, {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -143,11 +137,11 @@ export function formatDateTime(value: string): string {
 }
 
 /** "2026-11" -> "November 2026" (long) or "Nov" (short, for chart axes); invalid text -> "". */
-export function formatMonth(isoMonth: string, style: "long" | "short" = "long"): string {
+export function formatMonth(isoMonth: string, style: "long" | "short" = "long", current = defaultLocale()): string {
   if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(isoMonth)) return ""
   const [year, month] = isoMonth.split("-").map(Number)
   const options: Intl.DateTimeFormatOptions = style === "long" ? { month: "long", year: "numeric" } : { month: "short" }
-  return new Date(year, month - 1, 1).toLocaleDateString(locale(), options)
+  return new Date(year, month - 1, 1).toLocaleDateString(current, options)
 }
 
 /** Today, on this device's calendar, as "YYYY-MM-DD" (a new expense's default date). */

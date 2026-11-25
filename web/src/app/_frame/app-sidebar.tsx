@@ -1,9 +1,12 @@
+"use client"
+
 // The app's left-hand menu: the app's name, grouped links to every page, and a footer with language, theme and the
 // signed-in person's account menu (Phase 28). Part of the app composition (app/_frame/), drawn by AppLayout.
 
 import { Wallet } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 
 import { useUpdatePreferences } from "@/features/account"
@@ -11,7 +14,7 @@ import { UserMenu } from "@/features/auth"
 import { APP_NAME } from "@/shared/config/app"
 import { ROUTES } from "@/shared/config/routes"
 import { LanguageMenu, type Language } from "@/shared/i18n"
-import { messageOf } from "@/shared/lib/errors"
+import { useMessageOf } from "@/shared/lib/use-message-of"
 import { ModeToggle } from "@/shared/theme"
 import {
   Sidebar,
@@ -27,7 +30,6 @@ import {
   SidebarRail,
 } from "@/shared/ui/sidebar"
 
-import { useTexts } from "../_i18n"
 import { MENU_GROUPS } from "./pages"
 
 /**
@@ -36,7 +38,8 @@ import { MENU_GROUPS } from "./pages"
  */
 export function AppSidebar() {
   const pathname = usePathname()
-  const { t } = useTexts()
+  const t = useTranslations("app")
+  const messageOf = useMessageOf()
   const updatePreferences = useUpdatePreferences()
 
   function persistLanguage(next: Language) {

@@ -1,3 +1,5 @@
+"use client"
+
 // A shared component: the error boundary, a safety net that keeps a crash in one part of the screen from blanking
 // the whole app. Part of shared/. Used by app/ (around the app, the page area and the chat panel) and by the
 // assistant (around every A2UI card).

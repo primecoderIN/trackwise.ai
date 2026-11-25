@@ -1,8 +1,10 @@
+"use client"
+
 // The theme menu in the top bar: a sun/moon button that opens Light / Dark / System. Part of shared/theme. Used by
 // app/_frame/app-layout.tsx (through shared/theme's index.ts).
 
 import { Monitor, Moon, Sun, type LucideIcon } from "lucide-react"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 import { Button } from "@/shared/ui/button"
 import {
@@ -34,7 +36,7 @@ const CHOICES: { theme: Theme; icon: LucideIcon }[] = [
  */
 export function ModeToggle() {
   const { theme: current, setTheme } = useTheme()
-  const { t } = useTranslation()
+  const t = useTranslations("common")
 
   // The button holds both the sun and the moon; CSS (the dark: variants) shows the right one, so there's no flicker
   // on load, before React knows the theme.

@@ -4,14 +4,14 @@
 import type { Translation } from "../namespace"
 import type en from "./en"
 
-/** The shared texts, in Hindi. Same keys as en.ts; {{name}} placeholders stay as they are. */
+/** The shared texts, in Hindi. Same keys as en.ts; `{name}` placeholders stay as they are. */
 const hi: Translation<typeof en> = {
   errors: {
     unexpected: "कुछ गड़बड़ हो गई। फिर से कोशिश करें; अगर बार-बार हो, तो पेज दोबारा लोड करें।",
-    unreachable: "अभी {{app}} से संपर्क नहीं हो पा रहा है। अपना कनेक्शन जाँचें और फिर से कोशिश करें।",
+    unreachable: "अभी {app} से संपर्क नहीं हो पा रहा है। अपना कनेक्शन जाँचें और फिर से कोशिश करें।",
     unreadable: "API ने ऐसा जवाब भेजा जिसे यह ऐप पढ़ नहीं सका।",
-    requestFailed: "अनुरोध विफल रहा ({{status}})",
-    emptyAnswer: "API ने खाली जवाब भेजा ({{status}})",
+    requestFailed: "अनुरोध विफल रहा ({status})",
+    emptyAnswer: "API ने खाली जवाब भेजा ({status})",
   },
   retry: {
     tryAgain: "फिर से कोशिश करें",
@@ -19,7 +19,7 @@ const hi: Translation<typeof en> = {
     retry: "दोबारा कोशिश करें",
   },
   refreshNotice: {
-    stale: "रीफ़्रेश नहीं हो सका, इसलिए यह जानकारी पुरानी हो सकती है: {{message}}",
+    stale: "रीफ़्रेश नहीं हो सका, इसलिए यह जानकारी पुरानी हो सकती है: {message}",
   },
   placeholder: {
     comingSoon: "जल्द आ रहा है",
@@ -37,12 +37,12 @@ const hi: Translation<typeof en> = {
     sidebarDescription: "मोबाइल साइडबार दिखाता है।",
   },
   money: {
-    inBase: "≈ {{amount}}",
-    inBaseLabel: "{{currency}} में {{amount}}, {{date}} की दर {{rate}} पर",
+    inBase: "≈ {amount}",
+    inBaseLabel: "{currency} में {amount}, {date} की दर {rate} पर",
   },
   language: {
     change: "भाषा बदलें",
-    loadFailed: "{{language}} में नहीं बदला जा सका। अपना कनेक्शन जाँचकर फिर से कोशिश करें।",
+    loadFailed: "{language} में नहीं बदला जा सका। अपना कनेक्शन जाँचकर फिर से कोशिश करें।",
   },
   currency: {
     choose: "मुद्रा चुनें",

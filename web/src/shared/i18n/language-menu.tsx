@@ -1,8 +1,9 @@
-// The language menu in the top bar: a button that opens the list of languages, each written in itself. Part of
-// shared/i18n. Used by app/_frame/app-layout.tsx (through shared/i18n's index.ts).
+"use client"
+
+// The language menu in the top bar and sign-in screen: a button opening the list of languages in native script.
 
 import { Languages } from "lucide-react"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 
 import { Button } from "@/shared/ui/button"
@@ -24,7 +25,7 @@ import { useLanguage } from "./use-language"
  * changes.
  */
 export function LanguageMenu({ onSelect }: { onSelect?: (language: Language) => void }) {
-  const { t } = useTranslation()
+  const t = useTranslations("common")
   const { language, setLanguage } = useLanguage()
 
   const choose = (value: string) => {

@@ -4,7 +4,7 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
 import { Slot } from "radix-ui"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 import { useIsMobile } from "@/shared/hooks/use-mobile"
 import { Button } from "@/shared/ui/button"
@@ -163,7 +163,7 @@ function Sidebar({
   collapsible?: "offcanvas" | "icon" | "none"
 }) {
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
-  const { t } = useTranslation()
+  const t = useTranslations("common")
 
   if (collapsible === "none") {
     return (
@@ -258,7 +258,7 @@ function SidebarTrigger({
   ...props
 }: React.ComponentProps<typeof Button>) {
   const { toggleSidebar } = useSidebar()
-  const { t } = useTranslation()
+  const t = useTranslations("common")
 
   return (
     <Button
@@ -281,7 +281,7 @@ function SidebarTrigger({
 
 function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
   const { toggleSidebar } = useSidebar()
-  const { t } = useTranslation()
+  const t = useTranslations("common")
 
   return (
     <button

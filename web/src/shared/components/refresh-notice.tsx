@@ -1,8 +1,10 @@
+"use client"
+
 // A shared component: the "couldn't refresh, so this may be out of date" line shown above data that's still on
 // screen. Part of shared/. Used by the Dashboard and Expenses pages.
 
 import { RefreshCw, TriangleAlert } from "lucide-react"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 import { Button } from "@/shared/ui/button"
 
@@ -20,7 +22,7 @@ interface RefreshNoticeProps {
  * (Replacing good data with an error card because one refresh failed would be worse.)
  */
 export function RefreshNotice({ message, onRetry, retrying = false }: RefreshNoticeProps) {
-  const { t } = useTranslation()
+  const t = useTranslations("common")
   // <output> is announced politely by screen readers (its role is "status").
   return (
     <output className="flex flex-wrap items-center gap-2 rounded-md border px-3 py-2 text-sm text-muted-foreground">

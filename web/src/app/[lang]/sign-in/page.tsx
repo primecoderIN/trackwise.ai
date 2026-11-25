@@ -3,25 +3,21 @@
 
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
-import { setRequestLocale } from "next-intl/server"
+import { getTranslations, setRequestLocale } from "next-intl/server"
 import { Suspense } from "react"
 
 import { publicPage } from "@/app/_seo/seo"
 import { ClientRoot } from "@/app/_shell/client-root"
 import { SignInPage } from "@/app/_views/client-pages"
 import { ROUTES } from "@/shared/config/routes"
-import { isLanguage, type Language } from "@/shared/i18n/languages"
-
-async function signInTitle(lang: Language): Promise<string> {
-  const mod = lang === "hi" ? await import("@/app/_i18n/hi") : await import("@/app/_i18n/en")
-  return mod.default.pages.signIn
-}
+import { isLanguage } from "@/shared/i18n/languages"
 
 /** Localized metadata and hreflang alternates for `/sign-in` and `/hi/sign-in`. */
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
   const { lang } = await params
   if (!isLanguage(lang)) return {}
-  return publicPage(await signInTitle(lang), ROUTES.signIn, { lang })
+  const t = await getTranslations({ locale: lang, namespace: "app" })
+  return publicPage(t("pages.signIn"), ROUTES.signIn, { lang })
 }
 
 /** Localized sign-in route. */

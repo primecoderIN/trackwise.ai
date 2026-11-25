@@ -1,9 +1,12 @@
+"use client"
+
 // The frame around every signed-in page: the grouped sidebar (with user menu, language and theme in its footer), the
 // top bar (sidebar toggle, current page title, command-palette button, Assistant button), the page area, the command
 // palette (Ctrl/⌘ K), the first-run welcome dialog, and the assistant's chat panel (Phases 28 and 29).
 
 import { MessageSquare, Search } from "lucide-react"
 import { usePathname } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { Suspense, useState, type ReactNode } from "react"
 
 import { ChatPanel } from "@/features/assistant"
@@ -12,14 +15,13 @@ import { NavProgressBar } from "@/shared/components/nav-progress-bar"
 import { SectionError } from "@/shared/components/section-error"
 import { APP_NAME } from "@/shared/config/app"
 import { useIsMobile } from "@/shared/hooks/use-mobile"
-import { messageOf } from "@/shared/lib/errors"
+import { useMessageOf } from "@/shared/lib/use-message-of"
 import { Button } from "@/shared/ui/button"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/shared/ui/resizable"
 import { Separator } from "@/shared/ui/separator"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/shared/ui/sheet"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/shared/ui/sidebar"
 
-import { useTexts } from "../_i18n"
 import { AppSidebar } from "./app-sidebar"
 import { CommandPalette } from "./command-palette"
 import { currentPageFor } from "./pages"
@@ -28,7 +30,8 @@ import { WelcomeDialog } from "./welcome-dialog"
 
 function Page({ children }: { children: ReactNode }) {
   const pathname = usePathname()
-  const { t } = useTexts()
+  const t = useTranslations("app")
+  const messageOf = useMessageOf()
   return (
     <ErrorBoundary
       key={pathname}
@@ -47,7 +50,7 @@ interface TopBarProps {
 
 function TopBar({ chatOpen, onToggleChat, onOpenPalette }: TopBarProps) {
   const pathname = usePathname()
-  const { t } = useTexts()
+  const t = useTranslations("app")
   const currentPage = currentPageFor(pathname)
   const pageTitle = currentPage ? t(`pages.${currentPage.name}`) : APP_NAME
   const PageIcon = currentPage?.icon
@@ -86,7 +89,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const [chatOpen, setChatOpen] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const isMobile = useIsMobile()
-  const { t } = useTexts()
+  const t = useTranslations("app")
+  const messageOf = useMessageOf()
 
   const panel = (
     <ErrorBoundary

@@ -1,9 +1,11 @@
+"use client"
+
 // Reusable searchable IANA timezone selector built from Popover, Input and Intl.supportedValuesOf. Part of
 // shared/components. Used by WelcomeDialog (app/_frame/) and PreferencesCard (features/account/).
 
 import { Check, ChevronsUpDown, Search } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { useMemo, useState } from "react"
-import { useTranslation } from "react-i18next"
 
 import { allTimezones, filterTimezones, formatTimezoneOffset } from "@/shared/lib/timezones"
 import { Button } from "@/shared/ui/button"
@@ -51,7 +53,7 @@ function TimezoneOption({
 
 /** Searchable popover picker for choosing an IANA timezone name (e.g. "America/New_York", "UTC"). */
 export function TimezonePicker({ id, value, onChange, disabled, ariaLabel }: TimezonePickerProps) {
-  const { t } = useTranslation()
+  const t = useTranslations("common")
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
 

@@ -1,3 +1,5 @@
+"use client"
+
 // The providers: app-wide services that any component below them can reach through React context. Part of the
 // app composition (app/). It's also where the assistant meets the app's refresh rule: when the assistant reports
 // that data changed, refreshAfter (query-client.ts) runs for expenses, so the assistant feature never needs to know

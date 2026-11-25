@@ -5,10 +5,11 @@
 import type { Metadata, Viewport } from "next"
 import { notFound } from "next/navigation"
 import { NextIntlClientProvider } from "next-intl"
-import { setRequestLocale } from "next-intl/server"
+import { getMessages, setRequestLocale } from "next-intl/server"
 import type { ReactNode } from "react"
 
 import { SITE_VIEWPORT, siteMetadata } from "@/app/_seo/seo"
+import { BOOT_MESSAGE_NAMESPACES, pickMessages } from "@/i18n/messages"
 import { isLanguage, LANGUAGE_CODES, LANGUAGES } from "@/shared/i18n/languages"
 import { THEME_BOOT_SCRIPT } from "@/shared/theme/theme-constants"
 
@@ -36,6 +37,7 @@ export default async function LocalizedLayout({
   const { lang } = await params
   if (!isLanguage(lang)) notFound()
   setRequestLocale(lang)
+  const messages = await getMessages()
 
   return (
     <html lang={lang} dir={LANGUAGES[lang].dir} suppressHydrationWarning>
@@ -43,7 +45,7 @@ export default async function LocalizedLayout({
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
       </head>
       <body>
-        <NextIntlClientProvider locale={lang} messages={{}}>
+        <NextIntlClientProvider locale={lang} messages={pickMessages(messages, BOOT_MESSAGE_NAMESPACES)}>
           {children}
         </NextIntlClientProvider>
       </body>

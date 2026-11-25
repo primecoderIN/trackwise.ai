@@ -2,14 +2,14 @@
 // cards, the placeholder page, the theme and language menus). Part of shared/i18n. The source every other language
 // translates (hi.ts); the namespace is defined in index.ts.
 
-/** The shared texts, in English. {{name}} marks a value filled in when the text is shown. */
+/** The shared texts, in English. `{name}` marks an ICU interpolation placeholder. */
 const en = {
   errors: {
     unexpected: "Something went wrong. Try again; if it keeps happening, reload the page.",
-    unreachable: "Can't reach {{app}} right now. Check your connection and try again.",
+    unreachable: "Can't reach {app} right now. Check your connection and try again.",
     unreadable: "The API sent an answer this app couldn't read.",
-    requestFailed: "Request failed ({{status}})",
-    emptyAnswer: "The API sent an empty answer ({{status}})",
+    requestFailed: "Request failed ({status})",
+    emptyAnswer: "The API sent an empty answer ({status})",
   },
   retry: {
     tryAgain: "Try again",
@@ -17,7 +17,7 @@ const en = {
     retry: "Retry",
   },
   refreshNotice: {
-    stale: "Couldn't refresh, so this may be out of date: {{message}}",
+    stale: "Couldn't refresh, so this may be out of date: {message}",
   },
   placeholder: {
     comingSoon: "Coming soon",
@@ -37,12 +37,12 @@ const en = {
   },
   // An amount in another currency also shows its USD amount, the one totals count (shared/components/money.tsx).
   money: {
-    inBase: "≈ {{amount}}",
-    inBaseLabel: "{{amount}} in {{currency}}, at {{rate}} on {{date}}",
+    inBase: "≈ {amount}",
+    inBaseLabel: "{amount} in {currency}, at {rate} on {date}",
   },
   language: {
     change: "Change language",
-    loadFailed: "Couldn't switch to {{language}}. Check your connection and try again.",
+    loadFailed: "Couldn't switch to {language}. Check your connection and try again.",
   },
   currency: {
     choose: "Choose currency",

@@ -1,8 +1,10 @@
+"use client"
+
 // A shared component: the error card that takes the place of a part that couldn't load or crashed. Part of shared/.
 // Used by the pages (nothing loaded) and by app/ as the error boundaries' fallback (app-crashed.tsx, the layout).
 
 import { RefreshCw } from "lucide-react"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 import { Button } from "@/shared/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
@@ -23,7 +25,7 @@ interface SectionErrorProps {
  * misleading zeros or a blank page. It's an alert, so screen readers announce it at once.
  */
 export function SectionError({ title, message, onRetry, retrying = false }: SectionErrorProps) {
-  const { t } = useTranslation()
+  const t = useTranslations("common")
   return (
     <Card role="alert">
       <CardHeader>

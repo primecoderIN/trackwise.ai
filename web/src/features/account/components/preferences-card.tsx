@@ -3,7 +3,7 @@
 
 import { Monitor, Moon, Sun, type LucideIcon } from "lucide-react"
 import { useMemo } from "react"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 
 import { useSignedInUser } from "@/features/auth"
@@ -98,7 +98,7 @@ function CurrencyAndTimezoneFields({
 /** Preferences card: choose account language, default currency, timezone, and browser theme. */
 export function PreferencesCard() {
   const { t } = useTexts()
-  const { t: tCommon } = useTranslation()
+  const tCommon = useTranslations("common")
   const user = useSignedInUser().data
   const { language, setLanguage } = useLanguage()
   const { theme, setTheme } = useTheme()

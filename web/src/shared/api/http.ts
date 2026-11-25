@@ -8,8 +8,16 @@ import createClient from "openapi-fetch"
 import { AUTH } from "@/shared/api/contracts.gen"
 import type { components, paths } from "@/shared/api/schema.gen"
 import { APP_NAME } from "@/shared/config/app"
-import { i18n, languageHeaders, type CommonTexts } from "@/shared/i18n"
-import { isAbort, UserFacingError } from "@/shared/lib/errors"
+import commonEn from "@/shared/i18n/common/en"
+import { ACCEPT_LANGUAGE, DEFAULT_LANGUAGE, isLanguage, type Language } from "@/shared/i18n/languages"
+import {
+  formatErrorTemplate,
+  isAbort,
+  UserFacingError,
+  type CommonErrorKey,
+  type ErrorTranslation,
+  type ErrorTranslationValues,
+} from "@/shared/lib/errors"
 import { isObject } from "@/shared/lib/guards"
 
 /** The API's data shapes, by their backend names: Schemas["ExpenseRead"], Schemas["CategoryRead"]... */
@@ -23,13 +31,18 @@ export type Schemas = components["schemas"]
  */
 export const api = createClient<paths>()
 
+function requestLanguage(): Language {
+  const docLang = typeof document !== "undefined" ? document.documentElement.lang : undefined
+  return isLanguage(docLang) ? docLang : DEFAULT_LANGUAGE
+}
+
 /**
  * The headers every API call carries: the language on now (the server writes its texts, an error's detail, in it),
  * and X-CSRF, which says the app's own page sent it (the server refuses any call without it, D186). Used by `api`
  * and by the assistant's stream, which calls fetch itself.
  */
 export function apiHeaders(): Record<string, string> {
-  return { ...languageHeaders(), [AUTH.csrfHeader]: AUTH.csrfValue }
+  return { [ACCEPT_LANGUAGE]: requestLanguage(), [AUTH.csrfHeader]: AUTH.csrfValue }
 }
 
 // Called whenever an API call (other than GET /auth/user itself) answers 401: app/_shell/query-client.ts registers
@@ -59,9 +72,6 @@ api.use({
   },
 })
 
-/** One of the client's own error messages: a key of the common "errors" texts. */
-type ClientMessage = keyof CommonTexts["errors"]
-
 // The lowest server-error status. A 5xx without a problem body comes from whatever is in front of the backend, which
 // couldn't reach it: Next.js answers 500 "Internal Server Error" in plain text, a reverse proxy 502, 503 or 504. The
 // backend's own 5xx answers (a bug, a service it depends on failing) are always problems, so they're never mistaken
@@ -70,8 +80,8 @@ const SERVER_ERROR = 500
 
 /**
  * A failed API call. `message` is for people (the backend's own `detail`, which the server writes for people, or one
- * of the client's own messages), `status` is the HTTP status (0 when no answer came back), and `problemType` is the
- * problem's `type`, when it had one.
+ * of the client's own messages translated dynamically via `translation`), `status` is the HTTP status (0 when no
+ * answer came back), and `problemType` is the problem's `type`, when it had one.
  */
 export class ApiError extends UserFacingError {
   /** The HTTP status; 0 when the backend couldn't be reached or its answer couldn't be read. */
@@ -79,23 +89,19 @@ export class ApiError extends UserFacingError {
   /** The RFC 9457 problem's `type` (which kind of failure), when the backend sent one. */
   readonly problemType?: string
 
-  constructor(message: string, status: number, problemType?: string) {
-    super(message)
+  constructor(message: string, status: number, problemType?: string, translation?: ErrorTranslation) {
+    super(message, translation)
     this.status = status
     this.problemType = problemType
   }
 
   /**
-   * An ApiError whose message is one of the client's own texts, looked up each time it's read: an error already on
-   * screen (TanStack Query keeps it) follows a language switch. (A backend `detail` is the server's text.)
+   * An ApiError whose message is one of the client's own `common.errors` keys, translated on display via
+   * `useMessageOf()` so cached query errors automatically follow language switches.
    */
-  static ofText(text: ClientMessage, status: number, values: Record<string, string | number> = {}): ApiError {
-    const read = () => i18n.t(`errors.${text}`, values)
-    // Built with the text as it reads now, so the stack trace (captured here) carries it; then `message` becomes a
-    // getter on this one error. (A class accessor can't replace Error's own `message` field.)
-    const error = new ApiError(read(), status)
-    Object.defineProperty(error, "message", { get: read, configurable: true })
-    return error
+  static ofText(key: CommonErrorKey, status: number, values: ErrorTranslationValues = {}): ApiError {
+    const message = formatErrorTemplate(commonEn.errors[key], values)
+    return new ApiError(message, status, undefined, { key, values })
   }
 
   /**

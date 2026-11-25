@@ -1,8 +1,10 @@
+"use client"
+
 // Reusable ISO currency dropdown built from the backend's SUPPORTED_CURRENCIES contract and localized via
 // Intl.DisplayNames. Part of shared/components. Used by WelcomeDialog (app/_frame/) and PreferencesCard
 // (features/account/).
 
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 import { SUPPORTED_CURRENCIES } from "@/shared/api/contracts.gen"
 import { useLanguage } from "@/shared/i18n"
@@ -20,7 +22,7 @@ export interface CurrencySelectProps {
 
 /** Accessible dropdown listing every currency code supported by the backend with its localized name. */
 export function CurrencySelect({ id, value, onChange, disabled, ariaLabel }: CurrencySelectProps) {
-  const { t } = useTranslation()
+  const t = useTranslations("common")
   const { locale } = useLanguage()
 
   function handleChange(next: string) {

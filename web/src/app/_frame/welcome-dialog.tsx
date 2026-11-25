@@ -1,9 +1,11 @@
+"use client"
+
 // The first-run welcome dialog (Phase 29 + globalization): shown once after a person's first sign-in (or when the
 // current terms version hasn't been accepted yet), and persisted on the server (`welcomed_at`, `terms_version`,
 // `preferred_language`, `default_currency`, `timezone`). Part of app/_frame/.
 
+import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
-import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
 import { useCompleteWelcome } from "@/features/account"
@@ -12,19 +14,18 @@ import { useSignedInUser, type SignedInUser } from "@/features/auth"
 import { useSetBudget } from "@/features/budgets"
 import { ACCOUNT, DEFAULT_USER_CURRENCY } from "@/shared/api/contracts.gen"
 import { APP_NAME } from "@/shared/config/app"
-import { DEFAULT_LANGUAGE, isLanguage, LANGUAGES, useLanguage, type Language } from "@/shared/i18n"
+import { isLanguage, LANGUAGES, useLanguage, type Language } from "@/shared/i18n"
 import { isSupportedCurrency, type SupportedCurrency } from "@/shared/lib/currencies"
-import { messageOf } from "@/shared/lib/errors"
-import { formatMoney } from "@/shared/lib/format"
 import { detectBrowserTimezone } from "@/shared/lib/timezones"
+import { useFormatters } from "@/shared/lib/use-formatters"
+import { useMessageOf } from "@/shared/lib/use-message-of"
 import { Button } from "@/shared/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
 
-import { useTexts } from "../_i18n"
 import { WelcomeExtrasSteps, WelcomeLanguageStep, WelcomeRegionStep, WelcomeTermsConsent } from "./welcome-steps"
 
-function initialWelcomeLanguage(user: SignedInUser): Language {
-  return user.welcomed_at != null && isLanguage(user.preferred_language) ? user.preferred_language : DEFAULT_LANGUAGE
+function initialWelcomeLanguage(user: SignedInUser, activeLanguage: Language): Language {
+  return user.welcomed_at != null && isLanguage(user.preferred_language) ? user.preferred_language : activeLanguage
 }
 
 function initialWelcomeCurrency(user: SignedInUser): SupportedCurrency {
@@ -44,14 +45,16 @@ function WelcomeDialogBody({
   onOpenChat: () => void
   onDismiss: () => void
 }) {
-  const { t } = useTexts()
-  const { t: tCommon } = useTranslation()
+  const t = useTranslations("app")
+  const tCommon = useTranslations("common")
+  const { formatMoney } = useFormatters()
+  const messageOf = useMessageOf()
   const { language, setLanguage } = useLanguage()
   const completeWelcome = useCompleteWelcome()
   const setBudget = useSetBudget()
   const assistant = useAssistant()
 
-  const [selectedLanguage, setSelectedLanguage] = useState<Language>(() => initialWelcomeLanguage(user))
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>(() => initialWelcomeLanguage(user, language))
   const [selectedCurrency, setSelectedCurrency] = useState<SupportedCurrency>(() => initialWelcomeCurrency(user))
   const [selectedTimezone, setSelectedTimezone] = useState<string>(() => initialWelcomeTimezone(user))
   const [budgetLimit, setBudgetLimit] = useState("")

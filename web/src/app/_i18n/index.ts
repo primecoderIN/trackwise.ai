@@ -1,28 +1,16 @@
-// The "app" namespace: the texts of the app's frame. Part of the app composition (app/_i18n/). Listed in
-// app/_shell/namespaces.ts, so it's loaded when the app boots, before the first paint.
+// The "app" namespace: the texts of the app's frame, typed by en.ts and loaded per request via next-intl.
 
-import { defineNamespace } from "@/shared/i18n"
+import type { Language } from "@/shared/i18n"
 
 import en from "./en"
 
-/**
- * The app frame's texts. English is bundled with the app (the frame can always be drawn, even if a file can't be
- * fetched); every other language's file is fetched when first needed.
- */
-export const appTexts = defineNamespace("app", {
-  en: () => Promise.resolve({ default: en }),
-  hi: () => import("./hi"),
-})
-
-/** The app frame's texts in a component: `const { t } = useTexts()`, then t("pages.dashboard"), typed. */
-export const useTexts = appTexts.useTexts
+/** Shape of the "app" message catalog. */
+export type AppTexts = typeof en
 
 /** A page's name: its key under "pages". */
 export type PageName = keyof typeof en.pages
 
-// Gives t("pages.dashboard") and the other app keys their types (a misspelt key is a compile error).
-declare module "i18next" {
-  interface ResourceNamespaceMap {
-    app: typeof en
-  }
+/** Loads the "app" message catalog for `language`. */
+export async function loadAppNamespace(language: Language): Promise<AppTexts> {
+  return language === "hi" ? (await import("./hi")).default : en
 }

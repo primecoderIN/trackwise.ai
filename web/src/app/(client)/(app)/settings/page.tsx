@@ -3,14 +3,17 @@
 // the browser, behind the session check like every route in this group.
 
 import type { Metadata } from "next"
+import { getTranslations } from "next-intl/server"
 
-import en from "@/app/_i18n/en"
 import { privatePage } from "@/app/_seo/seo"
 
 import { SettingsPage } from "@/app/_views/client-pages"
 
-/** The tab's title, and kept out of search engines. */
-export const metadata: Metadata = privatePage(en.pages.settings)
+/** The tab's title in the active language, kept out of search engines. */
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("app")
+  return privatePage(t("pages.settings"))
+}
 
 /** The Settings page. */
 export default function Settings() {

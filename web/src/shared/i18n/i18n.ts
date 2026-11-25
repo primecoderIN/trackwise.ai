@@ -1,41 +1,23 @@
-// The app's one i18next instance, and how texts reach it. Part of shared/i18n. app/_shell/client-root.tsx awaits
-// initI18n (shared/'s and the app frame's texts) before drawing anything; each page's and panel's lazy loader awaits
-// loadNamespaces for its own texts together with its code; the language menu calls setLanguage. Components read texts
-// with their namespace's useTexts hook (react-i18next); code outside components uses i18n.t and currentLanguage.
-//
-// i18next is given no backend: the app imports each file itself and adds it with addResourceBundle once every file
-// it needs has arrived. A failed attempt (offline) so adds nothing and leaves nothing marked as failed, and trying
-// again really fetches again. (i18next's own loader remembers a failure and never retries it.)
+// Temporary i18next bridge for feature namespaces still being migrated to next-intl.
+// Shared components and app shell now load via `next-intl` directly; this module is removed once all features migrate.
 
 import i18next from "i18next"
 import type { DayPickerLocale } from "react-day-picker"
 import { initReactI18next } from "react-i18next"
 
-import { commonTexts } from "./common"
 import {
+  ACCEPT_LANGUAGE,
   DEFAULT_LANGUAGE,
-  LANGUAGE_CODES,
-  LANGUAGE_STORAGE_KEY,
-  LANGUAGES,
-  initialLanguage,
   isLanguage,
+  LANGUAGE_CODES,
+  LANGUAGES,
   type Language,
   type LanguageInfo,
 } from "./languages"
 import type { AnyNamespace } from "./namespace"
 
-// Without a namespace, t() reads "common" (shared/'s texts). Features always name their own.
-declare module "i18next" {
-  interface CustomTypeOptions {
-    defaultNS: typeof commonTexts.name
-  }
-}
-
-/** The app's i18next instance. Components use their namespace's useTexts(); other code may call i18n.t(...). */
+/** Temporary legacy i18next instance used by unmigrated feature namespaces. */
 export const i18n = i18next
-
-/** The request header that asks the server for a language (RFC 9110): it writes its texts (cards, errors) in it. */
-export const ACCEPT_LANGUAGE = "Accept-Language"
 
 // The namespaces in use: shared/'s and the app frame's from the start, then each page's or panel's the first time
 // it's opened. A language switch loads the new language for these; a page opened later loads its own then.
@@ -98,24 +80,19 @@ async function prepare(language: Language): Promise<void> {
  * Keeps <html lang> and <html dir> in step with the language.
  */
 export async function initI18n(namespaces: readonly AnyNamespace[]): Promise<void> {
-  for (const namespace of [commonTexts, ...namespaces]) inUse.add(namespace)
-  i18n.on("languageChanged", (language) => {
-    // Screen readers, hyphenation and fonts follow the page's language; the layout follows its direction.
-    document.documentElement.lang = language
-    if (isLanguage(language)) document.documentElement.dir = LANGUAGES[language].dir
-  })
+  for (const namespace of namespaces) inUse.add(namespace)
   await i18n.use(initReactI18next).init({
     lng: DEFAULT_LANGUAGE,
     fallbackLng: DEFAULT_LANGUAGE,
     supportedLngs: LANGUAGE_CODES,
-    ns: [commonTexts.name],
-    defaultNS: commonTexts.name,
+    ns: namespaces.map((namespace) => namespace.name),
     // Texts come only from addResourceBundle (an empty `resources`, no backend): i18next never loads by itself.
     resources: {},
     // React escapes what it draws, so i18next mustn't escape values a second time.
     interpolation: { escapeValue: false },
   })
-  const start = initialLanguage()
+  const docLang = typeof document !== "undefined" ? document.documentElement.lang : undefined
+  const start = isLanguage(docLang) ? docLang : DEFAULT_LANGUAGE
   try {
     await switchTo(start)
   } catch (error) {
@@ -167,7 +144,7 @@ export function currentLanguage(): Language {
   return isLanguage(i18n.language) ? i18n.language : DEFAULT_LANGUAGE
 }
 
-/** Headers asking the server for the language on now: the API client and the assistant's stream send them. */
+/** Headers asking the server for the active language. */
 export function languageHeaders(): Record<string, string> {
   return { [ACCEPT_LANGUAGE]: currentLanguage() }
 }
@@ -182,16 +159,12 @@ export function currentDatePickerLocale(): DayPickerLocale | undefined {
   return datePickerLocales.get(currentLanguage())
 }
 
-/**
- * Switch to `next` and save the choice. Resolves once its texts (for every namespace in use) are loaded and every
- * component using them has re-rendered, or once a later choice has replaced it. If they can't be loaded (offline),
- * nothing changes and the promise rejects; calling it again tries again.
- */
+/** Temporary helper synchronizing legacy feature namespaces with the active next-intl locale. */
+export async function syncLegacyLanguage(next: Language): Promise<void> {
+  await switchTo(next)
+}
+
+/** Alias preserved while feature callers transition to `useLanguage()`. */
 export async function setLanguage(next: Language): Promise<void> {
-  if (!(await switchTo(next))) return
-  try {
-    localStorage.setItem(LANGUAGE_STORAGE_KEY, next)
-  } catch {
-    // Not saved (storage blocked), but still applied for this visit.
-  }
+  await syncLegacyLanguage(next)
 }

@@ -4,17 +4,19 @@
 // with a retry and a link back to the Dashboard. Only user-facing messages are shown (messageOf, D180).
 
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 import { useEffect } from "react"
 
-import { useTexts } from "@/app/_i18n"
 import { SectionError } from "@/shared/components/section-error"
 import { ROUTES } from "@/shared/config/routes"
-import { messageOf, reportUnexpected } from "@/shared/lib/errors"
+import { reportUnexpected } from "@/shared/lib/errors"
+import { useMessageOf } from "@/shared/lib/use-message-of"
 import { Button } from "@/shared/ui/button"
 
 /** Signed-in route segment error UI: shows SectionError with retry and a way back to the Dashboard. */
 export default function SignedInError({ error, retry }: { error: unknown; retry: () => void }) {
-  const { t } = useTexts()
+  const t = useTranslations("app")
+  const messageOf = useMessageOf()
 
   useEffect(() => {
     reportUnexpected(error)

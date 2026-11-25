@@ -2,14 +2,17 @@
 // (privatePage); the page itself is the budgets feature's, drawn in the browser.
 
 import type { Metadata } from "next"
+import { getTranslations } from "next-intl/server"
 
-import en from "@/app/_i18n/en"
 import { privatePage } from "@/app/_seo/seo"
 
 import { BudgetsPage } from "@/app/_views/client-pages"
 
-/** The tab's title, and kept out of search engines. */
-export const metadata: Metadata = privatePage(en.pages.budgets)
+/** The tab's title in the active language, kept out of search engines. */
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("app")
+  return privatePage(t("pages.budgets"))
+}
 
 /** The Budgets page. */
 export default function Budgets() {

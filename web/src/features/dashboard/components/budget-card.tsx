@@ -3,7 +3,7 @@
 // budgets feature's useBudgetStatus), so the rest of the Dashboard never waits for it. Used by the Dashboard page.
 
 import Link from "next/link"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 import { BudgetMeter, useBudgetStatus, type BudgetStatus } from "@/features/budgets"
 import { BUDGETS } from "@/shared/api/contracts.gen"
@@ -20,7 +20,7 @@ import { useTexts } from "../i18n"
 /** The card: a skeleton while loading, a short note with retry if it failed, otherwise the summary. */
 export function BudgetCard({ month = currentMonth() }: { month?: string }) {
   const { t } = useTexts()
-  const { t: tCommon } = useTranslation()
+  const tCommon = useTranslations("common")
   const status = useBudgetStatus(month)
   const retry = () => void status.refetch()
   return (

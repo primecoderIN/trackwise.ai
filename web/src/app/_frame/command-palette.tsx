@@ -1,8 +1,11 @@
+"use client"
+
 // The command palette (Ctrl/⌘ + K): jump to any page, start a new expense, or open the assistant (Phase 28).
 // Built on the existing Radix Dialog in shared/ui/dialog.tsx with zero new npm dependencies. Part of app/_frame/.
 
 import { MessageSquare, Plus, Search, type LucideIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useEffect, useMemo, useState, type KeyboardEvent as ReactKeyboardEvent } from "react"
 
 import { ROUTES } from "@/shared/config/routes"
@@ -10,7 +13,6 @@ import { notifyNavigationStart } from "@/shared/lib/navigation-progress"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
 import { Input } from "@/shared/ui/input"
 
-import { useTexts } from "../_i18n"
 import { PAGES } from "./pages"
 
 interface CommandPaletteProps {
@@ -29,7 +31,7 @@ interface PaletteItem {
 
 /** The Ctrl/⌘+K command palette dialog: keyboard-navigable list of pages and quick actions. */
 export function CommandPalette({ open, onOpenChange, onOpenChat }: CommandPaletteProps) {
-  const { t } = useTexts()
+  const t = useTranslations("app")
   const router = useRouter()
   const [query, setQuery] = useState("")
   const [activeIndex, setActiveIndex] = useState(0)

@@ -7,16 +7,18 @@ import { getRequestConfig } from "next-intl/server"
 
 import { ACCEPT_LANGUAGE, isLanguage, LOCALE_COOKIE, matchLanguageHeader } from "@/shared/i18n/languages"
 
-/** Resolves the active request locale for Server Components, metadata generation, and NextIntlClientProvider. */
+import { loadAppMessages } from "./messages"
+
+/** Resolves the active request locale and messages for Server Components, metadata generation, and NextIntlClientProvider. */
 export default getRequestConfig(async ({ requestLocale }) => {
   const requested = await requestLocale
   if (isLanguage(requested)) {
-    return { locale: requested, messages: {} }
+    return { locale: requested, messages: await loadAppMessages(requested) }
   }
 
   const cookieStore = await cookies()
   const fromCookie = cookieStore.get(LOCALE_COOKIE)?.value
   const locale = isLanguage(fromCookie) ? fromCookie : matchLanguageHeader((await headers()).get(ACCEPT_LANGUAGE))
 
-  return { locale, messages: {} }
+  return { locale, messages: await loadAppMessages(locale) }
 })

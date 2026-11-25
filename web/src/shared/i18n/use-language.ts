@@ -1,33 +1,90 @@
-// A hook for components that depend on the language itself rather than on a text: the language menu, and anything
-// that needs the date picker's locale. Part of shared/i18n.
+"use client"
 
+// Hook for components needing active locale metadata, the date-picker locale, or imperative language switching.
+// Reads the active locale from next-intl, persists NEXT_LOCALE cookie on changes, and refreshes or navigates.
+
+import { useParams, usePathname, useRouter } from "next/navigation"
+import { useLocale } from "next-intl"
+import { useCallback, useEffect, useState } from "react"
 import type { DayPickerLocale } from "react-day-picker"
-import { useTranslation } from "react-i18next"
 
-import { currentDatePickerLocale, currentLanguage, setLanguage } from "./i18n"
-import { LANGUAGES, type Language } from "./languages"
+import { localizedPath, ROUTES } from "@/shared/config/routes"
 
-/** The language on now, what it needs for formatting, and how to switch. */
+import { syncLegacyLanguage } from "./i18n"
+import { DEFAULT_LANGUAGE, isLanguage, LANGUAGES, setLocaleCookie, type Language } from "./languages"
+
+const cachedPickerLocales = new Map<Language, DayPickerLocale>()
+
+async function ensureDatePickerLocale(language: Language): Promise<DayPickerLocale | undefined> {
+  const cached = cachedPickerLocales.get(language)
+  if (cached) return cached
+  const loaded = await LANGUAGES[language].loadDatePickerLocale().catch(() => undefined)
+  if (loaded) cachedPickerLocales.set(language, loaded)
+  return loaded
+}
+
+function unprefixedPath(pathname: string, routeLang: Language): string {
+  const prefix = `/${routeLang}`
+  if (pathname === prefix) return ROUTES.landing
+  return pathname.startsWith(`${prefix}/`) ? pathname.slice(prefix.length) : pathname
+}
+
+/** Current locale state, formatting metadata, date picker locale, and async language switcher. */
 export interface LanguageState {
-  /** The language's code ("en", "hi"). */
+  /** The active ISO language code ("en", "hi"). */
   language: Language
-  /** Its name in itself ("हिन्दी"). */
+  /** Native display name ("हिन्दी"). */
   name: string
-  /** The Intl locale numbers and dates are written in ("hi-IN"). */
+  /** The BCP 47 locale tag used for Intl formatting ("hi-IN"). */
   locale: string
-  /** Which way its text runs. */
+  /** Writing direction. */
   dir: "ltr" | "rtl"
-  /** The date picker's locale (month and weekday names, screen-reader labels). */
+  /** Loaded react-day-picker locale object, if available. */
   datePickerLocale: DayPickerLocale | undefined
-  /** Switch language (and save the choice); rejects if its texts couldn't be loaded. */
+  /** Switches active locale, updates NEXT_LOCALE cookie, and refreshes/navigates cleanly. */
   setLanguage: (next: Language) => Promise<void>
 }
 
-/** The current language. The component re-renders when it changes (react-i18next's languageChanged binding). */
+/** Exposes the active next-intl locale, its date-picker locale, and cookie-backed language switcher. */
 export function useLanguage(): LanguageState {
-  // Subscribes this component to language changes; the language itself is read from the shared instance.
-  useTranslation()
-  const language = currentLanguage()
+  const rawLocale = useLocale()
+  const language: Language = isLanguage(rawLocale) ? rawLocale : DEFAULT_LANGUAGE
+  const router = useRouter()
+  const pathname = usePathname()
+  const params = useParams<{ lang?: string | string[] }>()
+  const [datePickerLocale, setDatePickerLocale] = useState<DayPickerLocale | undefined>(() =>
+    cachedPickerLocales.get(language),
+  )
+
+  useEffect(() => {
+    let active = true
+    void ensureDatePickerLocale(language).then((loaded) => {
+      if (active) setDatePickerLocale(loaded)
+    })
+    return () => {
+      active = false
+    }
+  }, [language])
+
+  const rawRouteLang = params?.lang
+  const routeLang = typeof rawRouteLang === "string" && isLanguage(rawRouteLang) ? rawRouteLang : undefined
+
+  const setLanguage = useCallback(
+    async (next: Language) => {
+      await syncLegacyLanguage(next)
+      setLocaleCookie(next)
+      document.documentElement.lang = next
+      document.documentElement.dir = LANGUAGES[next].dir
+      if (routeLang) {
+        const search = typeof window !== "undefined" ? window.location.search : ""
+        router.replace(`${localizedPath(unprefixedPath(pathname, routeLang), next)}${search}`)
+        return
+      }
+      router.refresh()
+    },
+    [pathname, routeLang, router],
+  )
+
   const { name, locale, dir } = LANGUAGES[language]
-  return { language, name, locale, dir, datePickerLocale: currentDatePickerLocale(), setLanguage }
+  return { language, name, locale, dir, datePickerLocale, setLanguage }
 }

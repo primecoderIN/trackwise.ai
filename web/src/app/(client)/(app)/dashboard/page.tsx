@@ -3,13 +3,16 @@
 // itself is the dashboard feature's, drawn in the browser.
 
 import type { Metadata } from "next"
+import { getTranslations } from "next-intl/server"
 
-import en from "@/app/_i18n/en"
 import { privatePage } from "@/app/_seo/seo"
 import { DashboardPage } from "@/app/_views/client-pages"
 
-/** The tab's title, and kept out of search engines. */
-export const metadata: Metadata = privatePage(en.pages.dashboard)
+/** The tab's title in the active language, kept out of search engines. */
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("app")
+  return privatePage(t("pages.dashboard"))
+}
 
 /** The Dashboard page. */
 export default function Dashboard() {

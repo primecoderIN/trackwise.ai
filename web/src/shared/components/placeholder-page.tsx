@@ -1,7 +1,8 @@
-// A shared component: the stand-in for a page that isn't built yet, and for an address with no page. Part of
-// shared/. Used by app/_views/placeholder-pages.tsx ("Page not found").
+"use client"
 
-import { useTranslation } from "react-i18next"
+// A shared component: the stand-in for a page that isn't built yet. Part of shared/.
+
+import { useTranslations } from "next-intl"
 
 import { Card, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 
@@ -14,7 +15,7 @@ interface PlaceholderPageProps {
 
 /** A page that isn't built yet: its heading and a "Coming soon" card. Each placeholder passes its own text. */
 export function PlaceholderPage({ title, description }: PlaceholderPageProps) {
-  const { t } = useTranslation()
+  const t = useTranslations("common")
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-semibold">{title}</h1>

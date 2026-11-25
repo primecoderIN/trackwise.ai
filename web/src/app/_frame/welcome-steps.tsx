@@ -1,7 +1,10 @@
+"use client"
+
 // Step sections for the first-run welcome dialog: language, default currency & timezone, optional budget,
 // assistant starter prompts, and Terms & Privacy consent. Part of app/_frame/. Used by welcome-dialog.tsx.
 
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 
 import { ACCOUNT, BASE_CURRENCY } from "@/shared/api/contracts.gen"
 import { CurrencySelect } from "@/shared/components/currency-select"
@@ -14,8 +17,6 @@ import { Checkbox } from "@/shared/ui/checkbox"
 import { Input } from "@/shared/ui/input"
 import { Label } from "@/shared/ui/label"
 
-import { useTexts } from "../_i18n"
-
 /** Step 1: pick the app's initial UI and account language. */
 export function WelcomeLanguageStep({
   selected,
@@ -26,7 +27,7 @@ export function WelcomeLanguageStep({
   disabled: boolean
   onSelect: (code: Language) => void
 }) {
-  const { t } = useTexts()
+  const t = useTranslations("app")
   return (
     <fieldset className="flex flex-col gap-1.5">
       <legend className="text-sm font-medium">{t("welcome.stepLanguage")}</legend>
@@ -64,7 +65,7 @@ export function WelcomeRegionStep({
   onCurrencyChange: (next: SupportedCurrency) => void
   onTimezoneChange: (next: string) => void
 }) {
-  const { t } = useTexts()
+  const t = useTranslations("app")
   return (
     <fieldset className="flex flex-col gap-2">
       <legend className="text-sm font-medium">{t("welcome.stepRegion")}</legend>
@@ -115,7 +116,7 @@ export function WelcomeExtrasSteps({
   onBudgetChange: (next: string) => void
   onSelectPrompt: (index: number | null) => void
 }) {
-  const { t } = useTexts()
+  const t = useTranslations("app")
   return (
     <>
       <div className="flex flex-col gap-1.5">
@@ -168,7 +169,7 @@ export function WelcomeTermsConsent({
   accepted: boolean
   onChange: (next: boolean) => void
 }) {
-  const { t } = useTexts()
+  const t = useTranslations("app")
   return (
     <div className="flex items-start gap-2 rounded-md border bg-muted/30 p-3">
       <Checkbox id="welcome-terms" checked={accepted} onCheckedChange={(checked) => onChange(checked === true)} />

@@ -5,7 +5,7 @@ import type { Translation } from "@/shared/i18n"
 
 import type en from "./en"
 
-/** The app frame's texts, in Hindi. Same keys as en.ts; {{name}} placeholders stay as they are. */
+/** The app frame's texts, in Hindi. Same keys as en.ts; `{name}` placeholders stay as they are. */
 const hi: Translation<typeof en> = {
   menu: "मेन्यू",
   groups: {
@@ -36,22 +36,22 @@ const hi: Translation<typeof en> = {
     openAssistant: "सहायक खोलें",
   },
   welcome: {
-    title: "{{app}} में आपका स्वागत है",
+    title: "{app} में आपका स्वागत है",
     description: "एक मिनट में अपनी प्राथमिकताएँ सेट करें, या छोड़ें और तुरंत शुरू करें।",
     stepLanguage: "1. अपनी भाषा चुनें",
     stepRegion: "2. डिफ़ॉल्ट मुद्रा और टाइमज़ोन",
     currencyLabel: "डिफ़ॉल्ट मुद्रा",
-    currencyHint: "नया खर्च जोड़ते समय पहले से चुनी होती है। कुल योग और बजट {{baseCurrency}} में होते हैं।",
+    currencyHint: "नया खर्च जोड़ते समय पहले से चुनी होती है। कुल योग और बजट {baseCurrency} में होते हैं।",
     timezoneLabel: "टाइमज़ोन",
     timezoneHint: "आपके ब्राउज़र से स्वतः चुना गया; आज की तारीख़ और मासिक अवधि के लिए उपयोग होता है।",
-    stepBudget: "3. वैकल्पिक मासिक बजट ({{currency}} में)",
+    stepBudget: "3. वैकल्पिक मासिक बजट ({currency} में)",
     budgetPlaceholder: "जैसे 2000",
     budgetHint: "अगर आप बाद में बजट तय करना चाहते हैं तो इसे खाली छोड़ दें।",
     stepAssistant: "4. सहायक आज़माएँ",
     assistantHint: "सेटअप के बाद सहायक में आज़माने के लिए एक वाक्य चुनें, या कोई नहीं चुनें:",
-    prompt1: "आज Corner Bistro पर दोपहर के खाने में कार्ड से {{amount}} खर्च किए",
+    prompt1: "आज Corner Bistro पर दोपहर के खाने में कार्ड से {amount} खर्च किए",
     prompt2: "इस महीने मैंने कुल कितना खर्च किया?",
-    termsLabel: "मैं सेवा की शर्तों और गोपनीयता नीति ({{version}}) से सहमत हूँ।",
+    termsLabel: "मैं सेवा की शर्तों और गोपनीयता नीति ({version}) से सहमत हूँ।",
     viewTerms: "शर्तें",
     viewPrivacy: "गोपनीयता",
     skip: "स्वीकार करें और सेटअप छोड़ें",
@@ -67,10 +67,10 @@ const hi: Translation<typeof en> = {
   assistant: {
     open: "सहायक",
     title: "सहायक",
-    description: "{{app}} सहायक से बात करें।",
+    description: "{app} सहायक से बात करें।",
   },
   errors: {
-    app: "{{app}} में कोई समस्या आ गई",
+    app: "{app} में कोई समस्या आ गई",
     page: "इस पेज में कोई समस्या आ गई",
     assistant: "सहायक में कोई समस्या आ गई",
     backHome: "डैशबोर्ड पर जाएँ",

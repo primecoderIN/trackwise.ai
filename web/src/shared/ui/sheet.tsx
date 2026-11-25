@@ -1,7 +1,9 @@
+"use client"
+
 import * as React from "react"
 import { cn } from "cn"
 import { Dialog as SheetPrimitive } from "radix-ui"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 import { Button } from "@/shared/ui/button"
 import { XIcon } from "lucide-react"
@@ -54,7 +56,7 @@ function SheetContent({
   side?: "top" | "right" | "bottom" | "left"
   showCloseButton?: boolean
 }) {
-  const { t } = useTranslation()
+  const t = useTranslations("common")
   return (
     <SheetPortal>
       <SheetOverlay />
