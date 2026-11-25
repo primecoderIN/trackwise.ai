@@ -62,9 +62,64 @@ export const DEFAULT_LANGUAGE = "en" satisfies Language
 /** Where the chosen language is saved in localStorage. */
 export const LANGUAGE_STORAGE_KEY = "spendwise-language"
 
+/** Cookie storing the user's preferred app UI language so Next.js Server Components can SSR in that locale. */
+export const LOCALE_COOKIE = "NEXT_LOCALE"
+
+/** Request header used for language negotiation (RFC 9110). */
+export const ACCEPT_LANGUAGE = "Accept-Language"
+
+const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365
+
 /** Whether a value (a saved choice, a browser language) is one of LANGUAGES' codes, exactly. */
 export function isLanguage(value: unknown): value is Language {
   return typeof value === "string" && Object.hasOwn(LANGUAGES, value)
+}
+
+// Resolves one language tag ("hi-IN" or "en-US") against LANGUAGES: exact match first, then base subtag.
+function matchTag(tag: string): Language | undefined {
+  const wanted = tag.trim().toLowerCase()
+  if (!wanted || wanted === "*") return undefined
+  const base = wanted.split("-")[0]
+  return (
+    LANGUAGE_CODES.find((code) => code.toLowerCase() === wanted) ??
+    LANGUAGE_CODES.find((code) => code.toLowerCase() === base)
+  )
+}
+
+/**
+ * Negotiates a supported `Language` from an HTTP `Accept-Language` header (RFC 9110 q-values supported),
+ * falling back to DEFAULT_LANGUAGE when absent or unmatched.
+ */
+export function matchLanguageHeader(header: string | null | undefined): Language {
+  if (!header) return DEFAULT_LANGUAGE
+  const weighted = header
+    .split(",")
+    .map((entry, index) => {
+      const [rawTag, ...params] = entry.split(";")
+      const qParam = params.find((param) => param.trim().toLowerCase().startsWith("q="))
+      const qValue = qParam ? Number(qParam.trim().slice(2)) : 1
+      return { tag: rawTag.trim(), q: Number.isFinite(qValue) ? qValue : 0, index }
+    })
+    .filter((item) => item.q > 0 && item.tag !== "")
+    .sort((a, b) => b.q - a.q || a.index - b.index)
+
+  for (const item of weighted) {
+    const matched = matchTag(item.tag)
+    if (matched) return matched
+  }
+  return DEFAULT_LANGUAGE
+}
+
+/** OpenGraph `locale` format (`en_US`, `hi_IN`) derived from the configured BCP 47 locale. */
+export function openGraphLocale(language: Language): string {
+  return LANGUAGES[language].locale.replace("-", "_")
+}
+
+/** Persists the selected app locale in an SSR-readable cookie for future requests. */
+export function setLocaleCookie(language: Language): void {
+  if (typeof document === "undefined") return
+  const secure = typeof window !== "undefined" && window.location.protocol === "https:" ? "; Secure" : ""
+  document.cookie = `${LOCALE_COOKIE}=${language}; Path=/; Max-Age=${ONE_YEAR_SECONDS}; SameSite=Lax${secure}`
 }
 
 /**

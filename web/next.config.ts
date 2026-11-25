@@ -3,9 +3,13 @@
 // (no imports of its own), so the proxied prefix can't disagree with the app's API calls.
 
 import type { NextConfig } from "next"
+import createNextIntlPlugin from "next-intl/plugin"
 
 import { PAGES_SOURCE, securityHeaders } from "./security-headers"
 import { API_PREFIX } from "./src/shared/api/contracts.gen"
+import { DEFAULT_LANGUAGE, LANGUAGE_CODES } from "./src/shared/i18n/languages"
+
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts")
 
 // The server's setting (web/.env, or the environment) for where the backend runs. It has no NEXT_PUBLIC_ prefix on
 // purpose: only this file reads it, in Node, and it never reaches the browser's code.
@@ -31,6 +35,12 @@ const target = process.env[API_PROXY_TARGET] || DEFAULT_API_TARGET
  * - No generated web/AGENTS.md: `next dev` would write one for AI agents. The repository's rules live in one file, the
  *   root AGENTS.md, which points agents to the Next.js docs bundled in node_modules/next/dist/docs instead.
  */
+const LEGACY_REDIRECTS = [
+  { source: "/security", destination: "/faq" },
+  { source: "/privacy", destination: "/privacy-policy" },
+  { source: "/terms", destination: "/terms-of-service" },
+] as const
+
 const config: NextConfig = {
   compress: false,
   poweredByHeader: false,
@@ -39,14 +49,14 @@ const config: NextConfig = {
     return [{ source: PAGES_SOURCE, headers: securityHeaders() }]
   },
   async redirects() {
-    return [
-      { source: "/security", destination: "/faq", permanent: true },
-      { source: "/hi/security", destination: "/hi/faq", permanent: true },
-      { source: "/privacy", destination: "/privacy-policy", permanent: true },
-      { source: "/hi/privacy", destination: "/hi/privacy-policy", permanent: true },
-      { source: "/terms", destination: "/terms-of-service", permanent: true },
-      { source: "/hi/terms", destination: "/hi/terms-of-service", permanent: true },
-    ]
+    return LANGUAGE_CODES.flatMap((lang) => {
+      const prefix = lang === DEFAULT_LANGUAGE ? "" : `/${lang}`
+      return LEGACY_REDIRECTS.map(({ source, destination }) => ({
+        source: `${prefix}${source}`,
+        destination: `${prefix}${destination}`,
+        permanent: true,
+      }))
+    })
   },
   async rewrites() {
     return {
@@ -58,4 +68,4 @@ const config: NextConfig = {
   experimental: { proxyTimeout: PROXY_TIMEOUT_MS },
 }
 
-export default config
+export default withNextIntl(config)

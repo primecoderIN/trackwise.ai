@@ -3,6 +3,7 @@
 // the Dashboard's "View all".
 
 import { AUTH } from "@/shared/api/contracts.gen"
+import { DEFAULT_LANGUAGE, type Language } from "@/shared/i18n/languages"
 
 /** Each page's path. A new page gets its address here, then its route file under app/ and its menu entry. */
 export const ROUTES = {
@@ -29,3 +30,9 @@ export const ROUTES = {
   // The server sends people here when a sign-in fails and after signing out, so the path comes from the contract.
   signIn: AUTH.signInPage,
 } as const
+
+/** Formats a public route path for `language` (omitting prefix for DEFAULT_LANGUAGE, matching `localePrefix: "as-needed"`). */
+export function localizedPath(path: string, language: Language): string {
+  if (language === DEFAULT_LANGUAGE) return path
+  return path === "/" ? `/${language}` : `/${language}${path}`
+}
