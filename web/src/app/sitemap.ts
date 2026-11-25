@@ -1,61 +1,40 @@
 // The public pages' list for search engines: /sitemap.xml, served by Next.js from this file (Phase 29). Part of the
-// app composition (app/). Lists every public page in both English and Hindi with hreflang alternates (including
-// x-default), priorities, change frequencies, and lastModified.
+// app composition (app/). Lists every localized public page across all supported languages with hreflang alternates.
 
 import type { MetadataRoute } from "next"
 
-import { ROUTES } from "@/shared/config/routes"
+import { localizedPath, ROUTES } from "@/shared/config/routes"
+import { LANGUAGE_CODES } from "@/shared/i18n/languages"
 
-import { PUBLIC_PAGE_PAIRS, PUBLIC_PATHS, siteUrl } from "./_seo/seo"
+import { alternateLanguagesFor, LOCALIZED_PUBLIC_ROUTES, siteUrl } from "./_seo/seo"
 
 const LAST_MODIFIED = new Date("2026-11-22T00:00:00.000Z")
 
-function crawlSignals(path: string): {
+function crawlSignals(basePath: string): {
   changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"]
   priority: number
 } {
-  if (path === ROUTES.landing || path === ROUTES.landingHi) return { changeFrequency: "weekly", priority: 1.0 }
-  if (
-    path === ROUTES.howItWorks ||
-    path === ROUTES.howItWorksHi ||
-    path === ROUTES.features ||
-    path === ROUTES.featuresHi
-  ) {
+  if (basePath === ROUTES.landing) return { changeFrequency: "weekly", priority: 1.0 }
+  if (basePath === ROUTES.howItWorks || basePath === ROUTES.features) {
     return { changeFrequency: "weekly", priority: 0.9 }
   }
-  if (path === ROUTES.faq || path === ROUTES.faqHi) return { changeFrequency: "monthly", priority: 0.8 }
-  if (path === ROUTES.contact || path === ROUTES.contactHi) return { changeFrequency: "monthly", priority: 0.7 }
+  if (basePath === ROUTES.faq) return { changeFrequency: "monthly", priority: 0.8 }
+  if (basePath === ROUTES.contact) return { changeFrequency: "monthly", priority: 0.7 }
   return { changeFrequency: "yearly", priority: 0.3 }
 }
 
-/** sitemap.xml: every public page at its full address, with bilingual en/hi/x-default hreflang alternates. */
+/** sitemap.xml: every public page in every supported language with hreflang alternates (`x-default`). */
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = siteUrl()
-  const pairByPath = new Map<string, { en: string; hi: string }>()
-  for (const pair of PUBLIC_PAGE_PAIRS) {
-    pairByPath.set(pair.en, pair)
-    pairByPath.set(pair.hi, pair)
-  }
-
-  return PUBLIC_PATHS.map((path) => {
-    const pair = pairByPath.get(path)
-    const { changeFrequency, priority } = crawlSignals(path)
-    return {
-      url: new URL(path, base).toString(),
+  return LOCALIZED_PUBLIC_ROUTES.flatMap((route) => {
+    const { changeFrequency, priority } = crawlSignals(route)
+    const languages = alternateLanguagesFor(route, base)
+    return LANGUAGE_CODES.map((lang) => ({
+      url: new URL(localizedPath(route, lang), base).toString(),
       lastModified: LAST_MODIFIED,
       changeFrequency,
       priority,
-      ...(pair
-        ? {
-            alternates: {
-              languages: {
-                en: new URL(pair.en, base).toString(),
-                hi: new URL(pair.hi, base).toString(),
-                "x-default": new URL(pair.en, base).toString(),
-              },
-            },
-          }
-        : {}),
-    }
+      alternates: { languages },
+    }))
   })
 }

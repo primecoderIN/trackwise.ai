@@ -2,8 +2,9 @@
 // Uses PUBLIC_CONTAINER end-to-end with alternating 5/7 text-and-preview layouts plus a consumer workflow matrix.
 
 import { ArrowRight, CheckCircle2 } from "lucide-react"
-import Link from "next/link"
 
+import { PublicLink } from "@/i18n/navigation"
+import { localizedPath, ROUTES } from "@/shared/config/routes"
 import { Button } from "@/shared/ui/button"
 
 import type { PublicSiteTexts } from "../texts"
@@ -33,7 +34,7 @@ function FeaturesHero({ texts }: { texts: PublicSiteTexts }) {
               size="lg"
             />
             <Button asChild variant="outline" size="lg">
-              <Link href={texts.paths.faq}>{featuresPage.readFaq}</Link>
+              <PublicLink href={ROUTES.faq}>{featuresPage.readFaq}</PublicLink>
             </Button>
           </div>
         </div>
@@ -100,9 +101,9 @@ export function PublicFeaturesPage({ texts }: { texts: PublicSiteTexts }) {
     <PublicFrame texts={texts} currentPage="features">
       <BreadcrumbJsonLd
         homeName={texts.footer.home}
-        homePath={texts.paths.landing}
+        homePath={localizedPath(ROUTES.landing, texts.lang)}
         pageName={texts.nav.features}
-        pagePath={texts.paths.features}
+        pagePath={localizedPath(ROUTES.features, texts.lang)}
       />
       <FeaturesHero texts={texts} />
 
@@ -155,10 +156,10 @@ export function PublicFeaturesPage({ texts }: { texts: PublicSiteTexts }) {
                 signedInLabel={featuresPage.openDashboard}
               />
               <Button asChild variant="outline" className="gap-1.5">
-                <Link href={texts.paths.howItWorks}>
+                <PublicLink href={ROUTES.howItWorks}>
                   <span>{featuresPage.howItWorksCta}</span>
                   <ArrowRight className="size-4" aria-hidden="true" />
-                </Link>
+                </PublicLink>
               </Button>
             </div>
           </div>

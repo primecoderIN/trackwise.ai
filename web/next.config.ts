@@ -65,7 +65,7 @@ const config: NextConfig = {
       fallback: [],
     }
   },
-  experimental: { proxyTimeout: PROXY_TIMEOUT_MS },
+  experimental: { proxyTimeout: PROXY_TIMEOUT_MS, globalNotFound: true },
 }
 
 export default withNextIntl(config)

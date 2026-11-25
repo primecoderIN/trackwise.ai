@@ -2,7 +2,6 @@
 // Uses global, consumer-friendly wording with zero technical jargon. Part of app/_public/texts/.
 
 import { APP_NAME } from "@/shared/config/app"
-import { ROUTES } from "@/shared/config/routes"
 
 import { EN_PRIVACY_TEXTS, EN_TERMS_TEXTS } from "./en-legal"
 import { EN_WALKTHROUGH_TEXTS } from "./en-walkthrough"
@@ -10,42 +9,12 @@ import type { PublicSiteTexts } from "./types"
 
 type SiteCoreTexts = Pick<
   PublicSiteTexts,
-  | "lang"
-  | "otherLang"
-  | "otherLangLabel"
-  | "paths"
-  | "otherPaths"
-  | "nav"
-  | "footer"
-  | "landing"
-  | "privacyPage"
-  | "termsPage"
-  | "contactPage"
+  "lang" | "nav" | "footer" | "landing" | "privacyPage" | "termsPage" | "contactPage"
 >
 
 /** English navigation, landing, legal, and contact texts. */
 export const EN_SITE_TEXTS: SiteCoreTexts = {
   lang: "en",
-  otherLang: "hi",
-  otherLangLabel: "हिन्दी",
-  paths: {
-    landing: ROUTES.landing,
-    howItWorks: ROUTES.howItWorks,
-    features: ROUTES.features,
-    faq: ROUTES.faq,
-    contact: ROUTES.contact,
-    privacy: ROUTES.privacy,
-    terms: ROUTES.terms,
-  },
-  otherPaths: {
-    landing: ROUTES.landingHi,
-    howItWorks: ROUTES.howItWorksHi,
-    features: ROUTES.featuresHi,
-    faq: ROUTES.faqHi,
-    contact: ROUTES.contactHi,
-    privacy: ROUTES.privacyHi,
-    terms: ROUTES.termsHi,
-  },
   nav: {
     howItWorks: "How It Works",
     features: "Features",

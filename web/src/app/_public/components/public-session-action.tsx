@@ -4,10 +4,12 @@
 // so a signed-in visitor sees "Open Dashboard" instead of "Sign in" / "Get started". Part of app/_public/components/.
 
 import Link from "next/link"
+import { useLocale } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { apiHeaders } from "@/shared/api/http"
-import { ROUTES } from "@/shared/config/routes"
+import { localizedPath, ROUTES } from "@/shared/config/routes"
+import { DEFAULT_LANGUAGE, isLanguage } from "@/shared/i18n/languages"
 import { cn } from "@/shared/lib/utils"
 import { Button } from "@/shared/ui/button"
 
@@ -19,7 +21,7 @@ interface PublicSessionActionProps {
   className?: string
 }
 
-/** Link button to `/sign-in`, upgrading automatically to `/dashboard` when an active session cookie exists. */
+/** Link button to `/sign-in` (in active locale), upgrading automatically to `/dashboard` when signed in. */
 export function PublicSessionAction({
   signedOutLabel,
   signedInLabel,
@@ -28,6 +30,8 @@ export function PublicSessionAction({
   className,
 }: PublicSessionActionProps) {
   const [signedIn, setSignedIn] = useState(false)
+  const rawLocale = useLocale()
+  const lang = isLanguage(rawLocale) ? rawLocale : DEFAULT_LANGUAGE
 
   useEffect(() => {
     const controller = new AbortController()
@@ -47,7 +51,9 @@ export function PublicSessionAction({
 
   return (
     <Button asChild variant={variant} size={size} className={cn(className)}>
-      <Link href={signedIn ? ROUTES.dashboard : ROUTES.signIn}>{signedIn ? signedInLabel : signedOutLabel}</Link>
+      <Link href={signedIn ? ROUTES.dashboard : localizedPath(ROUTES.signIn, lang)}>
+        {signedIn ? signedInLabel : signedOutLabel}
+      </Link>
     </Button>
   )
 }

@@ -2,8 +2,9 @@
 // Uses PUBLIC_CONTAINER with a 12-column sticky section index on Legal pages and global support cards on Contact.
 
 import { Mail, ShieldCheck } from "lucide-react"
-import Link from "next/link"
 
+import { PublicLink } from "@/i18n/navigation"
+import { localizedPath, ROUTES } from "@/shared/config/routes"
 import { Button } from "@/shared/ui/button"
 
 import type { PublicSiteTexts } from "../texts"
@@ -15,14 +16,15 @@ import { PublicFrame } from "./public-frame"
 export function PublicLegalPage({ texts, kind }: { texts: PublicSiteTexts; kind: "privacy" | "terms" }) {
   const page = kind === "privacy" ? texts.privacyPage : texts.termsPage
   const currentPage = kind === "privacy" ? "privacy" : "terms"
+  const currentRoute = kind === "privacy" ? ROUTES.privacy : ROUTES.terms
 
   return (
     <PublicFrame texts={texts} currentPage={currentPage}>
       <BreadcrumbJsonLd
         homeName={texts.footer.home}
-        homePath={texts.paths.landing}
+        homePath={localizedPath(ROUTES.landing, texts.lang)}
         pageName={page.title}
-        pagePath={texts.paths[currentPage]}
+        pagePath={localizedPath(currentRoute, texts.lang)}
       />
       <section className="border-b bg-muted/25 py-12">
         <div className={PUBLIC_CONTAINER}>
@@ -50,10 +52,10 @@ export function PublicLegalPage({ texts, kind }: { texts: PublicSiteTexts; kind:
               </ul>
               <div className="mt-5 flex flex-wrap gap-2 border-t pt-4">
                 <Button asChild variant="outline" size="sm">
-                  <Link href={texts.paths.faq}>{texts.nav.faq}</Link>
+                  <PublicLink href={ROUTES.faq}>{texts.nav.faq}</PublicLink>
                 </Button>
                 <Button asChild variant="outline" size="sm">
-                  <Link href={texts.paths.contact}>{texts.nav.contact}</Link>
+                  <PublicLink href={ROUTES.contact}>{texts.nav.contact}</PublicLink>
                 </Button>
               </div>
             </div>
@@ -85,9 +87,9 @@ export function PublicContactPage({ texts }: { texts: PublicSiteTexts }) {
     <PublicFrame texts={texts} currentPage="contact">
       <BreadcrumbJsonLd
         homeName={texts.footer.home}
-        homePath={texts.paths.landing}
+        homePath={localizedPath(ROUTES.landing, texts.lang)}
         pageName={texts.nav.contact}
-        pagePath={texts.paths.contact}
+        pagePath={localizedPath(ROUTES.contact, texts.lang)}
       />
       <section className="border-b bg-muted/25 py-12">
         <div className={PUBLIC_CONTAINER}>
@@ -132,10 +134,10 @@ export function PublicContactPage({ texts }: { texts: PublicSiteTexts }) {
             <p className="text-xs leading-relaxed text-muted-foreground">{contactPage.responseNote}</p>
             <div className="flex shrink-0 gap-2">
               <Button asChild variant="outline" size="sm">
-                <Link href={texts.paths.faq}>{texts.nav.faq}</Link>
+                <PublicLink href={ROUTES.faq}>{texts.nav.faq}</PublicLink>
               </Button>
               <Button asChild variant="outline" size="sm">
-                <Link href={texts.paths.howItWorks}>{texts.nav.howItWorks}</Link>
+                <PublicLink href={ROUTES.howItWorks}>{texts.nav.howItWorks}</PublicLink>
               </Button>
             </div>
           </div>

@@ -2,8 +2,10 @@
 // Uses PUBLIC_CONTAINER across every band and links visitors cleanly to How It Works, Features, and FAQ.
 
 import { ArrowRight, Globe } from "lucide-react"
-import Link from "next/link"
 
+import { PublicLink } from "@/i18n/navigation"
+import { ROUTES } from "@/shared/config/routes"
+import { LANGUAGE_CODES, LANGUAGES } from "@/shared/i18n/languages"
 import { Button } from "@/shared/ui/button"
 
 import type { PublicSiteTexts } from "../texts"
@@ -12,7 +14,7 @@ import { PublicSessionAction } from "./public-session-action"
 
 /** Four clickable product pillar cards linking visitors to `/features` and `/faq`. */
 export function LandingPillarsSection({ texts }: { texts: PublicSiteTexts }) {
-  const { landing, paths } = texts
+  const { landing } = texts
   return (
     <section className="bg-muted/30 py-16 sm:py-20">
       <div className={PUBLIC_CONTAINER}>
@@ -22,9 +24,9 @@ export function LandingPillarsSection({ texts }: { texts: PublicSiteTexts }) {
         </div>
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {landing.pillars.map((pillar) => (
-            <Link
+            <PublicLink
               key={pillar.title}
-              href={`${paths[pillar.hrefKey]}${pillar.hash}`}
+              href={{ pathname: ROUTES[pillar.hrefKey], hash: pillar.hash.replace(/^#/, "") }}
               className="group flex flex-col justify-between rounded-2xl border bg-card p-6 shadow-xs transition-all hover:border-primary/40 hover:shadow-md"
             >
               <div>
@@ -36,7 +38,7 @@ export function LandingPillarsSection({ texts }: { texts: PublicSiteTexts }) {
                 <span>{pillar.linkLabel}</span>
                 <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
               </div>
-            </Link>
+            </PublicLink>
           ))}
         </div>
       </div>
@@ -46,7 +48,9 @@ export function LandingPillarsSection({ texts }: { texts: PublicSiteTexts }) {
 
 /** Three-step workflow summary, bilingual switcher highlight, and bottom call-to-action band. */
 export function LandingWorkflowAndCta({ texts }: { texts: PublicSiteTexts }) {
-  const { landing, paths } = texts
+  const { landing } = texts
+  const otherLanguages = LANGUAGE_CODES.filter((code) => code !== texts.lang)
+
   return (
     <>
       <section className="border-t py-16 sm:py-20">
@@ -59,10 +63,10 @@ export function LandingWorkflowAndCta({ texts }: { texts: PublicSiteTexts }) {
               </p>
             </div>
             <Button asChild variant="outline" className="shrink-0 gap-2">
-              <Link href={paths.howItWorks}>
+              <PublicLink href={ROUTES.howItWorks}>
                 <span>{landing.workflowCta}</span>
                 <ArrowRight className="size-4" aria-hidden="true" />
-              </Link>
+              </PublicLink>
             </Button>
           </div>
           <div className="mt-10 grid gap-6 md:grid-cols-3">
@@ -85,17 +89,21 @@ export function LandingWorkflowAndCta({ texts }: { texts: PublicSiteTexts }) {
             <div className="max-w-3xl">
               <div className="inline-flex items-center gap-2 text-xs font-semibold text-primary">
                 <Globe className="size-4" aria-hidden="true" />
-                <span>English · हिन्दी</span>
+                <span>{LANGUAGE_CODES.map((code) => LANGUAGES[code].name).join(" · ")}</span>
               </div>
               <h2 className="mt-2 text-xl font-bold tracking-tight sm:text-2xl">{landing.bilingualBannerTitle}</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{landing.bilingualBannerSubtitle}</p>
             </div>
-            <Button asChild variant="outline" className="shrink-0 gap-2">
-              <Link href={texts.otherPaths.landing} lang={texts.otherLang} hrefLang={texts.otherLang}>
-                <span>{landing.bilingualCta}</span>
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </Link>
-            </Button>
+            <div className="flex shrink-0 flex-wrap gap-2">
+              {otherLanguages.map((code) => (
+                <Button key={code} asChild variant="outline" className="gap-2">
+                  <PublicLink href={ROUTES.landing} locale={code} lang={code} hrefLang={code}>
+                    <span>{otherLanguages.length === 1 ? landing.bilingualCta : LANGUAGES[code].name}</span>
+                    <ArrowRight className="size-4" aria-hidden="true" />
+                  </PublicLink>
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -123,7 +131,7 @@ export function LandingWorkflowAndCta({ texts }: { texts: PublicSiteTexts }) {
                   size="lg"
                   className="border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white dark:border-border dark:text-foreground"
                 >
-                  <Link href={paths.faq}>{landing.faqCta}</Link>
+                  <PublicLink href={ROUTES.faq}>{landing.faqCta}</PublicLink>
                 </Button>
               </div>
             </div>

@@ -1,7 +1,6 @@
 "use client"
 
-// Next.js's root-level error boundary (app/error.tsx, Phase 28). Catches unexpected errors in any route segment below
-// the root layout and offers a retry or a link home.
+// Root error boundary for the `(client)` workspace group. Catches unexpected errors below `(client)/layout.tsx`.
 
 import { RefreshCw } from "lucide-react"
 import Link from "next/link"
@@ -10,12 +9,13 @@ import { useEffect } from "react"
 import en from "@/app/_i18n/en"
 import { APP_NAME } from "@/shared/config/app"
 import { ROUTES } from "@/shared/config/routes"
+import commonEn from "@/shared/i18n/common/en"
 import { messageOf, reportUnexpected } from "@/shared/lib/errors"
 import { Button } from "@/shared/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 
-/** Top-level route segment error fallback. */
-export default function RootRouteError({ error, retry }: { error: unknown; retry: () => void }) {
+/** Route segment error fallback for workspace routes. */
+export default function ClientRouteError({ error, retry }: { error: unknown; retry: () => void }) {
   useEffect(() => {
     reportUnexpected(error)
   }, [error])
@@ -30,7 +30,7 @@ export default function RootRouteError({ error, retry }: { error: unknown; retry
         <CardContent className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => retry()}>
             <RefreshCw className="size-4" />
-            Try again
+            {commonEn.retry.tryAgain}
           </Button>
           <Button asChild variant="ghost">
             <Link href={ROUTES.dashboard}>{en.errors.backHome}</Link>

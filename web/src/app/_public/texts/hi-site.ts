@@ -2,7 +2,6 @@
 // Uses global, consumer-friendly wording with zero technical jargon. Part of app/_public/texts/.
 
 import { APP_NAME } from "@/shared/config/app"
-import { ROUTES } from "@/shared/config/routes"
 
 import { HI_PRIVACY_TEXTS, HI_TERMS_TEXTS } from "./hi-legal"
 import { HI_WALKTHROUGH_TEXTS } from "./hi-walkthrough"
@@ -10,42 +9,12 @@ import type { PublicSiteTexts } from "./types"
 
 type SiteCoreTexts = Pick<
   PublicSiteTexts,
-  | "lang"
-  | "otherLang"
-  | "otherLangLabel"
-  | "paths"
-  | "otherPaths"
-  | "nav"
-  | "footer"
-  | "landing"
-  | "privacyPage"
-  | "termsPage"
-  | "contactPage"
+  "lang" | "nav" | "footer" | "landing" | "privacyPage" | "termsPage" | "contactPage"
 >
 
 /** Hindi navigation, landing, legal, and contact texts. */
 export const HI_SITE_TEXTS: SiteCoreTexts = {
   lang: "hi",
-  otherLang: "en",
-  otherLangLabel: "English",
-  paths: {
-    landing: ROUTES.landingHi,
-    howItWorks: ROUTES.howItWorksHi,
-    features: ROUTES.featuresHi,
-    faq: ROUTES.faqHi,
-    contact: ROUTES.contactHi,
-    privacy: ROUTES.privacyHi,
-    terms: ROUTES.termsHi,
-  },
-  otherPaths: {
-    landing: ROUTES.landing,
-    howItWorks: ROUTES.howItWorks,
-    features: ROUTES.features,
-    faq: ROUTES.faq,
-    contact: ROUTES.contact,
-    privacy: ROUTES.privacy,
-    terms: ROUTES.terms,
-  },
   nav: {
     howItWorks: "यह कैसे काम करता है",
     features: "विशेषताएँ",

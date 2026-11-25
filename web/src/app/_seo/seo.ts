@@ -1,48 +1,45 @@
 // What search engines and link previews are told about each page: the site's address, the default title and
-// description, which pages may be indexed, hreflang alternates between English and Hindi, and Google Search Console
-// verification (D188, Phase 29). Part of the app composition (app/_seo/), server side only.
+// description, which pages may be indexed, hreflang alternates across all supported languages, and Google Search
+// Console verification (D188, Phase 29). Part of the app composition (app/_seo/), server side only.
 
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 
 import { APP_DESCRIPTION, APP_NAME } from "@/shared/config/app"
-import { ROUTES } from "@/shared/config/routes"
+import { localizedPath, ROUTES } from "@/shared/config/routes"
 import { DEFAULT_PUBLIC_URL, PUBLIC_URL_SETTING } from "@/shared/config/site"
+import { DEFAULT_LANGUAGE, LANGUAGE_CODES, openGraphLocale, type Language } from "@/shared/i18n/languages"
 
 // Optional environment variable for Google Search Console verification (<meta name="google-site-verification" ...>).
 const GOOGLE_SITE_VERIFICATION_SETTING = "GOOGLE_SITE_VERIFICATION"
 
-/** Bilingual pairs of public pages (English and Hindi) for hreflang alternates and the sitemap. */
-export const PUBLIC_PAGE_PAIRS: readonly { en: string; hi: string }[] = [
-  { en: ROUTES.landing, hi: ROUTES.landingHi },
-  { en: ROUTES.howItWorks, hi: ROUTES.howItWorksHi },
-  { en: ROUTES.features, hi: ROUTES.featuresHi },
-  { en: ROUTES.faq, hi: ROUTES.faqHi },
-  { en: ROUTES.contact, hi: ROUTES.contactHi },
-  { en: ROUTES.privacy, hi: ROUTES.privacyHi },
-  { en: ROUTES.terms, hi: ROUTES.termsHi },
+/** Base public route paths that are localized across every supported language (`[lang]`). */
+export const LOCALIZED_PUBLIC_ROUTES: readonly string[] = [
+  ROUTES.landing,
+  ROUTES.howItWorks,
+  ROUTES.features,
+  ROUTES.faq,
+  ROUTES.contact,
+  ROUTES.privacy,
+  ROUTES.terms,
+  ROUTES.signIn,
 ]
 
 /**
- * The pages anyone may visit without signing in, in the order search engines should see them: robots.txt allows
- * them and the sitemap lists them. Each one's route file uses publicPage.
+ * Every localized public URL path (used in sitemap.xml). Generated dynamically from `LANGUAGE_CODES`.
  */
-export const PUBLIC_PATHS: readonly string[] = [
-  ROUTES.landing,
-  ROUTES.landingHi,
-  ROUTES.howItWorks,
-  ROUTES.howItWorksHi,
-  ROUTES.features,
-  ROUTES.featuresHi,
-  ROUTES.faq,
-  ROUTES.faqHi,
-  ROUTES.contact,
-  ROUTES.contactHi,
-  ROUTES.privacy,
-  ROUTES.privacyHi,
-  ROUTES.terms,
-  ROUTES.termsHi,
-  ROUTES.signIn,
-]
+export const PUBLIC_PATHS: readonly string[] = LOCALIZED_PUBLIC_ROUTES.flatMap((route) =>
+  LANGUAGE_CODES.map((lang) => localizedPath(route, lang)),
+)
+
+/** Shared viewport and responsive theme colors for both public and workspace root layouts. */
+export const SITE_VIEWPORT: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
+  ],
+}
 
 /**
  * The site's origin, e.g. https://trackwise.ai: PUBLIC_URL (shared/config/site.ts), else the development address.
@@ -52,17 +49,18 @@ export function siteUrl(): URL {
   return new URL(process.env[PUBLIC_URL_SETTING] || DEFAULT_PUBLIC_URL)
 }
 
-const EN_KEYWORDS = [
-  "AI expense tracker",
-  "receipt scanner app",
-  "personal expense manager",
-  "monthly budget tracker",
-  "spending insights",
-  "bilingual budget app",
-  APP_NAME,
-]
-
-const HI_KEYWORDS = ["AI खर्च ट्रैकर", "रसीद स्कैनर ऐप", "मासिक बजट प्लानर", "दैनिक खर्च हिसाब", "व्यक्तिगत वित्त ट्रैकर", APP_NAME]
+const DEFAULT_KEYWORDS: Record<Language, readonly string[]> = {
+  en: [
+    "AI expense tracker",
+    "receipt scanner app",
+    "personal expense manager",
+    "monthly budget tracker",
+    "spending insights",
+    "bilingual budget app",
+    APP_NAME,
+  ],
+  hi: ["AI खर्च ट्रैकर", "रसीद स्कैनर ऐप", "मासिक बजट प्लानर", "दैनिक खर्च हिसाब", "व्यक्तिगत वित्त ट्रैकर", APP_NAME],
+}
 
 const INDEXABLE_ROBOTS: Metadata["robots"] = {
   index: true,
@@ -76,8 +74,21 @@ const INDEXABLE_ROBOTS: Metadata["robots"] = {
   },
 }
 
+/** Builds the `hreflang` alternates map (`en`, `hi`, `x-default`) for a base public route path. */
+export function alternateLanguagesFor(basePath: string, origin?: URL): Record<string, string> {
+  const entries = LANGUAGE_CODES.map((code) => {
+    const path = localizedPath(basePath, code)
+    return [code, origin ? new URL(path, origin).toString() : path] as const
+  })
+  const defaultPath = localizedPath(basePath, DEFAULT_LANGUAGE)
+  return {
+    ...Object.fromEntries(entries),
+    "x-default": origin ? new URL(defaultPath, origin).toString() : defaultPath,
+  }
+}
+
 /**
- * The metadata every page starts from (the root layout's): the site's address, the title (a page's own title
+ * The metadata every page starts from (the root layouts'): the site's address, the title (a page's own title
  * becomes "<title> | trackwise.ai"), the description, icons, OpenGraph defaults, and Search Console verification.
  */
 export function siteMetadata(): Metadata {
@@ -88,7 +99,7 @@ export function siteMetadata(): Metadata {
     description: APP_DESCRIPTION,
     applicationName: APP_NAME,
     category: "Finance",
-    keywords: EN_KEYWORDS,
+    keywords: [...DEFAULT_KEYWORDS[DEFAULT_LANGUAGE]],
     authors: [{ name: APP_NAME }],
     creator: APP_NAME,
     publisher: APP_NAME,
@@ -104,8 +115,8 @@ export function siteMetadata(): Metadata {
     },
     openGraph: {
       type: "website",
-      locale: "en_US",
-      alternateLocale: ["hi_IN"],
+      locale: openGraphLocale(DEFAULT_LANGUAGE),
+      alternateLocale: LANGUAGE_CODES.filter((code) => code !== DEFAULT_LANGUAGE).map(openGraphLocale),
       siteName: APP_NAME,
       title: APP_NAME,
       description: APP_DESCRIPTION,
@@ -123,35 +134,33 @@ export function siteMetadata(): Metadata {
 
 /**
  * A public page's metadata: indexed with rich snippets, canonical URL, Open Graph & X card images, locale tags,
- * optional page-specific keywords, and optional hreflang language alternates (`en`, `hi`, `x-default`).
+ * optional page-specific keywords, and hreflang language alternates across every supported language.
  */
 export function publicPage(
   title: string,
-  path: string,
-  options?: { description?: string; keywords?: readonly string[]; languages?: { en: string; hi: string } },
+  basePath: string,
+  options?: { lang?: Language; description?: string; keywords?: readonly string[] },
 ): Metadata {
+  const lang = options?.lang ?? DEFAULT_LANGUAGE
+  const canonicalPath = localizedPath(basePath, lang)
   const description = options?.description ?? APP_DESCRIPTION
-  const isHindi = path === ROUTES.landingHi || path.startsWith(`${ROUTES.landingHi}/`)
-  const languages = options?.languages
-    ? { en: options.languages.en, hi: options.languages.hi, "x-default": options.languages.en }
-    : undefined
   return {
     title,
     description,
-    keywords: options?.keywords ? [...options.keywords] : isHindi ? HI_KEYWORDS : EN_KEYWORDS,
+    keywords: options?.keywords ? [...options.keywords] : [...DEFAULT_KEYWORDS[lang]],
     robots: INDEXABLE_ROBOTS,
     alternates: {
-      canonical: path,
-      ...(languages ? { languages } : {}),
+      canonical: canonicalPath,
+      languages: alternateLanguagesFor(basePath),
     },
     openGraph: {
       type: "website",
-      locale: isHindi ? "hi_IN" : "en_US",
-      alternateLocale: [isHindi ? "en_US" : "hi_IN"],
+      locale: openGraphLocale(lang),
+      alternateLocale: LANGUAGE_CODES.filter((code) => code !== lang).map(openGraphLocale),
       siteName: APP_NAME,
       title,
       description,
-      url: path,
+      url: canonicalPath,
       images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: `${title} — ${APP_NAME}` }],
     },
     twitter: {

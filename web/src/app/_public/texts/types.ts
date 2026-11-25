@@ -5,11 +5,8 @@ import type { Language } from "@/shared/i18n"
 
 import type { FaqPageTexts, FeaturesPageTexts, HowItWorksPageTexts, LegalPageTexts } from "./types-pages"
 
-/** Keys for every public route pair in `paths` and `otherPaths`. */
+/** Keys for every public route in the navigation and footer. */
 export type PublicRouteKey = "landing" | "howItWorks" | "features" | "faq" | "contact" | "privacy" | "terms"
-
-/** Navigation links shared across the public site and language switchers. */
-export type PublicRouteMap = Record<PublicRouteKey, string>
 
 /** One interactive scene in the animated hero walkthrough player. */
 export interface WalkthroughSceneTexts {
@@ -60,10 +57,6 @@ export interface PillarSummary {
 /** Complete server-rendered texts for one public language (`en` or `hi`). */
 export interface PublicSiteTexts {
   lang: Language
-  otherLang: Language
-  otherLangLabel: string
-  paths: PublicRouteMap
-  otherPaths: PublicRouteMap
   nav: {
     howItWorks: string
     features: string

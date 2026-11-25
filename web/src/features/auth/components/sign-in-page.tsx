@@ -10,7 +10,7 @@ import { useEffect } from "react"
 import { AUTH } from "@/shared/api/contracts.gen"
 import { SectionError } from "@/shared/components/section-error"
 import { APP_NAME } from "@/shared/config/app"
-import { ROUTES } from "@/shared/config/routes"
+import { localizedPath, ROUTES } from "@/shared/config/routes"
 import { LanguageMenu, useLanguage } from "@/shared/i18n"
 import { messageOf } from "@/shared/lib/errors"
 import { ModeToggle } from "@/shared/theme"
@@ -35,7 +35,6 @@ export function SignInPage() {
   const params = useSearchParams()
   const router = useRouter()
   const user = useSignedInUser()
-  const isHindi = language === "hi"
   // Another tab signing in moves this page on too (and this page, drawn after a sign-out, tells the other tabs).
   useSessionSync(user.data !== undefined)
   const options = useLoginOptions(user.data === null)
@@ -85,25 +84,25 @@ export function SignInPage() {
               aria-label="Public site and legal links"
               className="flex flex-wrap justify-center gap-x-3 gap-y-1.5 border-t pt-3 text-xs text-muted-foreground"
             >
-              <Link href={isHindi ? ROUTES.landingHi : ROUTES.landing} className="hover:text-foreground">
+              <Link href={localizedPath(ROUTES.landing, language)} className="hover:text-foreground">
                 {t("signIn.home")}
               </Link>
-              <Link href={isHindi ? ROUTES.howItWorksHi : ROUTES.howItWorks} className="hover:text-foreground">
+              <Link href={localizedPath(ROUTES.howItWorks, language)} className="hover:text-foreground">
                 {t("signIn.howItWorks")}
               </Link>
-              <Link href={isHindi ? ROUTES.featuresHi : ROUTES.features} className="hover:text-foreground">
+              <Link href={localizedPath(ROUTES.features, language)} className="hover:text-foreground">
                 {t("signIn.features")}
               </Link>
-              <Link href={isHindi ? ROUTES.faqHi : ROUTES.faq} className="hover:text-foreground">
+              <Link href={localizedPath(ROUTES.faq, language)} className="hover:text-foreground">
                 {t("signIn.faq")}
               </Link>
-              <Link href={isHindi ? ROUTES.contactHi : ROUTES.contact} className="hover:text-foreground">
+              <Link href={localizedPath(ROUTES.contact, language)} className="hover:text-foreground">
                 {t("signIn.contact")}
               </Link>
-              <Link href={isHindi ? ROUTES.privacyHi : ROUTES.privacy} className="hover:text-foreground">
+              <Link href={localizedPath(ROUTES.privacy, language)} className="hover:text-foreground">
                 {t("signIn.privacy")}
               </Link>
-              <Link href={isHindi ? ROUTES.termsHi : ROUTES.terms} className="hover:text-foreground">
+              <Link href={localizedPath(ROUTES.terms, language)} className="hover:text-foreground">
                 {t("signIn.terms")}
               </Link>
             </nav>

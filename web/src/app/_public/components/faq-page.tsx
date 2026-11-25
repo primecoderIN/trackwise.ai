@@ -2,8 +2,9 @@
 // Uses PUBLIC_CONTAINER with a sticky left topic navigator alongside collapsible Q&As and `FAQPage` JSON-LD.
 
 import { ArrowRight, ChevronDown, HelpCircle } from "lucide-react"
-import Link from "next/link"
 
+import { PublicLink } from "@/i18n/navigation"
+import { localizedPath, ROUTES } from "@/shared/config/routes"
 import { Button } from "@/shared/ui/button"
 
 import type { PublicSiteTexts } from "../texts"
@@ -37,9 +38,9 @@ export function PublicFaqPage({ texts }: { texts: PublicSiteTexts }) {
       <FaqJsonLd texts={texts} />
       <BreadcrumbJsonLd
         homeName={texts.footer.home}
-        homePath={texts.paths.landing}
+        homePath={localizedPath(ROUTES.landing, texts.lang)}
         pageName={texts.nav.faq}
-        pagePath={texts.paths.faq}
+        pagePath={localizedPath(ROUTES.faq, texts.lang)}
       />
 
       <section className="border-b bg-[radial-gradient(ellipse_at_top,oklch(0.47_0.19_262_/_0.08),transparent_65%)] pt-12 pb-12 sm:pt-16">
@@ -91,13 +92,13 @@ export function PublicFaqPage({ texts }: { texts: PublicSiteTexts }) {
                 <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{faqPage.ctaSubtitle}</p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Button asChild size="sm">
-                    <Link href={texts.paths.contact}>{faqPage.contactCta}</Link>
+                    <PublicLink href={ROUTES.contact}>{faqPage.contactCta}</PublicLink>
                   </Button>
                   <Button asChild variant="outline" size="sm" className="gap-1">
-                    <Link href={texts.paths.features}>
+                    <PublicLink href={ROUTES.features}>
                       <span>{faqPage.featuresCta}</span>
                       <ArrowRight className="size-3.5" aria-hidden="true" />
-                    </Link>
+                    </PublicLink>
                   </Button>
                 </div>
               </div>

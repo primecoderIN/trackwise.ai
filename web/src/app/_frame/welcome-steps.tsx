@@ -6,7 +6,7 @@ import Link from "next/link"
 import { ACCOUNT, BASE_CURRENCY } from "@/shared/api/contracts.gen"
 import { CurrencySelect } from "@/shared/components/currency-select"
 import { TimezonePicker } from "@/shared/components/timezone-picker"
-import { ROUTES } from "@/shared/config/routes"
+import { localizedPath, ROUTES } from "@/shared/config/routes"
 import { LANGUAGE_CODES, LANGUAGES, type Language } from "@/shared/i18n"
 import type { SupportedCurrency } from "@/shared/lib/currencies"
 import { Button } from "@/shared/ui/button"
@@ -177,13 +177,10 @@ export function WelcomeTermsConsent({
           {t("welcome.termsLabel", { version: ACCOUNT.currentTermsVersion })}
         </Label>
         <div className="flex gap-3 text-xs text-muted-foreground">
-          <Link href={language === "hi" ? ROUTES.termsHi : ROUTES.terms} className="underline hover:text-foreground">
+          <Link href={localizedPath(ROUTES.terms, language)} className="underline hover:text-foreground">
             {t("welcome.viewTerms")}
           </Link>
-          <Link
-            href={language === "hi" ? ROUTES.privacyHi : ROUTES.privacy}
-            className="underline hover:text-foreground"
-          >
+          <Link href={localizedPath(ROUTES.privacy, language)} className="underline hover:text-foreground">
             {t("welcome.viewPrivacy")}
           </Link>
         </div>

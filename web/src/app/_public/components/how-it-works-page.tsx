@@ -2,8 +2,9 @@
 // Presents the four-step expense workflow, control guarantees, BreadcrumbList JSON-LD, and HowTo JSON-LD.
 
 import { ArrowRight, CheckCircle2, ShieldCheck } from "lucide-react"
-import Link from "next/link"
 
+import { PublicLink } from "@/i18n/navigation"
+import { localizedPath, ROUTES } from "@/shared/config/routes"
 import { Button } from "@/shared/ui/button"
 
 import type { PublicSiteTexts } from "../texts"
@@ -44,9 +45,9 @@ export function PublicHowItWorksPage({ texts }: { texts: PublicSiteTexts }) {
       <HowToJsonLd texts={texts} />
       <BreadcrumbJsonLd
         homeName={texts.footer.home}
-        homePath={texts.paths.landing}
+        homePath={localizedPath(ROUTES.landing, texts.lang)}
         pageName={texts.nav.howItWorks}
-        pagePath={texts.paths.howItWorks}
+        pagePath={localizedPath(ROUTES.howItWorks, texts.lang)}
       />
 
       <section className="border-b bg-[radial-gradient(ellipse_at_top,oklch(0.47_0.19_262_/_0.08),transparent_65%)] pt-12 pb-14 sm:pt-16">
@@ -68,10 +69,10 @@ export function PublicHowItWorksPage({ texts }: { texts: PublicSiteTexts }) {
                 size="lg"
               />
               <Button asChild variant="outline" size="lg" className="gap-2">
-                <Link href={texts.paths.features}>
+                <PublicLink href={ROUTES.features}>
                   <span>{howItWorksPage.exploreFeatures}</span>
                   <ArrowRight className="size-4" aria-hidden="true" />
-                </Link>
+                </PublicLink>
               </Button>
             </div>
           </div>
@@ -140,10 +141,10 @@ export function PublicHowItWorksPage({ texts }: { texts: PublicSiteTexts }) {
             </div>
             <div className="flex flex-wrap gap-3">
               <Button asChild>
-                <Link href={texts.paths.features}>{howItWorksPage.exploreFeatures}</Link>
+                <PublicLink href={ROUTES.features}>{howItWorksPage.exploreFeatures}</PublicLink>
               </Button>
               <Button asChild variant="outline">
-                <Link href={texts.paths.faq}>{howItWorksPage.readFaq}</Link>
+                <PublicLink href={ROUTES.faq}>{howItWorksPage.readFaq}</PublicLink>
               </Button>
             </div>
           </div>

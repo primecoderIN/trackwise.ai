@@ -2,10 +2,11 @@
 // Uses a 12-column split hero with an interactive walkthrough player and delegates lower bands.
 
 import { ArrowRight, CheckCircle2, Sparkles } from "lucide-react"
-import Link from "next/link"
 
 import { siteUrl } from "@/app/_seo/seo"
+import { PublicLink } from "@/i18n/navigation"
 import { APP_NAME } from "@/shared/config/app"
+import { localizedPath, ROUTES } from "@/shared/config/routes"
 import { Button } from "@/shared/ui/button"
 
 import type { PublicSiteTexts } from "../texts"
@@ -17,7 +18,7 @@ import { PublicSessionAction } from "./public-session-action"
 
 function LandingJsonLd({ texts }: { texts: PublicSiteTexts }) {
   const origin = siteUrl()
-  const pageUrl = new URL(texts.paths.landing, origin).toString()
+  const pageUrl = new URL(localizedPath(ROUTES.landing, texts.lang), origin).toString()
   const graph = {
     "@context": "https://schema.org",
     "@graph": [
@@ -76,10 +77,10 @@ export function PublicLandingPage({ texts }: { texts: PublicSiteTexts }) {
                 size="lg"
               />
               <Button asChild variant="outline" size="lg" className="gap-2 bg-background">
-                <Link href={texts.paths.howItWorks}>
+                <PublicLink href={ROUTES.howItWorks}>
                   <span>{landing.howItWorksCta}</span>
                   <ArrowRight className="size-4" aria-hidden="true" />
-                </Link>
+                </PublicLink>
               </Button>
             </div>
             <ul className="mt-7 grid w-full gap-x-4 gap-y-2 text-xs font-medium text-muted-foreground sm:grid-cols-2">
