@@ -10,14 +10,12 @@ import { A2UI, AGUI } from "@/shared/api/contracts.gen"
 import * as http from "@/shared/api/http"
 import { ApiError, apiHeaders, unreachableError } from "@/shared/api/http"
 import type { paths } from "@/shared/api/schema.gen"
-import { i18n } from "@/shared/i18n"
 import { isAbort, UserFacingError } from "@/shared/lib/errors"
 import { newId } from "@/shared/lib/ids"
 
 import type { A2uiAction } from "../a2ui/protocol"
-import { assistantTexts } from "../i18n"
 import { receiptPart, uploadReceipt, type Receipt } from "./receipts"
-import { connectionLostMessage, sseData } from "./sse"
+import { sseData, StreamError } from "./sse"
 
 /** One AG-UI event, as validated by @ag-ui/core. */
 export type { AgentEvent }
@@ -37,11 +35,6 @@ const TEXT_PART = "text"
 const EVENT_STREAM_TYPE = "text/event-stream"
 const UNAUTHORIZED_STATUS = 401
 const TOO_MANY_REQUESTS_STATUS = 429
-
-// The message when an event can't be read. A function, so it's written in the language on when that happens.
-function notUnderstoodMessage(): string {
-  return i18n.t("stream.notUnderstood", { ns: assistantTexts.name })
-}
 
 /** The run itself failed on the server (RUN_ERROR): its message is written for people; its code is the kind. */
 export class AgentRunError extends UserFacingError {
@@ -82,17 +75,17 @@ export function runInput(threadId: string, prompt: AgentPrompt, dataVersion: num
   }
 }
 
-/** One event's data, as a valid AG-UI event. Throws a UserFacingError if it isn't JSON or isn't a valid event. */
+/** One event's data, as a valid AG-UI event. Throws a StreamError if it isn't JSON or isn't a valid event. */
 export function parseEvent(data: string): AgentEvent {
   let json: unknown
   try {
     json = JSON.parse(data)
   } catch {
-    throw new UserFacingError(notUnderstoodMessage())
+    throw new StreamError("notUnderstood")
   }
   // Network data is checked, not trusted: AG-UI's own schemas say what a valid event looks like.
   const parsed = EventSchemas.safeParse(json)
-  if (!parsed.success) throw new UserFacingError(notUnderstoodMessage())
+  if (!parsed.success) throw new StreamError("notUnderstood")
   return parsed.data
 }
 
@@ -138,7 +131,7 @@ async function startRun(
   }
   const contentType = response.headers.get("Content-Type")?.toLowerCase() ?? ""
   if (!contentType.includes(EVENT_STREAM_TYPE)) {
-    throw new UserFacingError(connectionLostMessage())
+    throw new StreamError("connectionLost")
   }
   return response.body.pipeThrough(new TextDecoderStream())
 }
@@ -146,7 +139,7 @@ async function startRun(
 /**
  * Runs the assistant once, calling `onEvent` for each event as soon as it arrives. Resolves on RUN_FINISHED.
  * Throws AgentRunError on RUN_ERROR, ApiError if the request itself fails, an AbortError if `signal` stops it,
- * or a UserFacingError if an event can't be read or the connection ends before the run does.
+ * or a StreamError if an event can't be read or the connection ends before the run does.
  */
 export async function runAgent(
   threadId: string,
@@ -163,7 +156,7 @@ export async function runAgent(
     onEvent(event)
     if (event.type === EventType.RUN_FINISHED) return
   }
-  throw new UserFacingError(connectionLostMessage())
+  throw new StreamError("connectionLost")
 }
 
 /** The shape of `runAgent`, so a test (or another transport) can be passed to useChat in its place. */

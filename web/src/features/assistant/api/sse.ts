@@ -1,18 +1,22 @@
 // Server-Sent Events framing for the assistant's stream: split the text into events, take each event's `data:`
 // lines, and read a stream as those data strings as they arrive. Knows nothing about AG-UI; agent-stream.ts
-// parses what comes out. Also defines the "connection lost" message, since this is where a break shows up.
+// parses what comes out. Also defines `StreamError` so stream breaks translate in the active UI language.
 
-import { i18n } from "@/shared/i18n"
 import { isAbort, UserFacingError } from "@/shared/lib/errors"
 
-import { assistantTexts } from "../i18n"
+import assistantEn from "../i18n/en"
 
-/**
- * What a run says when the connection breaks, or the stream ends, before the reply is finished. A function, not a
- * constant, so it's written in the language on when the break happens.
- */
-export function connectionLostMessage(): string {
-  return i18n.t("stream.connectionLost", { ns: assistantTexts.name })
+/** Key under the `assistant.stream` message group. */
+export type AssistantStreamErrorKey = keyof typeof assistantEn.stream
+
+/** Client-side SSE framing or parsing failure whose message is localized from `assistant.stream`. */
+export class StreamError extends UserFacingError {
+  readonly streamKey: AssistantStreamErrorKey
+
+  constructor(streamKey: AssistantStreamErrorKey) {
+    super(assistantEn.stream[streamKey])
+    this.streamKey = streamKey
+  }
 }
 
 const SSE_EVENT_END = "\n\n"
@@ -48,19 +52,19 @@ export function dataOf(block: string): string {
 }
 
 // One read. Stopped on purpose (Stop, or the page closed) stays an AbortError; a network drop mid-reply
-// becomes a UserFacingError with connectionLostMessage().
+// becomes a StreamError("connectionLost").
 async function read(reader: ReadableStreamDefaultReader<string>): Promise<ReadableStreamReadResult<string>> {
   try {
     return await reader.read()
   } catch (error) {
     if (isAbort(error)) throw error
-    throw new UserFacingError(connectionLostMessage())
+    throw new StreamError("connectionLost")
   }
 }
 
 /**
  * Reads `stream` piece by piece as it arrives and yields each event's data, skipping events without any. Ends
- * when the stream does. Throws an AbortError if the request was stopped, or an Error(connectionLostMessage()) if
+ * when the stream does. Throws an AbortError if the request was stopped, or a StreamError("connectionLost") if
  * the network dropped. However it ends (including the caller breaking out early), the reader is cancelled, which
  * closes the connection.
  */
@@ -82,7 +86,7 @@ export async function* sseData(stream: ReadableStream<string>): AsyncGenerator<s
       }
       const { events, rest } = splitEvents(buffer + value)
       if (rest.length > MAX_SSE_EVENT_BYTES) {
-        throw new UserFacingError(connectionLostMessage())
+        throw new StreamError("connectionLost")
       }
       buffer = rest
       for (const block of events) {

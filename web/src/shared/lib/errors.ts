@@ -2,7 +2,6 @@
 // Part of shared/lib. Used by pages, dialogs, toasts, error boundaries (`useMessageOf` / `messageOf`), TanStack Query,
 // and the HTTP client (`ApiError`).
 
-import commonEn from "@/shared/i18n/common/en"
 import type { CommonTexts } from "@/shared/i18n/common"
 
 /** Key under the `common.errors` message group. */
@@ -44,11 +43,11 @@ export class UserFacingError extends Error {
  * Resolves a displayable message for anything thrown: translates structured `UserFacingError` keys or returns
  * server-authored messages; falls back to the localized generic unexpected error text for developer/runtime errors.
  */
-export function messageOf(error: unknown, translate?: ErrorTranslator): string {
+export function messageOf(error: unknown, translate: ErrorTranslator): string {
   if (error instanceof UserFacingError) {
-    return error.translation && translate ? translate(error.translation.key, error.translation.values) : error.message
+    return error.translation ? translate(error.translation.key, error.translation.values) : error.message
   }
-  return translate ? translate("unexpected") : commonEn.errors.unexpected
+  return translate("unexpected")
 }
 
 /** Logs non-abort, non-user-facing errors to the console so developer diagnostics stay intact. */

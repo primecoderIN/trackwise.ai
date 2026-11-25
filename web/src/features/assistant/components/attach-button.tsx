@@ -3,12 +3,12 @@
 // (chat-composer.tsx).
 
 import { Paperclip } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { useRef, type ChangeEvent } from "react"
 import { toast } from "sonner"
 
 import { Button } from "@/shared/ui/button"
 
-import { useTexts } from "../i18n"
 import { attachmentProblem, MAX_RECEIPT_MB, RECEIPT_ACCEPT } from "../model/attachments"
 
 interface AttachButtonProps {
@@ -23,7 +23,7 @@ interface AttachButtonProps {
  * can't be a receipt is explained in a toast and not attached; the server still checks the file's own bytes.
  */
 export function AttachButton({ disabled, onAttach }: AttachButtonProps) {
-  const { t } = useTexts()
+  const t = useTranslations("assistant")
   const picker = useRef<HTMLInputElement>(null)
 
   function handleChange(event: ChangeEvent<HTMLInputElement>) {

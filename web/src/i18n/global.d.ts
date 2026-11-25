@@ -3,6 +3,7 @@
 
 import type { AppTexts } from "@/app/_i18n"
 import type { AccountTexts } from "@/features/account/i18n"
+import type { AssistantTexts } from "@/features/assistant/i18n"
 import type { AuthTexts } from "@/features/auth/i18n"
 import type { BudgetsTexts } from "@/features/budgets/i18n"
 import type { CategoriesTexts } from "@/features/categories/i18n"
@@ -16,6 +17,7 @@ export interface AppMessages {
   common: CommonTexts
   app: AppTexts
   auth: AuthTexts
+  assistant: AssistantTexts
   account: AccountTexts
   budgets: BudgetsTexts
   categories: CategoriesTexts

@@ -1,7 +1,6 @@
 // The languages the app speaks, and what each one needs besides its texts: how it writes numbers and dates, its
-// writing direction, and its date picker locale. Part of shared/i18n. Read by the i18next setup (i18n.ts), the
-// language menu and the formatting helpers (shared/lib/format.ts), so adding a language is one entry here plus its
-// text file in each namespace.
+// writing direction, and its date picker locale. Part of shared/i18n. Read by next-intl request/routing setup, the
+// language menu, and useFormatters(), so adding a language is one entry here plus its text file in each namespace.
 
 import type { DayPickerLocale } from "react-day-picker"
 
@@ -58,9 +57,6 @@ export const LANGUAGE_CODES = Object.keys(LANGUAGES) as Language[]
  * LANGUAGES.
  */
 export const DEFAULT_LANGUAGE = "en" satisfies Language
-
-/** Where the chosen language is saved in localStorage. */
-export const LANGUAGE_STORAGE_KEY = "spendwise-language"
 
 /** Cookie storing the user's preferred app UI language so Next.js Server Components can SSR in that locale. */
 export const LOCALE_COOKIE = "NEXT_LOCALE"
@@ -120,18 +116,4 @@ export function setLocaleCookie(language: Language): void {
   if (typeof document === "undefined") return
   const secure = typeof window !== "undefined" && window.location.protocol === "https:" ? "; Secure" : ""
   document.cookie = `${LOCALE_COOKIE}=${language}; Path=/; Max-Age=${ONE_YEAR_SECONDS}; SameSite=Lax${secure}`
-}
-
-/**
- * The language to start in: the one previously saved in localStorage; otherwise DEFAULT_LANGUAGE ("en") so first-run
- * onboarding starts predictably in English. Never throws if storage is blocked.
- */
-export function initialLanguage(): Language {
-  try {
-    const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY)
-    if (isLanguage(saved)) return saved
-  } catch {
-    // Storage blocked: fall back to DEFAULT_LANGUAGE.
-  }
-  return DEFAULT_LANGUAGE
 }

@@ -1,13 +1,13 @@
 // A component of the assistant feature: one message bubble in the conversation, with the assistant's tool chips
 // and A2UI cards. Used by ChatTranscript (chat-transcript.tsx), once per message.
 
+import { useTranslations } from "next-intl"
 import { memo } from "react"
 
 import { cn } from "@/shared/lib/utils"
 
 import { A2uiSurfaceView } from "../a2ui/a2ui-surface"
 import type { A2uiRenderContext } from "../a2ui/protocol"
-import { useTexts } from "../i18n"
 import { MESSAGE_ROLES, MESSAGE_STATUSES, type ChatMessage, type MessageStatus } from "../model/chat-types"
 import { AttachedFile } from "./attached-file"
 import { ToolChip } from "./tool-chip"
@@ -48,7 +48,7 @@ export const ChatMessageBubble = memo(function ChatMessageBubble({
   onFormChange,
   onFormSubmit,
 }: ChatMessageBubbleProps) {
-  const { t } = useTexts()
+  const t = useTranslations("assistant")
   const isUser = message.role === MESSAGE_ROLES.user
   const displayText = message.text || (message.status === MESSAGE_STATUSES.failed ? t("stream.connectionLost") : "")
 

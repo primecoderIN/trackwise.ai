@@ -4,10 +4,10 @@
 // it draws (cards and charts included) load as a separate chunk.
 
 import { Bot, SquarePen, X } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 import { Button } from "@/shared/ui/button"
 
-import { useTexts } from "../i18n"
 import { useAssistant } from "../model/assistant-context"
 import { ChatComposer } from "./chat-composer"
 import { ChatTranscript } from "./chat-transcript"
@@ -24,7 +24,7 @@ export interface ChatPanelProps {
  */
 export function ChatPanel({ onClose }: ChatPanelProps) {
   const chat = useAssistant()
-  const { t } = useTexts()
+  const t = useTranslations("assistant")
 
   return (
     <div className="flex h-full flex-col bg-background">

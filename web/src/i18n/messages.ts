@@ -3,6 +3,7 @@
 
 import { loadAppNamespace } from "@/app/_i18n"
 import { loadAccountMessages } from "@/features/account/i18n"
+import { loadAssistantMessages } from "@/features/assistant/i18n"
 import { loadAuthMessages } from "@/features/auth/i18n"
 import { loadBudgetsMessages } from "@/features/budgets/i18n"
 import { loadCategoriesMessages } from "@/features/categories/i18n"
@@ -19,15 +20,21 @@ export type AppNamespace = keyof AppMessages
 /** Baseline namespaces required on public layouts (`[lang]`) for shared chrome and errors. */
 export const BOOT_MESSAGE_NAMESPACES = ["common", "app"] as const satisfies readonly AppNamespace[]
 
-/** Baseline namespaces required across interactive sign-in and workspace shells. */
-export const WORKSPACE_MESSAGE_NAMESPACES = ["common", "app", "auth"] as const satisfies readonly AppNamespace[]
+/** Baseline namespaces required across the signed-in workspace shell (including the assistant drawer). */
+export const WORKSPACE_MESSAGE_NAMESPACES = [
+  "common",
+  "app",
+  "auth",
+  "assistant",
+] as const satisfies readonly AppNamespace[]
 
 /** Loads the typed message catalogs needed for `locale` (called per request in `src/i18n/request.ts`). */
 export async function loadAppMessages(locale: Language): Promise<AppMessages> {
-  const [common, app, auth, account, budgets, categories, dashboard, expenses, reports] = await Promise.all([
+  const [common, app, auth, assistant, account, budgets, categories, dashboard, expenses, reports] = await Promise.all([
     loadCommonMessages(locale),
     loadAppNamespace(locale),
     loadAuthMessages(locale),
+    loadAssistantMessages(locale),
     loadAccountMessages(locale),
     loadBudgetsMessages(locale),
     loadCategoriesMessages(locale),
@@ -35,7 +42,7 @@ export async function loadAppMessages(locale: Language): Promise<AppMessages> {
     loadExpensesMessages(locale),
     loadReportsMessages(locale),
   ])
-  return { common, app, auth, account, budgets, categories, dashboard, expenses, reports }
+  return { common, app, auth, assistant, account, budgets, categories, dashboard, expenses, reports }
 }
 
 /** Selects a subset of loaded namespaces to serialize across a route's `<NextIntlClientProvider>`. */

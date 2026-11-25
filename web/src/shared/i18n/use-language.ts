@@ -10,7 +10,6 @@ import type { DayPickerLocale } from "react-day-picker"
 
 import { localizedPath, ROUTES } from "@/shared/config/routes"
 
-import { syncLegacyLanguage } from "./i18n"
 import { DEFAULT_LANGUAGE, isLanguage, LANGUAGES, setLocaleCookie, type Language } from "./languages"
 
 const cachedPickerLocales = new Map<Language, DayPickerLocale>()
@@ -70,17 +69,17 @@ export function useLanguage(): LanguageState {
   const routeLang = typeof rawRouteLang === "string" && isLanguage(rawRouteLang) ? rawRouteLang : undefined
 
   const setLanguage = useCallback(
-    async (next: Language) => {
-      await syncLegacyLanguage(next)
+    (next: Language): Promise<void> => {
       setLocaleCookie(next)
       document.documentElement.lang = next
       document.documentElement.dir = LANGUAGES[next].dir
       if (routeLang) {
         const search = typeof window !== "undefined" ? window.location.search : ""
         router.replace(`${localizedPath(unprefixedPath(pathname, routeLang), next)}${search}`)
-        return
+        return Promise.resolve()
       }
       router.refresh()
+      return Promise.resolve()
     },
     [pathname, routeLang, router],
   )

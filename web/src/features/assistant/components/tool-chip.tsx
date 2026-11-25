@@ -2,10 +2,10 @@
 // ChatMessageBubble (chat-message.tsx), once per tool the reply used.
 
 import { Check, CircleHelp, Loader2, X } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 import { Badge } from "@/shared/ui/badge"
 
-import { useTexts } from "../i18n"
 import { TOOL_STATUSES, type ToolActivity } from "../model/chat-types"
 
 /**
@@ -15,7 +15,7 @@ import { TOOL_STATUSES, type ToolActivity } from "../model/chat-types"
  * did the work, its task ("A2A task 3f2a9c1e", also from the backend) follows the text once the call has ended.
  */
 export function ToolChip({ tool }: { tool: ToolActivity }) {
-  const { t } = useTexts()
+  const t = useTranslations("assistant")
   const { running, done, failed } = tool.labels
   const detail = tool.detail ? <span className="font-mono opacity-70">{tool.detail}</span> : null
 

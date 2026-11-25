@@ -4,13 +4,13 @@
 // enforces the drawing limits: size, depth and loops are checked before anything is drawn, only components
 // in the allow-list (catalogs.ts) are drawn, and each card has its own error boundary.
 
+import { useLocale } from "next-intl"
 import { Fragment, memo, useMemo } from "react"
 
 import { A2UI } from "@/shared/api/contracts.gen"
 import { ErrorBoundary } from "@/shared/components/error-boundary"
 import { pick } from "@/shared/lib/guards"
 
-import { useTexts } from "../i18n"
 import { Unsupported } from "./renderers/a2ui-unsupported"
 import { MAX_DEPTH, MAX_DRAWN } from "./renderers/basic-catalog"
 import { CATALOGS } from "./catalogs"
@@ -40,8 +40,8 @@ interface A2uiSurfaceViewProps {
  * in another form).
  */
 export const A2uiSurfaceView = memo(function A2uiSurfaceView(props: A2uiSurfaceViewProps) {
-  // Subscribes the card to language changes, so everything in it is drawn again in the new language.
-  useTexts()
+  // Subscribes the card to locale changes, so everything in it is drawn again in the new language.
+  useLocale()
   // A card is drawn from data the agent sent: if anything in it crashes while drawing, only this card
   // shows a note, instead of the whole app going blank.
   return (

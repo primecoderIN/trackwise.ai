@@ -2,7 +2,8 @@
 // unknown catalog or component, a malformed property, a card over the limits, or a card that crashed.
 // Used by every renderer in this folder.
 
-import { useTexts } from "../../i18n"
+import { useTranslations } from "next-intl"
+
 import type en from "../../i18n/en"
 
 /** Why something isn't drawn: a key of the "unsupported" texts, each a whole "Can't show …" sentence. */
@@ -19,10 +20,10 @@ interface UnsupportedProps {
  * language on now.
  */
 export function Unsupported({ reason, component }: UnsupportedProps) {
-  const { t } = useTexts()
-  return (
-    <div className="rounded-md border border-dashed px-2 py-1 text-xs text-muted-foreground">
-      {t(`unsupported.${reason}`, { component })}
-    </div>
-  )
+  const t = useTranslations("assistant")
+  const note =
+    reason === "unknownComponent"
+      ? t("unsupported.unknownComponent", { component: component ?? "" })
+      : t(`unsupported.${reason}`)
+  return <div className="rounded-md border border-dashed px-2 py-1 text-xs text-muted-foreground">{note}</div>
 }

@@ -2,10 +2,9 @@
 // button that removes it. Used by ChatComposer (before sending) and ChatMessageBubble (in a sent message).
 
 import { Paperclip, X } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 import { cn } from "@/shared/lib/utils"
-
-import { useTexts } from "../i18n"
 
 interface AttachedFileProps {
   /** The file's name: the user's own data, shown as it is. */
@@ -16,7 +15,7 @@ interface AttachedFileProps {
 
 /** One attached file. Screen readers hear "Attached: <name>"; a long name is cut, with the whole of it on hover. */
 export function AttachedFile({ name, onRemove }: AttachedFileProps) {
-  const { t } = useTexts()
+  const t = useTranslations("assistant")
   return (
     <span
       className={cn(

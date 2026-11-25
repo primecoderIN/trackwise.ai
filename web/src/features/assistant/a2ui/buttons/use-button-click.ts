@@ -5,7 +5,8 @@
 import { useRef, useState } from "react"
 import { toast } from "sonner"
 
-import { isAbort, messageOf, reportUnexpected } from "@/shared/lib/errors"
+import { isAbort, reportUnexpected } from "@/shared/lib/errors"
+import { useMessageOf } from "@/shared/lib/use-message-of"
 
 import { buildAction, readAction } from "./actions"
 import { readFunctionCall } from "./functions/client-functions"
@@ -19,6 +20,7 @@ import type { A2uiComponent, A2uiRenderContext } from "../protocol"
 export function useButtonClick(node: A2uiComponent, ctx: A2uiRenderContext): (() => void) | null {
   const [running, setRunning] = useState(false)
   const clicking = useRef(false)
+  const messageOf = useMessageOf()
   const run = readFunctionCall(node.action)
   if (run) {
     if (running) return null

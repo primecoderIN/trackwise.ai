@@ -7,14 +7,12 @@
 import { EventType } from "@ag-ui/core"
 
 import { AGUI } from "@/shared/api/contracts.gen"
-import { i18n } from "@/shared/i18n"
-import { isAbort, messageOf } from "@/shared/lib/errors"
+import { isAbort } from "@/shared/lib/errors"
 
 import { applyA2uiMessage, createdSurfaceId, setAt, type A2uiAction, type A2uiSurface } from "../a2ui/protocol"
 import { toolDetailOf, toolLabelsOf, toolSucceeded } from "../api/agent-events"
 import type { AgentEvent } from "../api/agent-stream"
-import { connectionLostMessage } from "../api/sse"
-import { assistantTexts } from "../i18n"
+import { StreamError, type AssistantStreamErrorKey } from "../api/sse"
 import { MESSAGE_ROLES, MESSAGE_STATUSES, TOOL_STATUSES, type ChatMessage, type ToolActivity } from "./chat-types"
 
 // How a form's values read in your bubble: "Sent: 250 · Food · Subway · 2026-11-13 · upi" (the text
@@ -154,31 +152,45 @@ export function markToolsUnknown(messages: ChatMessage[], replyId: number, ids: 
   }))
 }
 
+/** Localized resolvers supplied by `useChat` when creating terminal transcript bubbles. */
+export interface EndedEarlyTexts {
+  stopped: string
+  connectionLost: string
+  messageOf: (error: unknown) => string
+  streamError: (key: AssistantStreamErrorKey) => string
+}
+
 /**
  * What your side of the chat shows for a button's click: the button's own message ("Approve deleting #14", from
- * the server), or else the form's non-empty values, e.g. "Sent: 250 · Food · Subway · 2026-11-13 · upi" (in the
- * language on now). Only shown: the agent is sent the action itself, never this text.
+ * the server), or else the form's non-empty values rendered by `formatSent`, e.g.
+ * "Sent: 250 · Food · Subway · 2026-11-13 · upi". Only shown: the agent is sent the action itself, never this text.
  */
-export function sentText(action: A2uiAction): string {
+export function sentText(action: A2uiAction, formatSent: (values: string) => string): string {
   const values = Object.values(action.context)
     .map((value) => (Array.isArray(value) ? value.join(CHOICES_SEPARATOR) : value))
     .filter((value) => value !== "" && value !== null && value !== undefined)
     .join(SENT_SEPARATOR)
-  return action.userMessage ?? i18n.t("transcript.sent", { ns: assistantTexts.name, values })
+  return action.userMessage ?? formatSent(values)
 }
 
 /**
  * The bubble a run that ended early adds below whatever already arrived: "Stopped." if it was stopped, else
- * what went wrong. An error written for people (a RUN_ERROR, an API problem, our own) shows its message; any other
- * Error (a bug) only a generic text (messageOf); anything thrown that isn't even an Error, the connection-lost
- * text. Our own texts are in the language on now.
+ * what went wrong. Stream errors, RUN_ERRORs, and API problems show their localized messages; unexpected Bugs
+ * become the generic unexpected text; non-Errors fall back to `connectionLost`.
  */
-export function endedEarlyMessage(id: number, error: unknown): ChatMessage {
+export function endedEarlyMessage(id: number, error: unknown, texts: EndedEarlyTexts): ChatMessage {
   if (isAbort(error)) {
-    const stopped = i18n.t("transcript.stopped", { ns: assistantTexts.name })
-    return { id, role: MESSAGE_ROLES.assistant, text: stopped, status: MESSAGE_STATUSES.stopped }
+    return { id, role: MESSAGE_ROLES.assistant, text: texts.stopped, status: MESSAGE_STATUSES.stopped }
   }
-  const raw = error instanceof Error ? messageOf(error) : connectionLostMessage()
-  const text = raw.trim() ? raw : connectionLostMessage()
+  if (error instanceof StreamError) {
+    return {
+      id,
+      role: MESSAGE_ROLES.assistant,
+      text: texts.streamError(error.streamKey),
+      status: MESSAGE_STATUSES.failed,
+    }
+  }
+  const raw = error instanceof Error ? texts.messageOf(error) : texts.connectionLost
+  const text = raw.trim() ? raw : texts.connectionLost
   return { id, role: MESSAGE_ROLES.assistant, text, status: MESSAGE_STATUSES.failed }
 }

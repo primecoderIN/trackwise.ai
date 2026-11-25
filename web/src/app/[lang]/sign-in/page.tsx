@@ -10,6 +10,7 @@ import { publicPage } from "@/app/_seo/seo"
 import { ClientRoot } from "@/app/_shell/client-root"
 import { MessageScope } from "@/app/_shell/message-scope"
 import { SignInPage } from "@/app/_views/client-pages"
+import { BOOT_MESSAGE_NAMESPACES } from "@/i18n/messages"
 import { ROUTES } from "@/shared/config/routes"
 import { isLanguage } from "@/shared/i18n/languages"
 
@@ -27,7 +28,7 @@ export default async function SignIn({ params }: { params: Promise<{ lang: strin
   if (!isLanguage(lang)) notFound()
   setRequestLocale(lang)
   return (
-    <MessageScope namespaces={["auth"]}>
+    <MessageScope namespaces={["auth"]} baseline={BOOT_MESSAGE_NAMESPACES}>
       <ClientRoot>
         <Suspense fallback={null}>
           <SignInPage />

@@ -9,9 +9,13 @@
 // fallbacks ("Choose…", "Pick a date") and the calendar's month and day names follow the language on now.
 
 import { CalendarIcon } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { useState, type ChangeEvent, type ReactNode } from "react"
 
 import { useLanguage } from "@/shared/i18n"
+import { isoDate, parseIsoDate } from "@/shared/lib/format"
+import { isObject } from "@/shared/lib/guards"
+import { useFormatters } from "@/shared/lib/use-formatters"
 import { Button } from "@/shared/ui/button"
 import { Calendar } from "@/shared/ui/calendar"
 import { Input } from "@/shared/ui/input"
@@ -19,10 +23,7 @@ import { Label } from "@/shared/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
 import { Textarea } from "@/shared/ui/textarea"
-import { formatDate, isoDate, parseIsoDate } from "@/shared/lib/format"
-import { isObject } from "@/shared/lib/guards"
 
-import { useTexts } from "../../i18n"
 import { Unsupported } from "./a2ui-unsupported"
 import { CHOICE_VARIANT, TEXT_FIELD_VARIANT } from "./basic-catalog"
 import { boundPath, resolve, textOf, type A2uiComponent, type A2uiRenderContext } from "../protocol"
@@ -102,7 +103,7 @@ function isOption(option: unknown): option is ChoiceOption {
  * Only one choice at a time is supported: a multiple-selection picker becomes a "Can't show …" note.
  */
 export function A2uiChoicePicker({ node, ctx }: InputProps) {
-  const { t } = useTexts()
+  const t = useTranslations("assistant")
   if (node.variant === CHOICE_VARIANT.multipleSelection) return <Unsupported reason="multipleChoice" />
   const id = inputId(ctx, node)
   const path = boundPath(node.value)
@@ -150,8 +151,9 @@ export function A2uiDateTimeInput({ node, ctx }: InputProps) {
 // the language on now.
 function DatePicker({ node, ctx }: InputProps) {
   const [open, setOpen] = useState(false)
-  const { t } = useTexts()
+  const t = useTranslations("assistant")
   const { datePickerLocale } = useLanguage()
+  const { formatDate } = useFormatters()
   const id = inputId(ctx, node)
   const path = boundPath(node.value)
   const editable = canEdit(ctx, path)

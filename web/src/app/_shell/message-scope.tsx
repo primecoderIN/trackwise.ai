@@ -7,20 +7,22 @@ import type { ReactNode } from "react"
 
 import { pickMessages, WORKSPACE_MESSAGE_NAMESPACES, type AppNamespace } from "@/i18n/messages"
 
-/** Wraps `children` with `WORKSPACE_MESSAGE_NAMESPACES` merged with `namespaces` for the active locale. */
+/**
+ * Wraps `children` with `baseline` (defaulting to `WORKSPACE_MESSAGE_NAMESPACES`) merged with route-specific
+ * `namespaces` for the active locale.
+ */
 export async function MessageScope({
   namespaces,
+  baseline = WORKSPACE_MESSAGE_NAMESPACES,
   children,
 }: {
   namespaces: readonly AppNamespace[]
+  baseline?: readonly AppNamespace[]
   children: ReactNode
 }) {
   const [locale, messages] = await Promise.all([getLocale(), getMessages()])
   return (
-    <NextIntlClientProvider
-      locale={locale}
-      messages={pickMessages(messages, [...WORKSPACE_MESSAGE_NAMESPACES, ...namespaces])}
-    >
+    <NextIntlClientProvider locale={locale} messages={pickMessages(messages, [...baseline, ...namespaces])}>
       {children}
     </NextIntlClientProvider>
   )

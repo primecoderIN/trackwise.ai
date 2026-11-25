@@ -3,13 +3,13 @@
 // redraws only this box, not the conversation. Used by ChatPanel (chat-panel.tsx).
 
 import { SendHorizontal, Square } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { memo, useState, type FormEvent, type KeyboardEvent } from "react"
 
 import { LIMITS } from "@/shared/api/contracts.gen"
 import { Button } from "@/shared/ui/button"
 import { Textarea } from "@/shared/ui/textarea"
 
-import { useTexts } from "../i18n"
 import { AttachButton } from "./attach-button"
 import { AttachedFile } from "./attached-file"
 
@@ -26,12 +26,12 @@ interface ChatComposerProps {
  * The message box. Enter sends, Shift+Enter adds a new line. A message needs text or an attached receipt (then the
  * text may be empty); while a run is in progress nothing is sent: what's typed and attached stays until it ends.
  * Stop ends the run: the connection closes, and anything already said or done stays. Memoised, so a streamed reply
- * doesn't redraw it; its own texts still follow a change of language (useTexts subscribes it).
+ * doesn't redraw it; its own texts still follow a change of language (`useTranslations` subscribes it).
  */
 export const ChatComposer = memo(function ChatComposer({ sending, onSend, onStop }: ChatComposerProps) {
   const [input, setInput] = useState("")
   const [file, setFile] = useState<File | null>(null)
-  const { t } = useTexts()
+  const t = useTranslations("assistant")
   const ready = Boolean(input.trim() || file)
 
   function submit() {

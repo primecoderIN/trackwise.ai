@@ -3,10 +3,12 @@
 // live in those files. AssistantProvider calls it once and shares the result through AssistantContext.
 
 import { EventType } from "@ag-ui/core"
+import { useTranslations } from "next-intl"
 import { useCallback, useMemo, useRef, useState } from "react"
 
 import { ApiError } from "@/shared/api/http"
 import { reportUnexpected } from "@/shared/lib/errors"
+import { useMessageOf } from "@/shared/lib/use-message-of"
 
 import type { A2uiAction } from "../a2ui/protocol"
 import { runAgent, type AgentPrompt, type RunAgent } from "../api/agent-stream"
@@ -38,6 +40,8 @@ function isPreExecutionClientError(error: unknown): boolean {
  * bubbles), as long as `onDataChanged` and `runAgentFn` do.
  */
 export function useChat(onDataChanged: () => void, runAgentFn: RunAgent = runAgent): ChatState {
+  const t = useTranslations("assistant")
+  const messageOf = useMessageOf()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const nextId = useRef(0) // a counter for message ids (a ref: changing it shouldn't re-render anything)
   const submitting = useRef<Set<string>>(new Set()) // synchronous guard against double-clicking a form button
@@ -75,12 +79,22 @@ export function useChat(onDataChanged: () => void, runAgentFn: RunAgent = runAge
           }
           // Any text that already arrived stays; the error (or "Stopped.") appears as its own bubble below it.
           const endId = nextId.current++
-          setMessages((current) => transcript.appendMessage(current, transcript.endedEarlyMessage(endId, error)))
+          setMessages((current) =>
+            transcript.appendMessage(
+              current,
+              transcript.endedEarlyMessage(endId, error, {
+                stopped: t("transcript.stopped"),
+                connectionLost: t("stream.connectionLost"),
+                messageOf,
+                streamError: (key) => t(`stream.${key}`),
+              }),
+            ),
+          )
         },
       })
       return { ok, mayHaveChanged: mayHaveChanged(progress), error: failedWith }
     },
-    [onDataChanged, runAgentOnce],
+    [messageOf, onDataChanged, runAgentOnce, t],
   )
 
   const send = useCallback(
@@ -100,7 +114,10 @@ export function useChat(onDataChanged: () => void, runAgentFn: RunAgent = runAge
       if (submitting.current.has(action.surfaceId)) return
       submitting.current.add(action.surfaceId)
       setMessages((current) => transcript.setSubmitted(current, action.surfaceId, true))
-      const outcome = await run(transcript.sentText(action), { action })
+      const outcome = await run(
+        transcript.sentText(action, (values) => t("transcript.sent", { values })),
+        { action },
+      )
       // Unlock only on a deterministic pre-execution 4xx client error before anything could have changed.
       // On network drop, 5xx, stream cut-off, or abort, keep the form locked (D137) and refresh data.
       if (!outcome.ok) {
@@ -112,7 +129,7 @@ export function useChat(onDataChanged: () => void, runAgentFn: RunAgent = runAge
         }
       }
     },
-    [onDataChanged, run],
+    [onDataChanged, run, t],
   )
 
   const reset = useCallback(() => {

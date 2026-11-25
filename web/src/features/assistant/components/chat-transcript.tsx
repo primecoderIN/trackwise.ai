@@ -3,16 +3,16 @@
 // to the newest content. Used by ChatPanel (chat-panel.tsx).
 
 import { Loader2 } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { useEffect, useRef } from "react"
 
 import { useSignedInUser } from "@/features/auth"
 import { DEFAULT_CURRENCY } from "@/shared/api/contracts.gen"
-import { formatMoney } from "@/shared/lib/format"
+import { useFormatters } from "@/shared/lib/use-formatters"
 import { Button } from "@/shared/ui/button"
 import { ScrollArea } from "@/shared/ui/scroll-area"
 
 import type { A2uiRenderContext } from "../a2ui/protocol"
-import { useTexts } from "../i18n"
 import type en from "../i18n/en"
 import { MESSAGE_ROLES, TOOL_STATUSES, type ChatMessage } from "../model/chat-types"
 import { ChatMessageBubble } from "./chat-message"
@@ -40,7 +40,8 @@ function isWaiting(last: ChatMessage | undefined): boolean {
 
 // What an empty conversation shows: a short hint and a few messages to try.
 function Suggestions({ sending, onSuggestion }: Pick<ChatTranscriptProps, "sending" | "onSuggestion">) {
-  const { t } = useTexts()
+  const t = useTranslations("assistant")
+  const { formatMoney } = useFormatters()
   const userCurrency = useSignedInUser().data?.default_currency ?? DEFAULT_CURRENCY
   const exampleAmount = formatMoney("25", userCurrency)
   const labelFor = (suggestion: (typeof SUGGESTIONS)[number]) =>
@@ -74,7 +75,7 @@ function Suggestions({ sending, onSuggestion }: Pick<ChatTranscriptProps, "sendi
  */
 export function ChatTranscript({ messages, sending, onSuggestion, onFormChange, onFormSubmit }: ChatTranscriptProps) {
   const endRef = useRef<HTMLDivElement>(null)
-  const { t } = useTexts()
+  const t = useTranslations("assistant")
 
   // Keep the newest content in view: a new message, more reply text, a new chip or card. Not on every
   // keystroke in a form (that changes the messages too), which would yank the field you're typing in

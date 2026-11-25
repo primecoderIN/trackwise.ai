@@ -4,15 +4,16 @@
 // decided here. The data rules (which points, the unit, the number format) are in insight-data.ts.
 
 import { Minus, TrendingDown, TrendingUp } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { useMemo, type ReactNode } from "react"
 import { Bar, BarChart, Cell, Line, LineChart, Pie, PieChart, XAxis } from "recharts"
 
 import { A2UI } from "@/shared/api/contracts.gen"
 import { pick } from "@/shared/lib/guards"
+import { useFormatters } from "@/shared/lib/use-formatters"
 import { Card, CardContent } from "@/shared/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/shared/ui/chart"
 
-import { useTexts } from "../../i18n"
 import { Unsupported } from "./a2ui-unsupported"
 import { formatValue, positivePoints, readPoints, readUnit, type ChartPoint } from "./insight-data"
 import type { A2uiRendererProps } from "../renderer-types"
@@ -130,7 +131,8 @@ const CHART_KINDS: Readonly<Record<string, (props: ChartKindProps) => ReactNode>
  * well-formed points, or of a type not in the contract, becomes a "Can't show …" note.
  */
 export function A2uiChart({ node }: A2uiRendererProps) {
-  const { t } = useTexts()
+  const t = useTranslations("assistant")
+  const { locale } = useFormatters()
   // The same config until the language changes, so the chart doesn't rebuild its styles on every render.
   const config = useMemo(() => chartConfig(t("cards.chartValue")), [t])
   const rawPoints = readPoints(node.data)
@@ -139,8 +141,8 @@ export function A2uiChart({ node }: A2uiRendererProps) {
   const ChartKind = pick(CHART_KINDS, node.chartType)
   if (!ChartKind) return <Unsupported reason="chartKind" />
   const unit = readUnit(node.unit)
-  // The values are written in the language on now (formatValue); useTexts redraws the chart when it changes.
-  const format = (value: unknown) => formatValue(value, unit)
+  // The values follow the active locale, so the chart redraws whenever the UI language changes.
+  const format = (value: unknown) => formatValue(value, unit, locale)
   // The rule can't see that pick() returns a component from a module-level table: none is created here.
   // oxlint-disable-next-line react/static-components -- the chart comes from the fixed CHART_KINDS table
   return <ChartKind points={points} format={format} config={config} />

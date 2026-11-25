@@ -3,7 +3,6 @@
 // renderer in a2ui-insights.tsx. A chart's data comes from the server, so nothing here trusts its shape.
 
 import { A2UI } from "@/shared/api/contracts.gen"
-import { currentLanguageInfo } from "@/shared/i18n"
 import { formatAmount } from "@/shared/lib/format"
 import { isObject } from "@/shared/lib/guards"
 
@@ -60,16 +59,16 @@ export function positivePoints(points: readonly ChartPoint[]): ChartPoint[] {
  * A value as a chart writes it. With a unit (money): grouped with two decimals, exactly like the amounts
  * the server writes in the same card ("₹2,340.00"), so a number never appears in two styles side by side.
  * Negative values with a prefix symbol place the minus sign before the symbol ("-₹250.00").
- * Without one: up to two decimals. Both in the locale of the language on now.
+ * Without one: up to two decimals. Both in the active BCP 47 `locale`.
  */
-export function formatValue(value: unknown, unit: string): string {
+export function formatValue(value: unknown, unit: string, locale: string): string {
   const numeric = Number(value)
   if (!Number.isFinite(numeric)) return ""
   if (unit) {
     if (numeric < 0 && isPrefixSymbol(unit)) {
-      return `-${unit}${formatAmount(Math.abs(numeric))}`
+      return `-${unit}${formatAmount(Math.abs(numeric), locale)}`
     }
-    return `${unit}${formatAmount(numeric)}`
+    return `${unit}${formatAmount(numeric, locale)}`
   }
-  return numeric.toLocaleString(currentLanguageInfo().locale, { maximumFractionDigits: 2 })
+  return numeric.toLocaleString(locale, { maximumFractionDigits: 2 })
 }
