@@ -484,7 +484,7 @@ Each is a phase of its own when chosen; listed roughly by value.
 | Feature | For the user | Builds on |
 |---|---|---|
 | **Indian tax helper** | Spending eligible for 80C, 80D, HRA and similar tagged through the year; a year-end summary for filing | a skill with the rules, categories and notes, the report module |
-| **Splits with UPI links** | "Split this dinner with Ravi": shares worked out, and a `upi://pay` link with the amount filled in, so settling up is one tap | a splits module, A2UI cards, contacts per person |
+| **Splits with UPI links** | **Core delivered (D226):** `/splits` supports Personal and Shared groups, direct contacts, equal/exact splits, atomic invite links with guest-seat claiming, soft-voidable settlements, private "Record my share" expense linking, and opt-in INR `upi://pay` QR codes. Future follow-up: AI Assistant & MCP split tools + A2UI split cards | `splits` module, `expenses`, `categories`, `uqr` |
 | **Receipt vault and warranties** | A Receipts page: every scanned bill kept and searchable ("find my TV bill"); warranty periods read from receipts, with a reminder before they end | receipts, the receipt agent, Phase 31's scheduler |
 | **What-if planning and goals** | "If I halve Swiggy, when can I afford a ₹60,000 phone?"; savings goals tracked month by month | the insights agent, budgets |
 | **Trip mode** | Tag a trip; mixed currencies, per-person shares, a trip report | Phase 30, splits, reports |

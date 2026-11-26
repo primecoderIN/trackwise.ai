@@ -6,7 +6,7 @@ slices). Each half has strict boundaries, and the two share one contract that's 
 ## The backend: a modular monolith
 
 **One app, deployed as one unit, with one database**, divided inside into **modules by business domain**:
-categories, expenses, conversations, receipts, assistant, and an MCP adapter.
+accounts, categories, expenses, budgets, conversations, receipts, reports, splits, assistant, and an MCP adapter.
 
 Think of an apartment building. Everyone shares the foundation (`core/`), the plumbing (`infrastructure/`) and the
 entrance (`web/`). Each flat (module) has its own locked door. When you need something from a neighbour, you knock
@@ -63,7 +63,8 @@ backend/
       sealing.py         Sealer: the port for keeping a secret text unreadable where it's stored (seal, unseal)
       sql.py             rows_affected: how many rows a DELETE or UPDATE touched
       months.py          YearMonth: "2026-11", its range and arithmetic
-      money.py           major <-> minor units, SUPPORTED_CURRENCIES, BASE_CURRENCY, format_money (CLDR)
+      money.py           major <-> minor units, CURRENCY_EXPONENTS / currency_exponent(), SUPPORTED_CURRENCIES,
+                         BASE_CURRENCY, format_money (CLDR)
       i18n/              Language and Accept-Language negotiation, define_catalog / text / Plural / Translatable
                          (texts for people, checked at startup), format_day and format_month (Babel's CLDR data)
       llm/               the LLM port (port.py: StructuredOutputModel, ToolCallingModel, LanguageModel = both,
@@ -91,7 +92,8 @@ backend/
                          Sec-Fetch-Site), require_user / CurrentUserDep (the session check main.py puts on app.state)
       problems.py        RFC 9457 problem details for every error, the detail in the request's language: the
                          error handlers and the unexpected-error middleware
-      rate_limits.py     MODEL_QUOTA: the per-person allowance on the routes that call the model (D194)
+      rate_limits.py     MODEL_QUOTA (D194), REPORTS_QUOTA, RECEIPTS_QUOTA, AUTH_QUOTA, and INVITE_QUOTA +
+                         invalid-attempt throttling for shared-group invites (D226)
       security_headers.py  the headers on every answer; no-store under the API and MCP (D193)
       i18n/              the web layer's own texts (a bug's generic detail, "Sign in to continue.", a refused request)
     modules/
@@ -124,6 +126,14 @@ backend/
                          (MonthlyReports: reads expenses and categories through their queries, runs the monthly-report
                          skill's script, checks its answer), models.py (MonthlyReport), documents/ (markdown.py,
                          spreadsheet.py: the downloads, in the person's language), api.py, i18n/, values.py, module.py
+      splits/            unified Personal and Shared bill-splitting ledger + direct contacts (D226):
+                         commands/ (contacts, groups, invites, splits, soft-voidable settlements, private expense
+                         links, UPI receive profile), queries/ (per-currency isolated overview, group detail, invite
+                         preview, lists), domain/ (rules.py, math.py equal/exact minor-unit allocation, balances.py
+                         per-group balances + min-cash-flow simplification, access.py membership ACLs & settlement
+                         locks), application/ (record_split.py SplitRecorder orchestrating ExpenseRecorder +
+                         SaveWatcher outside the split UoW; invites.py GroupInvites 256-bit token minting/hashing),
+                         persistence/ (group_tables.py, ledger_tables.py, repository.py), api.py, group_api.py, i18n/
       assistant/         the agent, one folder per role; imports run api/ -> application/ -> the rest:
                            api/          adapters: routes.py, schemas.py (bodies), agui_request.py (AG-UI in),
                                          agui_stream.py (AG-UI out), protocol.py (names on the wire)
@@ -153,7 +163,7 @@ backend/
                          plus support.py: argument types, error mapping, checks), resources.py, views.py (an
                          expense as tools show it), http.py (bearer token), module.py
   migrations/            Alembic: env.py and versions/0001_baseline, 0002_neutral_conversations, 0003_expense_version,
-                         0004_conversation_turn_index, 0005_receipt_files, 0006_accounts, ... 0010_budgets
+                         0004_conversation_turn_index, 0005_receipt_files, 0006_accounts, ... 0014_splits
   scripts/               export_contracts.py (the contract for the web app), check.py (every automated check) and
                          check_rules.py (the architecture rules)
   seed.py                sample data, through the bus
@@ -188,7 +198,7 @@ backend/
 7. **Outside the modules, shared code is grouped by concern** (D177). `core/` imports nothing else in the app;
    `infrastructure/` and `web/` import only `core/`. Modules never import `infrastructure/` (what it builds, the
    bus's sessions and the model, is passed in), and only their HTTP adapters (`api.py`, `accounts/account_api.py`,
-   `assistant/api/routes.py`, `mcp/http.py`) import `web/`.
+   `splits/group_api.py`, `assistant/api/routes.py`, `mcp/http.py`) import `web/`.
 8. **`bootstrap.py` is the composition root:** the only file that knows every module. `main.py`, `seed.py`,
    `mcp_stdio.py`, `export_contracts.py` and the migrations all build from it. Nothing registers itself just by being
    imported.
@@ -231,8 +241,8 @@ A module's public contract is still its package: other modules write `from app.m
 files, so importing a module's package also loads its handlers and tables (not its routes, and not the database engine).
 The earlier layout, where the package loaded only a `contracts.py`, gave the lighter import; co-location was judged
 worth more. It can't cause an import cycle, because module dependencies run one way: expenses → categories; budgets →
-expenses, categories; reports → expenses, categories; mcp → expenses, categories, reports, budgets; assistant → the
-rest; accounts and receipts depend on none. The mcp package still exports only its `contracts.py` and loads no server
+expenses, categories; reports → expenses, categories; splits → expenses, categories; mcp → expenses, categories,
+reports, budgets; assistant → the rest; accounts and receipts depend on none. The mcp package still exports only its `contracts.py` and loads no server
 code (D166, D175).
 
 ### Why each module owns its tables
@@ -254,7 +264,8 @@ at the database level. Instead, `CreateExpense`'s handler asks `categories.GetCa
 | `mcp` | `ToolName`, `ResourceUri`, `SERVER_NAME`, `acting_for` and `act_for_process` (who a request acts for, D191), the argument names (`EXPENSE_ID_ARGUMENT`, `CONFIRM_ARGUMENT`, `EXPECTED_VERSION_ARGUMENT`, `CLEAR_NOTE_ARGUMENT`), the typed results (`ExpenseView`, `ExpenseSaved`, `MonthSpending`, ...). The server itself (`create_server`, `create_http_app`) comes from `mcp/module.py`, for the composition root only | assistant |
 | `receipts` | `ReceiptFiles` (an owner's receipt file: `content(owner_id, receipt_id)` → `ReceiptContent`, bytes and media type), `ReceiptContent`, `ReceiptRead`, `ReceiptId`, `ReceiptMediaType`, `MAX_RECEIPT_BYTES`, `ReceiptText`. Its `module.py` gives the composition root `create_files(bus, files)` and `create_router(bus, files)` | the assistant (sends a receipt attached in the chat to the receipt agent), the export script |
 | `assistant` | nothing for other modules; its `module.py` gives the composition root `create_router` (which builds the receipt reader around the remote agents), the `ExpenseTools` port type and `McpExpenseTools` | — |
-| `accounts` | `UserId`, `CurrentUser`, `SignedInUser`, `SignInFailure`, `SignInParam`, `SIGN_IN_PAGE`, `CALLBACK_PATH`, `SESSION_LIFETIME`, `LOGIN_ATTEMPT_TTL`. Its `module.py` gives the composition root `create_session_gate(bus, identity, clock)` (the check main.py puts on `app.state.authenticate`), `create_router(bus, identity, sealer, config)` and `SignInConfig` | the composition root, the export script; Phase 23's per-user data will use `UserId` |
+| `accounts` | `UserId`, `CurrentUser`, `SignedInUser`, `SignInFailure`, `SignInParam`, `SIGN_IN_PAGE`, `CALLBACK_PATH`, `SESSION_LIFETIME`, `LOGIN_ATTEMPT_TTL`. Its `module.py` gives the composition root `create_session_gate(bus, identity, clock)` (the check main.py puts on `app.state.authenticate`), `create_router(bus, identity, sealer, config)` and `SignInConfig` | the composition root, the export script; per-user data uses `UserId` |
+| `splits` | `SplitContactId`, `SplitGroupId`, `SplitGroupMemberId`, `SplitGroupInviteId`, `SplitExpenseId`, `SplitSettlementId`, `GroupKind`, `GroupMemberRole`, `SplitMethod`, `ExpenseLinkStatus`, `INVITE_TOKEN_PREFIX`, `UPI_ID_REGEX`, limits, `SplitText`, `SplitRecorder`, `GroupInvites`. Its `module.py` gives the composition root `register_handlers`, `create_router(bus, recorder, invites, clock)`, `TABLES` | the composition root, the export script (depends on `expenses` and `categories` only, D226) |
 
 Each module's `module.py` is what `bootstrap.py` plugs in: `register_handlers(bus)`, its router (or a function that
 builds one), its `TABLES`. Only `bootstrap.py` and `main.py` import a `module.py`.
@@ -538,6 +549,10 @@ web/
       categories/   categories API and queries, CategorySelect, category names
       budgets/      Budgets page, limits and spend alerts; api.ts, queries.ts
       reports/      Reports page and CSV/JSON exports; api.ts, queries.ts
+      splits/       Splits page (`/splits`) & invite join page (`/splits/join/[token]`): Personal/Shared groups,
+                    people obligations, activity feed, invites, soft-voidable settlements, INR UPI QR (`uqr`);
+                    components/ grouped into summary/, groups/, contacts/, activity/, join/, dialogs/; api.ts,
+                    queries.ts, upi.ts, split-preview.ts
       dashboard/    Dashboard page, stat cards, charts, recent list; api.ts, queries.ts
       assistant/    chat panel; model/ (useChat, AssistantProvider); api/ (AG-UI stream, StreamError); a2ui/
       auth/         sign-in page, AuthGate (the session check in front of the signed-in pages), user menu
@@ -661,7 +676,7 @@ source's imports (Python's `ast`) and checks:
 4. Only a composition root picks the LLM provider (bootstrap.py, the Gemini adapter, the agents' server.py).
 5. Inside the assistant, imports run `api/` → `application/` → the rest, never back.
 6. Each module package imports on its own, in a fresh interpreter (which catches import cycles).
-7. Only a module's HTTP adapters (`api.py`, `account_api.py`, `http.py`, `routes.py`) import `web/`.
+7. Only a module's HTTP adapters (`api.py`, `account_api.py`, `group_api.py`, `http.py`, `routes.py`) import `web/`.
 8. No identity provider's name in `backend/app` or `web/src` (D185).
 9. A person's data is never read by its id alone (`session.get(`): every read names the owner in the same statement
    (D190, D217).

@@ -14,12 +14,13 @@ Unauthenticated visitors land on a server-rendered, SEO-optimized public website
 
 ---
 
-## 2. Signed-In Workspace (`/dashboard`, `/expenses`, `/budgets`, `/categories`, `/reports`, `/settings`)
+## 2. Signed-In Workspace (`/dashboard`, `/expenses`, `/splits`, `/budgets`, `/categories`, `/reports`, `/settings`)
 
 All signed-in routes sit inside a unified frame with light/dark theme switching, live English/Hindi UI switching, and a zero-dependency **Command Palette (`Ctrl/⌘ + K`)** for keyboard navigation and quick expense entry:
 
 - **Dashboard (`/dashboard`):** Monthly total spend in normalized base currency (`USD`, D223), percentage comparison against the previous month, transaction counts, category breakdown bar/list, payment-method distribution, and daily spending charts. Month switching lets users review historical periods seamlessly.
 - **Expenses Ledger (`/expenses`):** Server-paginated, filterable table (by month, category, merchant search, payment method, and date range) with inline add/edit dialogs supporting multi-currency entry, optimistic concurrency checks on edits/deletes, and instant budget threshold toast notices on save.
+- **Splits (`/splits`, `/splits/join/[token]`):** Unified bill-splitting ledger supporting both **Personal** (single-owner) and **Shared** (multi-owner) groups alongside direct 1-on-1 contacts (`D226`). Supports equal and exact custom splits across per-currency ledgers (never netting balances across unrelated groups), zero-email shareable invite links with atomic guest-seat claiming and rejoin restoration, soft-voidable settlements with historical split lock protection, opt-in INR UPI QR payment links (`uqr`), and private per-user logging of your own share into `/expenses` with live budget alerts.
 - **Monthly Budgets (`/budgets`):** Set an overall monthly budget and/or per-category monthly caps. Progress bars highlight approaching (`>= 80%`) and exceeded (`> 100%`) limits, and saving/editing an expense from **any** surface (UI, Assistant, or MCP) triggers localized budget alerts when thresholds cross.
 - **Categories (`/categories`):** View all 8 curated categories (`Food`, `Transport`, `Shopping`, `Bills`, `Entertainment`, `Health`, `Travel`, `Other`) with monthly spending summaries and icons.
 - **Reports (`/reports`):** Structured monthly summary featuring total spend, month-over-month delta, daily average, category and payment breakdowns, largest expenses, and one-click **CSV** (formula-injection sanitized) or **Markdown** downloads.
@@ -55,6 +56,6 @@ All MCP tools (`add_expense`, `edit_expense`, `delete_expense` with `confirmed=t
 
 ## Deliberate Scope Boundaries
 
-- **Single user per account:** Expenses, budgets, conversations, receipts, and PATs belong strictly to one authenticated `UserId`. Shared family/team workspaces are planned for a later phase ([Roadmap](roadmap.md)).
+- **Private personal finance, opt-in shared splits:** Personal expenses, budgets, conversations, receipts, and PATs belong strictly to one authenticated `UserId`. Collaborative bill splitting lives in the `splits` module (`D226`), where Shared groups use membership-scoped access while every member's linked personal expenses remain strictly private.
 - **Curated global categories:** Categories are seeded across the workspace (`seed.py`) to keep cross-currency reporting, Agent Skills, and charts consistent.
 - **Safe client-side state:** Zero financial records or tokens live in `localStorage` or `sessionStorage`; switching accounts or signing out cleanly resets all active client memory and SSE streams.

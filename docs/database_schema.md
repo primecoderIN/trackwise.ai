@@ -128,10 +128,113 @@ erDiagram
         DATETIME expires_at
         DATETIME last_used_at "nullable"
     }
+    split_profile {
+        BIGINT owner_id PK
+        VARCHAR_100 upi_id "nullable; syntax-validated only"
+        BOOLEAN share_upi_with_groups "false by default"
+        DATETIME updated_at
+    }
+    split_contact {
+        BIGINT id PK
+        BIGINT owner_id "indexed"
+        VARCHAR_80 name
+        VARCHAR_80 name_key "unique with owner_id"
+        VARCHAR_100 upi_id "nullable; private to owner"
+        VARCHAR_200 note "nullable"
+        DATETIME archived_at "nullable"
+        DATETIME created_at
+    }
+    split_group {
+        BIGINT id PK
+        BIGINT owner_id "current owner UserId; indexed"
+        VARCHAR_16 kind "'personal' or 'shared'"
+        VARCHAR_80 name
+        VARCHAR_80 name_key "unique with owner_id"
+        VARCHAR_3 default_currency "nullable"
+        DATETIME archived_at "nullable"
+        DATETIME created_at
+    }
+    split_group_member {
+        BIGINT id PK
+        BIGINT group_id FK "indexed; unique with user_id / contact_id"
+        BIGINT user_id "nullable; registered member UserId"
+        BIGINT contact_id FK "nullable; private contact/guest seat"
+        VARCHAR_80 display_name
+        VARCHAR_16 role "'owner' or 'member'"
+        BIGINT added_by_user_id
+        DATETIME joined_at
+        DATETIME left_at "nullable; cleared on rejoin"
+    }
+    split_group_invite {
+        BIGINT id PK
+        BIGINT group_id FK "indexed"
+        BIGINT created_by_user_id
+        VARCHAR_64 token_hash "unique; SHA-256 of spwi_ token"
+        VARCHAR_4 hint "last characters"
+        BIGINT target_member_id FK "nullable; specific guest seat"
+        INTEGER max_uses ">= 1"
+        INTEGER use_count "0..max_uses"
+        DATETIME expires_at "indexed"
+        DATETIME revoked_at "nullable"
+        DATETIME created_at
+    }
+    split_expense {
+        BIGINT id PK
+        BIGINT owner_id "indexed; creator/owner"
+        BIGINT group_id FK "nullable; null for direct splits"
+        VARCHAR_120 description
+        BIGINT amount_minor "> 0"
+        VARCHAR_3 currency
+        BIGINT paid_by_member_id FK "nullable"
+        BIGINT paid_by_contact_id FK "nullable"
+        VARCHAR_20 split_method "'equal' or 'exact'"
+        DATE spent_on
+        VARCHAR_500 note "nullable"
+        DATETIME created_at
+    }
+    split_share {
+        BIGINT id PK
+        BIGINT split_expense_id FK "indexed"
+        BIGINT member_id FK "nullable"
+        BIGINT contact_id FK "nullable; both null = direct owner share"
+        BIGINT share_minor ">= 0"
+    }
+    split_settlement {
+        BIGINT id PK
+        BIGINT owner_id "indexed"
+        BIGINT group_id FK "nullable"
+        BIGINT from_member_id FK "nullable"
+        BIGINT to_member_id FK "nullable"
+        BIGINT from_contact_id FK "nullable"
+        BIGINT to_contact_id FK "nullable"
+        BIGINT amount_minor "> 0"
+        VARCHAR_3 currency
+        DATE settled_on
+        VARCHAR_200 note "nullable"
+        DATETIME voided_at "nullable; soft-void"
+        BIGINT voided_by_user_id "nullable"
+        DATETIME created_at
+    }
+    split_expense_link {
+        BIGINT id PK
+        BIGINT split_expense_id FK "unique with owner_id"
+        BIGINT owner_id "indexed"
+        BIGINT expense_id "nullable while recording; no FK"
+        VARCHAR_16 status "'recording' or 'linked'"
+        DATETIME created_at
+        DATETIME updated_at
+    }
     category ||..o{ expense : "category_id (checked in code)"
     app_user ||--o{ user_identity : "user_id"
     app_user ||--o{ user_session : "user_id"
     app_user ||--o{ access_token : "user_id"
+    split_group ||--o{ split_group_member : "group_id"
+    split_group ||--o{ split_group_invite : "group_id"
+    split_group ||--o{ split_expense : "group_id"
+    split_group ||--o{ split_settlement : "group_id"
+    split_expense ||--o{ split_share : "split_expense_id"
+    split_expense ||--o{ split_expense_link : "split_expense_id"
+    expense ||..o{ split_expense_link : "expense_id (checked in code)"
 ```
 
 The dotted line is a link kept **in code**, not by the database: there are no foreign keys between modules (below).
@@ -152,6 +255,15 @@ conversations, also without a key.
 | `user_session` | accounts | signed-in browsers: the hash of each cookie's key, and the session's lifetimes |
 | `login_attempt` | accounts | sign-ins that have left for the provider and not come back yet |
 | `access_token` | accounts | personal access tokens for MCP clients: the hash of each, never the token |
+| `split_profile` | splits | optional per-user UPI receive ID and opt-in group-sharing toggle (D226) |
+| `split_contact` | splits | a person's private contacts for direct 1-on-1 splits and Personal/guest seats |
+| `split_group` | splits | unified Personal (single-owner) and Shared (multi-owner) split groups |
+| `split_group_member` | splits | registered members and guest/placeholder seats inside a group (reactivated on rejoin) |
+| `split_group_invite` | splits | SHA-256 hashed, expiring, revocable invite links for Shared groups |
+| `split_expense` | splits | group or direct split ledger entries with currency and split method |
+| `split_share` | splits | per-participant minor-unit obligation rows for each `split_expense` |
+| `split_settlement` | splits | auditable, soft-voidable full/partial repayments between participants |
+| `split_expense_link` | splits | strictly private per-user mapping from a split to that user's own `expense.id` |
 | `alembic_version` | (migrations) | which migration the database is at |
 
 ## `category`
@@ -350,6 +462,49 @@ Each attempt is read and deleted in one step when the provider sends the browser
 | `created_at`, `expires_at` | DATETIME | it stops working at `expires_at`; revoking deletes the row |
 | `last_used_at` | DATETIME, nullable | written at most once an hour |
 
+## The splits tables (D226)
+
+Owned by the `splits` module (migration `0014_splits`). Foreign keys stay strictly inside the `splits` module (`D13`);
+cross-module links (`owner_id`, `user_id`, `expense_id`) remain plain `BIGINT` values checked through the owning
+module's queries. All minor-unit money columns use `BIGINT` scaled by `currency_exponent(currency)`.
+
+- **`split_profile`:** One row per `owner_id` (PK) holding an optional syntax-validated `upi_id` and
+  `share_upi_with_groups` (default `false`: co-members only see a user's UPI ID when opted in).
+- **`split_contact`:** Private per-owner contacts (`owner_id`, `name`, optional private `upi_id`, `note`, `archived_at`).
+  Private `upi_id` and `contact_id` are never exposed to other users in Shared groups.
+- **`split_group`:** Unified group record (`owner_id`, `kind` ∈ `{'personal', 'shared'}`, `name`, `default_currency`,
+  `archived_at`). Archived groups remain readable for history while rejecting mutations.
+- **`split_group_member`:** Unified participant inside a group (`group_id` FK, either `user_id` for a registered member
+  OR `contact_id` FK / guest label for a placeholder seat, `display_name`, `role` ∈ `{'owner', 'member'}`,
+  `added_by_user_id`, `joined_at`, `left_at`). Enforces:
+  - `ck_split_group_member_identity_exclusive`: a row cannot hold both `user_id` and `contact_id`.
+  - `ck_split_group_member_owner_registered`: an `owner` must have `user_id IS NOT NULL`.
+  - Partial unique `uq_split_group_member_user` on `(group_id, user_id) WHERE user_id IS NOT NULL` (reactivating
+    the same row on rejoin preserves historical `member_id`).
+  - Partial unique `uq_split_group_member_active_contact` on `(group_id, contact_id) WHERE contact_id IS NOT NULL AND left_at IS NULL`.
+  - Partial unique `uq_split_group_member_active_owner` on `(group_id) WHERE role = 'owner' AND left_at IS NULL`.
+- **`split_group_invite`:** Shareable zero-email invite (`group_id` FK, `created_by_user_id`, optional
+  `target_member_id` FK for claiming a specific guest seat, unique `token_hash` = SHA-256 of the `spwi_` token,
+  `hint`, `expires_at`, `max_uses >= 1`, `use_count` in `0..max_uses` via `ck_split_group_invite_uses`, `revoked_at`).
+- **`split_expense`:** Direct (`group_id IS NULL`) or group (`group_id IS NOT NULL`) split (`owner_id`, `paid_by_member_id`
+  or `paid_by_contact_id`, `amount_minor > 0`, `currency`, `split_method` ∈ `{'equal', 'exact'}`, `description`, `note`,
+  `spent_on`, `created_at`). Enforces `ck_split_expense_payer_mode` (group splits never set `paid_by_contact_id`;
+  direct splits never set `paid_by_member_id`).
+- **`split_share`:** Per-participant share row (`split_expense_id` FK, `member_id` FK, `contact_id` FK, `share_minor >= 0`).
+  Enforces `ck_split_share_participant_exclusive` (never both `member_id` and `contact_id`; both `NULL` represents the
+  owner's self-share in a direct split) plus partial unique indexes `uq_split_share_expense_member`,
+  `uq_split_share_expense_contact`, and `uq_split_share_expense_direct_self`.
+- **`split_settlement`:** Full or partial repayment (`owner_id`, `group_id` FK, `from_member_id`/`to_member_id` for group
+  settlements or `from_contact_id`/`to_contact_id` for direct settlements where `NULL` is the owner, `amount_minor > 0`,
+  `currency`, `settled_on`, `note`, `voided_at`, `voided_by_user_id`, `created_at`). Enforces `ck_split_settlement_mode`
+  (distinct `from_member_id != to_member_id` in groups; at least one contact and distinct parties in direct mode) and
+  `ck_split_settlement_void_pair` (`voided_at` and `voided_by_user_id` are either both null or both set). Settlements
+  are never hard-deleted.
+- **`split_expense_link`:** Strictly private per-user link (`split_expense_id` FK, `owner_id`, `expense_id` plain `BIGINT`,
+  `status` ∈ `{'recording', 'linked'}`, `created_at`, `updated_at`) with unique `(split_expense_id, owner_id)` and
+  `ck_split_expense_link_status` (`recording` requires `expense_id IS NULL`; `linked` requires `expense_id IS NOT NULL`),
+  ensuring idempotent and crash-recoverable "Record my share" creation.
+
 ## Rules every table follows
 
 - **One owner.** Only the owning module's handlers touch a table. Other modules ask through the bus
@@ -381,6 +536,7 @@ The tables are created and changed only by **Alembic migrations** in `backend/mi
 | `0011_bigint_and_category_key` | widens all id, owner/category/user reference and minor-unit money columns (`amount_minor`, `base_amount_minor`, `limit_minor`) to 64-bit `BigInteger` (`BIGINT` in PostgreSQL), and adds `category.name_key` with unique index `ix_category_name_key` (D216) |
 | `0012_user_onboarding_and_terms` | adds `app_user.welcomed_at`, `terms_version` and `terms_accepted_at` for the first-run welcome flow and terms acceptance (Phase 29, D220) |
 | `0013_user_preferences` | adds `app_user.preferred_language` (`'en'`), `default_currency` (`'USD'`), and `timezone` (`'UTC'`) with `NOT NULL` defaults |
+| `0014_splits` | adds the nine `splits` tables (`split_profile`, `split_contact`, `split_group`, `split_group_member`, `split_group_invite`, `split_expense`, `split_share`, `split_settlement`, `split_expense_link`), check constraints, and partial unique indexes (D226); downgrade drops all nine tables cleanly |
 
 - `.\run.ps1` runs `alembic upgrade head` before starting; `seed.py` and `mcp_stdio.py` do too. The app itself only
   checks, and refuses to start on an out-of-date database with the command to fix it.

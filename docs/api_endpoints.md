@@ -42,7 +42,7 @@ Every error, from any route, has one shape and the media type `application/probl
 | 400 | `invalid-token` | `POST /auth/backchannel-logout` with a logout token that fails a check |
 | 401 | `unauthorized` | no live session ("Sign in to continue."), or `/mcp/` without a working personal access token |
 | 413 | `http` | the request body exceeds the route's size limit (a little over 5 MB for `POST /receipts`, 2 MB for other API routes, 256 KB for `/mcp/`) |
-| 429 | `too-many-requests` | the caller's allowance for the route (the model-backed routes, report generation, receipt uploads, sign-in routes, or `/mcp/`) is spent: `Retry-After` says when to try again (D194, D217) |
+| 429 | `too-many-requests` | the caller's allowance for the route (the model-backed routes, report generation, receipt uploads, sign-in routes, shared-group invite preview/accept, or `/mcp/`) is spent: `Retry-After` says when to try again (D194, D217, D226) |
 | 403 | `forbidden` | a request the app didn't send: no `X-CSRF: 1`, a `Sec-Fetch-Site` from another site, or a sign-out link whose `sid` isn't this session's |
 | 4xx | `http` | FastAPI's own (404 unknown URL, 405 wrong method with an `Allow` header) |
 | 500 | `internal` | a bug; the details go to the server log only |
@@ -457,6 +457,78 @@ receipt.
 
 `POST /api/v1/receipts/{receipt_id}/extraction` was removed in Phase 24 (D199): reading a receipt is the receipt
 agent's job now, reached only through the chat.
+
+## Splits
+
+Unified Personal (single-owner) and Shared (multi-owner) bill-splitting ledger plus direct 1-on-1 contacts (D226).
+All balances are computed independently **per currency** and **per context** (direct contact or individual group) using
+each currency's ISO 4217 minor-unit exponent (`CURRENCY_EXPONENTS`) — never netted across unrelated groups. Non-members
+and former members (`left_at IS NOT NULL`) receive **404** for any Shared group or its splits/settlements.
+
+### Profile & Overview
+
+- **`GET /api/v1/splits/overview`**: Non-netted directional totals per currency (`owed_to_you_minor`, `you_owe_minor`),
+  summary cards for each active/archived group, and the **People** list showing separate per-context obligations
+  (`Direct split`, `Goa Trip`, `Office Lunch`, …).
+- **`GET /api/v1/splits/profile`**, **`PUT /api/v1/splits/profile`**: Read or update the signed-in user's optional UPI ID
+  (syntax-validated only; never bank-verified) and `share_upi_with_groups` opt-in flag (`false` by default).
+
+### Contacts (Private)
+
+- **`GET /api/v1/splits/contacts?include_archived=false`**, **`POST /api/v1/splits/contacts` (201)**: List or create
+  private contacts (`name`, optional private `upi_id`, `note`).
+- **`PATCH /api/v1/splits/contacts/{contact_id}`**, **`DELETE /api/v1/splits/contacts/{contact_id}` (204)**: Edit/archive
+  a contact, or delete it only when unreferenced by any split, settlement, or group member (otherwise 422 `business-rule`
+  instructing archive).
+
+### Groups, Ownership & Invites
+
+- **`GET /api/v1/splits/groups?include_archived=false`**, **`POST /api/v1/splits/groups` (201)**: List or create a
+  `personal` (single-owner) or `shared` (multi-owner) group with initial private contacts or placeholder guest seats.
+- **`GET /api/v1/splits/groups/{group_id}`**: Full group detail: active/past members (private `contact_id` and contact
+  `upi_id` stripped for non-owners; registered members' UPI IDs included only when opted in), per-currency net balances,
+  greedy min-cash-flow `simplified_transfers` (with `to_upi_id` when available), splits, and settlements.
+- **`PATCH /api/v1/splits/groups/{group_id}`**, **`DELETE /api/v1/splits/groups/{group_id}` (204)**: Group owner only.
+  Supports renaming, changing `default_currency`, archiving/unarchiving (archived groups become read-only), adding
+  contacts/guests, removing settled members, and one-way `personal` → `shared` upgrade via `upgrade_to_shared: true`
+  (downgrading back to `personal` is not supported). Delete succeeds only if the group has zero splits and zero
+  settlements.
+- **`POST /api/v1/splits/groups/{group_id}/leave` (204)**: Non-owner active members may leave a Shared group once their
+  balance in every currency is 0. Owners receive 422 until they transfer ownership.
+- **`POST /api/v1/splits/groups/{group_id}/transfer-ownership`**: Group owner atomically transfers ownership to another
+  active registered member (`target_member_id`).
+- **`GET /api/v1/splits/groups/{group_id}/invites`**, **`POST /api/v1/splits/groups/{group_id}/invites` (201)**,
+  **`DELETE /api/v1/splits/groups/{group_id}/invites/{invite_id}` (204)**: Group owner manages shareable `spwi_` invite
+  links (optional `target_member_id` for guest-seat claiming, `expires_in_hours`, `max_uses`). The plaintext token is
+  returned **only once** on creation (`Cache-Control: no-store`).
+- **`POST /api/v1/splits/invites/preview`**, **`POST /api/v1/splits/invites/accept`**: Token is sent strictly in the
+  JSON body (`{"token": "spwi_..."}`), never in URL query strings, guarded by `INVITE_QUOTA` (per-user + per-IP) and
+  stricter throttling on invalid tokens. Invalid, expired, revoked, or exhausted tokens all return the same generic 404.
+  Accept atomically consumes a use and either claims the guest seat, reactivates a former member's original `member_id`,
+  or creates a new member; retrying when already an active member is idempotent without consuming another use.
+
+### Split Expenses & Private Expense Linking
+
+- **`GET /api/v1/splits`**, **`GET /api/v1/splits/{split_id}`**, **`POST /api/v1/splits` (201)**: List, view, or create
+  a direct or group split (`equal` or `exact` split method). Optionally pass `record_my_share` (`category_id`,
+  `payment_method`, optional `merchant`/`note`) to also log strictly the caller's own `my_share_minor` as a private
+  personal expense via `ExpenseRecorder` (returning any `notices` from `BudgetWatch`), or `link_expense_id` to link an
+  existing personal expense.
+- **`PATCH /api/v1/splits/{split_id}`**, **`DELETE /api/v1/splits/{split_id}` (204)**: Creator or group owner only
+  (other active members receive 403). If any non-voided settlement exists on or after the split's `created_at` in the
+  same currency involving any participant, financial fields and deletion are refused with 422 (`SPLIT_LOCKED_BY_SETTLEMENT`);
+  `description` and `note` edits remain allowed.
+- **`POST /api/v1/splits/{split_id}/record-my-share`**, **`PUT /api/v1/splits/{split_id}/link-expense`**,
+  **`DELETE /api/v1/splits/{split_id}/link-expense` (204)**: Each member independently manages their own private link
+  (`split_expense_link`) between a split and their personal `/expenses` ledger. `record-my-share` is idempotent on
+  retries and never reveals another member's `expense_id`.
+
+### Settlements (Auditable, Soft-Voidable)
+
+- **`GET /api/v1/splits/settlements`**, **`POST /api/v1/splits/settlements` (201)**: List or record a full/partial
+  repayment (`amount > 0`, distinct members in a group or a contact in direct mode).
+- **`POST /api/v1/splits/settlements/{settlement_id}/void`**: Soft-void a settlement (`voided_at` / `voided_by_user_id`),
+  reversing its balance effect while preserving the audit trail (settlement creator or group owner only; double-void is 422).
 
 ## The assistant
 

@@ -85,6 +85,21 @@ The owner check is server-side only: nothing the browser does can widen it. The 
 | A link that leads off the site (`?return_to=https://evil.example`, a tampered sign-out link) | only paths on this site are followed (`ownSitePath`, `afterSignIn`); anything else goes to the start page |
 
 
+## Splits & shared groups (D226)
+
+Shared split groups are the one intentionally collaborative domain in trackwise.ai; personal expenses, budgets,
+conversations, receipts, and contacts stay strictly single-owner (`D190`).
+
+| Risk | Defence |
+|---|---|
+| Outsider or former member probing a Shared group, split, or settlement ID | Membership is checked server-side on every read and mutation (`left_at IS NULL`); non-members and former members receive **404** identical to a missing resource |
+| Active member tampering with someone else's split or settlement | Only the split creator or group owner may edit/delete a split, and only the settlement creator or group owner may soft-void a settlement (other members receive **403**); archived groups reject all mutations (**422**) |
+| Two users racing to claim the same guest seat or exceed `max_uses` | `AcceptGroupInvite` consumes `use_count` and claims the target seat with conditional SQL `UPDATE`s in one transaction; active-member retries are idempotent without burning another use |
+| Brute-forcing or enumerating invite tokens | Tokens carry 256 random bits (`spwi_` prefix), are stored only as SHA-256 hashes, travel only in `POST` JSON bodies (never query strings), return one generic **404** for unknown/expired/revoked/exhausted tokens, and are guarded by `INVITE_QUOTA` (per-user + per-IP) plus stricter throttling on invalid attempts |
+| Leaking private contacts or personal expenses inside a Shared group | `split_contact` rows and `split_expense_link` rows are strictly `owner_id`-scoped; shared group responses strip private `contact_id` and contact `upi_id` for non-owners, and `my_linked_expense_id` returns only the caller's own linked expense |
+| Unwanted UPI ID exposure or fake payment confirmation | Own `upi_id` in `split_profile` defaults to `share_upi_with_groups = false` (opt-in) and disappears immediately from co-members when turned off; syntax validation never claims bank verification, and UPI QR codes render pure SVG geometry (`uqr` matrix, zero `dangerouslySetInnerHTML`) without assuming payment completed |
+| Retroactive ledger tampering after someone settles up | Settlements are soft-voided (`voided_at`, `voided_by_user_id`), never hard-deleted, and any split with a later non-voided settlement in the same currency involving a participant blocks financial edits and deletion (**422**) |
+
 ## Headers and caching (D193)
 
 | Where | Headers |
@@ -93,14 +108,15 @@ The owner check is server-side only: nothing the browser does can widen it. The 
 | every backend answer (`web/security_headers.py`) | nosniff, `DENY`, `same-origin`; over https, HSTS |
 | the API and MCP's answers | also **`Cache-Control: no-store`** (a person's data never sits in a cache that could hand it to someone else) and `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'` |
 
-## Rate limits (D194, D217)
+## Rate limits (D194, D217, D226)
 
 The routes that call the model (`/agent`, which also reads attached receipts, `/chat`, `/parse`) spend Gemini quota,
 so each person may make 10 such requests a minute and 300 a day (`MODEL_REQUESTS_PER_MINUTE`,
 `MODEL_REQUESTS_PER_DAY`); clicking **Approve** or **Cancel** on a delete card uses no model and does not consume
-`MODEL_QUOTA`. Report routes (`REPORTS_QUOTA`), receipt uploads (`RECEIPTS_QUOTA`), MCP over HTTP (`mcp_quota`), and
-the sign-in routes (`AUTH_QUOTA`, keyed per client IP) also have per-minute and per-day allowances. One more is a 429
-problem with `Retry-After`.
+`MODEL_QUOTA`. Report routes (`REPORTS_QUOTA`), receipt uploads (`RECEIPTS_QUOTA`), MCP over HTTP (`mcp_quota`),
+sign-in routes (`AUTH_QUOTA`, keyed per client IP), and shared-group invite preview/accept (`INVITE_QUOTA`, keyed by
+both user and client IP with stricter failure throttling on invalid tokens) also have per-minute and per-day
+allowances. One more is a 429 problem with `Retry-After`.
 
 ## MCP
 
