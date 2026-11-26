@@ -911,6 +911,1452 @@
         }
       }
     },
+    "/api/v1/splits/overview": {
+      "get": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "Get Overview",
+        "operationId": "get_overview_api_v1_splits_overview_get",
+        "parameters": [
+          {
+            "name": "include_archived",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Archived"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SplitsOverviewRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/splits/profile": {
+      "get": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "Get Profile",
+        "operationId": "get_profile_api_v1_splits_profile_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SplitProfileRead"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "Update Profile",
+        "operationId": "update_profile_api_v1_splits_profile_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SplitProfileUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SplitProfileRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/splits/contacts": {
+      "get": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "List Contacts",
+        "operationId": "list_contacts_api_v1_splits_contacts_get",
+        "parameters": [
+          {
+            "name": "include_archived",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Archived"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ContactRead"
+                  },
+                  "title": "Response List Contacts Api V1 Splits Contacts Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "Create Contact",
+        "operationId": "create_contact_api_v1_splits_contacts_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewContact"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/splits/contacts/{contact_id}": {
+      "patch": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "Update Contact",
+        "operationId": "update_contact_api_v1_splits_contacts__contact_id__patch",
+        "parameters": [
+          {
+            "name": "contact_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Contact Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactChanges"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "Delete Contact",
+        "operationId": "delete_contact_api_v1_splits_contacts__contact_id__delete",
+        "parameters": [
+          {
+            "name": "contact_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Contact Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/splits/groups": {
+      "get": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "List Groups",
+        "operationId": "list_groups_api_v1_splits_groups_get",
+        "parameters": [
+          {
+            "name": "include_archived",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Archived"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GroupSummaryRead"
+                  },
+                  "title": "Response List Groups Api V1 Splits Groups Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "Create Group",
+        "operationId": "create_group_api_v1_splits_groups_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewGroup"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupDetailRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/splits/groups/{group_id}": {
+      "get": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "Get Group Detail",
+        "operationId": "get_group_detail_api_v1_splits_groups__group_id__get",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Group Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupDetailRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "Update Group",
+        "operationId": "update_group_api_v1_splits_groups__group_id__patch",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Group Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupChanges"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupDetailRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "Delete Group",
+        "operationId": "delete_group_api_v1_splits_groups__group_id__delete",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Group Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/splits/groups/{group_id}/leave": {
+      "post": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "Leave Group",
+        "operationId": "leave_group_api_v1_splits_groups__group_id__leave_post",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Group Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/splits/groups/{group_id}/transfer-ownership": {
+      "post": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "Transfer Ownership",
+        "operationId": "transfer_ownership_api_v1_splits_groups__group_id__transfer_ownership_post",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Group Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferOwnershipInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupDetailRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/splits/groups/{group_id}/invites": {
+      "get": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "List Invites",
+        "operationId": "list_invites_api_v1_splits_groups__group_id__invites_get",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Group Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InviteRead"
+                  },
+                  "title": "Response List Invites Api V1 Splits Groups  Group Id  Invites Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "Create Invite",
+        "operationId": "create_invite_api_v1_splits_groups__group_id__invites_post",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Group Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewGroupInvite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedInviteRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/splits/groups/{group_id}/invites/{invite_id}": {
+      "delete": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "Revoke Invite",
+        "operationId": "revoke_invite_api_v1_splits_groups__group_id__invites__invite_id__delete",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Group Id"
+            }
+          },
+          {
+            "name": "invite_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Invite Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/splits/invites/preview": {
+      "post": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "Preview Invite",
+        "operationId": "preview_invite_api_v1_splits_invites_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewInviteInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitePreviewRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/splits/invites/accept": {
+      "post": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "Accept Invite",
+        "operationId": "accept_invite_api_v1_splits_invites_accept_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptInviteInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptedInviteRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/splits/settlements": {
+      "get": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "List Settlements",
+        "operationId": "list_settlements_api_v1_splits_settlements_get",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 9223372036854775807,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Group Id"
+            }
+          },
+          {
+            "name": "contact_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 9223372036854775807,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Contact Id"
+            }
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[A-Z]{3}$",
+                  "examples": [
+                    "USD"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Currency"
+            }
+          },
+          {
+            "name": "include_voided",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Include Voided"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettlementList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "Record Settlement",
+        "operationId": "record_settlement_api_v1_splits_settlements_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewSettlement"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettlementRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/splits/settlements/{settlement_id}/void": {
+      "post": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "Void Settlement",
+        "operationId": "void_settlement_api_v1_splits_settlements__settlement_id__void_post",
+        "parameters": [
+          {
+            "name": "settlement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Settlement Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettlementRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/splits": {
+      "get": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "List Splits",
+        "operationId": "list_splits_api_v1_splits_get",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 9223372036854775807,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Group Id"
+            }
+          },
+          {
+            "name": "contact_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 9223372036854775807,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Contact Id"
+            }
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[A-Z]{3}$",
+                  "examples": [
+                    "USD"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Currency"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SplitExpenseList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "Create Split",
+        "operationId": "create_split_api_v1_splits_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewSplitExpense"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedSplitExpense"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/splits/{split_id}": {
+      "get": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "Get Split",
+        "operationId": "get_split_api_v1_splits__split_id__get",
+        "parameters": [
+          {
+            "name": "split_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Split Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SplitExpenseRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "Update Split",
+        "operationId": "update_split_api_v1_splits__split_id__patch",
+        "parameters": [
+          {
+            "name": "split_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Split Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SplitExpenseChanges"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SplitExpenseRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "Delete Split",
+        "operationId": "delete_split_api_v1_splits__split_id__delete",
+        "parameters": [
+          {
+            "name": "split_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Split Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/splits/{split_id}/record-my-share": {
+      "post": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "Record My Share",
+        "operationId": "record_my_share_api_v1_splits__split_id__record_my_share_post",
+        "parameters": [
+          {
+            "name": "split_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Split Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordMyShareInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedSplitExpense"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/splits/{split_id}/link-expense": {
+      "put": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "Link Expense",
+        "operationId": "link_expense_api_v1_splits__split_id__link_expense_put",
+        "parameters": [
+          {
+            "name": "split_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Split Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkExpenseInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SplitExpenseRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "splits"
+        ],
+        "summary": "Unlink Expense",
+        "operationId": "unlink_expense_api_v1_splits__split_id__link_expense_delete",
+        "parameters": [
+          {
+            "name": "split_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Split Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/threads/{thread_id}": {
       "get": {
         "tags": [
@@ -1537,6 +2983,48 @@
   },
   "components": {
     "schemas": {
+      "AcceptInviteInput": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 20,
+            "title": "Token"
+          },
+          "claim_member_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9.223372036854776e+18,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claim Member Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "title": "AcceptInviteInput"
+      },
+      "AcceptedInviteRead": {
+        "properties": {
+          "group_id": {
+            "type": "integer",
+            "title": "Group Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "group_id"
+        ],
+        "title": "AcceptedInviteRead"
+      },
       "AccessTokenRead": {
         "properties": {
           "id": {
@@ -1809,6 +3297,23 @@
           "logout_token"
         ],
         "title": "BackchannelLogoutForm"
+      },
+      "BalanceContextKind": {
+        "type": "string",
+        "enum": [
+          "direct",
+          "group"
+        ],
+        "title": "BalanceContextKind"
+      },
+      "BalanceDirection": {
+        "type": "string",
+        "enum": [
+          "owed_to_you",
+          "you_owe",
+          "settled"
+        ],
+        "title": "BalanceDirection"
       },
       "BigExpense": {
         "properties": {
@@ -2208,6 +3713,149 @@
         ],
         "title": "ChatResponse"
       },
+      "ClaimableGuestRead": {
+        "properties": {
+          "member_id": {
+            "type": "integer",
+            "title": "Member Id"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "has_history": {
+            "type": "boolean",
+            "title": "Has History"
+          }
+        },
+        "type": "object",
+        "required": [
+          "member_id",
+          "display_name",
+          "has_history"
+        ],
+        "title": "ClaimableGuestRead"
+      },
+      "ContactChanges": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "upi_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "pattern": "^[a-zA-Z0-9._-]{2,64}@[a-zA-Z0-9.-]{2,32}$",
+                "examples": [
+                  "ravi@okhdfcbank"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upi Id"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "archived": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Archived"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ContactChanges"
+      },
+      "ContactRead": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "upi_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upi Id"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "archived_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Archived At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "upi_id",
+          "note",
+          "archived_at",
+          "created_at"
+        ],
+        "title": "ContactRead"
+      },
       "Context": {
         "properties": {
           "description": {
@@ -2227,6 +3875,82 @@
         ],
         "title": "Context",
         "description": "A named piece of ambient information given to the agent for the run,\ndistinct from the conversation."
+      },
+      "ContextObligationRead": {
+        "properties": {
+          "context_kind": {
+            "$ref": "#/components/schemas/BalanceContextKind"
+          },
+          "group_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Id"
+          },
+          "group_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Name"
+          },
+          "group_kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GroupKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "member_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Member Id"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "amount_minor": {
+            "type": "integer",
+            "title": "Amount Minor"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/BalanceDirection"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount",
+            "description": "Major-unit obligation amount in `currency`.",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "context_kind",
+          "currency",
+          "amount_minor",
+          "direction",
+          "amount"
+        ],
+        "title": "ContextObligationRead"
       },
       "CreatedAccessToken": {
         "properties": {
@@ -2285,6 +4009,122 @@
           "token"
         ],
         "title": "CreatedAccessToken"
+      },
+      "CreatedInviteRead": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "hint": {
+            "type": "string",
+            "title": "Hint"
+          },
+          "target_member_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Member Id"
+          },
+          "target_member_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Member Name"
+          },
+          "max_uses": {
+            "type": "integer",
+            "title": "Max Uses"
+          },
+          "use_count": {
+            "type": "integer",
+            "title": "Use Count"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          },
+          "token": {
+            "type": "string",
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "hint",
+          "target_member_id",
+          "target_member_name",
+          "max_uses",
+          "use_count",
+          "expires_at",
+          "revoked_at",
+          "created_at",
+          "active",
+          "token"
+        ],
+        "title": "CreatedInviteRead"
+      },
+      "CurrencyBalance": {
+        "properties": {
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "amount_minor": {
+            "type": "integer",
+            "title": "Amount Minor"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/BalanceDirection"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount",
+            "description": "Major-unit magnitude formatted to `currency`'s minor-unit precision.",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "currency",
+          "amount_minor",
+          "direction",
+          "amount"
+        ],
+        "title": "CurrencyBalance"
       },
       "CurrentUser": {
         "properties": {
@@ -2540,6 +4380,61 @@
         "title": "DocumentPart",
         "description": "A document part."
       },
+      "ExactShareInput": {
+        "properties": {
+          "member_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9.223372036854776e+18,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Member Id"
+          },
+          "contact_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9.223372036854776e+18,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Id"
+          },
+          "is_self": {
+            "type": "boolean",
+            "title": "Is Self",
+            "default": false
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Amount",
+            "examples": [
+              "45.50"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "amount"
+        ],
+        "title": "ExactShareInput"
+      },
       "ExpenseChanges": {
         "properties": {
           "amount": {
@@ -2643,6 +4538,14 @@
         "type": "object",
         "title": "ExpenseChanges",
         "description": "The body of PATCH /expenses/{id}: send only the fields you want to change."
+      },
+      "ExpenseLinkStatus": {
+        "type": "string",
+        "enum": [
+          "recording",
+          "linked"
+        ],
+        "title": "ExpenseLinkStatus"
       },
       "ExpenseList": {
         "properties": {
@@ -2851,6 +4754,296 @@
         "title": "FunctionCall",
         "description": "The name and arguments of a tool call."
       },
+      "GroupChanges": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "default_currency": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Z]{3}$",
+                "examples": [
+                  "USD"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Currency"
+          },
+          "upgrade_to_shared": {
+            "type": "boolean",
+            "title": "Upgrade To Shared",
+            "default": false
+          },
+          "add_contact_ids": {
+            "items": {
+              "type": "integer",
+              "maximum": 9.223372036854776e+18,
+              "minimum": 1.0
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Add Contact Ids"
+          },
+          "add_guest_names": {
+            "items": {
+              "type": "string",
+              "maxLength": 80,
+              "minLength": 1
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Add Guest Names"
+          },
+          "remove_member_ids": {
+            "items": {
+              "type": "integer",
+              "maximum": 9.223372036854776e+18,
+              "minimum": 1.0
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Remove Member Ids"
+          },
+          "archived": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Archived"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "GroupChanges"
+      },
+      "GroupDetailRead": {
+        "properties": {
+          "group": {
+            "$ref": "#/components/schemas/GroupSummaryRead"
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/GroupMemberRead"
+            },
+            "type": "array",
+            "title": "Members"
+          },
+          "member_balances": {
+            "items": {
+              "$ref": "#/components/schemas/MemberCurrencyBalanceRead"
+            },
+            "type": "array",
+            "title": "Member Balances"
+          },
+          "simplified_transfers": {
+            "items": {
+              "$ref": "#/components/schemas/SimplifiedTransferRead"
+            },
+            "type": "array",
+            "title": "Simplified Transfers"
+          },
+          "invites": {
+            "items": {
+              "$ref": "#/components/schemas/InviteRead"
+            },
+            "type": "array",
+            "title": "Invites"
+          },
+          "splits": {
+            "items": {
+              "$ref": "#/components/schemas/SplitExpenseRead"
+            },
+            "type": "array",
+            "title": "Splits"
+          },
+          "settlements": {
+            "items": {
+              "$ref": "#/components/schemas/SettlementRead"
+            },
+            "type": "array",
+            "title": "Settlements"
+          }
+        },
+        "type": "object",
+        "required": [
+          "group",
+          "members",
+          "member_balances",
+          "simplified_transfers",
+          "invites",
+          "splits",
+          "settlements"
+        ],
+        "title": "GroupDetailRead"
+      },
+      "GroupKind": {
+        "type": "string",
+        "enum": [
+          "personal",
+          "shared"
+        ],
+        "title": "GroupKind"
+      },
+      "GroupMemberRead": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "role": {
+            "$ref": "#/components/schemas/MemberRole"
+          },
+          "is_self": {
+            "type": "boolean",
+            "title": "Is Self"
+          },
+          "is_registered": {
+            "type": "boolean",
+            "title": "Is Registered"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "upi_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upi Id"
+          },
+          "joined_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Joined At"
+          },
+          "left_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Left At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "display_name",
+          "role",
+          "is_self",
+          "is_registered",
+          "is_active",
+          "joined_at"
+        ],
+        "title": "GroupMemberRead"
+      },
+      "GroupSummaryRead": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/GroupKind"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "default_currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Currency"
+          },
+          "my_role": {
+            "$ref": "#/components/schemas/MemberRole"
+          },
+          "my_member_id": {
+            "type": "integer",
+            "title": "My Member Id"
+          },
+          "member_count": {
+            "type": "integer",
+            "title": "Member Count"
+          },
+          "archived_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Archived At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "my_balances": {
+            "items": {
+              "$ref": "#/components/schemas/CurrencyBalance"
+            },
+            "type": "array",
+            "title": "My Balances"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "name",
+          "default_currency",
+          "my_role",
+          "my_member_id",
+          "member_count",
+          "archived_at",
+          "created_at",
+          "my_balances"
+        ],
+        "title": "GroupSummaryRead"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -2923,6 +5116,155 @@
         "title": "ImagePart",
         "description": "An image part."
       },
+      "InviteLifetime": {
+        "type": "integer",
+        "enum": [
+          1,
+          7,
+          30
+        ],
+        "title": "InviteLifetime"
+      },
+      "InvitePreviewRead": {
+        "properties": {
+          "group_name": {
+            "type": "string",
+            "title": "Group Name"
+          },
+          "default_currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Currency"
+          },
+          "member_count": {
+            "type": "integer",
+            "title": "Member Count"
+          },
+          "already_member": {
+            "type": "boolean",
+            "title": "Already Member"
+          },
+          "is_rejoin": {
+            "type": "boolean",
+            "title": "Is Rejoin"
+          },
+          "target_guest": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClaimableGuestRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "claimable_guests": {
+            "items": {
+              "$ref": "#/components/schemas/ClaimableGuestRead"
+            },
+            "type": "array",
+            "title": "Claimable Guests"
+          }
+        },
+        "type": "object",
+        "required": [
+          "group_name",
+          "default_currency",
+          "member_count",
+          "already_member",
+          "is_rejoin",
+          "claimable_guests"
+        ],
+        "title": "InvitePreviewRead"
+      },
+      "InviteRead": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "hint": {
+            "type": "string",
+            "title": "Hint"
+          },
+          "target_member_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Member Id"
+          },
+          "target_member_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Member Name"
+          },
+          "max_uses": {
+            "type": "integer",
+            "title": "Max Uses"
+          },
+          "use_count": {
+            "type": "integer",
+            "title": "Use Count"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "hint",
+          "target_member_id",
+          "target_member_name",
+          "max_uses",
+          "use_count",
+          "expires_at",
+          "revoked_at",
+          "created_at",
+          "active"
+        ],
+        "title": "InviteRead"
+      },
       "Language": {
         "type": "string",
         "enum": [
@@ -2931,6 +5273,22 @@
         ],
         "title": "Language",
         "description": "A language, by its BCP 47 code: what the web app sends in Accept-Language."
+      },
+      "LinkExpenseInput": {
+        "properties": {
+          "expense_id": {
+            "type": "integer",
+            "maximum": 9.223372036854776e+18,
+            "minimum": 1.0,
+            "title": "Expense Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "expense_id"
+        ],
+        "title": "LinkExpenseInput"
       },
       "LoginOptionRead": {
         "properties": {
@@ -2949,6 +5307,54 @@
           "label"
         ],
         "title": "LoginOptionRead"
+      },
+      "MemberCurrencyBalanceRead": {
+        "properties": {
+          "member_id": {
+            "type": "integer",
+            "title": "Member Id"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "is_self": {
+            "type": "boolean",
+            "title": "Is Self"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "net_minor": {
+            "type": "integer",
+            "title": "Net Minor"
+          },
+          "net": {
+            "type": "string",
+            "title": "Net",
+            "description": "Signed major-unit net balance (+ means owed money, - means owes money).",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "member_id",
+          "display_name",
+          "is_self",
+          "currency",
+          "net_minor",
+          "net"
+        ],
+        "title": "MemberCurrencyBalanceRead"
+      },
+      "MemberRole": {
+        "type": "string",
+        "enum": [
+          "owner",
+          "member"
+        ],
+        "title": "MemberRole"
       },
       "MessageKind": {
         "type": "string",
@@ -3169,6 +5575,50 @@
         ],
         "title": "NewAccessToken"
       },
+      "NewContact": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "upi_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "pattern": "^[a-zA-Z0-9._-]{2,64}@[a-zA-Z0-9.-]{2,32}$",
+                "examples": [
+                  "ravi@okhdfcbank"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upi Id"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "NewContact"
+      },
       "NewExpense": {
         "properties": {
           "amount": {
@@ -3238,6 +5688,402 @@
         ],
         "title": "NewExpense",
         "description": "A new expense. Also the body of POST /expenses."
+      },
+      "NewGroup": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/GroupKind",
+            "default": "personal"
+          },
+          "default_currency": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Z]{3}$",
+                "examples": [
+                  "USD"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Currency"
+          },
+          "member_contact_ids": {
+            "items": {
+              "type": "integer",
+              "maximum": 9.223372036854776e+18,
+              "minimum": 1.0
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Member Contact Ids"
+          },
+          "guest_names": {
+            "items": {
+              "type": "string",
+              "maxLength": 80,
+              "minLength": 1
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Guest Names"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "NewGroup"
+      },
+      "NewGroupInvite": {
+        "properties": {
+          "target_member_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9.223372036854776e+18,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Member Id"
+          },
+          "lifetime_days": {
+            "$ref": "#/components/schemas/InviteLifetime",
+            "default": 7
+          },
+          "max_uses": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Max Uses",
+            "default": 1
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "NewGroupInvite"
+      },
+      "NewSettlement": {
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Amount",
+            "examples": [
+              "45.50"
+            ]
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency",
+            "default": "USD",
+            "examples": [
+              "USD"
+            ]
+          },
+          "settled_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Settled On"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "group_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9.223372036854776e+18,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Id"
+          },
+          "from_member_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9.223372036854776e+18,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Member Id"
+          },
+          "to_member_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9.223372036854776e+18,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Member Id"
+          },
+          "from_contact_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9.223372036854776e+18,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Contact Id"
+          },
+          "to_contact_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9.223372036854776e+18,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Contact Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "amount",
+          "settled_on"
+        ],
+        "title": "NewSettlement"
+      },
+      "NewSplitExpense": {
+        "properties": {
+          "description": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Description"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Amount",
+            "examples": [
+              "45.50"
+            ]
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency",
+            "default": "USD",
+            "examples": [
+              "USD"
+            ]
+          },
+          "spent_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Spent On"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "group_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9.223372036854776e+18,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Id"
+          },
+          "split_method": {
+            "$ref": "#/components/schemas/SplitMethod",
+            "default": "equal"
+          },
+          "paid_by_member_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9.223372036854776e+18,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid By Member Id"
+          },
+          "participant_member_ids": {
+            "items": {
+              "type": "integer",
+              "maximum": 9.223372036854776e+18,
+              "minimum": 1.0
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Participant Member Ids"
+          },
+          "paid_by_contact_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9.223372036854776e+18,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid By Contact Id"
+          },
+          "participant_contact_ids": {
+            "items": {
+              "type": "integer",
+              "maximum": 9.223372036854776e+18,
+              "minimum": 1.0
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Participant Contact Ids"
+          },
+          "include_self": {
+            "type": "boolean",
+            "title": "Include Self",
+            "default": true
+          },
+          "exact_shares": {
+            "items": {
+              "$ref": "#/components/schemas/ExactShareInput"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Exact Shares"
+          },
+          "linked_expense_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9.223372036854776e+18,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Linked Expense Id"
+          },
+          "record_my_share": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RecordMyShareInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "description",
+          "amount",
+          "spent_on"
+        ],
+        "title": "NewSplitExpense"
+      },
+      "OverviewCurrencyTotal": {
+        "properties": {
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "owed_to_you_minor": {
+            "type": "integer",
+            "title": "Owed To You Minor"
+          },
+          "you_owe_minor": {
+            "type": "integer",
+            "title": "You Owe Minor"
+          },
+          "owed_to_you": {
+            "type": "string",
+            "title": "Owed To You",
+            "description": "Major-unit sum of obligations owed to you in `currency`.",
+            "readOnly": true
+          },
+          "you_owe": {
+            "type": "string",
+            "title": "You Owe",
+            "description": "Major-unit sum of obligations you owe in `currency`.",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "currency",
+          "owed_to_you_minor",
+          "you_owe_minor",
+          "owed_to_you",
+          "you_owe"
+        ],
+        "title": "OverviewCurrencyTotal"
       },
       "ParseRequest": {
         "properties": {
@@ -3407,6 +6253,91 @@
         ],
         "title": "PaymentShare"
       },
+      "PersonBalanceRead": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "contact_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Id"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          },
+          "upi_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upi Id"
+          },
+          "is_contact": {
+            "type": "boolean",
+            "title": "Is Contact"
+          },
+          "archived": {
+            "type": "boolean",
+            "title": "Archived",
+            "default": false
+          },
+          "obligations": {
+            "items": {
+              "$ref": "#/components/schemas/ContextObligationRead"
+            },
+            "type": "array",
+            "title": "Obligations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "display_name",
+          "is_contact",
+          "obligations"
+        ],
+        "title": "PersonBalanceRead"
+      },
+      "PreviewInviteInput": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 20,
+            "title": "Token"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "title": "PreviewInviteInput"
+      },
       "ReasoningMessage": {
         "properties": {
           "subagentRunId": {
@@ -3496,6 +6427,26 @@
         ],
         "title": "ReceiptRead",
         "description": "An uploaded receipt file."
+      },
+      "RecordMyShareInput": {
+        "properties": {
+          "category_id": {
+            "type": "integer",
+            "maximum": 9.223372036854776e+18,
+            "minimum": 1.0,
+            "title": "Category Id"
+          },
+          "payment_method": {
+            "$ref": "#/components/schemas/PaymentMethod",
+            "default": "other"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "category_id"
+        ],
+        "title": "RecordMyShareInput"
       },
       "ReportFormat": {
         "type": "string",
@@ -3824,6 +6775,26 @@
         ],
         "title": "SavedExpense"
       },
+      "SavedSplitExpense": {
+        "properties": {
+          "split": {
+            "$ref": "#/components/schemas/SplitExpenseRead"
+          },
+          "notices": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Notices"
+          }
+        },
+        "type": "object",
+        "required": [
+          "split",
+          "notices"
+        ],
+        "title": "SavedSplitExpense"
+      },
       "SessionRead": {
         "properties": {
           "id": {
@@ -3865,6 +6836,191 @@
           "user_agent"
         ],
         "title": "SessionRead"
+      },
+      "SettlementList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SettlementRead"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "SettlementList"
+      },
+      "SettlementRead": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "group_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Id"
+          },
+          "group_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Name"
+          },
+          "from_member_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Member Id"
+          },
+          "from_contact_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Contact Id"
+          },
+          "from_is_self": {
+            "type": "boolean",
+            "title": "From Is Self"
+          },
+          "from_name": {
+            "type": "string",
+            "title": "From Name"
+          },
+          "to_member_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Member Id"
+          },
+          "to_contact_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Contact Id"
+          },
+          "to_is_self": {
+            "type": "boolean",
+            "title": "To Is Self"
+          },
+          "to_name": {
+            "type": "string",
+            "title": "To Name"
+          },
+          "amount_minor": {
+            "type": "integer",
+            "title": "Amount Minor"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "settled_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Settled On"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "voided_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voided At"
+          },
+          "can_void": {
+            "type": "boolean",
+            "title": "Can Void"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount",
+            "description": "Major-unit settlement amount in `currency`.",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "group_id",
+          "group_name",
+          "from_member_id",
+          "from_contact_id",
+          "from_is_self",
+          "from_name",
+          "to_member_id",
+          "to_contact_id",
+          "to_is_self",
+          "to_name",
+          "amount_minor",
+          "currency",
+          "settled_on",
+          "note",
+          "voided_at",
+          "can_void",
+          "created_at",
+          "amount"
+        ],
+        "title": "SettlementRead"
       },
       "SignedInUser": {
         "properties": {
@@ -3968,6 +7124,611 @@
           "logout_url"
         ],
         "title": "SignedInUser"
+      },
+      "SimplifiedTransferRead": {
+        "properties": {
+          "from_member_id": {
+            "type": "integer",
+            "title": "From Member Id"
+          },
+          "from_name": {
+            "type": "string",
+            "title": "From Name"
+          },
+          "from_is_self": {
+            "type": "boolean",
+            "title": "From Is Self"
+          },
+          "to_member_id": {
+            "type": "integer",
+            "title": "To Member Id"
+          },
+          "to_name": {
+            "type": "string",
+            "title": "To Name"
+          },
+          "to_is_self": {
+            "type": "boolean",
+            "title": "To Is Self"
+          },
+          "to_upi_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Upi Id"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "amount_minor": {
+            "type": "integer",
+            "title": "Amount Minor"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount",
+            "description": "Major-unit transfer amount in `currency`.",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "from_member_id",
+          "from_name",
+          "from_is_self",
+          "to_member_id",
+          "to_name",
+          "to_is_self",
+          "currency",
+          "amount_minor",
+          "amount"
+        ],
+        "title": "SimplifiedTransferRead"
+      },
+      "SplitExpenseChanges": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "examples": [
+                  "45.50"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Z]{3}$",
+                "examples": [
+                  "USD"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "spent_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spent On"
+          },
+          "split_method": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SplitMethod"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "paid_by_member_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9.223372036854776e+18,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid By Member Id"
+          },
+          "participant_member_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer",
+                  "maximum": 9.223372036854776e+18,
+                  "minimum": 1.0
+                },
+                "type": "array",
+                "maxItems": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Participant Member Ids"
+          },
+          "paid_by_contact_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9.223372036854776e+18,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid By Contact Id"
+          },
+          "participant_contact_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer",
+                  "maximum": 9.223372036854776e+18,
+                  "minimum": 1.0
+                },
+                "type": "array",
+                "maxItems": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Participant Contact Ids"
+          },
+          "include_self": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Include Self"
+          },
+          "exact_shares": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ExactShareInput"
+                },
+                "type": "array",
+                "maxItems": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exact Shares"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SplitExpenseChanges"
+      },
+      "SplitExpenseList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SplitExpenseRead"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "SplitExpenseList"
+      },
+      "SplitExpenseRead": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "group_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Id"
+          },
+          "group_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Name"
+          },
+          "group_kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GroupKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "amount_minor": {
+            "type": "integer",
+            "title": "Amount Minor"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "split_method": {
+            "$ref": "#/components/schemas/SplitMethod"
+          },
+          "spent_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Spent On"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "paid_by_member_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid By Member Id"
+          },
+          "paid_by_contact_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid By Contact Id"
+          },
+          "paid_by_is_self": {
+            "type": "boolean",
+            "title": "Paid By Is Self"
+          },
+          "paid_by_name": {
+            "type": "string",
+            "title": "Paid By Name"
+          },
+          "shares": {
+            "items": {
+              "$ref": "#/components/schemas/SplitShareRead"
+            },
+            "type": "array",
+            "title": "Shares"
+          },
+          "my_share_minor": {
+            "type": "integer",
+            "title": "My Share Minor"
+          },
+          "my_linked_expense_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "My Linked Expense Id"
+          },
+          "my_link_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExpenseLinkStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "can_edit": {
+            "type": "boolean",
+            "title": "Can Edit"
+          },
+          "locked_by_settlement": {
+            "type": "boolean",
+            "title": "Locked By Settlement"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount",
+            "description": "Total split amount in major units.",
+            "readOnly": true
+          },
+          "my_share": {
+            "type": "string",
+            "title": "My Share",
+            "description": "Caller's own share in major units (0 if caller is not a participant).",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "group_id",
+          "group_name",
+          "group_kind",
+          "description",
+          "amount_minor",
+          "currency",
+          "split_method",
+          "spent_on",
+          "note",
+          "paid_by_member_id",
+          "paid_by_contact_id",
+          "paid_by_is_self",
+          "paid_by_name",
+          "shares",
+          "my_share_minor",
+          "can_edit",
+          "locked_by_settlement",
+          "created_at",
+          "amount",
+          "my_share"
+        ],
+        "title": "SplitExpenseRead"
+      },
+      "SplitMethod": {
+        "type": "string",
+        "enum": [
+          "equal",
+          "exact"
+        ],
+        "title": "SplitMethod"
+      },
+      "SplitProfileRead": {
+        "properties": {
+          "upi_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upi Id"
+          },
+          "share_upi_with_groups": {
+            "type": "boolean",
+            "title": "Share Upi With Groups",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "SplitProfileRead"
+      },
+      "SplitProfileUpdate": {
+        "properties": {
+          "upi_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "pattern": "^[a-zA-Z0-9._-]{2,64}@[a-zA-Z0-9.-]{2,32}$",
+                "examples": [
+                  "ravi@okhdfcbank"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upi Id"
+          },
+          "share_upi_with_groups": {
+            "type": "boolean",
+            "title": "Share Upi With Groups",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SplitProfileUpdate"
+      },
+      "SplitShareRead": {
+        "properties": {
+          "member_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Member Id"
+          },
+          "contact_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Id"
+          },
+          "is_self": {
+            "type": "boolean",
+            "title": "Is Self"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "share_minor": {
+            "type": "integer",
+            "title": "Share Minor"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "share": {
+            "type": "string",
+            "title": "Share",
+            "description": "Major-unit share formatted to `currency`'s minor-unit precision.",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "is_self",
+          "display_name",
+          "share_minor",
+          "currency",
+          "share"
+        ],
+        "title": "SplitShareRead"
+      },
+      "SplitsOverviewRead": {
+        "properties": {
+          "totals": {
+            "items": {
+              "$ref": "#/components/schemas/OverviewCurrencyTotal"
+            },
+            "type": "array",
+            "title": "Totals"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/GroupSummaryRead"
+            },
+            "type": "array",
+            "title": "Groups"
+          },
+          "people": {
+            "items": {
+              "$ref": "#/components/schemas/PersonBalanceRead"
+            },
+            "type": "array",
+            "title": "People"
+          },
+          "contacts": {
+            "items": {
+              "$ref": "#/components/schemas/ContactRead"
+            },
+            "type": "array",
+            "title": "Contacts"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/SplitProfileRead"
+          }
+        },
+        "type": "object",
+        "required": [
+          "totals",
+          "groups",
+          "people",
+          "contacts",
+          "profile"
+        ],
+        "title": "SplitsOverviewRead"
       },
       "SystemMessage": {
         "properties": {
@@ -4365,6 +8126,22 @@
         ],
         "title": "ToolMessage",
         "description": "What a tool returned, as a message in the conversation. Stands alone\nrather than composing BaseMessage, because it carries no name."
+      },
+      "TransferOwnershipInput": {
+        "properties": {
+          "target_member_id": {
+            "type": "integer",
+            "maximum": 9.223372036854776e+18,
+            "minimum": 1.0,
+            "title": "Target Member Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "target_member_id"
+        ],
+        "title": "TransferOwnershipInput"
       },
       "UrlSource": {
         "properties": {

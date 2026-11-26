@@ -264,6 +264,324 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/splits/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Overview */
+        get: operations["get_overview_api_v1_splits_overview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/splits/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Profile */
+        get: operations["get_profile_api_v1_splits_profile_get"];
+        /** Update Profile */
+        put: operations["update_profile_api_v1_splits_profile_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/splits/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Contacts */
+        get: operations["list_contacts_api_v1_splits_contacts_get"];
+        put?: never;
+        /** Create Contact */
+        post: operations["create_contact_api_v1_splits_contacts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/splits/contacts/{contact_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Contact */
+        delete: operations["delete_contact_api_v1_splits_contacts__contact_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Contact */
+        patch: operations["update_contact_api_v1_splits_contacts__contact_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/splits/groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Groups */
+        get: operations["list_groups_api_v1_splits_groups_get"];
+        put?: never;
+        /** Create Group */
+        post: operations["create_group_api_v1_splits_groups_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/splits/groups/{group_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Group Detail */
+        get: operations["get_group_detail_api_v1_splits_groups__group_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Group */
+        delete: operations["delete_group_api_v1_splits_groups__group_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Group */
+        patch: operations["update_group_api_v1_splits_groups__group_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/splits/groups/{group_id}/leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Leave Group */
+        post: operations["leave_group_api_v1_splits_groups__group_id__leave_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/splits/groups/{group_id}/transfer-ownership": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Transfer Ownership */
+        post: operations["transfer_ownership_api_v1_splits_groups__group_id__transfer_ownership_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/splits/groups/{group_id}/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Invites */
+        get: operations["list_invites_api_v1_splits_groups__group_id__invites_get"];
+        put?: never;
+        /** Create Invite */
+        post: operations["create_invite_api_v1_splits_groups__group_id__invites_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/splits/groups/{group_id}/invites/{invite_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke Invite */
+        delete: operations["revoke_invite_api_v1_splits_groups__group_id__invites__invite_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/splits/invites/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Invite */
+        post: operations["preview_invite_api_v1_splits_invites_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/splits/invites/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accept Invite */
+        post: operations["accept_invite_api_v1_splits_invites_accept_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/splits/settlements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Settlements */
+        get: operations["list_settlements_api_v1_splits_settlements_get"];
+        put?: never;
+        /** Record Settlement */
+        post: operations["record_settlement_api_v1_splits_settlements_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/splits/settlements/{settlement_id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Void Settlement */
+        post: operations["void_settlement_api_v1_splits_settlements__settlement_id__void_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/splits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Splits */
+        get: operations["list_splits_api_v1_splits_get"];
+        put?: never;
+        /** Create Split */
+        post: operations["create_split_api_v1_splits_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/splits/{split_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Split */
+        get: operations["get_split_api_v1_splits__split_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Split */
+        delete: operations["delete_split_api_v1_splits__split_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Split */
+        patch: operations["update_split_api_v1_splits__split_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/splits/{split_id}/record-my-share": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record My Share */
+        post: operations["record_my_share_api_v1_splits__split_id__record_my_share_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/splits/{split_id}/link-expense": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Link Expense */
+        put: operations["link_expense_api_v1_splits__split_id__link_expense_put"];
+        post?: never;
+        /** Unlink Expense */
+        delete: operations["unlink_expense_api_v1_splits__split_id__link_expense_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/threads/{thread_id}": {
         parameters: {
             query?: never;
@@ -524,6 +842,18 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AcceptInviteInput */
+        AcceptInviteInput: {
+            /** Token */
+            token: string;
+            /** Claim Member Id */
+            claim_member_id?: number | null;
+        };
+        /** AcceptedInviteRead */
+        AcceptedInviteRead: {
+            /** Group Id */
+            group_id: number;
+        };
         /** AccessTokenRead */
         AccessTokenRead: {
             /** Id */
@@ -634,6 +964,16 @@ export interface components {
             /** Logout Token */
             logout_token: string;
         };
+        /**
+         * BalanceContextKind
+         * @enum {string}
+         */
+        BalanceContextKind: "direct" | "group";
+        /**
+         * BalanceDirection
+         * @enum {string}
+         */
+        BalanceDirection: "owed_to_you" | "you_owe" | "settled";
         /** BigExpense */
         BigExpense: {
             /**
@@ -767,6 +1107,44 @@ export interface components {
             /** Tool Calls */
             tool_calls: components["schemas"]["ToolCallSummary"][];
         };
+        /** ClaimableGuestRead */
+        ClaimableGuestRead: {
+            /** Member Id */
+            member_id: number;
+            /** Display Name */
+            display_name: string;
+            /** Has History */
+            has_history: boolean;
+        };
+        /** ContactChanges */
+        ContactChanges: {
+            /** Name */
+            name?: string | null;
+            /** Upi Id */
+            upi_id?: string | null;
+            /** Note */
+            note?: string | null;
+            /** Archived */
+            archived?: boolean | null;
+        };
+        /** ContactRead */
+        ContactRead: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Upi Id */
+            upi_id: string | null;
+            /** Note */
+            note: string | null;
+            /** Archived At */
+            archived_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /**
          * Context
          * @description A named piece of ambient information given to the agent for the run,
@@ -779,6 +1157,27 @@ export interface components {
             value: string;
         } & {
             [key: string]: unknown;
+        };
+        /** ContextObligationRead */
+        ContextObligationRead: {
+            context_kind: components["schemas"]["BalanceContextKind"];
+            /** Group Id */
+            group_id?: number | null;
+            /** Group Name */
+            group_name?: string | null;
+            group_kind?: components["schemas"]["GroupKind"] | null;
+            /** Member Id */
+            member_id?: number | null;
+            /** Currency */
+            currency: string;
+            /** Amount Minor */
+            amount_minor: number;
+            direction: components["schemas"]["BalanceDirection"];
+            /**
+             * Amount
+             * @description Major-unit obligation amount in `currency`.
+             */
+            readonly amount: string;
         };
         /** CreatedAccessToken */
         CreatedAccessToken: {
@@ -807,6 +1206,50 @@ export interface components {
             expired?: boolean;
             /** Token */
             token: string;
+        };
+        /** CreatedInviteRead */
+        CreatedInviteRead: {
+            /** Id */
+            id: number;
+            /** Hint */
+            hint: string;
+            /** Target Member Id */
+            target_member_id: number | null;
+            /** Target Member Name */
+            target_member_name: string | null;
+            /** Max Uses */
+            max_uses: number;
+            /** Use Count */
+            use_count: number;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Revoked At */
+            revoked_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Active */
+            active: boolean;
+            /** Token */
+            token: string;
+        };
+        /** CurrencyBalance */
+        CurrencyBalance: {
+            /** Currency */
+            currency: string;
+            /** Amount Minor */
+            amount_minor: number;
+            direction: components["schemas"]["BalanceDirection"];
+            /**
+             * Amount
+             * @description Major-unit magnitude formatted to `currency`'s minor-unit precision.
+             */
+            readonly amount: string;
         };
         /** CurrentUser */
         CurrentUser: {
@@ -900,6 +1343,23 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /** ExactShareInput */
+        ExactShareInput: {
+            /** Member Id */
+            member_id?: number | null;
+            /** Contact Id */
+            contact_id?: number | null;
+            /**
+             * Is Self
+             * @default false
+             */
+            is_self?: boolean;
+            /**
+             * Amount
+             * @example 45.50
+             */
+            amount: number | string;
+        };
         /**
          * ExpenseChanges
          * @description The body of PATCH /expenses/{id}: send only the fields you want to change.
@@ -919,6 +1379,11 @@ export interface components {
             /** Note */
             note?: string | null;
         };
+        /**
+         * ExpenseLinkStatus
+         * @enum {string}
+         */
+        ExpenseLinkStatus: "recording" | "linked";
         /** ExpenseList */
         ExpenseList: {
             /** Items */
@@ -1002,6 +1467,94 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /** GroupChanges */
+        GroupChanges: {
+            /** Name */
+            name?: string | null;
+            /** Default Currency */
+            default_currency?: string | null;
+            /**
+             * Upgrade To Shared
+             * @default false
+             */
+            upgrade_to_shared?: boolean;
+            /** Add Contact Ids */
+            add_contact_ids?: number[];
+            /** Add Guest Names */
+            add_guest_names?: string[];
+            /** Remove Member Ids */
+            remove_member_ids?: number[];
+            /** Archived */
+            archived?: boolean | null;
+        };
+        /** GroupDetailRead */
+        GroupDetailRead: {
+            group: components["schemas"]["GroupSummaryRead"];
+            /** Members */
+            members: components["schemas"]["GroupMemberRead"][];
+            /** Member Balances */
+            member_balances: components["schemas"]["MemberCurrencyBalanceRead"][];
+            /** Simplified Transfers */
+            simplified_transfers: components["schemas"]["SimplifiedTransferRead"][];
+            /** Invites */
+            invites: components["schemas"]["InviteRead"][];
+            /** Splits */
+            splits: components["schemas"]["SplitExpenseRead"][];
+            /** Settlements */
+            settlements: components["schemas"]["SettlementRead"][];
+        };
+        /**
+         * GroupKind
+         * @enum {string}
+         */
+        GroupKind: "personal" | "shared";
+        /** GroupMemberRead */
+        GroupMemberRead: {
+            /** Id */
+            id: number;
+            /** Display Name */
+            display_name: string;
+            role: components["schemas"]["MemberRole"];
+            /** Is Self */
+            is_self: boolean;
+            /** Is Registered */
+            is_registered: boolean;
+            /** Is Active */
+            is_active: boolean;
+            /** Upi Id */
+            upi_id?: string | null;
+            /**
+             * Joined At
+             * Format: date-time
+             */
+            joined_at: string;
+            /** Left At */
+            left_at?: string | null;
+        };
+        /** GroupSummaryRead */
+        GroupSummaryRead: {
+            /** Id */
+            id: number;
+            kind: components["schemas"]["GroupKind"];
+            /** Name */
+            name: string;
+            /** Default Currency */
+            default_currency: string | null;
+            my_role: components["schemas"]["MemberRole"];
+            /** My Member Id */
+            my_member_id: number;
+            /** Member Count */
+            member_count: number;
+            /** Archived At */
+            archived_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** My Balances */
+            my_balances: components["schemas"]["CurrencyBalance"][];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1027,11 +1580,66 @@ export interface components {
             [key: string]: unknown;
         };
         /**
+         * InviteLifetime
+         * @enum {integer}
+         */
+        InviteLifetime: 1 | 7 | 30;
+        /** InvitePreviewRead */
+        InvitePreviewRead: {
+            /** Group Name */
+            group_name: string;
+            /** Default Currency */
+            default_currency: string | null;
+            /** Member Count */
+            member_count: number;
+            /** Already Member */
+            already_member: boolean;
+            /** Is Rejoin */
+            is_rejoin: boolean;
+            target_guest?: components["schemas"]["ClaimableGuestRead"] | null;
+            /** Claimable Guests */
+            claimable_guests: components["schemas"]["ClaimableGuestRead"][];
+        };
+        /** InviteRead */
+        InviteRead: {
+            /** Id */
+            id: number;
+            /** Hint */
+            hint: string;
+            /** Target Member Id */
+            target_member_id: number | null;
+            /** Target Member Name */
+            target_member_name: string | null;
+            /** Max Uses */
+            max_uses: number;
+            /** Use Count */
+            use_count: number;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Revoked At */
+            revoked_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Active */
+            active: boolean;
+        };
+        /**
          * Language
          * @description A language, by its BCP 47 code: what the web app sends in Accept-Language.
          * @enum {string}
          */
         Language: "en" | "hi";
+        /** LinkExpenseInput */
+        LinkExpenseInput: {
+            /** Expense Id */
+            expense_id: number;
+        };
         /** LoginOptionRead */
         LoginOptionRead: {
             /** Key */
@@ -1039,6 +1647,29 @@ export interface components {
             /** Label */
             label: string;
         };
+        /** MemberCurrencyBalanceRead */
+        MemberCurrencyBalanceRead: {
+            /** Member Id */
+            member_id: number;
+            /** Display Name */
+            display_name: string;
+            /** Is Self */
+            is_self: boolean;
+            /** Currency */
+            currency: string;
+            /** Net Minor */
+            net_minor: number;
+            /**
+             * Net
+             * @description Signed major-unit net balance (+ means owed money, - means owes money).
+             */
+            readonly net: string;
+        };
+        /**
+         * MemberRole
+         * @enum {string}
+         */
+        MemberRole: "owner" | "member";
         /**
          * MessageKind
          * @enum {string}
@@ -1115,6 +1746,15 @@ export interface components {
             /** @default 90 */
             lifetime_days?: components["schemas"]["TokenLifetime"];
         };
+        /** NewContact */
+        NewContact: {
+            /** Name */
+            name: string;
+            /** Upi Id */
+            upi_id?: string | null;
+            /** Note */
+            note?: string | null;
+        };
         /**
          * NewExpense
          * @description A new expense. Also the body of POST /expenses.
@@ -1143,6 +1783,126 @@ export interface components {
              */
             spent_on: string;
             payment_method: components["schemas"]["PaymentMethod"];
+        };
+        /** NewGroup */
+        NewGroup: {
+            /** Name */
+            name: string;
+            /** @default personal */
+            kind?: components["schemas"]["GroupKind"];
+            /** Default Currency */
+            default_currency?: string | null;
+            /** Member Contact Ids */
+            member_contact_ids?: number[];
+            /** Guest Names */
+            guest_names?: string[];
+        };
+        /** NewGroupInvite */
+        NewGroupInvite: {
+            /** Target Member Id */
+            target_member_id?: number | null;
+            /** @default 7 */
+            lifetime_days?: components["schemas"]["InviteLifetime"];
+            /**
+             * Max Uses
+             * @default 1
+             */
+            max_uses?: number;
+        };
+        /** NewSettlement */
+        NewSettlement: {
+            /**
+             * Amount
+             * @example 45.50
+             */
+            amount: number | string;
+            /**
+             * Currency
+             * @default USD
+             * @example USD
+             */
+            currency?: string;
+            /**
+             * Settled On
+             * Format: date
+             */
+            settled_on: string;
+            /** Note */
+            note?: string | null;
+            /** Group Id */
+            group_id?: number | null;
+            /** From Member Id */
+            from_member_id?: number | null;
+            /** To Member Id */
+            to_member_id?: number | null;
+            /** From Contact Id */
+            from_contact_id?: number | null;
+            /** To Contact Id */
+            to_contact_id?: number | null;
+        };
+        /** NewSplitExpense */
+        NewSplitExpense: {
+            /** Description */
+            description: string;
+            /**
+             * Amount
+             * @example 45.50
+             */
+            amount: number | string;
+            /**
+             * Currency
+             * @default USD
+             * @example USD
+             */
+            currency?: string;
+            /**
+             * Spent On
+             * Format: date
+             */
+            spent_on: string;
+            /** Note */
+            note?: string | null;
+            /** Group Id */
+            group_id?: number | null;
+            /** @default equal */
+            split_method?: components["schemas"]["SplitMethod"];
+            /** Paid By Member Id */
+            paid_by_member_id?: number | null;
+            /** Participant Member Ids */
+            participant_member_ids?: number[];
+            /** Paid By Contact Id */
+            paid_by_contact_id?: number | null;
+            /** Participant Contact Ids */
+            participant_contact_ids?: number[];
+            /**
+             * Include Self
+             * @default true
+             */
+            include_self?: boolean;
+            /** Exact Shares */
+            exact_shares?: components["schemas"]["ExactShareInput"][];
+            /** Linked Expense Id */
+            linked_expense_id?: number | null;
+            record_my_share?: components["schemas"]["RecordMyShareInput"] | null;
+        };
+        /** OverviewCurrencyTotal */
+        OverviewCurrencyTotal: {
+            /** Currency */
+            currency: string;
+            /** Owed To You Minor */
+            owed_to_you_minor: number;
+            /** You Owe Minor */
+            you_owe_minor: number;
+            /**
+             * Owed To You
+             * @description Major-unit sum of obligations owed to you in `currency`.
+             */
+            readonly owed_to_you: string;
+            /**
+             * You Owe
+             * @description Major-unit sum of obligations you owe in `currency`.
+             */
+            readonly you_owe: string;
         };
         /** ParseRequest */
         ParseRequest: {
@@ -1212,6 +1972,33 @@ export interface components {
             /** Share Percent */
             share_percent: string | null;
         };
+        /** PersonBalanceRead */
+        PersonBalanceRead: {
+            /** Key */
+            key: string;
+            /** Display Name */
+            display_name: string;
+            /** Contact Id */
+            contact_id?: number | null;
+            /** User Id */
+            user_id?: number | null;
+            /** Upi Id */
+            upi_id?: string | null;
+            /** Is Contact */
+            is_contact: boolean;
+            /**
+             * Archived
+             * @default false
+             */
+            archived?: boolean;
+            /** Obligations */
+            obligations: components["schemas"]["ContextObligationRead"][];
+        };
+        /** PreviewInviteInput */
+        PreviewInviteInput: {
+            /** Token */
+            token: string;
+        };
         /**
          * ReasoningMessage
          * @description A span of the agent's reasoning, materialised as a message. Stands alone
@@ -1254,6 +2041,13 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+        };
+        /** RecordMyShareInput */
+        RecordMyShareInput: {
+            /** Category Id */
+            category_id: number;
+            /** @default other */
+            payment_method?: components["schemas"]["PaymentMethod"];
         };
         /**
          * ReportFormat
@@ -1356,6 +2150,12 @@ export interface components {
             /** Base Amount */
             readonly base_amount: string | null;
         };
+        /** SavedSplitExpense */
+        SavedSplitExpense: {
+            split: components["schemas"]["SplitExpenseRead"];
+            /** Notices */
+            notices: string[];
+        };
         /** SessionRead */
         SessionRead: {
             /** Id */
@@ -1377,6 +2177,63 @@ export interface components {
              * @default false
              */
             current?: boolean;
+        };
+        /** SettlementList */
+        SettlementList: {
+            /** Items */
+            items: components["schemas"]["SettlementRead"][];
+            /** Total */
+            total: number;
+        };
+        /** SettlementRead */
+        SettlementRead: {
+            /** Id */
+            id: number;
+            /** Group Id */
+            group_id: number | null;
+            /** Group Name */
+            group_name: string | null;
+            /** From Member Id */
+            from_member_id: number | null;
+            /** From Contact Id */
+            from_contact_id: number | null;
+            /** From Is Self */
+            from_is_self: boolean;
+            /** From Name */
+            from_name: string;
+            /** To Member Id */
+            to_member_id: number | null;
+            /** To Contact Id */
+            to_contact_id: number | null;
+            /** To Is Self */
+            to_is_self: boolean;
+            /** To Name */
+            to_name: string;
+            /** Amount Minor */
+            amount_minor: number;
+            /** Currency */
+            currency: string;
+            /**
+             * Settled On
+             * Format: date
+             */
+            settled_on: string;
+            /** Note */
+            note: string | null;
+            /** Voided At */
+            voided_at: string | null;
+            /** Can Void */
+            can_void: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Amount
+             * @description Major-unit settlement amount in `currency`.
+             */
+            readonly amount: string;
         };
         /** SignedInUser */
         SignedInUser: {
@@ -1408,6 +2265,180 @@ export interface components {
             terms_accepted_at?: string | null;
             /** Logout Url */
             logout_url: string;
+        };
+        /** SimplifiedTransferRead */
+        SimplifiedTransferRead: {
+            /** From Member Id */
+            from_member_id: number;
+            /** From Name */
+            from_name: string;
+            /** From Is Self */
+            from_is_self: boolean;
+            /** To Member Id */
+            to_member_id: number;
+            /** To Name */
+            to_name: string;
+            /** To Is Self */
+            to_is_self: boolean;
+            /** To Upi Id */
+            to_upi_id?: string | null;
+            /** Currency */
+            currency: string;
+            /** Amount Minor */
+            amount_minor: number;
+            /**
+             * Amount
+             * @description Major-unit transfer amount in `currency`.
+             */
+            readonly amount: string;
+        };
+        /** SplitExpenseChanges */
+        SplitExpenseChanges: {
+            /** Description */
+            description?: string | null;
+            /** Note */
+            note?: string | null;
+            /** Amount */
+            amount?: (number | string) | null;
+            /** Currency */
+            currency?: string | null;
+            /** Spent On */
+            spent_on?: string | null;
+            split_method?: components["schemas"]["SplitMethod"] | null;
+            /** Paid By Member Id */
+            paid_by_member_id?: number | null;
+            /** Participant Member Ids */
+            participant_member_ids?: number[] | null;
+            /** Paid By Contact Id */
+            paid_by_contact_id?: number | null;
+            /** Participant Contact Ids */
+            participant_contact_ids?: number[] | null;
+            /** Include Self */
+            include_self?: boolean | null;
+            /** Exact Shares */
+            exact_shares?: components["schemas"]["ExactShareInput"][] | null;
+        };
+        /** SplitExpenseList */
+        SplitExpenseList: {
+            /** Items */
+            items: components["schemas"]["SplitExpenseRead"][];
+            /** Total */
+            total: number;
+        };
+        /** SplitExpenseRead */
+        SplitExpenseRead: {
+            /** Id */
+            id: number;
+            /** Group Id */
+            group_id: number | null;
+            /** Group Name */
+            group_name: string | null;
+            group_kind: components["schemas"]["GroupKind"] | null;
+            /** Description */
+            description: string;
+            /** Amount Minor */
+            amount_minor: number;
+            /** Currency */
+            currency: string;
+            split_method: components["schemas"]["SplitMethod"];
+            /**
+             * Spent On
+             * Format: date
+             */
+            spent_on: string;
+            /** Note */
+            note: string | null;
+            /** Paid By Member Id */
+            paid_by_member_id: number | null;
+            /** Paid By Contact Id */
+            paid_by_contact_id: number | null;
+            /** Paid By Is Self */
+            paid_by_is_self: boolean;
+            /** Paid By Name */
+            paid_by_name: string;
+            /** Shares */
+            shares: components["schemas"]["SplitShareRead"][];
+            /** My Share Minor */
+            my_share_minor: number;
+            /** My Linked Expense Id */
+            my_linked_expense_id?: number | null;
+            my_link_status?: components["schemas"]["ExpenseLinkStatus"] | null;
+            /** Can Edit */
+            can_edit: boolean;
+            /** Locked By Settlement */
+            locked_by_settlement: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Amount
+             * @description Total split amount in major units.
+             */
+            readonly amount: string;
+            /**
+             * My Share
+             * @description Caller's own share in major units (0 if caller is not a participant).
+             */
+            readonly my_share: string;
+        };
+        /**
+         * SplitMethod
+         * @enum {string}
+         */
+        SplitMethod: "equal" | "exact";
+        /** SplitProfileRead */
+        SplitProfileRead: {
+            /** Upi Id */
+            upi_id?: string | null;
+            /**
+             * Share Upi With Groups
+             * @default false
+             */
+            share_upi_with_groups?: boolean;
+        };
+        /** SplitProfileUpdate */
+        SplitProfileUpdate: {
+            /** Upi Id */
+            upi_id?: string | null;
+            /**
+             * Share Upi With Groups
+             * @default false
+             */
+            share_upi_with_groups?: boolean;
+        };
+        /** SplitShareRead */
+        SplitShareRead: {
+            /** Member Id */
+            member_id?: number | null;
+            /** Contact Id */
+            contact_id?: number | null;
+            /** Is Self */
+            is_self: boolean;
+            /** Display Name */
+            display_name: string;
+            /** Share Minor */
+            share_minor: number;
+            /** Currency */
+            currency: string;
+            /**
+             * Share
+             * @description Major-unit share formatted to `currency`'s minor-unit precision.
+             */
+            readonly share: string;
+        };
+        /** SplitsOverviewRead */
+        SplitsOverviewRead: {
+            /** Totals */
+            totals: components["schemas"]["OverviewCurrencyTotal"][];
+            /** Groups */
+            groups: components["schemas"]["GroupSummaryRead"][];
+            /** People */
+            people: components["schemas"]["PersonBalanceRead"][];
+            /** Contacts */
+            contacts: components["schemas"]["ContactRead"][];
+            profile: components["schemas"]["SplitProfileRead"];
         };
         /**
          * SystemMessage
@@ -1569,6 +2600,11 @@ export interface components {
             } | null;
         } & {
             [key: string]: unknown;
+        };
+        /** TransferOwnershipInput */
+        TransferOwnershipInput: {
+            /** Target Member Id */
+            target_member_id: number;
         };
         /**
          * UrlSource
@@ -2263,6 +3299,965 @@ export interface operations {
             };
         };
     };
+    get_overview_api_v1_splits_overview_get: {
+        parameters: {
+            query?: {
+                include_archived?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SplitsOverviewRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_profile_api_v1_splits_profile_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SplitProfileRead"];
+                };
+            };
+        };
+    };
+    update_profile_api_v1_splits_profile_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SplitProfileUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SplitProfileRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_contacts_api_v1_splits_contacts_get: {
+        parameters: {
+            query?: {
+                include_archived?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_contact_api_v1_splits_contacts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewContact"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_contact_api_v1_splits_contacts__contact_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_contact_api_v1_splits_contacts__contact_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContactChanges"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_groups_api_v1_splits_groups_get: {
+        parameters: {
+            query?: {
+                include_archived?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupSummaryRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_group_api_v1_splits_groups_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewGroup"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupDetailRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_group_detail_api_v1_splits_groups__group_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupDetailRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_group_api_v1_splits_groups__group_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_group_api_v1_splits_groups__group_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GroupChanges"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupDetailRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    leave_group_api_v1_splits_groups__group_id__leave_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    transfer_ownership_api_v1_splits_groups__group_id__transfer_ownership_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransferOwnershipInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupDetailRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_invites_api_v1_splits_groups__group_id__invites_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_invite_api_v1_splits_groups__group_id__invites_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewGroupInvite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedInviteRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revoke_invite_api_v1_splits_groups__group_id__invites__invite_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: number;
+                invite_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_invite_api_v1_splits_invites_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreviewInviteInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitePreviewRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accept_invite_api_v1_splits_invites_accept_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcceptInviteInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcceptedInviteRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_settlements_api_v1_splits_settlements_get: {
+        parameters: {
+            query?: {
+                group_id?: number | null;
+                contact_id?: number | null;
+                currency?: string | null;
+                include_voided?: boolean;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettlementList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    record_settlement_api_v1_splits_settlements_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewSettlement"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettlementRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    void_settlement_api_v1_splits_settlements__settlement_id__void_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                settlement_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettlementRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_splits_api_v1_splits_get: {
+        parameters: {
+            query?: {
+                group_id?: number | null;
+                contact_id?: number | null;
+                currency?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SplitExpenseList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_split_api_v1_splits_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewSplitExpense"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedSplitExpense"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_split_api_v1_splits__split_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                split_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SplitExpenseRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_split_api_v1_splits__split_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                split_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_split_api_v1_splits__split_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                split_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SplitExpenseChanges"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SplitExpenseRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    record_my_share_api_v1_splits__split_id__record_my_share_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                split_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordMyShareInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedSplitExpense"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    link_expense_api_v1_splits__split_id__link_expense_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                split_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkExpenseInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SplitExpenseRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unlink_expense_api_v1_splits__split_id__link_expense_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                split_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_thread_api_v1_threads__thread_id__get: {
         parameters: {
             query?: never;
@@ -2746,18 +4741,25 @@ type ReadonlyArray<T> = [
 export const activityMessageRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ActivityMessage"]["role"]> = ["activity"];
 export const assistantMessageRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AssistantMessage"]["role"]> = ["assistant"];
 export const audioPartTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AudioPart"]["type"]> = ["audio"];
+export const balanceContextKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BalanceContextKind"]> = ["direct", "group"];
+export const balanceDirectionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BalanceDirection"]> = ["owed_to_you", "you_owe", "settled"];
 export const budgetStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BudgetState"]> = ["on_track", "near_limit", "over_limit"];
 export const dataSourceTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DataSource"]["type"]> = ["data"];
 export const developerMessageRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DeveloperMessage"]["role"]> = ["developer"];
 export const documentPartTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DocumentPart"]["type"]> = ["document"];
+export const expenseLinkStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ExpenseLinkStatus"]> = ["recording", "linked"];
 export const fileSourceTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FileSource"]["type"]> = ["file"];
+export const groupKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GroupKind"]> = ["personal", "shared"];
 export const imagePartTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImagePart"]["type"]> = ["image"];
+export const inviteLifetimeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["InviteLifetime"]> = [1, 7, 30];
 export const languageValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Language"]> = ["en", "hi"];
+export const memberRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MemberRole"]> = ["owner", "member"];
 export const messageKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MessageKind"]> = ["user_text", "assistant_text", "tool_call", "tool_result", "reasoning"];
 export const paymentMethodValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PaymentMethod"]> = ["cash", "upi", "card", "netbanking", "wallet", "other"];
 export const reasoningMessageRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ReasoningMessage"]["role"]> = ["reasoning"];
 export const reportFormatValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ReportFormat"]> = ["csv", "md"];
 export const resumeEntryStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ResumeEntry"]["status"]> = ["resolved", "cancelled"];
+export const splitMethodValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SplitMethod"]> = ["equal", "exact"];
 export const systemMessageRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SystemMessage"]["role"]> = ["system"];
 export const textPartTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TextPart"]["type"]> = ["text"];
 export const tokenLifetimeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TokenLifetime"]> = [30, 90, 365];

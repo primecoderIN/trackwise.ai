@@ -21,11 +21,18 @@ sys.path.insert(0, str(BACKEND_DIR))
 from app import bootstrap  # noqa: E402
 from app.core.clock import DEFAULT_TIMEZONE  # noqa: E402
 from app.core.i18n import Language  # noqa: E402
-from app.core.money import BASE_CURRENCY, DEFAULT_CURRENCY, DEFAULT_USER_CURRENCY, SUPPORTED_CURRENCIES  # noqa: E402
+from app.core.money import (  # noqa: E402
+    BASE_CURRENCY,
+    CURRENCY_EXPONENTS,
+    DEFAULT_CURRENCY,
+    DEFAULT_USER_CURRENCY,
+    SUPPORTED_CURRENCIES,
+)
 from app.core.months import YearMonth  # noqa: E402
 from app.infrastructure.config import API_PREFIX, PROJECT_DIR, Settings  # noqa: E402
 from app.infrastructure.db import create_db_engine  # noqa: E402
 from app.main import create_app  # noqa: E402
+from app.modules import splits  # noqa: E402
 from app.modules.accounts import (  # noqa: E402
     CURRENT_TERMS_VERSION,
     DASHBOARD_PAGE,
@@ -157,6 +164,34 @@ def _budgets_contract() -> dict[str, object]:
     }
 
 
+def _splits_contract() -> dict[str, object]:
+    """Splits (D226): group kinds, roles, split methods, balance enums, invite lifetimes, UPI syntax, and limits."""
+    return {
+        "groupKinds": {_camel(kind.name): kind.value for kind in splits.GroupKind},
+        "memberRoles": {_camel(role.name): role.value for role in splits.MemberRole},
+        "methods": {_camel(method.name): method.value for method in splits.SplitMethod},
+        "directions": {_camel(direction.name): direction.value for direction in splits.BalanceDirection},
+        "contextKinds": {_camel(kind.name): kind.value for kind in splits.BalanceContextKind},
+        "linkStatuses": {_camel(status.name): status.value for status in splits.ExpenseLinkStatus},
+        "inviteLifetimeDays": [lifetime.value for lifetime in splits.InviteLifetime],
+        "defaultInviteLifetimeDays": splits.DEFAULT_INVITE_LIFETIME.value,
+        "upiPattern": splits.UPI_ID_PATTERN,
+        "limits": {
+            "nameLength": splits.MAX_NAME_LENGTH,
+            "descriptionLength": splits.MAX_DESCRIPTION_LENGTH,
+            "contactNoteLength": splits.MAX_CONTACT_NOTE_LENGTH,
+            "noteLength": splits.MAX_NOTE_LENGTH,
+            "settlementNoteLength": splits.MAX_SETTLEMENT_NOTE_LENGTH,
+            "upiIdLength": splits.MAX_UPI_ID_LENGTH,
+            "maxParticipants": splits.MAX_PARTICIPANTS,
+            "maxActiveInvites": splits.MAX_ACTIVE_INVITES,
+            "maxInviteUses": splits.MAX_INVITE_USES,
+            "listDefault": splits.DEFAULT_LIST_LIMIT,
+            "listMax": splits.MAX_LIST_LIMIT,
+        },
+    }
+
+
 def _a2ui_contract() -> dict[str, object]:
     """A2UI: the version, the catalogs and components the renderer allows, the insights catalog's names and limits,
     the actions a click sends, and the functions the browser runs on a click (D209)."""
@@ -197,6 +232,7 @@ def _contracts() -> dict[str, object]:
         "BASE_CURRENCY": BASE_CURRENCY,
         "DEFAULT_USER_CURRENCY": DEFAULT_USER_CURRENCY,
         "SUPPORTED_CURRENCIES": list(SUPPORTED_CURRENCIES),
+        "CURRENCY_EXPONENTS": CURRENCY_EXPONENTS,
         "DEFAULT_TIMEZONE": DEFAULT_TIMEZONE,
         # The languages the server writes its texts in; the web app's language table is typed against them.
         "LANGUAGES": [language.value for language in Language],
@@ -209,6 +245,7 @@ def _contracts() -> dict[str, object]:
         # How a month is written (YYYY-MM, 1900-2099): the browser checks a card's month against it.
         "MONTH_PATTERN": YearMonth.PATTERN,
         "BUDGETS": _budgets_contract(),
+        "SPLITS": _splits_contract(),
         "A2UI": _a2ui_contract(),
         "AUTH": _auth_contract(),
         "ACCOUNT": _account_contract(),

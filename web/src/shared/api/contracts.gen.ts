@@ -23,6 +23,20 @@ export const SUPPORTED_CURRENCIES = [
   "AED"
 ] as const
 
+export const CURRENCY_EXPONENTS = {
+  "USD": 2,
+  "EUR": 2,
+  "GBP": 2,
+  "INR": 2,
+  "CAD": 2,
+  "AUD": 2,
+  "SGD": 2,
+  "CHF": 2,
+  "AED": 2,
+  "JPY": 0,
+  "KWD": 3
+} as const
+
 export const DEFAULT_TIMEZONE = "UTC" as const
 
 export const LANGUAGES = [
@@ -85,6 +99,54 @@ export const BUDGETS = {
   },
   "nearLimitPercent": 80,
   "fullPercent": 100
+} as const
+
+export const SPLITS = {
+  "groupKinds": {
+    "personal": "personal",
+    "shared": "shared"
+  },
+  "memberRoles": {
+    "owner": "owner",
+    "member": "member"
+  },
+  "methods": {
+    "equal": "equal",
+    "exact": "exact"
+  },
+  "directions": {
+    "owedToYou": "owed_to_you",
+    "youOwe": "you_owe",
+    "settled": "settled"
+  },
+  "contextKinds": {
+    "direct": "direct",
+    "group": "group"
+  },
+  "linkStatuses": {
+    "recording": "recording",
+    "linked": "linked"
+  },
+  "inviteLifetimeDays": [
+    1,
+    7,
+    30
+  ],
+  "defaultInviteLifetimeDays": 7,
+  "upiPattern": "^[a-zA-Z0-9._-]{2,64}@[a-zA-Z0-9.-]{2,32}$",
+  "limits": {
+    "nameLength": 80,
+    "descriptionLength": 120,
+    "contactNoteLength": 200,
+    "noteLength": 500,
+    "settlementNoteLength": 300,
+    "upiIdLength": 100,
+    "maxParticipants": 50,
+    "maxActiveInvites": 10,
+    "maxInviteUses": 20,
+    "listDefault": 50,
+    "listMax": 100
+  }
 } as const
 
 export const A2UI = {
