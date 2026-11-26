@@ -11,6 +11,8 @@ export const DATA_SCOPES = {
   expenses: "expenses",
   // The person's monthly budgets (the Budgets page).
   budgets: "budgets",
+  // Splits contacts, groups, invites, splits, settlements, and UPI profile (the Splits page).
+  splits: "splits",
   // The signed-in person's own account (the Settings page and welcome state).
   sessions: "sessions",
   accessTokens: "accessTokens",
@@ -23,6 +25,6 @@ export type DataScope = (typeof DATA_SCOPES)[keyof typeof DATA_SCOPES]
 // Teach TanStack Query the shape of a mutation's `meta`, so `meta.changes` is checked by TypeScript.
 declare module "@tanstack/react-query" {
   interface Register {
-    mutationMeta: { changes?: DataScope }
+    mutationMeta: { changes?: DataScope | readonly DataScope[] }
   }
 }

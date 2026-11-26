@@ -14,6 +14,7 @@ const en = {
     dashboard: "Dashboard",
     expenses: "Expenses",
     budgets: "Budgets",
+    splits: "Splits",
     categories: "Categories",
     reports: "Reports",
     settings: "Settings",

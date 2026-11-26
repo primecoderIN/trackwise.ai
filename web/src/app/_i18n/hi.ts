@@ -18,6 +18,7 @@ const hi: Translation<typeof en> = {
     dashboard: "डैशबोर्ड",
     expenses: "खर्च",
     budgets: "बजट",
+    splits: "बँटवारा",
     categories: "श्रेणियाँ",
     reports: "रिपोर्ट",
     settings: "सेटिंग्स",

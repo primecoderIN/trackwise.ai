@@ -13,6 +13,7 @@ import { categoryKeys } from "@/features/categories"
 import { dashboardKeys } from "@/features/dashboard"
 import { expenseKeys } from "@/features/expenses"
 import { reportKeys } from "@/features/reports"
+import { splitKeys } from "@/features/splits"
 import { ApiError, setUnauthorizedHandler } from "@/shared/api/http"
 import { DATA_SCOPES, type DataScope } from "@/shared/config/data-scopes"
 import { reportUnexpected } from "@/shared/lib/errors"
@@ -38,6 +39,7 @@ function isClientError(error: unknown): boolean {
 export const STALE_AFTER: Readonly<Record<DataScope, readonly QueryKey[]>> = {
   [DATA_SCOPES.expenses]: [expenseKeys.all, dashboardKeys.all, budgetKeys.all, categoryKeys.all, reportKeys.all],
   [DATA_SCOPES.budgets]: [budgetKeys.all],
+  [DATA_SCOPES.splits]: [splitKeys.all],
   [DATA_SCOPES.sessions]: [accountKeys.sessions],
   [DATA_SCOPES.accessTokens]: [accountKeys.tokens],
   [DATA_SCOPES.account]: [authKeys.user],
@@ -79,8 +81,13 @@ export const queryClient: QueryClient = new QueryClient({
   mutationCache: new MutationCache({
     onError: onFailure,
     onSettled: (_data, _error, _variables, _context, mutation) => {
-      const scope = mutation.meta?.changes
-      if (scope) refreshAfter(queryClient, scope)
+      const scopes = mutation.meta?.changes
+      if (!scopes) return
+      if (typeof scopes === "string") {
+        refreshAfter(queryClient, scopes)
+      } else {
+        for (const scope of scopes) refreshAfter(queryClient, scope)
+      }
     },
   }),
   defaultOptions: {

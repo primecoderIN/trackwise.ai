@@ -17,6 +17,8 @@ export const ROUTES = {
   dashboard: AUTH.dashboardPage,
   expenses: "/expenses",
   budgets: "/budgets",
+  splits: "/splits",
+  splitsJoin: "/splits/join",
   categories: "/categories",
   reports: "/reports",
   settings: "/settings",

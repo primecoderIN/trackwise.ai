@@ -2,7 +2,16 @@
 // composition (app/_frame/, Phase 28). app-sidebar.tsx builds the grouped menu from MENU_GROUPS, top-bar title lookup
 // and command-palette.tsx read PAGES.
 
-import { FileBarChart, LayoutDashboard, PiggyBank, ReceiptText, Settings, Tags, type LucideIcon } from "lucide-react"
+import {
+  FileBarChart,
+  LayoutDashboard,
+  PiggyBank,
+  ReceiptText,
+  Settings,
+  Tags,
+  Users,
+  type LucideIcon,
+} from "lucide-react"
 
 import { ROUTES } from "@/shared/config/routes"
 
@@ -34,6 +43,7 @@ export const PAGES: readonly Page[] = [
   { path: ROUTES.dashboard, name: "dashboard", icon: LayoutDashboard, group: "overview" },
   { path: ROUTES.expenses, name: "expenses", icon: ReceiptText, group: "money" },
   { path: ROUTES.budgets, name: "budgets", icon: PiggyBank, group: "money" },
+  { path: ROUTES.splits, name: "splits", icon: Users, group: "money" },
   { path: ROUTES.categories, name: "categories", icon: Tags, group: "money" },
   { path: ROUTES.reports, name: "reports", icon: FileBarChart, group: "insights" },
   { path: ROUTES.settings, name: "settings", icon: Settings, group: "account" },

@@ -10,6 +10,7 @@ import type { CategoriesTexts } from "@/features/categories/i18n"
 import type { DashboardTexts } from "@/features/dashboard/i18n"
 import type { ExpensesTexts } from "@/features/expenses/i18n"
 import type { ReportsTexts } from "@/features/reports/i18n"
+import type { SplitsTexts } from "@/features/splits/i18n"
 import type { CommonTexts, Language } from "@/shared/i18n"
 
 /** Complete typed message structure exposed through `next-intl` hooks and server translators. */
@@ -24,6 +25,7 @@ export interface AppMessages {
   dashboard: DashboardTexts
   expenses: ExpensesTexts
   reports: ReportsTexts
+  splits: SplitsTexts
 }
 
 declare module "next-intl" {
