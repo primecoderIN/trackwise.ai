@@ -76,6 +76,10 @@ def create_app(services: Services | None = None) -> FastAPI:
     app.state.report_quota = built.report_quota
     app.state.receipt_quota = built.receipt_quota
     app.state.auth_quota = built.auth_quota
+    app.state.invite_quota = built.invite_quota
+    app.state.invite_ip_quota = built.invite_ip_quota
+    app.state.invite_fail_quota = built.invite_fail_quota
+    app.state.invite_fail_ip_quota = built.invite_fail_ip_quota
     if built.identity.issuer is None:
         logger.warning("Sign-in isn't configured, so nobody can sign in: every API route answers 401 (see OIDC_*).")
     if not getattr(built.files, "configured", True):

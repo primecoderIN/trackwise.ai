@@ -1,0 +1,65 @@
+"""Splits module: Personal and Shared bill splitting, simplified group balances, and settlements (D226).
+
+Public contract exports for other modules and contract export scripts. Tables, handlers, and routes stay private;
+bootstrap.py wires the module through module.py.
+"""
+
+from app.modules.splits.i18n import SplitText
+from app.modules.splits.values import (
+    DEFAULT_INVITE_LIFETIME,
+    DEFAULT_LIST_LIMIT,
+    MAX_ACTIVE_INVITES,
+    MAX_CONTACT_NOTE_LENGTH,
+    MAX_DESCRIPTION_LENGTH,
+    MAX_INVITE_USES,
+    MAX_LIST_LIMIT,
+    MAX_NAME_LENGTH,
+    MAX_NOTE_LENGTH,
+    MAX_PARTICIPANTS,
+    MAX_SETTLEMENT_NOTE_LENGTH,
+    MAX_UPI_ID_LENGTH,
+    UPI_ID_PATTERN,
+    BalanceContextKind,
+    BalanceDirection,
+    ContactId,
+    ExpenseLinkStatus,
+    GroupId,
+    GroupKind,
+    InviteId,
+    InviteLifetime,
+    MemberId,
+    MemberRole,
+    SettlementId,
+    SplitExpenseId,
+    SplitMethod,
+)
+
+__all__ = [
+    "DEFAULT_INVITE_LIFETIME",
+    "DEFAULT_LIST_LIMIT",
+    "MAX_ACTIVE_INVITES",
+    "MAX_CONTACT_NOTE_LENGTH",
+    "MAX_DESCRIPTION_LENGTH",
+    "MAX_INVITE_USES",
+    "MAX_LIST_LIMIT",
+    "MAX_NAME_LENGTH",
+    "MAX_NOTE_LENGTH",
+    "MAX_PARTICIPANTS",
+    "MAX_SETTLEMENT_NOTE_LENGTH",
+    "MAX_UPI_ID_LENGTH",
+    "UPI_ID_PATTERN",
+    "BalanceContextKind",
+    "BalanceDirection",
+    "ContactId",
+    "ExpenseLinkStatus",
+    "GroupId",
+    "GroupKind",
+    "InviteId",
+    "InviteLifetime",
+    "MemberId",
+    "MemberRole",
+    "SettlementId",
+    "SplitExpenseId",
+    "SplitMethod",
+    "SplitText",
+]

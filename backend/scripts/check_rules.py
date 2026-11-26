@@ -35,6 +35,7 @@ ALLOWED_MODULE_DEPENDENCIES: dict[str, set[str]] = {
     "expenses": {"categories"},
     "budgets": {"expenses", "categories"},
     "reports": {"expenses", "categories"},
+    "splits": {"expenses", "categories"},
     "mcp": {"expenses", "categories", "reports", "budgets"},
     "assistant": {"*"},
 }
@@ -50,6 +51,8 @@ HTTP_ADAPTERS = {
     "mcp/http.py",
     "receipts/api.py",
     "reports/api.py",
+    "splits/api.py",
+    "splits/group_api.py",
 }
 # Where the Gemini adapter may be chosen: the composition root, the adapter itself, and each agent's server.py.
 LLM_PROVIDER_PATTERN = re.compile(r"llm\.gemini|from google")
@@ -72,7 +75,7 @@ STORAGE_PROVIDER_FILES = {
 # No identity provider's name in the code (D185).
 PROVIDER_NAMES = re.compile(r"zitadel", re.IGNORECASE)
 # A person's data is read with its owner in the same statement (D190), never session.get(Table, id).
-OWNED_DATA_MODULES = ("accounts", "expenses", "budgets", "conversations", "receipts", "assistant")
+OWNED_DATA_MODULES = ("accounts", "expenses", "budgets", "conversations", "receipts", "assistant", "splits")
 SESSION_GET = re.compile(r"session\.get\(")
 SESSION_GET_ALLOWED: set[str] = set()
 

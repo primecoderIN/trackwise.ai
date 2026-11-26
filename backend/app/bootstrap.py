@@ -45,6 +45,7 @@ from app.modules.expenses import module as expenses_module
 from app.modules.mcp import module as mcp_module
 from app.modules.receipts import module as receipts_module
 from app.modules.reports import module as reports_module
+from app.modules.splits import module as splits_module
 from app.web.auth import SessionCookies
 
 HTTPS_SCHEME = "https://"
@@ -57,6 +58,13 @@ AUTH_REQUESTS_PER_MINUTE = 30
 AUTH_REQUESTS_PER_DAY = 300
 MCP_REQUESTS_PER_MINUTE = 60
 MCP_REQUESTS_PER_DAY = 2000
+# Shared-group invite preview & accept limits: per user, per IP, and stricter failed-token limits (D226).
+INVITE_REQUESTS_PER_MINUTE = 20
+INVITE_REQUESTS_PER_DAY = 100
+INVITE_IP_REQUESTS_PER_MINUTE = 30
+INVITE_IP_REQUESTS_PER_DAY = 200
+INVITE_FAIL_PER_MINUTE = 5
+INVITE_FAIL_PER_DAY = 25
 
 # Every module with handlers or tables. (The mcp module has neither: it's an adapter over the bus. Nor has the reports
 # module: it reads through other modules' queries.)
@@ -65,6 +73,7 @@ MODULES = (
     categories_module,
     expenses_module,
     budgets_module,
+    splits_module,
     conversations_module,
     receipts_module,
     assistant_module,
@@ -108,6 +117,10 @@ class Services:
     receipt_quota: RateLimiter
     auth_quota: RateLimiter
     mcp_quota: RateLimiter
+    invite_quota: RateLimiter
+    invite_ip_quota: RateLimiter
+    invite_fail_quota: RateLimiter
+    invite_fail_ip_quota: RateLimiter
     # The web app's origin (settings.public_url) and whether it uses HTTPS.
     public_url: str
     https: bool
@@ -209,6 +222,10 @@ def build(
         receipt_quota=RateLimiter(clock, RECEIPT_REQUESTS_PER_MINUTE, RECEIPT_REQUESTS_PER_DAY),
         auth_quota=RateLimiter(clock, AUTH_REQUESTS_PER_MINUTE, AUTH_REQUESTS_PER_DAY),
         mcp_quota=RateLimiter(clock, MCP_REQUESTS_PER_MINUTE, MCP_REQUESTS_PER_DAY),
+        invite_quota=RateLimiter(clock, INVITE_REQUESTS_PER_MINUTE, INVITE_REQUESTS_PER_DAY),
+        invite_ip_quota=RateLimiter(clock, INVITE_IP_REQUESTS_PER_MINUTE, INVITE_IP_REQUESTS_PER_DAY),
+        invite_fail_quota=RateLimiter(clock, INVITE_FAIL_PER_MINUTE, INVITE_FAIL_PER_DAY),
+        invite_fail_ip_quota=RateLimiter(clock, INVITE_FAIL_PER_MINUTE * 2, INVITE_FAIL_PER_DAY * 2),
         public_url=settings.public_url,
         https=settings.public_url.startswith(HTTPS_SCHEME),
         identity=identity,
@@ -307,6 +324,7 @@ def api_routers(services: Services) -> list[APIRouter]:
         categories_module.router,
         expenses_module.create_router(services.recorder, services.budget_watch),
         budgets_module.router,
+        splits_module.create_router(services.bus, services.recorder, services.budget_watch),
         conversations_module.router,
         receipts_module.create_router(services.bus, services.files),
         reports_module.create_router(services.reports),
