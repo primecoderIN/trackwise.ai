@@ -57,7 +57,7 @@ class LogoutNotice:
 
 @dataclass(frozen=True)
 class Principal:
-    """The person a request comes from: their user id, session, and account preferences."""
+    """The person a request comes from: their user id, session, display name, and account preferences."""
 
     user_id: int
     session_id: int
@@ -65,6 +65,7 @@ class Principal:
     preferred_language: Language = DEFAULT_LANGUAGE
     default_currency: str = DEFAULT_USER_CURRENCY
     timezone: str = DEFAULT_TIMEZONE
+    display_name: str | None = None
 
 
 @dataclass(frozen=True)

@@ -58,7 +58,11 @@ def require_receipt_quota(request: Request, principal: CurrentUserDep) -> None:
 
 def require_auth_quota(request: Request) -> None:
     """Per-client-IP rate limit on unauthenticated auth endpoints (/auth/login, /auth/backchannel-logout)."""
-    limiter: RateLimiter | None = getattr(request.app.state, "auth_quota", None)
+    _enforce_ip_limit(getattr(request.app.state, "auth_quota", None), request)
+
+
+def _enforce_ip_limit(limiter: RateLimiter | None, request: Request) -> None:
+    """Count one request for the client IP against `limiter`, raising 429 with Retry-After if exceeded."""
     if limiter is None:
         return
     client_key = request.client.host if request.client and request.client.host else "unknown"
@@ -67,8 +71,21 @@ def require_auth_quota(request: Request) -> None:
         raise TooManyRequestsError(translatable(WebText.RATE_LIMITED), refusal.retry_after_seconds)
 
 
-# Route dependencies: `dependencies=[MODEL_QUOTA]` / `REPORTS_QUOTA` / `RECEIPTS_QUOTA` / `AUTH_QUOTA`.
+def require_invite_quota(request: Request, principal: CurrentUserDep) -> None:
+    """Dual per-user and per-IP rate limit on shared-group invite preview and accept endpoints (D226)."""
+    _enforce_user_limit(getattr(request.app.state, "invite_quota", None), principal.user_id)
+    _enforce_ip_limit(getattr(request.app.state, "invite_ip_quota", None), request)
+
+
+def record_invalid_invite_attempt(request: Request, user_id: int) -> None:
+    """Apply stricter throttling after a failed invite token lookup to deter brute-force probing (D226)."""
+    _enforce_user_limit(getattr(request.app.state, "invite_fail_quota", None), user_id)
+    _enforce_ip_limit(getattr(request.app.state, "invite_fail_ip_quota", None), request)
+
+
+# Route dependencies: `dependencies=[MODEL_QUOTA]` / `REPORTS_QUOTA` / `RECEIPTS_QUOTA` / `AUTH_QUOTA` / `INVITE_QUOTA`.
 MODEL_QUOTA = Depends(require_model_quota)
 REPORTS_QUOTA = Depends(require_report_quota)
 RECEIPTS_QUOTA = Depends(require_receipt_quota)
 AUTH_QUOTA = Depends(require_auth_quota)
+INVITE_QUOTA = Depends(require_invite_quota)

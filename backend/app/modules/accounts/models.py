@@ -90,6 +90,7 @@ class SessionView(BaseModel):
     preferred_language: Language = DEFAULT_LANGUAGE
     default_currency: str = DEFAULT_USER_CURRENCY
     timezone: str = DEFAULT_TIMEZONE
+    display_name: str | None = None
 
 
 # What the callback checks a sign-in against: TakeLoginAttempt returns it, once.

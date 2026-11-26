@@ -51,4 +51,5 @@ def get_session(ctx: Context, query: GetSession) -> SessionView | None:
         preferred_language=Language(user.preferred_language),
         default_currency=user.default_currency,
         timezone=user.timezone,
+        display_name=user.name,
     )

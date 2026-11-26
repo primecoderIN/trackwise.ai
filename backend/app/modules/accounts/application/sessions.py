@@ -40,4 +40,5 @@ class SessionGate:
             preferred_language=session.preferred_language,
             default_currency=session.default_currency,
             timezone=session.timezone,
+            display_name=session.display_name,
         )
