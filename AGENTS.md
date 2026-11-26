@@ -190,19 +190,28 @@ files, not new branches in shared code.
 
 ## 3. Web: Next.js, feature slices (`web/`)
 
-- **Next.js 16, App Router (D188).** This version differs from older ones: check the docs bundled in
+- **Next.js 16, App Router (D188, D225).** This version differs from older ones: check the docs bundled in
   `web/node_modules/next/dist/docs/` before using a Next.js API.
-  - `src/app/` holds only Next's own files at its top (`layout.tsx`, `not-found.tsx`, `robots.ts`, `sitemap.ts`);
-    the composition lives in private folders (`_shell/`, `_frame/`, `_views/`, `_i18n/`, `_seo/`, `_styles/`).
-    Never leave a loose file there.
-  - Routes are `page.tsx` files under `src/app/(client)/`; a route file is a server component that exports its
-    `metadata` (`privatePage` or `publicPage` from `_seo/seo.ts`) and draws its feature's page from `_views/`.
-  - Signed-in pages go in `(client)/(app)/`, behind the session check (`AuthGate`, D189); a public page goes beside
-    it, uses `publicPage` and is added to `PUBLIC_PATHS` (`_seo/seo.ts`: robots.txt and the sitemap).
+  - `src/proxy.ts` runs Next.js 16 `next-intl` locale routing (`localePrefix: "as-needed"` for public routes and
+    `/sign-in`, plus cookie/`Accept-Language` locale negotiation for workspace routes).
+  - `src/i18n/` holds `routing.ts`, `navigation.ts` (`PublicLink`), `request.ts`, `messages.ts` (per-namespace dynamic
+    loaders and `pickMessages`), and `global.d.ts` (`AppConfig` over per-feature `AppMessages`).
+  - `src/app/` holds only Next's own root files at its top (`global-error.tsx`, `global-not-found.tsx`, icons,
+    `manifest.ts`, `opengraph-image.tsx`, `robots.ts`, `sitemap.ts`); composition lives in private folders (`_shell/`,
+    `_frame/`, `_views/`, `_i18n/`, `_public/`, `_seo/`, `_styles/`). Never leave a loose file there.
+  - Routes live under `src/app/[lang]/` (static SSG public pages via `generateStaticParams` + `setRequestLocale`, plus
+    `sign-in/`) and `src/app/(client)/(app)/` (unprefixed signed-in workspace pages). A route file is a server
+    component that exports `metadata` or `generateMetadata` (`privatePage` or `publicPage` from `_seo/seo.ts`), wraps
+    client views in `<MessageScope namespaces={[...]} />`, and renders from `_views/client-pages.ts` or
+    `_public/components/`.
+  - Signed-in pages go in `(client)/(app)/`, behind the session check (`AuthGate`, D189); a public page goes under
+    `[lang]/(public)/`, uses `publicPage` with `{ lang }`, and is added to `PUBLIC_PATHS` (`_seo/seo.ts`).
   - A page never outlives its person (D192): when the session ends or someone else signs in, `AuthGate` unloads it.
     Never keep a person's data where a reload wouldn't clear it (browser storage).
-  - Everything under `(client)/` is drawn in the browser only (`ClientRoot`); don't read `window` or `localStorage`
-    in a server component. A page meant to be rendered on the server for search engines goes outside `(client)/`.
+  - Interactive routes under `(client)/` and `[lang]/sign-in` receive SSR HTML (`<html lang dir>` and initial
+    `next-intl` messages from `NEXT_LOCALE` / `Accept-Language`) immediately inside `ClientRoot`; guard browser-only
+    APIs (`window`, `document`, DOM APIs) rather than returning `null` during SSR. Pure Server Component pages live
+    under `[lang]/(public)/` with zero client JS translation payloads.
 - **Plain feature slices** (not Feature-Sliced Design):
   - `src/app` composes the app.
   - `src/features/<name>` owns everything for one feature.
@@ -226,23 +235,25 @@ files, not new branches in shared code.
     `fetch` directly (the assistant's stream) spreads them in. Never store a token or session data in the browser.
   - Never hand-copy a backend type or value: use `schema.gen.ts` and `contracts.gen.ts`.
   - Never edit `*.gen.ts` or `openapi.json`.
-- **Pages** are exported from their feature's `index.ts` through `lazyWithRetry` (their code and texts load together),
-  re-exported by `app/_views/client-pages.ts`, drawn by their route file, and listed in the menu once in `PAGES`
-  (`app/_frame/pages.tsx`).
+- **Pages** are exported from their feature's `index.ts` through `lazyWithRetry`, re-exported by
+  `app/_views/client-pages.ts`, wrapped in `<MessageScope namespaces={[...]} />` inside their route `page.tsx`, and
+  listed in the menu once in `PAGES` (`app/_frame/pages.tsx`).
 - **Logic that doesn't need React** goes in pure functions in their own files.
-- **Texts** (D178): everything a person sees or hears comes from a namespace of texts, never a literal in a component.
-  - Each feature owns `i18n/`: `en.ts` (the source, a default-exported plain object), one file per other language
-    typed `Translation<typeof en>` (a missing key is a compile error), and `index.ts` (`defineNamespace` with a loader
-    per language, `export const useTexts = xTexts.useTexts`, and its `ResourceNamespaceMap` entry, typed by
-    `import type en from "./en"`).
-  - Every language's file is a chunk of its own, loaded with what uses it: a feature's from its page's or panel's lazy
-    loader, `Promise.all([import(page), loadNamespaces(...)])`, so nothing is drawn before its texts are in. `common`
-    (shared/), `app` (the frame) and `auth` (the session check and the user menu) load when the app boots
-    (`app/_shell/namespaces.ts`), their English bundled so the frame can always be drawn.
-  - Components call `const { t } = useTexts()`. Code outside React calls `i18n.t(key, { ns })` when it needs the
-    text. Never keep a text in a module-level constant (store its key), and never build a sentence from pieces: one
-    key per sentence, with `{{placeholders}}`, and `_one`/`_other` keys for counts.
-  - Numbers and dates go through `shared/lib/format.ts`, which follows the language's locale (`LANGUAGES`).
+- **Texts** (D178, D225): everything a person sees or hears comes from a typed `next-intl` namespace (`AppMessages` in
+  `src/i18n/global.d.ts`), never a literal in a component.
+  - Each feature owns `i18n/`: `en.ts` (ICU MessageFormat source), one file per other language typed
+    `Translation<typeof en>` (a missing or extra key is a compile error), and `index.ts` exporting its `*Texts` type
+    and `load*Messages(language)` dynamic import loader (registered in `src/i18n/messages.ts` and `AppMessages`).
+  - Only the namespaces in `<NextIntlClientProvider>` / `<MessageScope>` are serialized to the client:
+    `BOOT_MESSAGE_NAMESPACES` (`["common", "app"]`) on `[lang]/`, `WORKSPACE_MESSAGE_NAMESPACES`
+    (`["common", "app", "auth", "assistant"]`) in `(client)/layout.tsx`, plus page namespaces in `(app)/*/page.tsx`.
+    Public marketing pages under `[lang]/(public)/` use server-only catalogs in `app/_public/texts/`.
+  - Client components call `const t = useTranslations("<namespace>")`; Server Components and `generateMetadata` call
+    `getTranslations({ locale, namespace })`. Never keep a translated string in a module-level constant, and never build
+    a sentence from pieces: one key per sentence with ICU `{placeholders}` and `{count, plural, ...}`. Code outside React
+    throws typed `UserFacingError` / `StreamError` with catalog keys or receives translator callbacks from hooks.
+  - Numbers and dates go through `useFormatters()` (`shared/lib/use-formatters.ts`), which binds the active `next-intl`
+    locale (`LANGUAGES[lang].locale`) into `shared/lib/format.ts`.
   - Not translated in the browser: user data, and text the server sends (cards, chip labels, error details,
     payment labels), which the server will write in the chosen language.
 - **Size.** Files under about 150 lines of code, and components or hooks under about 60. A folder past about eight
@@ -254,9 +265,10 @@ files, not new branches in shared code.
   - Error boundaries wrap the app, the page area, the chat panel and every A2UI card.
   - A page keeps its data when a refresh fails (`RefreshNotice`).
   - Code that fails to load can be retried.
-- **Errors show only texts for people (D180).** Show an error with `messageOf`: only a `UserFacingError`'s message
-  (`ApiError`, `AgentRunError`, our own texts) is shown, anything else as a generic text. Throw `UserFacingError` with
-  a text from a namespace, never a raw `Error` meant to be read.
+- **Errors show only texts for people (D180).** Show an error with `useMessageOf()` (wrapping `messageOf(error, translate)`):
+  only a `UserFacingError`'s message (`ApiError`, `AgentRunError`, `StreamError`, catalog keys) is shown, anything else
+  as `common.errors.unexpected`. Throw `UserFacingError` with a catalog key or server detail, never a raw `Error` meant
+  to be read.
 - **Accessibility.**
   - Every control has a label.
   - Sortable headers set `aria-sort`.

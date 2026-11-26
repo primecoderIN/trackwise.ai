@@ -42,7 +42,7 @@ Technical and product documentation for **trackwise.ai**, organized by topic.
 | [Configuration](configuration.md) | Environment variables (`.env`), Gemini model limits, timeouts, body-size limits, and rate quotas |
 | [Identity Provider Setup](identity_provider.md) | Step-by-step OpenID Connect configuration (ZITADEL / generic PKCE OIDC) and provider switching |
 | [Backend Onboarding](backend_onboarding.md) | Adding vertical slices, CQRS commands/queries, modules, translations, and migrations |
-| [Frontend Onboarding](frontend_onboarding.md) | Building Next.js feature slices, TanStack Query scopes, and typed EN/HI i18next chunks |
+| [Frontend Onboarding](frontend_onboarding.md) | Building Next.js feature slices, TanStack Query scopes, and typed EN/HI `next-intl` namespaces |
 | [Repository Rules (`AGENTS.md`)](../AGENTS.md) | Coding rules, size limits, localization rules, and definition of done verified by CI |
 
 ---

@@ -21,36 +21,39 @@ npm run gen:api      # regenerate API types from openapi.json (after the backend
 
 ```
 src/
+  proxy.ts              Next.js 16 `next-intl` locale routing (`localePrefix: "as-needed"`)
+  i18n/                 `routing.ts`, `navigation.ts` (`PublicLink`), `request.ts`, `messages.ts`, `global.d.ts`
   app/                  Next's route folder, and the composition: the only place that knows every feature
-    layout.tsx          the root document (server): metadata, theme boot script, stylesheet
-    not-found.tsx       every unknown address: a 404, "Page not found" drawn in the browser
-    robots.ts, sitemap.ts   for search engines: only public pages
-    (client)/           pages drawn in the browser: layout.tsx renders ClientRoot
-      (app)/            the signed-in routes: layout.tsx (the session check, then the frame), page.tsx (Dashboard),
-                        expenses/, budgets/...
-      sign-in/          the public sign-in page
-    _shell/             client-root.tsx (starts i18next, then the root error boundary and providers), providers.tsx
-                        (TanStack Query, theme, tooltips, the assistant, toasts), query-client.ts (the cache, retry
-                        rules, THE "what reloads after a change" rule), namespaces.ts (the texts loaded at boot)
-    _frame/             app-layout.tsx (top bar, page area, chat panel's place), app-sidebar.tsx, pages.tsx (the menu)
-    _views/             client-pages.ts (the pages the route files draw), placeholder-pages.tsx (Page not found)
-    _i18n/              the frame's own texts: menu, page names, top bar, error titles
-    _seo/               seo.ts: site address, metadata for public and signed-in pages
+    global-error.tsx    last-resort root crash boundary outside providers
+    global-not-found.tsx  app-wide 404 fallback
+    robots.ts, sitemap.ts   for search engines: localized public pages
+    [lang]/             SSG public pages & `/sign-in`: layout.tsx (`generateStaticParams`, `BOOT_MESSAGE_NAMESPACES`)
+    (client)/           interactive workspace root: layout.tsx (cookie/`Accept-Language` SSR `<html lang dir>`)
+      (app)/            the signed-in routes: layout.tsx (`AuthGate`, `AppLayout`), page.tsx (`<MessageScope>`)
+    _shell/             client-root.tsx (root error boundary + providers), message-scope.tsx (route namespace scoping),
+                        providers.tsx, query-client.ts, app-crashed.tsx
+    _frame/             app-layout.tsx, app-sidebar.tsx, pages.tsx (the menu), welcome-dialog.tsx
+    _views/             client-pages.ts (lazy client boundaries for signed-in pages & SignInPage)
+    _public/            server-rendered marketing components (`components/`) and catalogs (`texts/`)
+    _i18n/              the app frame's own typed texts (`app` namespace)
+    _seo/               seo.ts: site address, `PUBLIC_PATHS`, hreflang & public/signed-in metadata
     _styles/            index.css
   features/
     expenses/           Expenses page: table, edit row, add & delete dialogs, filters
     categories/         categories API + queries, CategorySelect, category names
+    budgets/            Budgets page: monthly overall and category limits, alerts
+    reports/            Reports page: monthly/category breakdowns and CSV/JSON exports
     dashboard/          Dashboard page: stat cards, charts, recent list
     assistant/          chat panel, conversation model, AG-UI stream, A2UI renderer
     auth/               sign-in page, the session check in front of the signed-in pages (AuthGate), user menu
-    account/            the Settings page: profile, where you're signed in, access tokens
+    account/            the Settings page: profile, preferences, sessions, access tokens
   shared/               used by any feature; knows none of them
     api/                typed HTTP client (http.ts) + generated contract (*.gen.ts)
     ui/                 shadcn/ui components (generated source; edit freely)
     components/         error boundary, section error, refresh notice, empty state, placeholder page, labeled field
     config/             app name, routes, data scopes
-    i18n/               languages and their locales, i18next setup, language menu, the "common" texts
-    hooks/, lib/        use-mobile, use-debounced-value; formatting, guards, errors, ids
+    i18n/               languages and locales, NEXT_LOCALE helpers, `useLanguage`, language menu, `common` texts
+    hooks/, lib/        use-mobile, use-debounced-value; `useFormatters`, `useMessageOf`, format, guards, errors, ids
     theme/              theme constants, provider, toggle
 ```
 
@@ -85,9 +88,9 @@ features/expenses/
     fields/            form controls shared by the dialogs, the edit row and the filters (a label and its
                        control, LabeledField, is shared/components')
   i18n/
-    en.ts              every text the feature shows, in English (the source, and the keys' type)
-    hi.ts              the same keys in Hindi
-    index.ts           the namespace (a loader per language), useTexts(), and the keys' types
+    en.ts              every text the feature shows, in English ICU MessageFormat (source and keys' type)
+    hi.ts              the same keys in Hindi (`satisfies Translation<typeof en>`)
+    index.ts           the `*Texts` type and async `load*Messages(language)` loader (`src/i18n/messages.ts`)
 ```
 
 A folder that grows past a handful of files is grouped by area like this. Imports stay relative inside the feature;
@@ -159,11 +162,12 @@ Never fetch in a `useEffect` by hand: use a query.
 | nothing loaded yet | a skeleton (`DashboardSkeleton`) or "Loading…" |
 | nothing loaded, request failed | `<SectionError>` with **Try again** (retrying only what failed) |
 | data on screen, a reload failed | keep the data, add `<RefreshNotice>` ("Couldn't refresh, so this may be out of date") |
-| a mutation failed | a toast with the problem's message (`messageOf(error)`); keep the user's input |
+| a mutation failed | a toast with the problem's message (`useMessageOf()`); keep the user's input |
 
-`messageOf` shows only a message written for people: an `ApiError` (the server's `detail`), an `AgentRunError`, or a
-`UserFacingError` with one of our texts. Anything else (a crash) shows the common "Something went wrong" text, and
-`reportUnexpected` logs it to the console (D180). So throw `UserFacingError` for a message a person should read.
+`useMessageOf()` wraps `messageOf(error, translate)` so only messages written for people appear: an `ApiError` (the
+server's `detail`), an `AgentRunError`, a `StreamError` (in assistant), or a `UserFacingError` with a `common.errors`
+key. Anything else (a crash) shows the localized generic "Something went wrong" text, and `reportUnexpected` logs it to
+the console (D180). So throw `UserFacingError` for a message a person should read.
 
 ## Signing in
 
@@ -198,10 +202,12 @@ Never edit them. After a backend change: run `backend\scripts\export_contracts.p
   `npx shadcn@latest add <name>`). They're the only files the lint rules don't hold to app standards.
 - **Tailwind 4** with CSS variables (`app/index.css`); dark mode is a `dark` class on `<html>`, set before the first
   paint by a script generated from `shared/theme/theme-constants.ts`.
-- **Formatting** goes through `shared/lib/format.ts`, in the language's locale: `formatMoney("1250.5", "USD")` →
-  `$1,250.50` (the currency's CLDR format, the same data as the backend's cards), `formatDate`, `formatMonth`.
-- **The server's language:** the API client and the assistant's stream send `Accept-Language` (the language on now),
-  so error details, cards, chip labels and the assistant's replies come back in it.
+- **Formatting** goes through `useFormatters()` (binding the active `next-intl` locale's BCP 47 tag into
+  `shared/lib/format.ts`): `formatMoney("1250.5", "USD")` → `$1,250.50` (the currency's CLDR format, matching the
+  backend's cards), `formatDate`, `formatMonth`.
+- **The server's language:** the API client and the assistant's stream send `Accept-Language` (read from
+  `document.documentElement.lang`, kept in sync with `NEXT_LOCALE` and `<html lang>`), so error details, cards, chip
+  labels and the assistant's replies come back in it.
 - **Every call carries `apiHeaders()`** (`shared/api/http.ts`): the language and `X-CSRF: 1`, without which the API
   answers 403 (D186). `api` adds them itself; a direct `fetch` (the assistant's stream) spreads them in. The session
   is a cookie the browser sends by itself (same origin, D184): the app never sees or stores a token.
@@ -237,23 +243,21 @@ How it works end to end: [assistant_architecture.md](assistant_architecture.md).
    ```
 2. Re-export it from `app/_views/client-pages.ts` (the client boundary the route files draw pages through).
 3. Add its address to `shared/config/routes.ts`, and its route file, `app/(client)/(app)/budgets/page.tsx`: a server
-   component that exports `metadata` (`privatePage(en.pages.budgets)` from `app/_seo/seo.ts`, so it isn't indexed)
-   and returns `<BudgetsPage />`. Being in `(app)/`, it's behind the session check. A public page goes in
-   `app/(client)/` instead, beside `(app)/`, with `publicPage(title, path)`, and its path joins `PUBLIC_PATHS` in
-   `app/_seo/seo.ts` (robots.txt allows it, the sitemap lists it).
-4. Add one entry to `PAGES` in `app/_frame/pages.tsx` (path, name, icon) for the menu, and the page's name under
+   component that exports `generateMetadata` (`privatePage(t("pages.budgets"))` from `app/_seo/seo.ts`) and renders
+   `<MessageScope namespaces={["budgets", "categories"]}><BudgetsPage /></MessageScope>`. Being in `(app)/`, it's
+   behind the session check. A public page goes under `app/[lang]/(public)/` instead, exports `generateMetadata` with
+   `publicPage(title, path, { lang })`, uses `app/_public/texts/`, and joins `PUBLIC_PATHS` in `app/_seo/seo.ts`.
+4. Add one entry to `PAGES` in `app/_frame/pages.tsx` (path, key, icon) for the menu, and the page's name under
    `pages` in `app/_i18n/en.ts` and every other language's file.
 
 ### Add a feature
 
 `features/<name>/` with `index.ts`, `api.ts` (calls through `api` + `unwrap`), `queries.ts` (keys, hooks; mutations
-with `meta.changes`), `components/`, and `i18n/` (copy another feature's three files and rename the namespace; its
-`index.ts` exports `useTexts` from the namespace: `export const useTexts = xTexts.useTexts`).
-Its page's lazy loader in `index.ts` loads its texts with its code:
-`Promise.all([import("./components/x-page"), loadNamespaces(xTexts)])`, plus any other feature's namespace the page
-draws (the Expenses page loads `categoriesTexts` for CategorySelect). If its changes should refresh other data, add a
-scope to `shared/config/data-scopes.ts` and its entry to `STALE_AFTER` in `app/_shell/query-client.ts` (the compiler
-insists).
+with `meta.changes`), `components/`, and `i18n/` (`en.ts`, `hi.ts`, and `index.ts` exporting `*Texts` and
+`load*Messages(language)`). Register the namespace in `src/i18n/global.d.ts` (`AppMessages`) and `src/i18n/messages.ts`
+(`loadAppMessages`), and include its namespace name (plus any dependency like `"categories"`) in `<MessageScope
+namespaces={[...]} />` inside the route's `page.tsx`. If its changes should refresh other data, add a scope to
+`shared/config/data-scopes.ts` and its entry to `STALE_AFTER` in `app/_shell/query-client.ts` (the compiler insists).
 
 ### Add an API call
 
@@ -263,12 +267,13 @@ insists).
 
 ### Add or change a text
 
-1. Add the key to the feature's `i18n/en.ts`, grouped with its neighbours, with the English text. A sentence is one
-   key; values go in as `{{placeholders}}`; a count gets `_one` and `_other` keys, used as `t("count", { count })`.
-2. Add the same key to every other language's file (`hi.ts`). Until you do, `npx tsc -b` fails, so no language can
-   miss it.
-3. Use it: `const { t } = useTexts()`, then `t("group.key", { name })`. Outside a component, call
-   `i18n.t("group.key", { ns: expensesTexts.name })` at the moment the text is needed, never into a constant.
+1. Add the key to the feature's `i18n/en.ts`, grouped with its neighbours, in English ICU MessageFormat. A sentence is
+   one key; values use `{placeholder}`; counts use `{count, plural, =0 {...} one {...} other {...}}`.
+2. Add the same key to every other language's file (`hi.ts`). Until you do, `tsc -b` fails on `Translation<typeof en>`,
+   so no language can miss a key.
+3. Use it in a component with `const t = useTranslations("<namespace>")` (or `getTranslations` in Server Components /
+   `generateMetadata`), then `t("group.key", { name })`. Outside React, throw typed errors or accept formatted callbacks
+   from hooks rather than reading translations from a global singleton.
 
 ### Add a language
 
@@ -276,9 +281,10 @@ insists).
 2. One entry in `LANGUAGES` (`shared/i18n/languages.ts`): its code (a BCP 47 tag, like `pt-BR`), its name in itself,
    its Intl locale, its writing direction, and a loader for its react-day-picker locale. The table is typed against
    the server's `LANGUAGES`, so a language one side lacks fails `tsc`.
-3. One file per namespace, next to `hi.ts` (`common`, `app`, every feature), typed `Translation<typeof en>`, and its
-   loader in that namespace's `defineNamespace` call. The compiler lists every namespace that lacks either.
-4. A language with more plural forms than English adds them as extra keys (`count_few`, `count_many`).
+3. One file per namespace, next to `hi.ts` (`common`, `app`, every feature, plus `app/_public/texts/`), typed
+   `Translation<typeof en>`, and its loader in that namespace's `i18n/index.ts`. The compiler lists every namespace
+   that lacks either.
+4. A language with differing CLDR plural categories expresses them directly in its ICU `{count, plural, ...}` string.
 5. Right-to-left languages also need the layout mirrored; that isn't supported yet.
 
 ### Draw a new A2UI component

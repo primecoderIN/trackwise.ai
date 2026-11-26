@@ -503,44 +503,50 @@ the same task.
 
 ## The web app: Next.js and feature slices
 
-A Next.js 16 app (App Router, D188). The routes and their metadata are rendered on the server; everything signed-in
-is drawn in the browser, behind one client boundary.
+A Next.js 16 app (App Router, D188, D225). Route metadata and SSR shells render on the server in the active language;
+public pages compile statically under `[lang]`, and signed-in workspace pages hydrate feature slices on the client.
 
 ```
 web/
-  next.config.ts  the API rewrite (D184), its proxy settings, no compression
+  next.config.ts       the API rewrite (D184), proxy timeout, `globalNotFound`, no compression
   security-headers.ts  the pages' security headers, applied by next.config.ts (D193)
   src/
-  app/          Next's route folder and the composition. At its top only Next's files:
-                  layout.tsx       the root document: metadata, the theme boot script, the stylesheet (server)
-                  not-found.tsx    every unknown address: a real 404, with "Page not found" in the browser
-                  robots.ts, sitemap.ts   for search engines: only public pages (today /sign-in)
-                  (client)/        the pages drawn in the browser: layout.tsx renders ClientRoot; (app)/ holds the
-                                   signed-in routes (page.tsx files, each exporting its metadata) and their layout.tsx
-                                   (the session check, then the frame); sign-in/ is the public sign-in page
-                and the rest in private folders (a leading "_" is never a route):
-                  _shell/          client-root.tsx (starts i18next, then the root error boundary and the providers),
-                                   providers.tsx, query-client.ts (the cache and the one refresh rule), namespaces.ts
-                                   (the texts loaded at boot), app-crashed.tsx
-                  _frame/          app-layout.tsx, app-sidebar.tsx (the frame), pages.tsx (the menu's entries)
-                  _views/          client-pages.ts (the client boundary the route files draw pages through),
-                                   placeholder-pages.tsx
-                  _i18n/           the frame's own texts
-                  _seo/            seo.ts: site address (PUBLIC_URL), the public pages, metadata for public and
-                                   signed-in pages
-                  _styles/         index.css
-  features/     one folder per feature, each owning its components, hooks, API calls, types, constants and texts
-                (i18n/: en.ts, hi.ts, the namespace and its useTexts hook):
-    expenses/     the Expenses page; components/ grouped into table/, dialogs/, filters/, fields/; api.ts, queries.ts
-    categories/   categories API and queries, CategorySelect, category names
-    dashboard/    the Dashboard page, stat cards, charts, recent list; api.ts, queries.ts
-    assistant/    the chat panel; model/ (useChat, AssistantProvider); api/ (the AG-UI stream); a2ui/ (renderer)
-    auth/         the sign-in page, AuthGate (the session check in front of the signed-in pages), the user menu
-    account/      the Settings page: profile, sessions (sign out one or all others), personal access tokens
-  shared/       knows no feature: ui/ (shadcn kit), api/ (typed HTTP client, generated contract), config/ (app name,
-                routes, data scopes), i18n/ (the languages and their locales, the i18next setup, the language
-                menu, shared/'s "common" texts), lib/ (formatting, guards, errors, ids), components/ (empty state,
-                error boundary, section error, refresh notice, placeholder page, labeled field), hooks/, theme/
+    proxy.ts        Next.js 16 `next-intl` locale routing (`localePrefix: "as-needed"`) for public/workspace routes
+    i18n/           next-intl configuration: routing.ts, navigation.ts (PublicLink), request.ts, messages.ts
+                    (per-namespace async loaders and `pickMessages`), global.d.ts (`AppConfig` / `AppMessages`)
+    app/            Next's route folder and the composition. At its top only Next's root files:
+                      global-error.tsx, global-not-found.tsx, apple-icon.tsx, icon.tsx, manifest.ts,
+                      opengraph-image.tsx, robots.ts, sitemap.ts
+                      [lang]/        SSG localized routes (`generateStaticParams` + `setRequestLocale`): layout.tsx
+                                     (`BOOT_MESSAGE_NAMESPACES`), (public)/ pages, sign-in/ (`auth`), not-found.tsx
+                      (client)/      interactive workspace shell: layout.tsx (cookie/`Accept-Language` SSR `<html
+                                     lang dir>`, `WORKSPACE_MESSAGE_NAMESPACES`, `ClientRoot`); (app)/ holds signed-in
+                                     routes (each exporting `generateMetadata` and `<MessageScope namespaces={[...]} />`)
+                    and the rest in private folders (a leading "_" is never a route):
+                      _shell/        client-root.tsx (root error boundary + providers), message-scope.tsx (route
+                                     namespace scoping), providers.tsx, query-client.ts, app-crashed.tsx
+                      _frame/        app-layout.tsx, app-sidebar.tsx (the frame), pages.tsx (menu entries),
+                                     welcome-dialog.tsx, command-palette.tsx
+                      _views/        client-pages.ts (lazy client boundaries drawn by `(client)/(app)/` routes)
+                      _public/       components/ + texts/ (server-rendered marketing pages and catalogs)
+                      _i18n/         the app frame's own typed texts (`app` namespace)
+                      _seo/          seo.ts: PUBLIC_URL, PUBLIC_PATHS, hreflang & public/private metadata builders
+                      _styles/       index.css
+    features/       one folder per feature, each owning its components, hooks, API calls, types, constants and texts
+                    (i18n/: en.ts, hi.ts, index.ts exporting `*Texts` + `load*Messages`):
+      expenses/     Expenses page; components/ grouped into table/, dialogs/, filters/, fields/; api.ts, queries.ts
+      categories/   categories API and queries, CategorySelect, category names
+      budgets/      Budgets page, limits and spend alerts; api.ts, queries.ts
+      reports/      Reports page and CSV/JSON exports; api.ts, queries.ts
+      dashboard/    Dashboard page, stat cards, charts, recent list; api.ts, queries.ts
+      assistant/    chat panel; model/ (useChat, AssistantProvider); api/ (AG-UI stream, StreamError); a2ui/
+      auth/         sign-in page, AuthGate (the session check in front of the signed-in pages), user menu
+      account/      Settings page: profile, sessions (sign out one or all others), personal access tokens, preferences
+    shared/         knows no feature: ui/ (shadcn kit), api/ (typed HTTP client, generated contract), config/ (app name,
+                    routes, data scopes), i18n/ (languages, NEXT_LOCALE cookie/header helpers, `useLanguage`, language
+                    menu, `Translation<T>`, shared "common" texts), lib/ (formatting, `useFormatters`, guards, errors,
+                    `useMessageOf`, ids), components/ (empty state, error boundary, section error, refresh notice,
+                    placeholder page, labeled field, CurrencySelect, TimezonePicker), hooks/, theme/
 ```
 
 ### The rules
@@ -567,18 +573,23 @@ web/
    a switch (D172).
 9. **Load on demand:** each feature's `index.ts` exports its page through `lazyWithRetry`; the chat panel is loaded the
    same way, in the background, so the first page doesn't wait for code it doesn't need (D174).
-10. **Every text from a namespace, loaded with what uses it** (D178). Each feature (and `app/`, and `shared/` as
-    "common") owns its texts in `i18n/`: English in `en.ts` is the source, and each other language is a file with
-    the same keys. Every file is its own chunk: a page's (or the chat panel's) load together with its code, from its
-    lazy loader, and "common", the frame's and the auth feature's texts load when the app boots (their English
-    bundled, so the frame, with its session check and user menu, can always be drawn). Keys are typed, so a
-    misspelt key or a translation missing one fails the build. A language switch loads the new language for the
-    namespaces in use, then redraws; numbers and dates follow the language's locale. The app speaks English and Hindi.
+10. **Every text from a typed `next-intl` namespace, scoped by route** (D178, D225). Each feature (and `app/`, and
+    `shared/` as "common") owns its texts in `i18n/`: English ICU MessageFormat in `en.ts` is the source, each other
+    language satisfies `Translation<typeof en>`, and `index.ts` exports its `*Texts` type and `load*Messages` loader for
+    `src/i18n/messages.ts` and `AppMessages` (`src/i18n/global.d.ts`). Public layouts under `[lang]/` provide
+    `BOOT_MESSAGE_NAMESPACES` (`["common", "app"]`), `(client)/layout.tsx` provides `WORKSPACE_MESSAGE_NAMESPACES`
+    (`["common", "app", "auth", "assistant"]`), and each `(app)/*/page.tsx` wraps its client page in
+    `<MessageScope namespaces={[...]} />` so only the active route's namespaces reach the browser. Public marketing
+    pages render purely on the server from `app/_public/texts/` with zero client JS message payload. Workspace routes
+    negotiate locale from the `NEXT_LOCALE` cookie or `Accept-Language` header, and switching languages updates the
+    cookie and refreshes via `router.refresh()` (`router.replace` on `[lang]` routes). `useFormatters()` and
+    `useMessageOf()` bind the active locale and `common.errors` translator into pure helpers.
 
-11. **Server and browser apart** (D188). A route file is a server component: it exports `metadata` and draws a page
-    from `_views/client-pages.ts`, the client boundary. Under `(client)/`, `ClientRoot` draws nothing on the server,
-    so browser-only code (saved language and theme, window width) never runs there; a page that should be fully
-    rendered on the server (a landing page) goes outside `(client)/`.
+11. **Server and browser apart** (D188, D225). Layouts and route `page.tsx` files are Server Components: they resolve
+    locale on the server (`setRequestLocale` under `[lang]`, `getLocale()`/`getMessages()` under `(client)`), export
+    `generateMetadata`, wrap views in `<MessageScope>`, and render interactive pages via `_views/client-pages.ts`.
+    `ClientRoot` renders immediately without blanking SSR; browser-only state stays guarded inside effects or
+    `useSyncExternalStore`, while `[lang]/(public)/` pages render pure HTML on the server.
 
 12. **Signed in, or sent to sign in** (D189). Every route in `(client)/(app)/` is behind `AuthGate`, which asks the
     server who is signed in (`GET /auth/user`; its 401 means nobody). Any other request's 401 makes the query client
