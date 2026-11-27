@@ -8,9 +8,21 @@ import type { FaqPageTexts, FeaturesPageTexts, HowItWorksPageTexts, LegalPageTex
 /** Keys for every public route in the navigation and footer. */
 export type PublicRouteKey = "landing" | "howItWorks" | "features" | "faq" | "contact" | "privacy" | "terms"
 
-/** One interactive scene in the animated hero walkthrough player. */
-export interface WalkthroughSceneTexts {
-  id: "expenses" | "receipts" | "assistant" | "reports"
+/** Right-hand balance, privacy, and share breakdown texts for the Splits walkthrough scene. */
+export interface WalkthroughSplitsPanelTexts {
+  kpiLabel: string
+  kpiBefore: string
+  kpiAfter: string
+  panelTitle: string
+  groupBadge: string
+  inviteLine: string
+  shareLabels: readonly [string, string, string]
+  transferLines: readonly [string, string]
+  privateChip: string
+  footerNote: string
+}
+
+interface WalkthroughSceneBase {
   chapterLabel: string
   actionCaption: string
   navLabel: string
@@ -20,10 +32,24 @@ export interface WalkthroughSceneTexts {
   secondaryValue: string
   actionButtonLabel: string
   doneStatus: string
+}
+
+/** An assistant-driven scene in the animated hero walkthrough player. */
+export interface AssistantWalkthroughSceneTexts extends WalkthroughSceneBase {
+  id: "expenses" | "receipts" | "assistant" | "reports"
   assistantPrompt: string
   assistantChip: string
   assistantReply: string
 }
+
+/** The dedicated Splits workspace scene in the animated hero walkthrough player. */
+export interface SplitsWalkthroughSceneTexts extends WalkthroughSceneBase {
+  id: "splits"
+  splitsPanel: WalkthroughSplitsPanelTexts
+}
+
+/** One interactive scene in the animated hero walkthrough player. */
+export type WalkthroughSceneTexts = AssistantWalkthroughSceneTexts | SplitsWalkthroughSceneTexts
 
 /** Complete bilingual texts for the animated product walkthrough player on `/` and `/hi`. */
 export interface WalkthroughTexts {
@@ -36,12 +62,19 @@ export interface WalkthroughTexts {
   sidebarOverview: string
   sidebarExpenses: string
   sidebarReceipts: string
+  sidebarSplits: string
   sidebarReports: string
   kpiLabel: string
   kpiBefore: string
   kpiAfter: string
   assistantTitle: string
-  scenes: readonly [WalkthroughSceneTexts, WalkthroughSceneTexts, WalkthroughSceneTexts, WalkthroughSceneTexts]
+  scenes: readonly [
+    WalkthroughSceneTexts,
+    WalkthroughSceneTexts,
+    WalkthroughSceneTexts,
+    WalkthroughSceneTexts,
+    WalkthroughSceneTexts,
+  ]
 }
 
 /** A single feature pillar summary card shown on the home page and linked to a public page. */

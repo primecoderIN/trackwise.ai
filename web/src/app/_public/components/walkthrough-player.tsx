@@ -1,22 +1,28 @@
 "use client"
 
-// Auto-playing animated interactive walkthrough player showing trackwise.ai across 4 core scenes (Phase 29).
-// Renders a gliding cursor, click ripples, typing prompt, receipt preview scan, and Play/Pause/Scrub controls.
+// Auto-playing animated interactive walkthrough player showing trackwise.ai across 5 core scenes (Phase 29, D226).
+// Renders a gliding cursor, click ripples, typing prompt, receipt scan, bill splitting, and Play/Pause/Scrub controls.
 
 import { MousePointer2, Pause, Play, RotateCcw } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import { Button } from "@/shared/ui/button"
 
-import type { WalkthroughTexts } from "../texts"
+import type { WalkthroughSceneTexts, WalkthroughTexts } from "../texts"
 import { type WalkthroughPhase, WalkthroughStageCanvas } from "./walkthrough-scenes"
 
 const SCENE_MS = 5000
-const TOTAL_MS = SCENE_MS * 4
 const TICK_MS = 50
 
-const CURSOR_PATH = [
-  { x: 16, y: 34 },
+const SIDEBAR_CURSOR_Y: Record<WalkthroughSceneTexts["id"], number> = {
+  expenses: 34,
+  receipts: 45,
+  splits: 56,
+  assistant: 34,
+  reports: 67,
+}
+
+const CLICK_POSITIONS = [
   { x: 54, y: 78 },
   { x: 56, y: 76 },
 ] as const
@@ -26,14 +32,16 @@ function formatSeconds(ms: number): string {
   return `0:${String(sec).padStart(2, "0")}`
 }
 
-function cursorPositionFor(localProgress: number) {
-  if (localProgress < 0.35) return CURSOR_PATH[0]
-  if (localProgress < 0.72) return CURSOR_PATH[1]
-  return CURSOR_PATH[2]
+function cursorPositionFor(sceneId: WalkthroughSceneTexts["id"], localProgress: number) {
+  if (localProgress < 0.35) return { x: 16, y: SIDEBAR_CURSOR_Y[sceneId] }
+  if (localProgress < 0.72) return CLICK_POSITIONS[0]
+  return CLICK_POSITIONS[1]
 }
 
-/** Interactive animated video player showing live typing, cursor clicks, receipt scanning, and CSV export. */
+/** Interactive animated video player showing chat logging, receipt scanning, bill splitting, and CSV export. */
 export function WalkthroughPlayer({ walkthrough }: { walkthrough: WalkthroughTexts }) {
+  const sceneCount = walkthrough.scenes.length
+  const totalMs = SCENE_MS * sceneCount
   const [elapsedMs, setElapsedMs] = useState(0)
   const [playing, setPlaying] = useState(() =>
     typeof window !== "undefined" ? !window.matchMedia("(prefers-reduced-motion: reduce)").matches : true,
@@ -42,16 +50,16 @@ export function WalkthroughPlayer({ walkthrough }: { walkthrough: WalkthroughTex
   useEffect(() => {
     if (!playing) return
     const timer = window.setInterval(() => {
-      setElapsedMs((prev) => (prev + TICK_MS) % TOTAL_MS)
+      setElapsedMs((prev) => (prev + TICK_MS) % totalMs)
     }, TICK_MS)
     return () => window.clearInterval(timer)
-  }, [playing])
+  }, [playing, totalMs])
 
-  const sceneIndex = Math.min(3, Math.floor(elapsedMs / SCENE_MS))
+  const sceneIndex = Math.min(sceneCount - 1, Math.floor(elapsedMs / SCENE_MS))
   const localProgress = (elapsedMs % SCENE_MS) / SCENE_MS
   const phase: WalkthroughPhase = localProgress < 0.3 ? 0 : localProgress < 0.62 ? 1 : 2
   const scene = walkthrough.scenes[sceneIndex] ?? walkthrough.scenes[0]
-  const cursor = cursorPositionFor(localProgress)
+  const cursor = cursorPositionFor(scene.id, localProgress)
   const clicking = localProgress >= 0.56 && localProgress <= 0.72
 
   return (
@@ -115,7 +123,7 @@ export function WalkthroughPlayer({ walkthrough }: { walkthrough: WalkthroughTex
           <input
             type="range"
             min={0}
-            max={TOTAL_MS - TICK_MS}
+            max={totalMs - TICK_MS}
             value={elapsedMs}
             aria-label={walkthrough.seekLabel}
             onChange={(event) => {
@@ -125,23 +133,25 @@ export function WalkthroughPlayer({ walkthrough }: { walkthrough: WalkthroughTex
             className="h-1.5 flex-1 cursor-pointer accent-primary"
           />
           <span className="shrink-0 font-mono text-[11px] text-muted-foreground tabular-nums">
-            {formatSeconds(elapsedMs)} / {formatSeconds(TOTAL_MS)}
+            {formatSeconds(elapsedMs)} / {formatSeconds(totalMs)}
           </span>
         </div>
 
-        <div className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+        <div className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-5">
           {walkthrough.scenes.map((item, idx) => {
             const active = idx === sceneIndex
             const fillPct = idx < sceneIndex ? 100 : active ? Math.round(localProgress * 100) : 0
+            const mobileSpan = idx === sceneCount - 1 && sceneCount % 2 === 1 ? "col-span-2 sm:col-span-1" : ""
             return (
               <button
                 key={item.id}
                 type="button"
+                aria-pressed={active}
                 onClick={() => {
                   setElapsedMs(idx * SCENE_MS + 100)
                   setPlaying(true)
                 }}
-                className={`overflow-hidden rounded-lg border px-2.5 py-1.5 text-left text-[11px] transition-colors ${
+                className={`overflow-hidden rounded-lg border px-2.5 py-1.5 text-left text-[11px] transition-colors ${mobileSpan} ${
                   active
                     ? "border-primary/40 bg-background font-semibold text-primary"
                     : "bg-background/60 text-muted-foreground hover:text-foreground"

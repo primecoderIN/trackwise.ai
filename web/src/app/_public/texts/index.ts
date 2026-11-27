@@ -42,6 +42,7 @@ const LOADERS: Record<Language, () => Promise<PublicSiteTexts>> = {
 export const getPublicSiteTexts = cache((lang: Language): Promise<PublicSiteTexts> => LOADERS[lang]())
 
 export type {
+  AssistantWalkthroughSceneTexts,
   ControlGuarantee,
   FaqCategory,
   FaqPageTexts,
@@ -52,7 +53,9 @@ export type {
   LegalPageTexts,
   PublicRouteKey,
   PublicSiteTexts,
+  SplitsWalkthroughSceneTexts,
   SurfaceCapabilityRow,
   WalkthroughSceneTexts,
+  WalkthroughSplitsPanelTexts,
   WalkthroughTexts,
 } from "./types"
