@@ -61,12 +61,12 @@ export function PublicLegalPage({ texts, kind }: { texts: PublicSiteTexts; kind:
             </div>
           </aside>
 
-          <div className="space-y-5 lg:col-span-8">
+          <div className="min-w-0 space-y-5 lg:col-span-8">
             {page.sections.map((section, idx) => (
               <section
                 key={section.heading}
                 id={`section-${idx + 1}`}
-                className="scroll-mt-24 rounded-2xl border bg-card p-6 shadow-xs sm:p-7"
+                className="scroll-mt-24 rounded-2xl border bg-card p-5 shadow-xs sm:p-7"
               >
                 <h2 className="text-base font-semibold tracking-tight sm:text-lg">{section.heading}</h2>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{section.body}</p>
@@ -130,9 +130,9 @@ export function PublicContactPage({ texts }: { texts: PublicSiteTexts }) {
             </section>
           </div>
 
-          <div className="mt-8 flex flex-col items-start justify-between gap-4 rounded-2xl border bg-muted/30 p-6 sm:flex-row sm:items-center">
+          <div className="mt-8 flex flex-col items-start justify-between gap-4 rounded-2xl border bg-muted/30 p-5 sm:flex-row sm:items-center sm:p-6">
             <p className="text-xs leading-relaxed text-muted-foreground">{contactPage.responseNote}</p>
-            <div className="flex shrink-0 gap-2">
+            <div className="flex shrink-0 flex-wrap gap-2">
               <Button asChild variant="outline" size="sm">
                 <PublicLink href={ROUTES.faq}>{texts.nav.faq}</PublicLink>
               </Button>

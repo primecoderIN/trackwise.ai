@@ -16,18 +16,18 @@ import { PublicSessionAction } from "./public-session-action"
 export function LandingPillarsSection({ texts }: { texts: PublicSiteTexts }) {
   const { landing } = texts
   return (
-    <section className="bg-muted/30 py-16 sm:py-20">
+    <section className="bg-muted/30 py-12 sm:py-16 lg:py-20">
       <div className={PUBLIC_CONTAINER}>
         <div className="max-w-3xl">
           <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">{landing.pillarsTitle}</h2>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">{landing.pillarsSubtitle}</p>
         </div>
-        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 grid gap-5 sm:mt-10 sm:grid-cols-2 lg:grid-cols-4">
           {landing.pillars.map((pillar) => (
             <PublicLink
               key={pillar.title}
               href={{ pathname: ROUTES[pillar.hrefKey], hash: pillar.hash.replace(/^#/, "") }}
-              className="group flex flex-col justify-between rounded-2xl border bg-card p-6 shadow-xs transition-all hover:border-primary/40 hover:shadow-md"
+              className="group flex min-w-0 flex-col justify-between rounded-2xl border bg-card p-5 shadow-xs transition-all hover:border-primary/40 hover:shadow-md sm:p-6"
             >
               <div>
                 <p className="text-xs font-semibold tracking-wider text-primary uppercase">{pillar.eyebrow}</p>
@@ -53,10 +53,10 @@ export function LandingWorkflowAndCta({ texts }: { texts: PublicSiteTexts }) {
 
   return (
     <>
-      <section className="border-t py-16 sm:py-20">
+      <section className="border-t py-12 sm:py-16 lg:py-20">
         <div className={PUBLIC_CONTAINER}>
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-            <div className="max-w-3xl">
+            <div className="min-w-0 max-w-3xl">
               <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">{landing.workflowTitle}</h2>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
                 {landing.workflowSubtitle}
@@ -69,9 +69,9 @@ export function LandingWorkflowAndCta({ texts }: { texts: PublicSiteTexts }) {
               </PublicLink>
             </Button>
           </div>
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
+          <div className="mt-8 grid gap-5 sm:mt-10 md:grid-cols-3 md:gap-6">
             {landing.workflowSteps.map((step) => (
-              <div key={step.step} className="rounded-2xl border bg-card p-6 shadow-xs">
+              <div key={step.step} className="min-w-0 rounded-2xl border bg-card p-5 shadow-xs sm:p-6">
                 <span className="inline-flex rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary tabular-nums">
                   {step.step}
                 </span>
@@ -108,9 +108,9 @@ export function LandingWorkflowAndCta({ texts }: { texts: PublicSiteTexts }) {
         </div>
       </section>
 
-      <section className="py-16">
+      <section className="py-12 sm:py-16">
         <div className={PUBLIC_CONTAINER}>
-          <div className="rounded-3xl bg-slate-950 p-8 text-slate-50 shadow-xl sm:p-12 dark:border dark:bg-card dark:text-card-foreground">
+          <div className="rounded-3xl bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950 p-6 text-slate-50 shadow-xl sm:p-10 lg:p-12 dark:border dark:border-primary/25 dark:from-card dark:via-primary/10 dark:to-card dark:text-card-foreground">
             <div className="flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
               <div className="max-w-3xl">
                 <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">{landing.ctaTitle}</h2>

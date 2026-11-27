@@ -17,7 +17,7 @@ import { PublicSessionAction } from "./public-session-action"
 function FeaturesHero({ texts }: { texts: PublicSiteTexts }) {
   const { featuresPage } = texts
   return (
-    <section className="border-b bg-[radial-gradient(ellipse_at_top,oklch(0.47_0.19_262_/_0.08),transparent_65%)] pt-12 pb-14 sm:pt-16">
+    <section className="border-b border-border/80 bg-[radial-gradient(ellipse_at_top,color-mix(in_oklch,var(--primary)_10%,transparent),transparent_65%)] pt-12 pb-14 sm:pt-16">
       <div className={PUBLIC_CONTAINER}>
         <div className="max-w-4xl">
           <span className="inline-flex rounded-full border border-primary/25 bg-primary/10 px-3.5 py-1 text-xs font-medium text-primary">
@@ -114,10 +114,10 @@ export function PublicFeaturesPage({ texts }: { texts: PublicSiteTexts }) {
             <section
               key={section.id}
               id={section.id}
-              className={`scroll-mt-20 py-16 sm:py-20 ${flipped ? "bg-muted/20" : ""}`}
+              className={`scroll-mt-20 py-12 sm:py-16 lg:py-20 ${flipped ? "bg-muted/20" : ""}`}
             >
-              <div className={`${PUBLIC_CONTAINER} grid items-center gap-10 lg:grid-cols-12 xl:gap-14`}>
-                <div className={`lg:col-span-5 ${flipped ? "lg:order-2" : ""}`}>
+              <div className={`${PUBLIC_CONTAINER} grid items-center gap-8 sm:gap-10 lg:grid-cols-12 xl:gap-14`}>
+                <div className={`min-w-0 lg:col-span-5 ${flipped ? "lg:order-2" : ""}`}>
                   <span className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                     {section.badge}
                   </span>
@@ -132,7 +132,7 @@ export function PublicFeaturesPage({ texts }: { texts: PublicSiteTexts }) {
                     ))}
                   </ul>
                 </div>
-                <div className={`lg:col-span-7 ${flipped ? "lg:order-1" : ""}`}>
+                <div className={`min-w-0 lg:col-span-7 ${flipped ? "lg:order-1" : ""}`}>
                   <FeaturePreview kind={section.previewKind} data={featuresPage.previewData} />
                 </div>
               </div>
@@ -145,7 +145,7 @@ export function PublicFeaturesPage({ texts }: { texts: PublicSiteTexts }) {
 
       <section className="py-14">
         <div className={PUBLIC_CONTAINER}>
-          <div className="flex flex-col items-start justify-between gap-6 rounded-2xl border bg-card p-8 shadow-xs sm:flex-row sm:items-center">
+          <div className="flex flex-col items-start justify-between gap-6 rounded-2xl border bg-card p-6 shadow-xs sm:flex-row sm:items-center sm:p-8">
             <div>
               <h2 className="text-xl font-bold tracking-tight sm:text-2xl">{featuresPage.ctaTitle}</h2>
               <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{featuresPage.ctaSubtitle}</p>

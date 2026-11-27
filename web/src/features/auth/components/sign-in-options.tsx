@@ -1,7 +1,7 @@
 // The sign-in page's buttons: one per way of signing in the server offers ("Continue with Google"), or a single "Sign
-// in" that opens the provider's own page. Part of the auth feature (components/). Used by sign-in-page.tsx. Each button
-// is a link: signing in is a navigation to the backend, which sends the browser on to the provider.
+// in" button. Each button is a full-width navigation link to the backend's login route. Used by sign-in-page.tsx.
 
+import { ArrowRight } from "lucide-react"
 import { useTranslations } from "next-intl"
 
 import { Button } from "@/shared/ui/button"
@@ -10,7 +10,6 @@ import { Skeleton } from "@/shared/ui/skeleton"
 import type { LoginOption } from "../api"
 import { loginUrl } from "../sign-in-urls"
 
-// How many placeholder buttons show while the options load (most setups offer one or two).
 const PLACEHOLDER_BUTTONS = 2
 
 interface SignInOptionsProps {
@@ -20,32 +19,46 @@ interface SignInOptionsProps {
   returnTo: string | null
 }
 
-/** The ways to sign in, each a link to the backend's login route. */
+/** The ways to sign in, each a link to the backend's login route with crisp hover affordance. */
 export function SignInOptions({ options, returnTo }: SignInOptionsProps) {
   const t = useTranslations("auth")
   if (options === undefined) {
     return (
-      // <output> is announced politely by screen readers (its role is "status").
       <output className="grid gap-3">
         <span className="sr-only">{t("signIn.loadingOptions")}</span>
         {Array.from({ length: PLACEHOLDER_BUTTONS }, (_, index) => (
-          <Skeleton key={index} className="h-10 w-full" />
+          <Skeleton key={index} className="h-11 w-full rounded-xl" />
         ))}
       </output>
     )
   }
   if (options.length === 0) {
     return (
-      <Button asChild size="lg">
-        <a href={loginUrl(undefined, returnTo)}>{t("signIn.signIn")}</a>
+      <Button asChild size="lg" className="h-11 w-full rounded-xl">
+        <a href={loginUrl(undefined, returnTo)}>
+          <span>{t("signIn.signIn")}</span>
+          <ArrowRight className="size-4" aria-hidden="true" />
+        </a>
       </Button>
     )
   }
   return (
-    <div className="grid gap-3">
+    <div className="grid gap-2.5">
       {options.map((option) => (
-        <Button key={option.key} asChild size="lg" variant="outline">
-          <a href={loginUrl(option.key, returnTo)}>{t("signIn.continueWith", { provider: option.label })}</a>
+        <Button
+          key={option.key}
+          asChild
+          size="lg"
+          variant="outline"
+          className="group h-11 w-full justify-between rounded-xl px-4"
+        >
+          <a href={loginUrl(option.key, returnTo)}>
+            <span className="font-medium">{t("signIn.continueWith", { provider: option.label })}</span>
+            <ArrowRight
+              className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground"
+              aria-hidden="true"
+            />
+          </a>
         </Button>
       ))}
     </div>

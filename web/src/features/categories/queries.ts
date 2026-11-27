@@ -49,3 +49,13 @@ export function useCategoryName(): (categoryId: number) => string {
   const names = useMemo(() => (data ? new Map(data.map((category) => [category.id, category.name])) : null), [data])
   return useCallback((categoryId: number) => (names ? (names.get(categoryId) ?? t("unknown")) : ""), [names, t])
 }
+
+/**
+ * id -> Category lookup hook so other features (Dashboard, Expenses, Budgets) can read a category's icon and name
+ * without duplicating query maps.
+ */
+export function useCategoryLookup(): (categoryId: number) => { id: number; name: string; icon: string } | undefined {
+  const { data } = useCategories()
+  const map = useMemo(() => (data ? new Map(data.map((category) => [category.id, category])) : null), [data])
+  return useCallback((categoryId: number) => map?.get(categoryId), [map])
+}

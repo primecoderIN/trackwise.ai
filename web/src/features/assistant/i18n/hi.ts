@@ -9,6 +9,8 @@ import type en from "./en"
 const hi: Translation<typeof en> = {
   panel: {
     title: "सहायक",
+    subtitle: "पूछें, खर्च जोड़ें या रसीद ड्रॉप करें",
+    dropReceipt: "स्कैन करने के लिए रसीद फ़ोटो या PDF यहाँ छोड़ें",
     newConversation: "नई बातचीत",
     close: "सहायक बंद करें",
   },
@@ -17,6 +19,7 @@ const hi: Translation<typeof en> = {
     label: "संदेश",
     send: "भेजें",
     stop: "रोकें",
+    hint: "भेजने के लिए Enter · नई पंक्ति के लिए Shift+Enter · रसीद पेस्ट या ड्रॉप करें",
     attach: "रसीद जोड़ें (फ़ोटो या PDF)",
     removeAttachment: "{name} हटाएँ",
     attachmentTooLarge: "{name} {max} MB से बड़ी है। छोटी फ़ोटो या छोटी PDF आज़माएँ।",
@@ -24,7 +27,9 @@ const hi: Translation<typeof en> = {
   },
   transcript: {
     label: "बातचीत",
-    hint: "अपने खर्च के बारे में पूछें, सीधे शब्दों में कोई खर्च दर्ज करें, या कोई रसीद जोड़ें। आज़माकर देखें:",
+    emptyTitle: "आपके खर्च में मैं कैसे मदद कर सकता हूँ?",
+    hint: "अपने खर्च के बारे में पूछें, सीधे शब्दों में कोई खर्च दर्ज करें, या रसीद की फ़ोटो या PDF ड्रॉप करें।",
+    jumpToLatest: "नवीनतम पर जाएँ",
     thinking: "सोच रहा है…",
     stopped: "रोक दिया गया।",
     sent: "भेजा गया: {values}",

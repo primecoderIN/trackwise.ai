@@ -18,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
 /** The Dashboard page. */
 export default function Dashboard() {
   return (
-    <MessageScope namespaces={["dashboard", "categories"]}>
+    <MessageScope namespaces={["dashboard", "categories", "budgets"]}>
       <DashboardPage />
     </MessageScope>
   )

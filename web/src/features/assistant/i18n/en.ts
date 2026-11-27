@@ -7,6 +7,8 @@
 const en = {
   panel: {
     title: "Assistant",
+    subtitle: "Ask, log expenses, or drop a receipt",
+    dropReceipt: "Drop a receipt photo or PDF to scan",
     newConversation: "New conversation",
     close: "Close assistant",
   },
@@ -15,6 +17,7 @@ const en = {
     label: "Message",
     send: "Send",
     stop: "Stop",
+    hint: "Enter to send · Shift+Enter for new line · Paste or drop a receipt",
     attach: "Attach a receipt (photo or PDF)",
     removeAttachment: "Remove {name}",
     attachmentTooLarge: "{name} is larger than {max} MB. Try a smaller photo or a shorter PDF.",
@@ -22,7 +25,9 @@ const en = {
   },
   transcript: {
     label: "Conversation",
-    hint: "Ask about your spending, record an expense in plain words, or attach a receipt. Try:",
+    emptyTitle: "How can I help with your spending?",
+    hint: "Ask about your spending, record an expense in plain words, or drop a receipt photo or PDF.",
+    jumpToLatest: "Jump to latest",
     thinking: "Thinking…",
     stopped: "Stopped.",
     sent: "Sent: {values}",

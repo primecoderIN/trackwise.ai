@@ -15,24 +15,24 @@ type PreviewData = FeaturesPageTexts["previewData"]
 
 function AssistantFeaturePreview({ data }: { data: PreviewData }) {
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border bg-card p-5 shadow-md ring-1 ring-border/50">
-      <div className="flex items-center justify-between border-b pb-2.5 text-xs font-semibold">
+    <div className="flex min-w-0 flex-col gap-3 rounded-2xl border bg-card p-4 shadow-md ring-1 ring-border/50 sm:p-5">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-2.5 text-xs font-semibold">
         <span className="inline-flex items-center gap-1.5">
-          <Bot className="size-3.5 text-primary" aria-hidden="true" />
+          <Bot className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
           <span>{data.assistantHeader}</span>
         </span>
-        <span className="self-end rounded-full bg-primary px-2.5 py-0.5 text-[11px] text-primary-foreground">
+        <span className="rounded-full bg-primary px-2.5 py-0.5 text-[11px] text-primary-foreground">
           {data.assistantUser}
         </span>
       </div>
       <p className="text-xs font-medium text-muted-foreground">{data.assistantChip}</p>
       <div className="rounded-xl border border-amber-500/35 bg-muted/30 p-3.5">
         <div className="flex items-center gap-2 text-sm font-semibold">
-          <ShieldAlert className="size-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+          <ShieldAlert className="size-4 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
           <span>{data.assistantApprovalTitle}</span>
         </div>
         <p className="mt-1 text-xs text-muted-foreground tabular-nums">{data.assistantApprovalMeta}</p>
-        <div className="mt-3 flex gap-2">
+        <div className="mt-3 flex flex-wrap gap-2">
           <span className="rounded-md bg-destructive px-3 py-1 text-xs font-medium text-white">
             {data.assistantApprove}
           </span>
@@ -45,10 +45,10 @@ function AssistantFeaturePreview({ data }: { data: PreviewData }) {
 
 function ReceiptsFeaturePreview({ data }: { data: PreviewData }) {
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border bg-card p-5 shadow-md ring-1 ring-border/50">
+    <div className="flex min-w-0 flex-col gap-3 rounded-2xl border bg-card p-4 shadow-md ring-1 ring-border/50 sm:p-5">
       <div className="flex items-center justify-between border-b pb-2.5">
         <span className="inline-flex items-center gap-1.5 text-xs font-semibold">
-          <FileCheck2 className="size-3.5 text-primary" aria-hidden="true" />
+          <FileCheck2 className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
           <span>{data.receiptBadge}</span>
         </span>
       </div>
@@ -69,14 +69,14 @@ function ReceiptsFeaturePreview({ data }: { data: PreviewData }) {
 
 function ExpensesFeaturePreview({ data }: { data: PreviewData }) {
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border bg-card p-5 shadow-md ring-1 ring-border/50">
+    <div className="flex min-w-0 flex-col gap-3 rounded-2xl border bg-card p-4 shadow-md ring-1 ring-border/50 sm:p-5">
       <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-        <Search className="size-3.5" aria-hidden="true" />
-        <span>{data.expensesSearchPlaceholder}</span>
+        <Search className="size-3.5 shrink-0" aria-hidden="true" />
+        <span className="truncate">{data.expensesSearchPlaceholder}</span>
       </div>
-      <div className="flex items-center justify-between rounded-xl border bg-background px-3.5 py-2.5 text-xs">
-        <div className="font-semibold">{data.expensesPrimaryTitle}</div>
-        <div className="text-right tabular-nums">
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-background px-3.5 py-2.5 text-xs">
+        <div className="min-w-0 font-semibold">{data.expensesPrimaryTitle}</div>
+        <div className="ml-auto shrink-0 text-right tabular-nums">
           <p className="font-semibold">{data.expensesPrimaryAmount}</p>
           <p className="text-muted-foreground">{data.expensesPrimaryNote}</p>
         </div>

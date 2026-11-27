@@ -7,6 +7,8 @@ const en = {
   signIn: {
     title: "Sign in to {app}",
     description: "Choose how you'd like to sign in.",
+    privacyNote: "Passwordless sign-in · Strict per-account data isolation",
+    linksLabel: "Public site and legal links",
     continueWith: "Continue with {provider}",
     signIn: "Sign in",
     loadingOptions: "Loading the ways to sign in…",
@@ -37,6 +39,7 @@ const en = {
     label: "Account menu for {name}",
     you: "Your account",
     signedInAs: "Signed in as",
+    settings: "Settings",
     signOut: "Sign out",
   },
 }

@@ -1,7 +1,7 @@
 "use client"
 
-// Client CTA button for server-rendered public pages (Phase 29): probes `/api/v1/auth/user` (sending X-CSRF: 1)
-// so a signed-in visitor sees "Open Dashboard" instead of "Sign in" / "Get started". Part of app/_public/components/.
+// Client CTA button for server-rendered public pages (Phase 29): shares one memoized `/api/v1/auth/user` probe across
+// all instances on the page so signed-in visitors see "Open Dashboard" without firing duplicate network requests.
 
 import Link from "next/link"
 import { useLocale } from "next-intl"
@@ -12,6 +12,20 @@ import { localizedPath, ROUTES } from "@/shared/config/routes"
 import { DEFAULT_LANGUAGE, isLanguage } from "@/shared/i18n/languages"
 import { cn } from "@/shared/lib/utils"
 import { Button } from "@/shared/ui/button"
+
+let cachedProbe: Promise<boolean> | null = null
+
+function checkSignedIn(): Promise<boolean> {
+  if (!cachedProbe) {
+    cachedProbe = fetch("/api/v1/auth/user", {
+      headers: apiHeaders(),
+      credentials: "same-origin",
+    })
+      .then((response) => response.ok)
+      .catch(() => false)
+  }
+  return cachedProbe
+}
 
 interface PublicSessionActionProps {
   signedOutLabel: string
@@ -34,19 +48,13 @@ export function PublicSessionAction({
   const lang = isLanguage(rawLocale) ? rawLocale : DEFAULT_LANGUAGE
 
   useEffect(() => {
-    const controller = new AbortController()
-    fetch("/api/v1/auth/user", {
-      headers: apiHeaders(),
-      credentials: "same-origin",
-      signal: controller.signal,
+    let active = true
+    void checkSignedIn().then((ok) => {
+      if (active && ok) setSignedIn(true)
     })
-      .then((response) => {
-        if (response.ok) setSignedIn(true)
-      })
-      .catch(() => {
-        // Keep default signed-out CTA when unreachable or unauthenticated.
-      })
-    return () => controller.abort()
+    return () => {
+      active = false
+    }
   }, [])
 
   return (

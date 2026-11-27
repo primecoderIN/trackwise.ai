@@ -1,38 +1,60 @@
-// A component of the assistant feature: the message box at the bottom of the chat panel, with a button to attach a
-// receipt, and Send (or Stop while a run is in progress). It owns what's being typed and attached, so a keystroke
-// redraws only this box, not the conversation. Used by ChatPanel (chat-panel.tsx).
+// A component of the assistant feature: unified rounded composer with auto-growing textarea, image-thumbnail
+// receipt preview, clipboard paste support, and Send/Stop action. Used by ChatPanel.
 
 import { SendHorizontal, Square } from "lucide-react"
 import { useTranslations } from "next-intl"
-import { memo, useState, type FormEvent, type KeyboardEvent } from "react"
+import { memo, useEffect, useRef, useState, type ClipboardEvent, type FormEvent, type KeyboardEvent } from "react"
+import { toast } from "sonner"
 
 import { LIMITS } from "@/shared/api/contracts.gen"
 import { Button } from "@/shared/ui/button"
-import { Textarea } from "@/shared/ui/textarea"
 
+import { attachmentProblem, MAX_RECEIPT_MB } from "../model/attachments"
 import { AttachButton } from "./attach-button"
 import { AttachedFile } from "./attached-file"
 
 interface ChatComposerProps {
-  /** A run is in progress: typing still works, Enter does nothing (the text stays, to send later), Send is Stop. */
+  /** A run is in progress: typing still works, Enter does nothing, Send becomes Stop. */
   sending: boolean
-  /** Called with the trimmed text, and the attached receipt if there is one, when the user sends. */
+  /** Optional externally dropped receipt file (from ChatPanel drag-and-drop). */
+  droppedFile?: File | null
+  /** Clears `droppedFile` once absorbed into the composer's draft state. */
+  onConsumeDroppedFile?: () => void
+  /** Called with the trimmed text and optional attached receipt when the user sends. */
   onSend: (text: string, file?: File) => void
   /** Called by Stop. */
   onStop: () => void
 }
 
 /**
- * The message box. Enter sends, Shift+Enter adds a new line. A message needs text or an attached receipt (then the
- * text may be empty); while a run is in progress nothing is sent: what's typed and attached stays until it ends.
- * Stop ends the run: the connection closes, and anything already said or done stays. Memoised, so a streamed reply
- * doesn't redraw it; its own texts still follow a change of language (`useTranslations` subscribes it).
+ * Unified rounded message composer: auto-grows as text wraps, supports Ctrl/⌘+V receipt image paste, previews
+ * attached receipt photos, and switches cleanly between Send and Stop.
  */
-export const ChatComposer = memo(function ChatComposer({ sending, onSend, onStop }: ChatComposerProps) {
+export const ChatComposer = memo(function ChatComposer({
+  sending,
+  droppedFile,
+  onConsumeDroppedFile,
+  onSend,
+  onStop,
+}: ChatComposerProps) {
   const [input, setInput] = useState("")
   const [file, setFile] = useState<File | null>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const t = useTranslations("assistant")
   const ready = Boolean(input.trim() || file)
+
+  useEffect(() => {
+    if (!droppedFile) return
+    setFile(droppedFile)
+    onConsumeDroppedFile?.()
+  }, [droppedFile, onConsumeDroppedFile])
+
+  useEffect(() => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = "auto"
+    el.style.height = `${Math.min(el.scrollHeight, 144)}px`
+  }, [input])
 
   function submit() {
     if (!ready || sending) return
@@ -46,8 +68,6 @@ export const ChatComposer = memo(function ChatComposer({ sending, onSend, onStop
     submit()
   }
 
-  // As in most chat apps. While an input method (e.g. for Hindi or Japanese) is composing, Enter picks the
-  // suggested text instead, so it mustn't send.
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.nativeEvent.isComposing) return
     if (event.key === "Enter" && !event.shiftKey) {
@@ -56,38 +76,67 @@ export const ChatComposer = memo(function ChatComposer({ sending, onSend, onStop
     }
   }
 
+  function handlePaste(event: ClipboardEvent<HTMLTextAreaElement>) {
+    if (sending) return
+    const pastedFile = Array.from(event.clipboardData.files)[0]
+    if (!pastedFile) return
+    const problem = attachmentProblem(pastedFile)
+    if (problem) {
+      toast.error(t(`composer.${problem}`, { name: pastedFile.name, max: MAX_RECEIPT_MB }))
+      return
+    }
+    event.preventDefault()
+    setFile(pastedFile)
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="flex shrink-0 flex-col items-start gap-2 border-t p-3">
-      {file && <AttachedFile name={file.name} onRemove={() => setFile(null)} />}
-      <div className="flex w-full items-end gap-2">
-        <AttachButton disabled={sending} onAttach={setFile} />
-        <Textarea
-          value={input}
-          onChange={(event) => setInput(event.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={t("composer.placeholder")}
-          rows={2}
-          maxLength={LIMITS.messageLength}
-          className="max-h-40 min-h-0 resize-none"
-          aria-label={t("composer.label")}
-        />
-        {sending ? (
-          <Button
-            type="button"
-            size="icon"
-            variant="outline"
-            aria-label={t("composer.stop")}
-            title={t("composer.stop")}
-            onClick={onStop}
-          >
-            <Square />
-          </Button>
-        ) : (
-          <Button type="submit" size="icon" aria-label={t("composer.send")} disabled={!ready}>
-            <SendHorizontal />
-          </Button>
+    <form onSubmit={handleSubmit} className="shrink-0 border-t border-border/80 bg-background p-3">
+      <div className="flex flex-col gap-2 rounded-2xl border border-input bg-card p-2 shadow-2xs transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/25">
+        {file && (
+          <div className="px-1 pt-0.5">
+            <AttachedFile name={file.name} file={file} onRemove={() => setFile(null)} />
+          </div>
         )}
+        <div className="flex items-end gap-1.5">
+          <AttachButton disabled={sending} onAttach={setFile} />
+          <textarea
+            ref={textareaRef}
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
+            onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
+            placeholder={t("composer.placeholder")}
+            rows={1}
+            maxLength={LIMITS.messageLength}
+            aria-label={t("composer.label")}
+            className="max-h-36 min-h-9 flex-1 resize-none bg-transparent py-2 text-sm leading-snug text-foreground outline-none placeholder:text-muted-foreground"
+          />
+          {sending ? (
+            <Button
+              type="button"
+              size="icon-sm"
+              variant="outline"
+              aria-label={t("composer.stop")}
+              title={t("composer.stop")}
+              onClick={onStop}
+              className="shrink-0 rounded-xl"
+            >
+              <Square className="size-3.5 fill-current" />
+            </Button>
+          ) : (
+            <Button
+              type="submit"
+              size="icon-sm"
+              aria-label={t("composer.send")}
+              disabled={!ready}
+              className="shrink-0 rounded-xl"
+            >
+              <SendHorizontal className="size-4" />
+            </Button>
+          )}
+        </div>
       </div>
+      <p className="mt-1.5 hidden px-1 text-[11px] text-muted-foreground/80 sm:block">{t("composer.hint")}</p>
     </form>
   )
 })

@@ -97,12 +97,15 @@ export interface PublicSiteTexts {
     contact: string
     signIn: string
     openApp: string
+    primaryLabel: string
+    menuLabel: string
   }
   footer: {
     tagline: string
     rights: string
     productHeading: string
     supportHeading: string
+    legalHeading: string
     languageHeading: string
     home: string
     howItWorks: string
@@ -110,6 +113,8 @@ export interface PublicSiteTexts {
     signIn: string
     faq: string
     contact: string
+    privacy: string
+    terms: string
     languageLabel: string
   }
   landing: {

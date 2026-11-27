@@ -1,7 +1,7 @@
-// One row of "Where you're signed in": a browser, when it signed in and was last active, and Sign out for any browser
-// but this one. Part of the account feature (components/sessions/). Used by sessions-card.tsx.
+// One row of "Where you're signed in": device-aware icon (phone vs desktop), browser & OS, timestamps, and Sign out.
+// Part of the account feature (components/sessions/). Used by sessions-card.tsx.
 
-import { Monitor } from "lucide-react"
+import { Monitor, Smartphone } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 
@@ -15,9 +15,7 @@ import { deviceOf } from "../../device-name"
 import { useSignOutSession } from "../../queries"
 
 /**
- * The session's browser ("Edge on Windows", or whichever half is known), marked if it's this one. Signing another
- * browser out ends its session on the server at once; this browser signs out through the top bar's menu, which also
- * signs out at the identity provider.
+ * The session's browser and system, marked if it's this browser, with a device-appropriate icon and remote sign-out.
  */
 export function SessionRow({ session }: { session: Session }) {
   const t = useTranslations("account")
@@ -28,6 +26,8 @@ export function SessionRow({ session }: { session: Session }) {
   const device =
     browser && system ? t("sessions.deviceOn", { browser, system }) : (browser ?? system ?? t("sessions.unknownDevice"))
   const signedIn = formatDateTime(session.created_at)
+  const isPhone = system === "iOS" || system === "Android"
+  const DeviceIcon = isPhone ? Smartphone : Monitor
 
   function handleSignOut() {
     signOut.mutate(session.id, {
@@ -37,14 +37,20 @@ export function SessionRow({ session }: { session: Session }) {
   }
 
   return (
-    <li className="flex flex-wrap items-center gap-3 py-3">
-      <Monitor aria-hidden className="size-5 shrink-0 text-muted-foreground" />
+    <li className="flex flex-wrap items-center gap-3.5 py-3.5 first:pt-1 last:pb-1">
+      <span
+        className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${
+          session.current ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+        }`}
+      >
+        <DeviceIcon aria-hidden="true" className="size-4.5" />
+      </span>
       <div className="min-w-0 flex-1">
-        <p className="flex flex-wrap items-center gap-2 font-medium">
-          {device}
-          {session.current && <Badge variant="secondary">{t("sessions.thisBrowser")}</Badge>}
+        <p className="flex flex-wrap items-center gap-2 font-medium text-foreground">
+          <span>{device}</span>
+          {session.current && <Badge variant="positive">{t("sessions.thisBrowser")}</Badge>}
         </p>
-        <p className="text-sm text-muted-foreground">
+        <p className="mt-0.5 text-xs text-muted-foreground">
           {t("sessions.times", { signedIn, lastActive: formatDateTime(session.last_active_at) })}
         </p>
       </div>

@@ -87,7 +87,7 @@ function LineInsight({ points, format, config }: ChartKindProps) {
 // for screen readers too.
 function DonutInsight({ points, format, config }: ChartKindProps) {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-col items-center gap-3 sm:flex-row">
       <ChartContainer config={config} className="aspect-square h-28 shrink-0">
         <PieChart>
           <ChartTooltip
@@ -105,7 +105,7 @@ function DonutInsight({ points, format, config }: ChartKindProps) {
           </Pie>
         </PieChart>
       </ChartContainer>
-      <ul className="flex min-w-0 flex-1 flex-col gap-1 text-xs">
+      <ul className="flex w-full min-w-0 flex-1 flex-col gap-1 text-xs">
         {points.map((point, index) => (
           <li key={`${index}-${point.label}`} className="flex items-center gap-1.5">
             <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: sliceColor(index) }} />
@@ -172,10 +172,12 @@ function textProp(value: unknown): string {
 export function A2uiStat({ node }: A2uiRendererProps) {
   const change = textProp(node.change)
   return (
-    <Card size="sm" className="min-w-0 flex-1 gap-1">
-      <CardContent className="flex flex-col gap-0.5">
-        <span className="text-xs text-muted-foreground">{textProp(node.label)}</span>
-        <span className="truncate text-base font-semibold tabular-nums">{textProp(node.value)}</span>
+    <Card size="sm" className="min-w-0 flex-1 gap-1 bg-muted/25 shadow-none">
+      <CardContent className="flex flex-col gap-1">
+        <span className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+          {textProp(node.label)}
+        </span>
+        <span className="truncate text-lg font-bold tracking-tight tabular-nums">{textProp(node.value)}</span>
         {change && (
           <span className="flex items-center gap-1 text-xs text-muted-foreground">
             <TrendIcon trend={node.trend} />

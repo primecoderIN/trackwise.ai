@@ -22,6 +22,7 @@ const hi: Translation<typeof en> = {
   categories: {
     title: "श्रेणी के अनुसार",
     description: "सीमा वाली श्रेणियाँ पहले, जो अपनी सीमा के सबसे पास हैं वे सबसे ऊपर।",
+    unbudgetedHeading: "बिना सीमा वाली श्रेणियाँ",
     empty: "अभी कोई श्रेणी नहीं है।",
   },
   line: {

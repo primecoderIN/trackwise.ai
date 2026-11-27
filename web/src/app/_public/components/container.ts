@@ -1,5 +1,5 @@
-// Shared layout container class keeping every public SaaS section balanced and wide edge-to-edge on desktop screens.
+// Shared layout container class scaling side gutters across breakpoints up to 10rem on wide desktop screens.
 // Stored separately to satisfy `react/only-export-components` linting across public component files.
 
-/** Full-width responsive public layout wrapper (`1520px` max on ultrawide monitors with clean edge padding). */
-export const PUBLIC_CONTAINER = "mx-auto w-full max-w-[1520px] px-4 sm:px-6 lg:px-10 xl:px-12"
+/** Full-width public layout wrapper with progressive side gutters reaching 10rem (px-40) on 2xl desktop screens. */
+export const PUBLIC_CONTAINER = "w-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-20 2xl:px-40"

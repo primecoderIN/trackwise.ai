@@ -1,32 +1,33 @@
-// A component of the expenses feature: the expenses table (TanStack Table), with the count line above it, sortable
-// headers, tick boxes, Edit and Delete on each row, and the inline edit row. It puts together the parts: the
-// columns (expense-columns.tsx), the count line (expenses-toolbar.tsx), inline editing (use-expense-editor.ts) and
-// the row selection kept here. Deleting goes through the page, which asks "are you sure?" first. Its texts come
-// from the feature's i18n namespace. Used by the Expenses page.
+// A component of the expenses feature: the expenses table (TanStack Table) on desktop and stacked card list on
+// mobile, wired to the slide-over EditExpenseSheet, skeleton loading rows, refetch dimming, and top/bottom paging.
 
 import { flexRender, useTable, type Row, type RowSelectionState } from "@tanstack/react-table"
 import { useTranslations } from "next-intl"
 import { useCallback, useMemo, useState } from "react"
 
-import { useCategoryName } from "@/features/categories"
+import { useCategoryLookup, useCategoryName } from "@/features/categories"
 import { useLanguage } from "@/shared/i18n"
 import { useFormatters } from "@/shared/lib/use-formatters"
+import { Skeleton } from "@/shared/ui/skeleton"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table"
 
 import type { Expense } from "../../api"
 import { useIsDeletingExpenses } from "../../queries"
-import { EditRow } from "./edit-row"
+import { EditExpenseSheet } from "../dialogs/edit-expense-sheet"
 import { ariaSortOf, expenseColumns, expenseTableFeatures } from "./expense-columns"
-import { ExpensesToolbar } from "./expenses-toolbar"
-import { useExpenseEditor, type ExpenseEditor } from "./use-expense-editor"
+import { ExpenseMobileList } from "./expense-mobile-list"
+import { ExpensesPagination, ExpensesToolbar } from "./expenses-toolbar"
+import { useExpenseEditor } from "./use-expense-editor"
 
 interface ExpensesTableProps {
   /** The rows to show (the newest first, as the API sends them). */
   expenses: Expense[]
   /** How many match the filters; `expenses` may hold fewer (the API's limit). */
   total: number
-  /** Nothing has loaded yet: an empty table says "Loading…". */
+  /** Nothing has loaded yet: skeleton rows show. */
   loading: boolean
+  /** Background refresh in progress while keeping previous rows on screen. */
+  fetching?: boolean
   /** Asks the page to confirm and delete these expenses (one row, or all selected rows). */
   onDelete: (expenses: Expense[]) => void
   /** The 0-based offset of the current page. */
@@ -37,10 +38,6 @@ interface ExpensesTableProps {
   onOffsetChange?: (nextOffset: number) => void
 }
 
-// Which rows are ticked, as { "12": true, "15": true }. Kept here (not only inside the table) so the table
-// decides when it's cleared: new data (after a filter change, add, edit or delete) clears it, so hidden or
-// already-deleted rows can't stay selected by accident. React's "reset state when a prop changes" pattern:
-// compare during render instead of in an effect.
 function useSelectionOf(expenses: Expense[]) {
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [selectionFor, setSelectionFor] = useState(expenses)
@@ -52,71 +49,77 @@ function useSelectionOf(expenses: Expense[]) {
 }
 
 /**
- * The expenses as a table: a count line ("140 expenses · showing the newest 100 · 2 selected"), then one row per
- * expense. Clicking a header sorts by id, date, merchant, category or amount; sorting happens in the browser,
- * within the rows already loaded. The row being edited is drawn as an EditRow. While a delete runs, every
- * delete button is disabled.
+ * The expenses view: toolbar with page subtotal & bulk actions, desktop 7-column table, mobile card list, bottom
+ * pagination, and slide-over EditExpenseSheet.
  */
 export function ExpensesTable({
   expenses,
   total,
   loading,
+  fetching = false,
   onDelete,
-  offset,
-  pageSize,
+  offset = 0,
+  pageSize = expenses.length,
   onOffsetChange,
 }: ExpensesTableProps) {
   const t = useTranslations("expenses")
   const { language } = useLanguage()
   const { formatDate } = useFormatters()
   const editor = useExpenseEditor()
-  // A delete is running (the confirmation dialog started it): its rows can't be deleted twice meanwhile.
   const deleting = useIsDeletingExpenses()
   const categoryName = useCategoryName()
+  const categoryOf = useCategoryLookup()
+  const categoryIconName = useCallback((id: number) => categoryOf(id)?.icon, [categoryOf])
   const [rowSelection, setRowSelection] = useSelectionOf(expenses)
-  const startEdit = editor.start
-  // Opening a row for editing unticks it, so an edited row (whose checkbox is hidden) isn't bulk-deleted by mistake.
-  const onEdit = useCallback(
-    (id: number) => {
-      setRowSelection((prev) => {
-        if (!prev[String(id)]) return prev
-        const next = { ...prev }
-        delete next[String(id)]
-        return next
-      })
-      startEdit(id)
-    },
-    [setRowSelection, startEdit],
-  )
 
-  // useMemo keeps the same columns between renders, rebuilding them only when their inputs change, as TanStack
-  // recommends. onDelete is the page's state setter, so it's stable too; t/language change only with locale.
   const columns = useMemo(
-    () => expenseColumns({ t, language, formatDate, categoryName, deleting, onEdit, onDelete }),
-    [t, language, formatDate, categoryName, deleting, onEdit, onDelete],
+    () =>
+      expenseColumns({
+        t,
+        language,
+        formatDate,
+        categoryName,
+        categoryIconName,
+        deleting,
+        onEdit: editor.start,
+        onDelete,
+      }),
+    [t, language, formatDate, categoryName, categoryIconName, deleting, editor.start, onDelete],
   )
 
   const table = useTable({
     features: expenseTableFeatures,
     columns,
     data: expenses,
-    // Use the expense id as the row id, so selection and editing follow the expense, not its position.
     getRowId: (expense) => String(expense.id),
     enableRowSelection: true,
-    // "Controlled" selection: the table reads it from our state and reports changes back to us.
     state: { rowSelection },
     onRowSelectionChange: setRowSelection,
   })
 
-  // The ticked expenses, for the count and Delete selected.
   const selected = table.getSelectedRowModel().rows.map((row) => row.original)
+  const editingExpense = useMemo(
+    () => (editor.editingId !== null ? (expenses.find((item) => item.id === editor.editingId) ?? null) : null),
+    [expenses, editor.editingId],
+  )
+  const pageTotalMinor = useMemo(
+    () =>
+      expenses.length > 0
+        ? expenses.reduce((sum, item) => sum + (item.base_amount_minor ?? item.amount_minor), 0)
+        : null,
+    [expenses],
+  )
 
-  // Each header cell says how it's sorted (aria-sort).
+  const hasPaging = onOffsetChange !== undefined && pageSize > 0 && (total > pageSize || offset > 0)
+  const currentPage = pageSize > 0 ? Math.floor(offset / pageSize) + 1 : 1
+  const totalPages = pageSize > 0 ? Math.max(1, Math.ceil(total / pageSize)) : 1
+
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       <ExpensesToolbar
         total={total}
         shown={expenses.length}
+        pageTotalMinor={pageTotalMinor}
         offset={offset}
         pageSize={pageSize}
         onOffsetChange={onOffsetChange}
@@ -125,66 +128,110 @@ export function ExpensesTable({
         onDeleteSelected={() => onDelete(selected)}
       />
 
-      <div className="rounded-lg border">
+      <ExpenseMobileList
+        expenses={expenses}
+        loading={loading}
+        deleting={deleting}
+        selectedIds={rowSelection}
+        onToggleSelect={(id, checked) =>
+          setRowSelection((prev) => {
+            const next = { ...prev }
+            if (checked) next[id] = true
+            else delete next[id]
+            return next
+          })
+        }
+        onEdit={editor.start}
+        onDelete={onDelete}
+      />
+
+      <div
+        className={`hidden overflow-hidden rounded-2xl border border-border/80 bg-card shadow-xs transition-opacity lg:block ${
+          fetching && !loading ? "opacity-65" : "opacity-100"
+        }`}
+      >
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-muted/35">
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="hover:bg-transparent">
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} aria-sort={ariaSortOf(header.column.getIsSorted())}>
+                  <TableHead key={header.id} aria-sort={ariaSortOf(header.column.getIsSorted())} className="h-11 px-3">
                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 ))}
               </TableRow>
             ))}
           </TableHeader>
-          <ExpenseRows rows={table.getRowModel().rows} columnCount={columns.length} loading={loading} editor={editor} />
+          <ExpenseRows rows={table.getRowModel().rows} columnCount={columns.length} loading={loading} />
         </Table>
       </div>
+
+      {hasPaging && (
+        <div className="flex justify-end pt-1">
+          <ExpensesPagination
+            page={currentPage}
+            totalPages={totalPages}
+            canPrev={offset > 0}
+            canNext={offset + expenses.length < total}
+            onPrev={() => onOffsetChange(Math.max(0, offset - pageSize))}
+            onNext={() => onOffsetChange(offset + pageSize)}
+          />
+        </div>
+      )}
+
+      <EditExpenseSheet
+        expense={editingExpense}
+        saving={editingExpense !== null && editor.isSaving(editingExpense.id)}
+        deleting={deleting}
+        onSave={editor.save}
+        onDelete={(item) => onDelete([item])}
+        onClose={editor.cancel}
+      />
     </div>
   )
 }
 
-interface ExpenseRowsProps {
-  // The rows in their current (sorted) order.
+function ExpenseRows({
+  rows,
+  columnCount,
+  loading,
+}: {
   rows: Row<typeof expenseTableFeatures, Expense>[]
-  // How many columns the "nothing here" cell spans.
   columnCount: number
   loading: boolean
-  editor: ExpenseEditor
-}
-
-// The table's body: one row per expense, the one being edited drawn as an EditRow. With no rows, one wide cell
-// says "Loading…" or that nothing matches the filters. getAllCells, not getVisibleCells: v9 only has
-// getVisibleCells with the column-visibility feature, which this table doesn't use.
-function ExpenseRows({ rows, columnCount, loading, editor }: ExpenseRowsProps) {
+}) {
   const t = useTranslations("expenses")
+  if (loading) {
+    return (
+      <TableBody>
+        {[0, 1, 2, 3, 4, 5].map((index) => (
+          <TableRow key={index}>
+            <TableCell colSpan={columnCount} className="px-3 py-3">
+              <Skeleton className="h-7 w-full rounded-md" />
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    )
+  }
   return (
     <TableBody>
       {rows.length === 0 ? (
         <TableRow>
-          <TableCell colSpan={columnCount} className="h-24 text-center text-muted-foreground">
-            {loading ? t("table.loading") : t("table.noMatches")}
+          <TableCell colSpan={columnCount} className="h-28 text-center text-muted-foreground">
+            {t("table.noMatches")}
           </TableCell>
         </TableRow>
       ) : (
-        rows.map((row) =>
-          row.original.id === editor.editingId ? (
-            <EditRow
-              key={row.id}
-              expense={row.original}
-              saving={editor.isSaving(row.original.id)}
-              onCancel={editor.cancel}
-              onSave={(changes) => editor.save(row.original.id, changes)}
-            />
-          ) : (
-            <TableRow key={row.id} data-state={row.getIsSelected() ? "selected" : undefined}>
-              {row.getAllCells().map((cell) => (
-                <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
-              ))}
-            </TableRow>
-          ),
-        )
+        rows.map((row) => (
+          <TableRow key={row.id} data-state={row.getIsSelected() ? "selected" : undefined}>
+            {row.getAllCells().map((cell) => (
+              <TableCell key={cell.id} className="px-3 py-2.5">
+                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              </TableCell>
+            ))}
+          </TableRow>
+        ))
       )}
     </TableBody>
   )

@@ -1,5 +1,5 @@
-// A component of the assistant feature: one tool call as a small status chip in the assistant's bubble. Used by
-// ChatMessageBubble (chat-message.tsx), once per tool the reply used.
+// A component of the assistant feature: one tool call rendered as a semantic status pill (running, done, failed, or
+// unknown). Used by ChatMessageBubble.
 
 import { Check, CircleHelp, Loader2, X } from "lucide-react"
 import { useTranslations } from "next-intl"
@@ -9,43 +9,38 @@ import { Badge } from "@/shared/ui/badge"
 import { TOOL_STATUSES, type ToolActivity } from "../model/chat-types"
 
 /**
- * One tool call as a chip: spinning while it runs, then a tick or a cross, or "?" if the connection broke while
- * it ran. What it says comes from the backend (TOOL_CALL_START's labels, shown as sent), so this file knows no
- * tool names; only the "?" chip's explanation is the browser's own text, in the language on now. When a remote agent
- * did the work, its task ("A2A task 3f2a9c1e", also from the backend) follows the text once the call has ended.
+ * One tool call as a compact status chip with semantic colouring: neutral spinning while running, positive green
+ * when done, destructive when failed, or outline "?" when interrupted.
  */
 export function ToolChip({ tool }: { tool: ToolActivity }) {
   const t = useTranslations("assistant")
   const { running, done, failed } = tool.labels
-  const detail = tool.detail ? <span className="font-mono opacity-70">{tool.detail}</span> : null
+  const detail = tool.detail ? <span className="font-mono opacity-75">{tool.detail}</span> : null
 
   if (tool.status === TOOL_STATUSES.running) {
     return (
-      <Badge variant="outline">
+      <Badge variant="info" className="gap-1.5">
         <Loader2 className="animate-spin" /> {running}
       </Badge>
     )
   }
   if (tool.status === TOOL_STATUSES.unknown) {
-    // The connection broke while it ran: it may or may not have finished. Don't claim either.
     const notConfirmed = t("chips.notConfirmed")
     return (
-      <Badge variant="outline" title={notConfirmed}>
+      <Badge variant="warning" title={notConfirmed} className="gap-1">
         <CircleHelp /> {done}?<span className="sr-only"> {notConfirmed}</span>
       </Badge>
     )
   }
   if (tool.status === TOOL_STATUSES.failed) {
-    // Only that it failed: the tool's own reason is written for the model and stays on the server (D180). The
-    // reply explains what went wrong, in the user's language.
     return (
-      <Badge variant="destructive">
+      <Badge variant="destructive" className="gap-1">
         <X /> {failed} {detail}
       </Badge>
     )
   }
   return (
-    <Badge variant="secondary">
+    <Badge variant="positive" className="gap-1">
       <Check /> {done} {detail}
     </Badge>
   )

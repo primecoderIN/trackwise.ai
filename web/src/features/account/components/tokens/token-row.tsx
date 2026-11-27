@@ -1,5 +1,5 @@
-// One row of "Access tokens": a token's name, its last characters, its dates, and Revoke. Part of the account feature
-// (components/tokens/). Used by tokens-card.tsx. The token itself is never here: the server only ever sent it once.
+// One row of "Access tokens": token icon tile, name, monospace hint badge, compact lifecycle timestamps, and Revoke.
+// Part of the account feature (components/tokens/). Used by tokens-card.tsx.
 
 import { KeyRound } from "lucide-react"
 import { useTranslations } from "next-intl"
@@ -16,8 +16,7 @@ import { useRevokeAccessToken } from "../../queries"
 import { ConfirmDialog } from "../confirm-dialog"
 
 /**
- * The token, marked if it has expired (the server says so: it no longer works, and can be removed). Revoke asks
- * first: apps using the token stop working at once, and it can't be brought back.
+ * One access token row with expiry badge, monospace hint tag, usage timestamps, and destructive-hover Revoke action.
  */
 export function TokenRow({ token }: { token: AccessToken }) {
   const t = useTranslations("account")
@@ -35,14 +34,22 @@ export function TokenRow({ token }: { token: AccessToken }) {
   }
 
   return (
-    <li className="flex flex-wrap items-center gap-3 py-3">
-      <KeyRound aria-hidden className="size-5 shrink-0 text-muted-foreground" />
-      <div className="min-w-0 flex-1 text-sm text-muted-foreground">
-        <p className="flex flex-wrap items-center gap-2 text-base font-medium text-foreground">
-          <span className="truncate">{token.name}</span>
+    <li className="flex flex-wrap items-center gap-3.5 py-3.5 first:pt-1 last:pb-1">
+      <span
+        className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${
+          token.expired ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
+        }`}
+      >
+        <KeyRound aria-hidden="true" className="size-4.5" />
+      </span>
+      <div className="min-w-0 flex-1 space-y-1 text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="truncate text-sm font-semibold text-foreground">{token.name}</span>
+          <Badge variant="secondary" className="font-mono text-[11px]">
+            {t("tokens.endsWith", { hint: token.hint })}
+          </Badge>
           {token.expired && <Badge variant="destructive">{t("tokens.expired")}</Badge>}
-        </p>
-        <p>{t("tokens.endsWith", { hint: token.hint })}</p>
+        </div>
         <p>{t("tokens.dates", dates)}</p>
         <p>
           {token.last_used_at
@@ -56,6 +63,7 @@ export function TokenRow({ token }: { token: AccessToken }) {
         disabled={revoke.isPending}
         aria-label={t("tokens.revokeLabel", { name: token.name })}
         onClick={() => setConfirming(true)}
+        className="hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
       >
         {t("tokens.revoke")}
       </Button>

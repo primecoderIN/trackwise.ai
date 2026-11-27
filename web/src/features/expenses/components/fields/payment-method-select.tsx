@@ -1,5 +1,5 @@
 // A component of the expenses feature: the payment-method dropdown (shadcn's Select), listing every method
-// by its label. Used by the Add dialog and the inline edit row.
+// by its label. Used by the Add dialog and the Edit expense slide-over sheet.
 
 import { useLanguage } from "@/shared/i18n"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"

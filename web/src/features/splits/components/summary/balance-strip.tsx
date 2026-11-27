@@ -1,5 +1,5 @@
 // Top balance summary strip for the Splits page: displays per-currency directional obligations ("You are owed" vs.
-// "You owe") separately — never mixing currencies and never netting across unrelated groups (D225).
+// "You owe") separately using semantic positive/warning tokens — never mixing currencies or netting across groups.
 
 import { ArrowDownLeft, ArrowUpRight } from "lucide-react"
 import { useTranslations } from "next-intl"
@@ -24,11 +24,15 @@ export function BalanceStrip({ totals }: BalanceStripProps) {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">{t("summary.owedToYou")}</CardTitle>
-            <ArrowDownLeft className="size-4 text-emerald-600 dark:text-emerald-400" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+            <CardTitle className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              {t("summary.owedToYou")}
+            </CardTitle>
+            <span className="flex size-9 items-center justify-center rounded-xl bg-positive-soft text-positive-foreground">
+              <ArrowDownLeft className="size-4" aria-hidden="true" />
+            </span>
           </CardHeader>
           <CardContent>
             {owedItems.length === 0 ? (
@@ -36,7 +40,10 @@ export function BalanceStrip({ totals }: BalanceStripProps) {
             ) : (
               <div className="flex flex-wrap gap-x-4 gap-y-1">
                 {owedItems.map((row) => (
-                  <span key={row.currency} className="text-xl font-semibold text-emerald-600 dark:text-emerald-400">
+                  <span
+                    key={row.currency}
+                    className="text-2xl font-bold tracking-tight text-positive-foreground tabular-nums"
+                  >
                     {formatMoney(row.owed_to_you, row.currency)}
                   </span>
                 ))}
@@ -46,9 +53,13 @@ export function BalanceStrip({ totals }: BalanceStripProps) {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">{t("summary.youOwe")}</CardTitle>
-            <ArrowUpRight className="size-4 text-amber-600 dark:text-amber-400" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+            <CardTitle className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              {t("summary.youOwe")}
+            </CardTitle>
+            <span className="flex size-9 items-center justify-center rounded-xl bg-warning-soft text-warning-foreground">
+              <ArrowUpRight className="size-4" aria-hidden="true" />
+            </span>
           </CardHeader>
           <CardContent>
             {oweItems.length === 0 ? (
@@ -56,7 +67,10 @@ export function BalanceStrip({ totals }: BalanceStripProps) {
             ) : (
               <div className="flex flex-wrap gap-x-4 gap-y-1">
                 {oweItems.map((row) => (
-                  <span key={row.currency} className="text-xl font-semibold text-amber-600 dark:text-amber-400">
+                  <span
+                    key={row.currency}
+                    className="text-2xl font-bold tracking-tight text-warning-foreground tabular-nums"
+                  >
                     {formatMoney(row.you_owe, row.currency)}
                   </span>
                 ))}

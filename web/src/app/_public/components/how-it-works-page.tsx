@@ -50,7 +50,7 @@ export function PublicHowItWorksPage({ texts }: { texts: PublicSiteTexts }) {
         pagePath={localizedPath(ROUTES.howItWorks, texts.lang)}
       />
 
-      <section className="border-b bg-[radial-gradient(ellipse_at_top,oklch(0.47_0.19_262_/_0.08),transparent_65%)] pt-12 pb-14 sm:pt-16">
+      <section className="border-b border-border/80 bg-[radial-gradient(ellipse_at_top,color-mix(in_oklch,var(--primary)_10%,transparent),transparent_65%)] pt-12 pb-14 sm:pt-16">
         <div className={PUBLIC_CONTAINER}>
           <div className="max-w-4xl">
             <span className="inline-flex rounded-full border border-primary/25 bg-primary/10 px-3.5 py-1 text-xs font-medium text-primary">
@@ -134,7 +134,7 @@ export function PublicHowItWorksPage({ texts }: { texts: PublicSiteTexts }) {
 
       <section className="py-14">
         <div className={PUBLIC_CONTAINER}>
-          <div className="flex flex-col items-start justify-between gap-6 rounded-2xl border bg-card p-8 shadow-xs sm:flex-row sm:items-center">
+          <div className="flex flex-col items-start justify-between gap-6 rounded-2xl border bg-card p-6 shadow-xs sm:flex-row sm:items-center sm:p-8">
             <div>
               <h2 className="text-xl font-bold tracking-tight sm:text-2xl">{howItWorksPage.ctaTitle}</h2>
               <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{howItWorksPage.ctaSubtitle}</p>

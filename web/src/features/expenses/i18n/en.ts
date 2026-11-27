@@ -40,9 +40,13 @@ const en = {
   filters: {
     search: "Search",
     searchPlaceholder: "Merchant or note",
+    clearSearch: "Clear search",
     allCategories: "All categories",
     from: "From",
     to: "To",
+    presetThisMonth: "This month",
+    presetLastMonth: "Last month",
+    presetLast30Days: "Last 30 days",
     clear: "Clear filters",
   },
   // The count line above the table; its parts are joined with " · ".
@@ -50,6 +54,8 @@ const en = {
     count: "{count, plural, one {# expense} other {# expenses}}",
     showingNewest: "showing the newest {shown}",
     showingRange: "showing {from}–{to}",
+    pageTotal: "Page total {amount}",
+    pageOf: "Page {page} of {pages}",
     selected: "{count, plural, one {# selected} other {# selected}}",
     deleteSelected: "Delete selected",
     previousPage: "Previous page",
@@ -70,6 +76,8 @@ const en = {
   },
   // The inline edit row: each control's name for screen readers, its buttons, and the toast after a save.
   edit: {
+    title: "Edit expense #{id}",
+    description: "Update details for this expense. Only changed fields are saved.",
     date: "Date of #{id}",
     merchant: "Merchant of #{id}",
     category: "Category of #{id}",

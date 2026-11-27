@@ -40,13 +40,13 @@ export function SimplifiedTransfers({ transfers, archived, onSettle, onRemind }:
                   key={`${tr.currency}-${tr.from_member_id}-${tr.to_member_id}`}
                   className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm"
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
                     <span className="font-medium">{fromLabel}</span>
-                    <ArrowRight className="size-3.5 text-muted-foreground" />
+                    <ArrowRight className="size-3.5 shrink-0 text-muted-foreground" />
                     <span className="font-medium">{toLabel}</span>
-                    <span className="font-semibold">{formatMoney(tr.amount, tr.currency)}</span>
+                    <span className="font-semibold tabular-nums">{formatMoney(tr.amount, tr.currency)}</span>
                   </div>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex flex-wrap items-center gap-1.5">
                     <Button size="sm" variant="outline" onClick={() => onRemind(tr)}>
                       <QrCode className="size-3.5" />
                       {t("people.remindOrPay")}

@@ -1,7 +1,7 @@
 "use client"
 
 // A shared component: the "couldn't refresh, so this may be out of date" line shown above data that's still on
-// screen. Part of shared/. Used by the Dashboard and Expenses pages.
+// screen. Part of shared/. Used by the Dashboard, Expenses, Budgets, Categories, Reports, and Splits pages.
 
 import { RefreshCw, TriangleAlert } from "lucide-react"
 import { useTranslations } from "next-intl"
@@ -25,10 +25,10 @@ export function RefreshNotice({ message, onRetry, retrying = false }: RefreshNot
   const t = useTranslations("common")
   // <output> is announced politely by screen readers (its role is "status").
   return (
-    <output className="flex flex-wrap items-center gap-2 rounded-md border px-3 py-2 text-sm text-muted-foreground">
-      <TriangleAlert className="size-4 shrink-0" />
+    <output className="flex flex-wrap items-center gap-2.5 rounded-xl border border-warning/30 bg-warning-soft px-3.5 py-2.5 text-sm text-warning-foreground">
+      <TriangleAlert className="size-4 shrink-0 text-warning" aria-hidden="true" />
       <span className="min-w-0 flex-1">{t("refreshNotice.stale", { message })}</span>
-      <Button variant="ghost" size="sm" onClick={onRetry} disabled={retrying}>
+      <Button variant="outline" size="xs" onClick={onRetry} disabled={retrying} className="bg-background/80">
         <RefreshCw className={retrying ? "animate-spin" : undefined} /> {t("retry.retry")}
       </Button>
     </output>

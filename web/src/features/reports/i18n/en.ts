@@ -11,6 +11,7 @@ const en = {
     nextMonth: "Next month",
   },
   downloads: {
+    export: "Export",
     csv: "Download CSV",
     md: "Download Markdown",
     downloading: "Downloading…",

@@ -98,7 +98,7 @@ export function PeopleList({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-semibold">{t("people.title")}</h2>
         <Button size="sm" onClick={onAddContact}>
           <Plus className="size-4" />
@@ -128,7 +128,7 @@ export function PeopleList({
                       {person.archived && <Badge variant="outline">{t("people.archivedBadge")}</Badge>}
                     </div>
                     {contact && (
-                      <div className="flex items-center gap-1">
+                      <div className="flex flex-wrap items-center gap-1">
                         <Button size="sm" variant="ghost" onClick={() => onEditContact(contact)}>
                           <Pencil className="size-3.5" />
                           {t("people.edit")}
@@ -187,7 +187,7 @@ export function PeopleList({
                                 : t("people.youOwe", { amount: formatMoney(ob.amount, ob.currency) })}
                             </span>
                           </div>
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex flex-wrap items-center gap-1.5">
                             <Button
                               size="sm"
                               variant="outline"

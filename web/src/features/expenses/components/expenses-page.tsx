@@ -1,10 +1,9 @@
-// A component of the expenses feature: the Expenses page, the feature's main export
-// (app/(client)/(app)/expenses/page.tsx draws it). It holds the page's state (the filters, and which expenses are
-// waiting for "are you sure?"), loads the list through useExpenses, and lays out its parts: the Add dialog, the filters
-// bar, the table, and the delete dialog. Its texts come from the feature's i18n namespace.
+// A component of the expenses feature: the Expenses page, the feature's main export. Syncs filters with URL query
+// parameters (so Categories and Dashboard drill-downs work directly), handles `?add=1` deep-links, and lays out the
+// filter card, responsive table/cards, Add dialog, and Delete confirmation.
 
 import { ReceiptText } from "lucide-react"
-import { useSearchParams } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
 
@@ -18,29 +17,27 @@ import { useMessageOf } from "@/shared/lib/use-message-of"
 import { Card, CardContent } from "@/shared/ui/card"
 
 import type { Expense, ExpenseFilters } from "../api"
+import { filtersFromSearchParams, filtersToQueryString } from "../filter-params"
 import { useExpenses } from "../queries"
 import { AddExpenseDialog } from "./dialogs/add-expense-dialog"
 import { DeleteExpensesDialog } from "./dialogs/delete-expenses-dialog"
-import { ExpensesTable } from "./table/expenses-table"
 import { FiltersBar } from "./filters/filters-bar"
+import { ExpensesTable } from "./table/expenses-table"
 
-// Wait this long after the last change before asking the API, so typing in Search doesn't send a
-// request on every key.
-const FILTER_DEBOUNCE_MS = 300
-
-// What the table gets while nothing is loaded: one array, the same on every render. A new `[]` each time would
-// count as new data, and the table clears its selection whenever its data changes. Never modified.
+const FILTER_DEBOUNCE_MS = 280
 const NO_EXPENSES: Expense[] = []
 
 /**
- * The Expenses page: a title with the Add button, the filters, the table, and the delete confirmation. If
- * nothing could be loaded, an error card with Try again takes the table's place; if a reload fails, the rows
- * stay and a "couldn't refresh" notice appears above them.
+ * The Expenses page: URL-synced filters, Add Expense dialog, desktop table & mobile card list, and delete dialog.
  */
 export function ExpensesPage() {
   const t = useTranslations("expenses")
   const messageOf = useMessageOf()
+  const router = useRouter()
+  const pathname = usePathname()
   const searchParams = useSearchParams()
+  const searchKey = searchParams.toString()
+
   const addParam = searchParams.get("add")
   const [addOpen, setAddOpen] = useState(() => addParam === "1")
   const [lastAddParam, setLastAddParam] = useState(addParam)
@@ -48,9 +45,19 @@ export function ExpensesPage() {
     setLastAddParam(addParam)
     if (addParam === "1") setAddOpen(true)
   }
-  const [filters, setFilters] = useState<ExpenseFilters>({})
+
   const [offset, setOffset] = useState(0)
-  // The expenses waiting for "are you sure?"; null means the confirmation dialog is closed.
+  const [filters, setFilters] = useState<ExpenseFilters>(() => filtersFromSearchParams(searchParams))
+  const [lastSearchKey, setLastSearchKey] = useState(searchKey)
+  if (searchKey !== lastSearchKey) {
+    setLastSearchKey(searchKey)
+    const fromUrl = filtersFromSearchParams(searchParams)
+    if (filtersToQueryString(fromUrl) !== filtersToQueryString(filters)) {
+      setFilters(fromUrl)
+      setOffset(0)
+    }
+  }
+
   const [pendingDelete, setPendingDelete] = useState<Expense[] | null>(null)
   const debouncedFilters = useDebouncedValue(filters, FILTER_DEBOUNCE_MS)
   const expenses = useExpenses({ ...debouncedFilters, limit: LIMITS.listDefault, offset })
@@ -58,9 +65,20 @@ export function ExpensesPage() {
   function handleFiltersChange(nextFilters: ExpenseFilters) {
     setFilters(nextFilters)
     setOffset(0)
+    const nextQuery = filtersToQueryString(nextFilters)
+    setLastSearchKey(nextQuery)
+    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false })
   }
 
-  // If deleting every item on the last page leaves it empty while earlier pages still have rows, step back one page.
+  function handleAddOpenChange(next: boolean) {
+    setAddOpen(next)
+    if (!next && searchParams.get("add") === "1") {
+      const nextQuery = filtersToQueryString(filters)
+      setLastSearchKey(nextQuery)
+      router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false })
+    }
+  }
+
   if (expenses.data && offset > 0 && expenses.data.items.length === 0 && expenses.data.total > 0) {
     const lastPageOffset = Math.max(0, Math.floor((expenses.data.total - 1) / LIMITS.listDefault) * LIMITS.listDefault)
     if (lastPageOffset !== offset) setOffset(lastPageOffset)
@@ -72,11 +90,11 @@ export function ExpensesPage() {
   const isFirstTimeEmpty = Boolean(expenses.data && expenses.data.total === 0 && !hasActiveFilters && offset === 0)
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <PageHeader
         title={t("page.title")}
         description={t("page.description")}
-        actions={<AddExpenseDialog open={addOpen} onOpenChange={setAddOpen} />}
+        actions={<AddExpenseDialog open={addOpen} onOpenChange={handleAddOpenChange} />}
       />
 
       <FiltersBar filters={filters} onChange={handleFiltersChange} />
@@ -102,7 +120,7 @@ export function ExpensesPage() {
               icon={ReceiptText}
               title={t("table.emptyTitle")}
               message={t("table.emptyDescription")}
-              action={{ label: t("add.open"), onClick: () => setAddOpen(true) }}
+              action={{ label: t("add.open"), onClick: () => setAddOpen(true), primary: true }}
             />
           </CardContent>
         </Card>
@@ -111,6 +129,7 @@ export function ExpensesPage() {
           expenses={expenses.data?.items ?? NO_EXPENSES}
           total={expenses.data?.total ?? 0}
           loading={expenses.isPending}
+          fetching={expenses.isFetching}
           onDelete={setPendingDelete}
           offset={offset}
           pageSize={LIMITS.listDefault}

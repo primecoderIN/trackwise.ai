@@ -10,6 +10,8 @@ const en = {
     loadFailed: "Couldn't load categories",
     previousMonth: "Previous month",
     nextMonth: "Next month",
+    sortBySpend: "Highest spend",
+    sortByName: "A–Z",
     empty: "No categories found.",
   },
   card: {

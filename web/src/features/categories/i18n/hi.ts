@@ -13,6 +13,8 @@ const hi: Translation<typeof en> = {
     loadFailed: "श्रेणियाँ लोड नहीं हो सकीं",
     previousMonth: "पिछला महीना",
     nextMonth: "अगला महीना",
+    sortBySpend: "सबसे अधिक खर्च",
+    sortByName: "नाम के अनुसार",
     empty: "कोई श्रेणी नहीं मिली।",
   },
   card: {

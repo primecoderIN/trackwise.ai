@@ -1,18 +1,19 @@
-// The Categories page (/categories): every shared category with its icon, this month's spend and expense count, and a
-// month selector to inspect any month. Part of the categories feature (Phase 28).
+// The Categories page (/categories): colour-coded category cards with monthly spend, share progress bar, sort toggle,
+// shared MonthPicker, and working deep-links to Expenses filtered by that category and month. Part of categories.
 
-import { ChevronLeft, ChevronRight, Tags } from "lucide-react"
+import { ArrowUpRight, Info, Tags } from "lucide-react"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { useMemo, useState } from "react"
 
 import { DEFAULT_CURRENCY } from "@/shared/api/contracts.gen"
 import { EmptyState } from "@/shared/components/empty-state"
+import { MonthPicker } from "@/shared/components/month-picker"
 import { PageHeader } from "@/shared/components/page-header"
 import { RefreshNotice } from "@/shared/components/refresh-notice"
 import { SectionError } from "@/shared/components/section-error"
 import { ROUTES } from "@/shared/config/routes"
-import { currentMonth, MAX_MONTH, MIN_MONTH, shiftMonth } from "@/shared/lib/format"
+import { currentMonth, monthDateRange } from "@/shared/lib/format"
 import { queryGroupStatus } from "@/shared/lib/query-status"
 import { useFormatters } from "@/shared/lib/use-formatters"
 import { useMessageOf } from "@/shared/lib/use-message-of"
@@ -20,25 +21,37 @@ import { Button } from "@/shared/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 import { Skeleton } from "@/shared/ui/skeleton"
 
-import { categoryIcon } from "../category-icons"
+import { categoryVisual } from "../category-icons"
 import { useCategories, useCategoryMonthlySummary } from "../queries"
 
-/** The Categories page: shared categories with each one's icon and monthly spend. */
+type SortMode = "spend" | "name"
+
+function filteredExpensesHref(categoryId: number, month: string): string {
+  const params = new URLSearchParams({ category_id: String(categoryId) })
+  const range = monthDateRange(month)
+  if (range) {
+    params.set("start_date", range.start)
+    params.set("end_date", range.end)
+  }
+  return `${ROUTES.expenses}?${params.toString()}`
+}
+
+/** The Categories page: shared categories with colour-coded icons, share meters, sorting, and filtered drill-downs. */
 export function CategoriesPage() {
   const t = useTranslations("categories")
   const messageOf = useMessageOf()
   const { formatMoney, formatMonth } = useFormatters()
   const [month, setMonth] = useState(currentMonth)
+  const [sortBy, setSortBy] = useState<SortMode>("spend")
   const categories = useCategories()
   const summary = useCategoryMonthlySummary(month)
   const { failed, retrying, retry } = queryGroupStatus([categories, summary])
-  const step = (offset: number) => () => setMonth((current) => shiftMonth(current, offset))
 
   const rows = useMemo(() => {
     if (!categories.data || !summary.data) return null
     const totalsById = new Map(summary.data.by_category.map((item) => [item.category_id, item]))
     const monthTotalMinor = summary.data.total_minor
-    return categories.data.map((category) => {
+    const mapped = categories.data.map((category) => {
       const spent = totalsById.get(category.id)
       const totalMinor = spent?.total_minor ?? 0
       const sharePercent = monthTotalMinor > 0 && totalMinor > 0 ? Math.round((totalMinor / monthTotalMinor) * 100) : 0
@@ -50,39 +63,44 @@ export function CategoriesPage() {
         sharePercent,
       }
     })
-  }, [categories.data, summary.data])
+    return [...mapped].sort((a, b) =>
+      sortBy === "spend"
+        ? b.totalMinor - a.totalMinor || a.category.name.localeCompare(b.category.name)
+        : a.category.name.localeCompare(b.category.name),
+    )
+  }, [categories.data, summary.data, sortBy])
 
-  const monthControls = (
-    <div className="flex items-center gap-1">
-      <Button
-        variant="ghost"
-        size="icon"
-        aria-label={t("page.previousMonth")}
-        onClick={step(-1)}
-        disabled={month <= MIN_MONTH}
-      >
-        <ChevronLeft />
-      </Button>
-      <span aria-live="polite" className="min-w-32 text-center text-sm font-medium">
-        {formatMonth(month)}
-      </span>
-      <Button
-        variant="ghost"
-        size="icon"
-        aria-label={t("page.nextMonth")}
-        onClick={step(1)}
-        disabled={month >= MAX_MONTH}
-      >
-        <ChevronRight />
-      </Button>
+  const headerActions = (
+    <div className="flex flex-wrap items-center gap-2">
+      <div className="inline-flex rounded-lg border border-border/80 bg-card p-0.5 shadow-2xs">
+        <Button
+          type="button"
+          size="xs"
+          variant={sortBy === "spend" ? "secondary" : "ghost"}
+          aria-pressed={sortBy === "spend"}
+          onClick={() => setSortBy("spend")}
+        >
+          {t("page.sortBySpend")}
+        </Button>
+        <Button
+          type="button"
+          size="xs"
+          variant={sortBy === "name" ? "secondary" : "ghost"}
+          aria-pressed={sortBy === "name"}
+          onClick={() => setSortBy("name")}
+        >
+          {t("page.sortByName")}
+        </Button>
+      </div>
+      <MonthPicker month={month} onChange={setMonth} />
     </div>
   )
 
   const headerDescription = t("page.description", { currency: summary.data?.currency ?? DEFAULT_CURRENCY })
   if (!rows || !summary.data) {
     return (
-      <div className="flex flex-col gap-4">
-        <PageHeader title={t("page.title")} description={headerDescription} actions={monthControls} />
+      <div className="flex flex-col gap-6">
+        <PageHeader title={t("page.title")} description={headerDescription} actions={headerActions} />
         {failed ? (
           <SectionError
             title={t("page.loadFailed")}
@@ -91,10 +109,10 @@ export function CategoriesPage() {
             retrying={retrying}
           />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <Skeleton className="h-32" />
-            <Skeleton className="h-32" />
-            <Skeleton className="h-32" />
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {[0, 1, 2, 3, 4, 5].map((index) => (
+              <Skeleton key={index} className="h-40 rounded-2xl" />
+            ))}
           </div>
         )}
       </div>
@@ -104,8 +122,8 @@ export function CategoriesPage() {
   const monthLabel = formatMonth(month)
 
   return (
-    <div className="flex flex-col gap-4">
-      <PageHeader title={t("page.title")} description={headerDescription} actions={monthControls} />
+    <div className="flex flex-col gap-6">
+      <PageHeader title={t("page.title")} description={headerDescription} actions={headerActions} />
       {failed && <RefreshNotice message={messageOf(failed.error)} onRetry={retry} retrying={retrying} />}
       {rows.length === 0 ? (
         <Card>
@@ -114,44 +132,67 @@ export function CategoriesPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {rows.map(({ category, total, totalMinor, expenseCount, sharePercent }) => {
-            const Icon = categoryIcon(category.icon)
+            const visual = categoryVisual(category.icon)
+            const Icon = visual.icon
+            const inactive = totalMinor === 0
             return (
-              <Card key={category.id}>
-                <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0 pb-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                      <Icon className="size-4" aria-hidden="true" />
+              <Card
+                key={category.id}
+                className={`transition-all hover:border-border hover:shadow-sm ${inactive ? "opacity-80 hover:opacity-100" : ""}`}
+              >
+                <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0 pb-1">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${visual.tileClass}`}>
+                      <Icon className="size-4.5" aria-hidden="true" />
                     </div>
-                    <div>
-                      <CardTitle className="text-base">{category.name}</CardTitle>
-                      <CardDescription>
-                        {t("card.expenses", {
-                          count: expenseCount,
-                          month: monthLabel,
-                        })}
+                    <div className="min-w-0">
+                      <CardTitle className="truncate text-base">{category.name}</CardTitle>
+                      <CardDescription className="truncate text-xs">
+                        {t("card.expenses", { count: expenseCount, month: monthLabel })}
                       </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="flex items-end justify-between gap-2 pt-2">
-                  <div>
-                    <p className="text-xl font-semibold tabular-nums">{formatMoney(total, summary.data.currency)}</p>
-                    {totalMinor > 0 && (
-                      <p className="text-xs text-muted-foreground">{t("card.share", { percent: sharePercent })}</p>
-                    )}
+                <CardContent className="flex flex-col gap-3 pt-1">
+                  <div className="flex flex-wrap items-end justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-xl font-semibold tracking-tight tabular-nums sm:text-2xl">
+                        {formatMoney(total, summary.data.currency)}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
+                        {t("card.share", { percent: sharePercent })}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      asChild
+                      className="gap-1 text-muted-foreground hover:text-primary"
+                    >
+                      <Link href={filteredExpensesHref(category.id, month)}>
+                        <span>{t("card.viewExpenses")}</span>
+                        <ArrowUpRight className="size-3.5" aria-hidden="true" />
+                      </Link>
+                    </Button>
                   </div>
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link href={ROUTES.expenses}>{t("card.viewExpenses")}</Link>
-                  </Button>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${sharePercent}%`, backgroundColor: visual.chartColor }}
+                    />
+                  </div>
                 </CardContent>
               </Card>
             )
           })}
         </div>
       )}
-      <p className="text-xs text-muted-foreground">{t("card.customSoon")}</p>
+      <div className="flex items-center gap-2 rounded-xl border border-dashed bg-muted/25 px-4 py-2.5 text-xs text-muted-foreground">
+        <Info className="size-3.5 shrink-0" aria-hidden="true" />
+        <span>{t("card.customSoon")}</span>
+      </div>
     </div>
   )
 }

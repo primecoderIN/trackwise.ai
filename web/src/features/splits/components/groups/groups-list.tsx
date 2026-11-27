@@ -25,7 +25,7 @@ export function GroupsList({ groups, onSelectGroup, onNewGroup }: GroupsListProp
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-semibold">{t("groups.title")}</h2>
         <Button size="sm" onClick={onNewGroup}>
           <Plus className="size-4" />
@@ -41,7 +41,7 @@ export function GroupsList({ groups, onSelectGroup, onNewGroup }: GroupsListProp
           action={{ label: t("groups.newGroup"), onClick: onNewGroup }}
         />
       ) : (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           {groups.map((group) => (
             <Card key={group.id} className="transition-colors hover:bg-accent/30">
               <CardContent className="p-4">

@@ -1,31 +1,32 @@
-// The Reports page (/reports): pick a month, inspect totals against the previous month, see the category and payment
-// method breakdowns and biggest expenses, and download the report in every format the API offers (CSV and Markdown,
-// D209). Part of the reports feature (Phase 28).
+// The Reports page (/reports): pick a month with the shared MonthPicker, inspect KPI cards with semantic MoM deltas,
+// review colour-coded category and payment breakdowns, and export CSV/Markdown via a clean dropdown. Part of reports.
 
-import { ChevronLeft, ChevronRight, Download, FileBarChart } from "lucide-react"
+import { ChevronDown, Download, FileBarChart, FileSpreadsheet, FileText } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { toast } from "sonner"
 
 import { DEFAULT_CURRENCY, REPORT_FORMATS } from "@/shared/api/contracts.gen"
 import { EmptyState } from "@/shared/components/empty-state"
+import { MonthPicker } from "@/shared/components/month-picker"
 import { PageHeader } from "@/shared/components/page-header"
 import { RefreshNotice } from "@/shared/components/refresh-notice"
 import { SectionError } from "@/shared/components/section-error"
 import { ROUTES } from "@/shared/config/routes"
-import { currentMonth, MAX_MONTH, MIN_MONTH, shiftMonth } from "@/shared/lib/format"
+import { currentMonth } from "@/shared/lib/format"
 import { saveFile } from "@/shared/lib/save-file"
 import { useFormatters } from "@/shared/lib/use-formatters"
 import { useMessageOf } from "@/shared/lib/use-message-of"
 import { Button } from "@/shared/ui/button"
 import { Card, CardContent } from "@/shared/ui/card"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared/ui/dropdown-menu"
 import { Skeleton } from "@/shared/ui/skeleton"
 
 import { fetchMonthlyReportFile, type ReportFormat } from "../api"
 import { useMonthlyReport } from "../queries"
 import { ReportBreakdowns, ReportStatCards } from "./report-sections"
 
-/** The Reports page: monthly summary, comparison with last month, breakdowns and file downloads. */
+/** The Reports page: monthly summary, comparison with last month, visual breakdowns, and file exports. */
 export function ReportsPage() {
   const t = useTranslations("reports")
   const messageOf = useMessageOf()
@@ -34,7 +35,6 @@ export function ReportsPage() {
   const [downloading, setDownloading] = useState<ReportFormat | null>(null)
   const report = useMonthlyReport(month)
   const retry = () => void report.refetch()
-  const step = (offset: number) => () => setMonth((current) => shiftMonth(current, offset))
 
   async function handleDownload(format: ReportFormat) {
     if (downloading) return
@@ -49,48 +49,37 @@ export function ReportsPage() {
     }
   }
 
+  const canExport = Boolean(report.data && report.data.expense_count > 0 && downloading === null)
+
   const actions = (
     <div className="flex flex-wrap items-center gap-2">
-      <div className="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={t("page.previousMonth")}
-          onClick={step(-1)}
-          disabled={month <= MIN_MONTH}
-        >
-          <ChevronLeft />
-        </Button>
-        <span aria-live="polite" className="min-w-32 text-center text-sm font-medium">
-          {formatMonth(month)}
-        </span>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={t("page.nextMonth")}
-          onClick={step(1)}
-          disabled={month >= MAX_MONTH}
-        >
-          <ChevronRight />
-        </Button>
-      </div>
-      {REPORT_FORMATS.map((format) => (
-        <Button
-          key={format}
-          variant="outline"
-          size="sm"
-          disabled={downloading !== null || !report.data || report.data.expense_count === 0}
-          onClick={() => void handleDownload(format)}
-        >
-          <Download className="size-4" />
-          {downloading === format ? t("downloads.downloading") : t(`downloads.${format}`)}
-        </Button>
-      ))}
+      <MonthPicker month={month} onChange={setMonth} />
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" disabled={!canExport} className="gap-1.5">
+            <Download className="size-4" aria-hidden="true" />
+            <span>{downloading ? t("downloads.downloading") : t("downloads.export")}</span>
+            <ChevronDown className="size-3.5 text-muted-foreground" aria-hidden="true" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          {REPORT_FORMATS.map((format) => (
+            <DropdownMenuItem key={format} onSelect={() => void handleDownload(format)}>
+              {format === "csv" ? (
+                <FileSpreadsheet className="size-4 text-positive" aria-hidden="true" />
+              ) : (
+                <FileText className="size-4 text-primary" aria-hidden="true" />
+              )}
+              <span>{t(`downloads.${format}`)}</span>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   )
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <PageHeader
         title={t("page.title")}
         description={t("page.description", { currency: report.data?.currency ?? DEFAULT_CURRENCY })}
@@ -109,7 +98,7 @@ export function ReportsPage() {
                   icon={FileBarChart}
                   title={t("empty.title", { month: formatMonth(report.data.month) })}
                   message={t("empty.description")}
-                  action={{ label: t("empty.addExpense"), to: ROUTES.expenses }}
+                  action={{ label: t("empty.addExpense"), to: `${ROUTES.expenses}?add=1`, primary: true }}
                 />
               </CardContent>
             </Card>
@@ -125,13 +114,13 @@ export function ReportsPage() {
           retrying={report.isFetching}
         />
       ) : (
-        <div className="grid gap-4">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <Skeleton className="h-28" />
-            <Skeleton className="h-28" />
-            <Skeleton className="h-28" />
+        <div className="grid gap-5">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <Skeleton className="h-32 rounded-2xl" />
+            <Skeleton className="h-32 rounded-2xl" />
+            <Skeleton className="h-32 rounded-2xl sm:col-span-2 xl:col-span-1" />
           </div>
-          <Skeleton className="h-64" />
+          <Skeleton className="h-72 rounded-2xl" />
         </div>
       )}
     </div>

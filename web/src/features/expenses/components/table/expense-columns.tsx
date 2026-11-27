@@ -1,7 +1,5 @@
-// A part of the expenses feature's table: what each column shows and how it sorts (TanStack Table v9 column
-// definitions), the table's opted-in features, the sortable header and its aria-sort. Pure configuration: no
-// state and no hooks, so the table decides when the columns are rebuilt. Its texts come from the `t` the table
-// passes in (the feature's i18n namespace). Used by expenses-table.tsx.
+// A part of the expenses feature's table: TanStack Table v9 column definitions with compact 7-column density,
+// colour-coded category pills, truncated inline notes under merchant, and clean right-aligned amounts & actions.
 
 import {
   createColumnHelper,
@@ -17,6 +15,7 @@ import {
 import { Pencil, Trash2 } from "lucide-react"
 import type { useTranslations } from "next-intl"
 
+import { categoryVisual } from "@/features/categories"
 import { ExpenseMoney } from "@/shared/components/money"
 import type { Language } from "@/shared/i18n"
 import { Badge } from "@/shared/ui/badge"
@@ -27,37 +26,27 @@ import type { Expense } from "../../api"
 import { paymentMethodLabel } from "../../payment-methods"
 import { SortButton } from "./sort-button"
 
-/**
- * The TanStack Table features the expenses table uses. In v9 you opt in to each one: here sorting (with its
- * sorted row model) and row selection. Defined once, outside any component, so it never changes.
- */
+/** TanStack Table features opted into by the expenses table: client sorting and row selection. */
 export const expenseTableFeatures = tableFeatures({
   rowSortingFeature,
   rowSelectionFeature,
   sortedRowModel: createSortedRowModel(),
 })
 
-// Builds the column definitions, typed for these features and for Expense rows.
 const columnHelper = createColumnHelper<typeof expenseTableFeatures, Expense>()
-
-// What screen readers announce for a sorted column (the header cell's aria-sort).
 const ARIA_SORT = { asc: "ascending", desc: "descending" } as const
 
-/** The header cell's aria-sort for a column's direction; undefined (no attribute) for a column that isn't sorted. */
+/** The header cell's aria-sort for a column's direction; undefined for an unsorted column. */
 export function ariaSortOf(sorted: false | SortDirection) {
   return sorted ? ARIA_SORT[sorted] : undefined
 }
 
-// The part of a column that a sortable header reads: its direction, and the handler that toggles it.
 type SortableColumn = Pick<
   Column_RowSorting<typeof expenseTableFeatures, Expense>,
   "getIsSorted" | "getToggleSortingHandler"
 >
 
-/**
- * A column's `header`: a SortButton titled `title`, wired to whichever column it heads. `align: "end"` pushes the
- * button to the right, over a right-aligned column (the amount).
- */
+/** Sortable column header helper; aligns right when `align === "end"`. */
 export function sortableHeader(title: string, align?: "end") {
   return ({ column }: { column: SortableColumn }) => {
     const button = <SortButton title={title} sorted={column.getIsSorted()} onClick={column.getToggleSortingHandler()} />
@@ -65,30 +54,20 @@ export function sortableHeader(title: string, align?: "end") {
   }
 }
 
-// The expenses namespace's t function, as `useTranslations("expenses")` gives it.
 type ExpensesT = ReturnType<typeof useTranslations<"expenses">>
 
-/** What the columns need from the table around them. */
+/** Dependencies passed from ExpensesTable when memoising columns. */
 export interface ExpenseColumnOptions {
-  /**
-   * The feature's texts (`useTranslations("expenses")`), in the active language: column titles and control labels.
-   */
   t: ExpensesT
-  /** Active UI language for payment-method labels. */
   language: Language
-  /** Locale-aware date formatter bound via `useFormatters()`. */
   formatDate: (value: string | Date) => string
-  /** A category's name by id (the Category column shows and sorts by it). */
   categoryName: (id: number) => string
-  /** A delete is running: every Delete button is disabled meanwhile. */
+  categoryIconName: (id: number) => string | undefined
   deleting: boolean
-  /** Edit was pressed on this expense's row. */
   onEdit: (id: number) => void
-  /** Delete was pressed on a row: asks the page to confirm and delete it. */
   onDelete: (expenses: Expense[]) => void
 }
 
-// Tick boxes. The header's ticks every row, and shows a dash when only some are ticked.
 function selectColumn(t: ExpensesT) {
   return columnHelper.display({
     id: "select",
@@ -110,44 +89,66 @@ function selectColumn(t: ExpensesT) {
   })
 }
 
-// The expense's own fields, in display order. Sorting happens in the browser, within the rows already loaded.
 function dataColumns({
+  categoryIconName,
   categoryName,
   formatDate,
   language,
   t,
-}: Pick<ExpenseColumnOptions, "categoryName" | "formatDate" | "language" | "t">) {
+}: Pick<ExpenseColumnOptions, "categoryIconName" | "categoryName" | "formatDate" | "language" | "t">) {
   return columnHelper.columns([
-    // The id as "#14": the assistant shows ids the same way, so you can say "delete #14".
-    columnHelper.accessor("id", {
-      header: sortableHeader(t("fields.id")),
-      cell: ({ getValue }) => <span className="text-muted-foreground tabular-nums">#{getValue()}</span>,
-      sortFn: sortFn_basic,
-    }),
     columnHelper.accessor("spent_on", {
       header: sortableHeader(t("fields.date")),
-      cell: ({ getValue }) => formatDate(getValue()),
-      // "YYYY-MM-DD" strings sort correctly as plain text.
+      cell: ({ getValue }) => <span className="text-muted-foreground tabular-nums">{formatDate(getValue())}</span>,
       sortFn: sortFn_alphanumeric,
     }),
     columnHelper.accessor("merchant", {
       header: sortableHeader(t("fields.merchant")),
-      cell: ({ getValue }) => <span className="font-medium">{getValue()}</span>,
+      cell: ({ row }) => {
+        const { id, merchant, note } = row.original
+        return (
+          <div className="flex max-w-xs flex-col gap-0.5 py-0.5 whitespace-normal">
+            <div className="flex items-center gap-1.5">
+              <span className="truncate font-medium text-foreground">{merchant}</span>
+              <span className="shrink-0 font-mono text-[11px] text-muted-foreground/75 tabular-nums">#{id}</span>
+            </div>
+            {note && (
+              <span className="truncate text-xs text-muted-foreground" title={note}>
+                {note}
+              </span>
+            )}
+          </div>
+        )
+      },
       sortFn: sortFn_alphanumeric,
     }),
-    // Shows (and sorts by) the category's name, not its id.
     columnHelper.accessor((expense) => categoryName(expense.category_id), {
       id: "category",
       header: sortableHeader(t("fields.category")),
+      cell: ({ row, getValue }) => {
+        const visual = categoryVisual(categoryIconName(row.original.category_id))
+        const Icon = visual.icon
+        return (
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${visual.badgeClass}`}
+          >
+            <Icon className="size-3 shrink-0" aria-hidden="true" />
+            <span className="truncate">{getValue()}</span>
+          </span>
+        )
+      },
       sortFn: sortFn_alphanumeric,
     }),
-    // Sort by the USD amount in minor units (D204, D223), so €4 and $10 compare by what they're worth; an expense not converted
-    // yet sorts by its own amount. Shown in its own currency, with the USD amount under it.
+    columnHelper.accessor("payment_method", {
+      header: t("fields.paidWith"),
+      cell: ({ getValue }) => <Badge variant="secondary">{paymentMethodLabel(getValue(), language)}</Badge>,
+      enableSorting: false,
+    }),
     columnHelper.accessor((expense) => expense.base_amount_minor ?? expense.amount_minor, {
       id: "amount",
       header: sortableHeader(t("fields.amount"), "end"),
       cell: ({ row }) => (
-        <div className="text-right tabular-nums">
+        <div className="text-right font-semibold text-foreground tabular-nums">
           <ExpenseMoney
             amount={row.original.amount}
             currency={row.original.currency}
@@ -159,20 +160,9 @@ function dataColumns({
       ),
       sortFn: sortFn_basic,
     }),
-    columnHelper.accessor("payment_method", {
-      header: t("fields.paidWith"),
-      cell: ({ getValue }) => <Badge variant="secondary">{paymentMethodLabel(getValue(), language)}</Badge>,
-      enableSorting: false,
-    }),
-    columnHelper.accessor("note", {
-      header: t("fields.note"),
-      cell: ({ getValue }) => <span className="text-muted-foreground">{getValue() ?? ""}</span>,
-      enableSorting: false,
-    }),
   ])
 }
 
-// Edit opens this row's edit row; Delete asks the page to confirm. Delete is disabled while a delete runs.
 function actionsColumn({ t, deleting, onEdit, onDelete }: ExpenseColumnOptions) {
   return columnHelper.display({
     id: "actions",
@@ -185,7 +175,7 @@ function actionsColumn({ t, deleting, onEdit, onDelete }: ExpenseColumnOptions) 
           aria-label={t("table.editRow", { id: row.original.id })}
           onClick={() => onEdit(row.original.id)}
         >
-          <Pencil />
+          <Pencil className="size-3.5" />
         </Button>
         <Button
           size="icon-sm"
@@ -194,18 +184,14 @@ function actionsColumn({ t, deleting, onEdit, onDelete }: ExpenseColumnOptions) 
           disabled={deleting}
           onClick={() => onDelete([row.original])}
         >
-          <Trash2 className="text-destructive" />
+          <Trash2 className="size-3.5 text-destructive" />
         </Button>
       </div>
     ),
   })
 }
 
-/**
- * The expenses table's columns, in order: select, id, date, merchant, category, amount, paid with, note, actions
- * (EditRow draws the same order). ID, Date, Merchant, Category and Amount sort when their header is clicked. Every
- * call builds new definitions, so the table memoises the result and rebuilds it only when an option changes.
- */
+/** Desktop table columns: select, date, merchant (+ #id & note), category pill, paid with, amount, and actions. */
 export function expenseColumns(options: ExpenseColumnOptions) {
   return columnHelper.columns([selectColumn(options.t), ...dataColumns(options), actionsColumn(options)])
 }

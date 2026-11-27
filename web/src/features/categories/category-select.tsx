@@ -1,11 +1,11 @@
-// A component of the categories feature: the category dropdown (shadcn's Select), filled from the categories
-// query. Public (index.ts): the expenses feature uses it in its Add dialog, edit row and filters. Its placeholder
-// texts come from the feature's i18n namespace; the category names are data from the backend.
+// A component of the categories feature: the category dropdown (shadcn's Select), enriched with each category's icon
+// and tint. Public (index.ts): the expenses feature uses it in its Add dialog, Edit sheet, and filters bar.
 
 import { useTranslations } from "next-intl"
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
 
+import { categoryVisual } from "./category-icons"
 import { useCategories } from "./queries"
 
 /**
@@ -29,13 +29,12 @@ interface CategorySelectProps {
 }
 
 /**
- * The category dropdown, wherever a category is picked: the Add dialog, the inline edit row, the filters. It lists
- * the categories by name. While they load it says "Loading…"; if they can't be loaded it says so and is disabled.
+ * The category dropdown, wherever a category is picked. Lists categories with their icon badges; shows loading or
+ * failure text when unavailable.
  */
 export function CategorySelect({ value, onChange, id, className, ariaLabel, anyLabel }: CategorySelectProps) {
   const t = useTranslations("categories")
   const { data: categories = [], isPending, isError } = useCategories()
-  // Say why the list is empty, instead of an empty dropdown that can't be filled in.
   const placeholder = isError ? t("select.loadFailed") : isPending ? t("select.loading") : t("select.choose")
 
   return (
@@ -45,11 +44,18 @@ export function CategorySelect({ value, onChange, id, className, ariaLabel, anyL
       </SelectTrigger>
       <SelectContent>
         {anyLabel && <SelectItem value={ANY_CATEGORY}>{anyLabel}</SelectItem>}
-        {categories.map((category) => (
-          <SelectItem key={category.id} value={String(category.id)}>
-            {category.name}
-          </SelectItem>
-        ))}
+        {categories.map((category) => {
+          const visual = categoryVisual(category.icon)
+          const Icon = visual.icon
+          return (
+            <SelectItem key={category.id} value={String(category.id)}>
+              <span className={`inline-flex size-5 items-center justify-center rounded ${visual.tileClass}`}>
+                <Icon className="size-3" aria-hidden="true" />
+              </span>
+              <span>{category.name}</span>
+            </SelectItem>
+          )
+        })}
       </SelectContent>
     </Select>
   )

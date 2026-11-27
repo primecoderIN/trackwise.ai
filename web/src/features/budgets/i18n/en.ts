@@ -18,6 +18,7 @@ const en = {
   categories: {
     title: "By category",
     description: "Categories with a limit first, the ones closest to it at the top.",
+    unbudgetedHeading: "Without a limit",
     empty: "There are no categories yet.",
   },
   line: {

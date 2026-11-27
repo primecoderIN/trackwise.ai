@@ -54,6 +54,16 @@ const en = {
     listLabel: "Timezones",
     empty: "No matching timezones.",
   },
+  monthPicker: {
+    previous: "Previous month",
+    next: "Next month",
+    current: "This month",
+  },
+  datePicker: {
+    placeholder: "Pick a date",
+    today: "Today",
+    clear: "Clear",
+  },
 }
 
 export default en

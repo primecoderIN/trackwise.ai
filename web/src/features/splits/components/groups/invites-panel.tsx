@@ -96,7 +96,7 @@ export function InvitesPanel({ groupId, members, invites, archived }: InvitesPan
       <CardContent className="flex flex-col gap-4">
         {!archived && (
           <div className="flex flex-wrap items-end gap-2">
-            <div className="min-w-44 flex-1">
+            <div className="min-w-0 flex-1 basis-44">
               <p className="mb-1 text-xs font-medium text-muted-foreground">{t("invites.targetLabel")}</p>
               <Select value={target} onValueChange={setTarget}>
                 <SelectTrigger aria-label={t("invites.targetLabel")} className="h-9 w-full">
@@ -112,7 +112,7 @@ export function InvitesPanel({ groupId, members, invites, archived }: InvitesPan
                 </SelectContent>
               </Select>
             </div>
-            <div className="w-28">
+            <div className="w-full sm:w-28">
               <p className="mb-1 text-xs font-medium text-muted-foreground">{t("invites.lifetimeLabel")}</p>
               <Select value={days} onValueChange={setDays}>
                 <SelectTrigger aria-label={t("invites.lifetimeLabel")} className="h-9 w-full">
@@ -128,7 +128,7 @@ export function InvitesPanel({ groupId, members, invites, archived }: InvitesPan
               </Select>
             </div>
             {target === ANY_TARGET && (
-              <div className="w-24">
+              <div className="w-full sm:w-24">
                 <p className="mb-1 text-xs font-medium text-muted-foreground">{t("invites.maxUsesLabel")}</p>
                 <Select value={maxUses} onValueChange={setMaxUses}>
                   <SelectTrigger aria-label={t("invites.maxUsesLabel")} className="h-9 w-full">
@@ -153,9 +153,9 @@ export function InvitesPanel({ groupId, members, invites, archived }: InvitesPan
         {fresh && inviteUrl && (
           <div className="flex flex-col gap-2 rounded-md border border-primary/40 bg-primary/5 p-3">
             <p className="text-xs font-medium">{t("invites.oneTimeNotice")}</p>
-            <div className="flex items-center gap-2">
-              <code className="flex-1 truncate rounded bg-background px-2 py-1 text-xs">{inviteUrl}</code>
-              <Button size="sm" variant="default" onClick={() => void handleCopy()}>
+            <div className="flex flex-wrap items-center gap-2">
+              <code className="min-w-0 flex-1 truncate rounded bg-background px-2 py-1 text-xs">{inviteUrl}</code>
+              <Button size="sm" variant="default" className="shrink-0" onClick={() => void handleCopy()}>
                 {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
                 {t("invites.copyLink")}
               </Button>

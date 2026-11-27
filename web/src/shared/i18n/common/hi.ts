@@ -54,6 +54,16 @@ const hi: Translation<typeof en> = {
     listLabel: "टाइमज़ोन",
     empty: "कोई मेल खाता टाइमज़ोन नहीं मिला।",
   },
+  monthPicker: {
+    previous: "पिछला महीना",
+    next: "अगला महीना",
+    current: "इस महीने",
+  },
+  datePicker: {
+    placeholder: "तारीख चुनें",
+    today: "आज",
+    clear: "साफ़ करें",
+  },
 }
 
 export default hi

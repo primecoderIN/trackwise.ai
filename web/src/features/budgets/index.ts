@@ -8,6 +8,7 @@ import { lazyWithRetry } from "@/shared/lib/lazy-with-retry"
 
 export type { BudgetStatus } from "./api"
 export { BudgetMeter } from "./components/budget-meter"
+export { BudgetStateBadge } from "./components/budget-state-badge"
 export { budgetKeys, useBudgetStatus, useSetBudget } from "./queries"
 
 /**

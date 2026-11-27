@@ -54,15 +54,17 @@ export function SceneCardBody({ scene, phase }: { scene: WalkthroughSceneTexts; 
           className="pointer-events-none absolute inset-x-0 top-1/2 z-10 h-0.5 bg-primary shadow-[0_0_12px_2px_oklch(0.47_0.19_262_/_0.65)] transition-transform duration-700"
         />
       ) : null}
-      <div className="flex items-start justify-between gap-2">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 text-xs font-semibold">
-            {scene.id === "receipts" ? <ScanLine className="size-3.5 text-primary" aria-hidden="true" /> : null}
-            {scene.id === "splits" ? <Users className="size-3.5 text-primary" aria-hidden="true" /> : null}
-            {scene.id === "assistant" ? (
-              <ShieldAlert className="size-3.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+            {scene.id === "receipts" ? (
+              <ScanLine className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
             ) : null}
-            <span>{scene.primaryTitle}</span>
+            {scene.id === "splits" ? <Users className="size-3.5 shrink-0 text-primary" aria-hidden="true" /> : null}
+            {scene.id === "assistant" ? (
+              <ShieldAlert className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+            ) : null}
+            <span className="truncate">{scene.primaryTitle}</span>
           </div>
           <p className="mt-1 text-[11px] text-muted-foreground">{scene.primaryMeta}</p>
         </div>
@@ -83,7 +85,7 @@ export function SceneCardBody({ scene, phase }: { scene: WalkthroughSceneTexts; 
         </div>
       ) : null}
 
-      <div className="flex items-center justify-between gap-2 pt-1">
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
         <span className="text-[11px] text-muted-foreground">{scene.secondaryLabel}</span>
         <span
           className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-medium transition-all duration-300 ${
@@ -117,22 +119,22 @@ export function AssistantStagePanel({
   const showReply = localProgress >= 0.56
 
   return (
-    <div className="flex flex-col justify-between gap-2.5 border-t bg-muted/15 p-4 sm:p-5 lg:col-span-4 lg:border-t-0 lg:border-l">
+    <div className="flex min-w-0 flex-col justify-between gap-2.5 border-t bg-muted/15 p-3.5 sm:p-5 md:col-span-5 md:border-t-0 md:border-l lg:col-span-4 xl:col-span-5 2xl:col-span-4">
       <div className="flex items-center gap-1.5 border-b pb-2 text-xs font-semibold">
-        <Bot className="size-3.5 text-primary" aria-hidden="true" />
-        <span>{assistantTitle}</span>
+        <Bot className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
+        <span className="truncate">{assistantTitle}</span>
       </div>
       <div className="flex flex-1 flex-col justify-center gap-2.5">
-        <div className="self-end rounded-xl bg-primary px-3 py-2 text-xs text-primary-foreground shadow-xs">
+        <div className="max-w-full self-end rounded-xl bg-primary px-3 py-2 text-xs break-words text-primary-foreground shadow-xs">
           <span>{scene.assistantPrompt.slice(0, typedChars)}</span>
           {localProgress < 0.45 ? (
             <span className="ml-0.5 inline-block h-3 w-0.5 animate-pulse bg-primary-foreground" />
           ) : null}
         </div>
         {showChip ? (
-          <div className="inline-flex w-fit items-center gap-1.5 rounded-full border bg-background px-2.5 py-1 text-[11px] font-medium text-emerald-700 transition-opacity duration-300 dark:text-emerald-400">
-            <CheckCircle2 className="size-3" aria-hidden="true" />
-            <span>{scene.assistantChip}</span>
+          <div className="inline-flex w-fit max-w-full items-center gap-1.5 rounded-full border bg-background px-2.5 py-1 text-[11px] font-medium text-emerald-700 transition-opacity duration-300 dark:text-emerald-400">
+            <CheckCircle2 className="size-3 shrink-0" aria-hidden="true" />
+            <span className="truncate">{scene.assistantChip}</span>
           </div>
         ) : null}
         {showReply ? (
@@ -161,18 +163,18 @@ export function SplitsStagePanel({
   const settledStyle = phase === 2 ? "border-emerald-500/35 bg-emerald-500/5" : "bg-background"
 
   return (
-    <div className="flex flex-col justify-between gap-2.5 border-t bg-muted/15 p-4 sm:p-5 lg:col-span-4 lg:border-t-0 lg:border-l">
-      <div className="flex items-center justify-between gap-2 border-b pb-2 text-xs font-semibold">
-        <span className="inline-flex items-center gap-1.5">
-          <Users className="size-3.5 text-primary" aria-hidden="true" />
-          <span>{splitsPanel.panelTitle}</span>
+    <div className="flex min-w-0 flex-col justify-between gap-2.5 border-t bg-muted/15 p-3.5 sm:p-5 md:col-span-5 md:border-t-0 md:border-l lg:col-span-4 xl:col-span-5 2xl:col-span-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-2 text-xs font-semibold">
+        <span className="inline-flex min-w-0 items-center gap-1.5">
+          <Users className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
+          <span className="truncate">{splitsPanel.panelTitle}</span>
         </span>
-        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+        <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
           {splitsPanel.groupBadge}
         </span>
       </div>
       <div className="flex flex-1 flex-col justify-center gap-2.5">
-        <div className={`rounded-xl border p-2.5 transition-colors duration-300 ${settledStyle}`}>
+        <div className={`min-w-0 rounded-xl border p-2.5 transition-colors duration-300 ${settledStyle}`}>
           <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground">
             <Link2 className="size-3 shrink-0 text-primary" aria-hidden="true" />
             <span className="truncate">{splitsPanel.inviteLine}</span>
@@ -184,9 +186,9 @@ export function SplitsStagePanel({
           </ul>
         </div>
         {showPrivateChip ? (
-          <div className="inline-flex w-fit items-center gap-1.5 rounded-full border bg-background px-2.5 py-1 text-[11px] font-medium text-emerald-700 transition-opacity duration-300 dark:text-emerald-400">
+          <div className="inline-flex w-fit max-w-full items-center gap-1.5 rounded-full border bg-background px-2.5 py-1 text-[11px] font-medium text-emerald-700 transition-opacity duration-300 dark:text-emerald-400">
             <ShieldCheck className="size-3 shrink-0" aria-hidden="true" />
-            <span>{splitsPanel.privateChip}</span>
+            <span className="truncate">{splitsPanel.privateChip}</span>
           </div>
         ) : null}
         {showFooter ? (

@@ -43,7 +43,7 @@ export function PublicFaqPage({ texts }: { texts: PublicSiteTexts }) {
         pagePath={localizedPath(ROUTES.faq, texts.lang)}
       />
 
-      <section className="border-b bg-[radial-gradient(ellipse_at_top,oklch(0.47_0.19_262_/_0.08),transparent_65%)] pt-12 pb-12 sm:pt-16">
+      <section className="border-b border-border/80 bg-[radial-gradient(ellipse_at_top,color-mix(in_oklch,var(--primary)_10%,transparent),transparent_65%)] pt-12 pb-12 sm:pt-16">
         <div className={PUBLIC_CONTAINER}>
           <div className="max-w-4xl">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-3.5 py-1 text-xs font-medium text-primary">
@@ -105,7 +105,7 @@ export function PublicFaqPage({ texts }: { texts: PublicSiteTexts }) {
             </div>
           </aside>
 
-          <div className="space-y-12 lg:col-span-8">
+          <div className="min-w-0 space-y-12 lg:col-span-8">
             {faqPage.categories.map((category) => (
               <section key={category.id} id={category.id} className="scroll-mt-24">
                 <h2 className="text-xl font-bold tracking-tight sm:text-2xl">{category.title}</h2>

@@ -48,11 +48,11 @@ export function WalkthroughStageCanvas({
   const kpiTone = isSplits && kpiUpdated ? "text-emerald-600 dark:text-emerald-400" : ""
 
   return (
-    <div className="grid min-h-[270px] lg:grid-cols-12">
-      <aside className="hidden border-r bg-muted/20 p-3 lg:col-span-3 lg:flex lg:flex-col lg:gap-1">
+    <div className="grid min-h-[260px] md:grid-cols-12">
+      <aside className="hidden min-w-0 border-r bg-muted/20 p-3 lg:col-span-3 lg:flex lg:flex-col lg:gap-1 xl:hidden 2xl:col-span-3 2xl:flex">
         <div className="mb-2 flex items-center gap-1.5 px-2 py-1 text-xs font-semibold">
-          <Wallet className="size-3.5 text-primary" aria-hidden="true" />
-          <span>{APP_NAME}</span>
+          <Wallet className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
+          <span className="truncate">{APP_NAME}</span>
         </div>
         {navItems.map(({ key, label, icon: Icon, active }) => (
           <div
@@ -67,10 +67,12 @@ export function WalkthroughStageCanvas({
         ))}
       </aside>
 
-      <div className="flex flex-col justify-between gap-3 p-4 sm:p-5 lg:col-span-5">
-        <div className="rounded-xl border bg-background p-3.5">
+      <div className="flex min-w-0 flex-col justify-between gap-3 p-3.5 sm:p-5 md:col-span-7 lg:col-span-5 xl:col-span-7 2xl:col-span-5">
+        <div className="min-w-0 rounded-xl border bg-background p-3.5">
           <p className="text-[11px] font-medium text-muted-foreground">{kpiLabel}</p>
-          <p className={`mt-1 text-2xl font-bold tracking-tight tabular-nums transition-all duration-500 ${kpiTone}`}>
+          <p
+            className={`mt-1 truncate text-xl font-bold tracking-tight tabular-nums transition-all duration-500 sm:text-2xl ${kpiTone}`}
+          >
             {kpiValue}
           </p>
         </div>

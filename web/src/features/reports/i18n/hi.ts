@@ -15,6 +15,7 @@ const hi: Translation<typeof en> = {
     nextMonth: "अगला महीना",
   },
   downloads: {
+    export: "निर्यात करें",
     csv: "CSV डाउनलोड करें",
     md: "Markdown डाउनलोड करें",
     downloading: "डाउनलोड हो रहा है…",

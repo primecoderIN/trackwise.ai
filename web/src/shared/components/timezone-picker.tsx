@@ -81,7 +81,7 @@ export function TimezonePicker({ id, value, onChange, disabled, ariaLabel }: Tim
           variant="outline"
           aria-label={ariaLabel ?? t("timezone.choose")}
           disabled={disabled}
-          className="h-8 w-full justify-between px-2.5 text-sm font-normal"
+          className="h-9 w-full justify-between px-3 text-sm font-normal"
         >
           <span className="flex min-w-0 items-center gap-1.5 truncate">
             <span className="truncate">{value}</span>
@@ -90,7 +90,7 @@ export function TimezonePicker({ id, value, onChange, disabled, ariaLabel }: Tim
           <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-80 p-2">
+      <PopoverContent align="start" className="w-[min(20rem,calc(100vw-2rem))] p-2">
         <div className="relative">
           <Search
             className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"

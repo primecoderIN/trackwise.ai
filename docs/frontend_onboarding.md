@@ -39,7 +39,7 @@ src/
     _seo/               seo.ts: site address, `PUBLIC_PATHS`, hreflang & public/signed-in metadata
     _styles/            index.css
   features/
-    expenses/           Expenses page: table, edit row, add & delete dialogs, filters
+    expenses/           Expenses page: URL-synced filters, table & mobile cards, Add dialog, Edit sheet, Delete dialog
     categories/         categories API + queries, CategorySelect, category names
     budgets/            Budgets page: monthly overall and category limits, alerts
     splits/             Splits page (`/splits`, `/splits/join/[token]`): Personal/Shared groups, invites, settlements, INR UPI QR
@@ -51,7 +51,7 @@ src/
   shared/               used by any feature; knows none of them
     api/                typed HTTP client (http.ts) + generated contract (*.gen.ts)
     ui/                 shadcn/ui components (generated source; edit freely)
-    components/         error boundary, section error, refresh notice, empty state, placeholder page, labeled field
+    components/         error boundary, section error, refresh notice, empty state, placeholder page, labeled field, month picker, date picker, page skeleton
     config/             app name, routes, data scopes
     i18n/               languages and locales, NEXT_LOCALE helpers, `useLanguage`, language menu, `common` texts
     hooks/, lib/        use-mobile, use-debounced-value; `useFormatters`, `useMessageOf`, format, guards, errors, ids
@@ -79,15 +79,15 @@ features/expenses/
   api.ts               typed API calls + the types (from the generated schema)
   queries.ts           TanStack Query keys, hooks and mutations
   expense-form.ts      a draft's rules: empty, from an expense, to a request, what changed (pure)
-  use-expense-draft.ts a draft being typed, for the Add dialog and the edit row
+  filter-params.ts     URL query-string parsing/serialisation for filters and quick date presets (pure)
+  use-expense-draft.ts a draft being typed, for the Add dialog and the Edit sheet
   payment-methods.ts   labels and the list, from the generated contract
   components/
     expenses-page.tsx  the page: composes the parts below
-    table/             the table, its columns and sort button, the toolbar, the edit row and its editor hook
-    dialogs/           Add expense, Delete expenses
-    filters/           the filters bar
-    fields/            form controls shared by the dialogs, the edit row and the filters (a label and its
-                       control, LabeledField, is shared/components')
+    table/             the table, mobile card list, columns and sort button, toolbar, and editor hook
+    dialogs/           Add expense dialog, Edit expense slide-over sheet, Delete expenses confirmation
+    filters/           the filter card (search, category, calendar date pickers, quick date presets)
+    fields/            form controls shared by the dialogs/sheet and filters (LabeledField is shared/components')
   i18n/
     en.ts              every text the feature shows, in English ICU MessageFormat (source and keys' type)
     hi.ts              the same keys in Hindi (`satisfies Translation<typeof en>`)

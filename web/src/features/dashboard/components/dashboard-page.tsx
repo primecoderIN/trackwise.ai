@@ -1,17 +1,18 @@
-// A component of the dashboard feature: the Dashboard page, the feature's main export (its route file,
-// app/(client)/(app)/page.tsx, draws it, through the lazy DashboardPage in index.ts). It loads the month's summary, the
-// trend, the newest expenses and the category names together, and lays out the stat cards, the budget card (which
-// loads on its own), the two charts and the recent list.
+// A component of the dashboard feature: the Dashboard page, the feature's main export. Supports stepping across
+// months with the shared MonthPicker, computes month-over-month delta from the trend series, and lays out the KPI
+// cards, budget pace summary, interactive multi-colour charts, and enriched recent expenses list.
 
 import { useTranslations } from "next-intl"
+import { useState } from "react"
 
 import { useCategories } from "@/features/categories"
 import { useExpenses } from "@/features/expenses"
 import { DEFAULT_CURRENCY, LIMITS } from "@/shared/api/contracts.gen"
+import { MonthPicker } from "@/shared/components/month-picker"
 import { PageHeader } from "@/shared/components/page-header"
 import { RefreshNotice } from "@/shared/components/refresh-notice"
 import { SectionError } from "@/shared/components/section-error"
-import { currentMonth } from "@/shared/lib/format"
+import { currentMonth, shiftMonth } from "@/shared/lib/format"
 import { queryGroupStatus } from "@/shared/lib/query-status"
 import { useMessageOf } from "@/shared/lib/use-message-of"
 
@@ -23,37 +24,33 @@ import { RecentExpenses } from "./recent-expenses"
 import { StatCards } from "./stat-cards"
 import { TrendChart } from "./trend-chart"
 
-// How many of the newest expenses the Dashboard lists.
 const RECENT_COUNT = 5
 
 /**
- * The Dashboard: this month's numbers, spending by category, the monthly trend and the latest expenses. Until
- * everything has loaded it shows a skeleton, or an error card with Try again (which asks again only what failed).
- * Once loaded, a failed reload keeps the numbers on screen with a "couldn't refresh" notice.
+ * The Dashboard: selectable month overview with headline KPIs, budget pace card, interactive category and trend
+ * charts, and latest expenses.
  */
 export function DashboardPage() {
   const t = useTranslations("dashboard")
   const messageOf = useMessageOf()
-  // Small requests, sent at the same time. The backend does the adding up and sends back only totals
-  // and 5 rows, not every expense. Each one reloads by itself when the data changes.
-  const summary = useMonthlySummary(currentMonth())
+  const [month, setMonth] = useState(currentMonth)
+  const summary = useMonthlySummary(month)
   const trend = useMonthlyTrend(LIMITS.trendMonthsDefault)
   const recent = useExpenses({ limit: RECENT_COUNT })
-  const categories = useCategories() // the recent list shows category names
+  const categories = useCategories()
   const { failed, retrying, retry } = queryGroupStatus([summary, trend, recent, categories])
 
   const header = (
     <PageHeader
       title={t("page.title")}
       description={t("page.description", { currency: summary.data?.currency ?? DEFAULT_CURRENCY })}
+      actions={<MonthPicker month={month} onChange={setMonth} maxMonth={currentMonth()} />}
     />
   )
 
-  // Nothing to show yet: a skeleton while loading, or the error if loading failed. Showing $0 when the
-  // backend is unreachable would be misleading, so say what happened instead.
   if (!summary.data || !trend.data || !recent.data || !categories.data) {
     return (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-6">
         {header}
         {failed ? (
           <SectionError
@@ -69,14 +66,16 @@ export function DashboardPage() {
     )
   }
 
-  // Everything has loaded. If a reload has failed since, keep the numbers on screen and say they may be old.
+  const prevMonthKey = shiftMonth(month, -1)
+  const prevMonthPoint = trend.data.months.find((entry) => entry.month === prevMonthKey)
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       {header}
       {failed && <RefreshNotice message={messageOf(failed.error)} onRetry={retry} retrying={retrying} />}
-      <StatCards summary={summary.data} />
+      <StatCards summary={summary.data} previousTotalMinor={prevMonthPoint?.total_minor ?? null} />
       <BudgetCard month={summary.data.month} />
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-5 xl:grid-cols-2">
         <CategoryChart summary={summary.data} />
         <TrendChart trend={trend.data} />
       </div>

@@ -233,7 +233,7 @@ export function GroupDetailView({
         </p>
       )}
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <SimplifiedTransfers
           transfers={detail.simplified_transfers}
           archived={archived}
@@ -271,7 +271,7 @@ export function GroupDetailView({
                       {!member.is_registered && <Badge variant="outline">{t("groups.guestTag")}</Badge>}
                       {!member.is_active && <Badge variant="secondary">{t("groups.formerTag")}</Badge>}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       {balances.length === 0 ? (
                         <span className="text-xs text-muted-foreground">{t("groups.settled")}</span>
                       ) : (

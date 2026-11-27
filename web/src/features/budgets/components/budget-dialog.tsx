@@ -1,5 +1,5 @@
-// A component of the budgets feature: the "Set limit" / "Change limit" button and the dialog it opens, where a
-// budget's monthly limit is typed, changed or removed. Used by the overall card and the category rows.
+// A component of the budgets feature: the "Set limit" / "Change limit" button and dialog, with currency-prefixed
+// numeric input and clear Save / Remove actions. Used by the overall card and the category rows.
 
 import { useTranslations } from "next-intl"
 import { useId } from "react"
@@ -54,11 +54,32 @@ export function BudgetDialog({ scope, name, currency, currentLimit }: BudgetDial
             <DialogDescription>{t("dialog.description", { currency })}</DialogDescription>
           </DialogHeader>
           <LabeledField id={id} label={t("dialog.limit")}>
-            <Input id={id} inputMode="decimal" value={editor.limit} onChange={(e) => editor.setLimit(e.target.value)} />
+            <div className="relative">
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-xs font-semibold text-muted-foreground"
+              >
+                {currency}
+              </span>
+              <Input
+                id={id}
+                inputMode="decimal"
+                placeholder="500.00"
+                className="pl-12 tabular-nums"
+                value={editor.limit}
+                onChange={(e) => editor.setLimit(e.target.value)}
+              />
+            </div>
           </LabeledField>
           <DialogFooter className="gap-2">
             {hasLimit && (
-              <Button type="button" variant="ghost" className="sm:mr-auto" disabled={busy} onClick={editor.onRemove}>
+              <Button
+                type="button"
+                variant="ghost"
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive sm:mr-auto"
+                disabled={busy}
+                onClick={editor.onRemove}
+              >
                 {editor.removing ? t("dialog.removing") : t("dialog.remove")}
               </Button>
             )}

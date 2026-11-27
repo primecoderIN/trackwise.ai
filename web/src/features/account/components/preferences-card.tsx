@@ -44,8 +44,8 @@ function CurrencyAndTimezoneFields({
 }) {
   const t = useTranslations("account")
   return (
-    <div className="grid gap-6 sm:grid-cols-2">
-      <div className="flex flex-col gap-2">
+    <div className="grid gap-6 md:grid-cols-2">
+      <div className="flex min-w-0 flex-col gap-2">
         <Label htmlFor="pref-currency" className="text-sm font-medium">
           {t("preferences.currencyTitle")}
         </Label>
@@ -63,7 +63,7 @@ function CurrencyAndTimezoneFields({
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex min-w-0 flex-col gap-2">
         <Label htmlFor="pref-timezone" className="text-sm font-medium">
           {t("preferences.timezoneTitle")}
         </Label>

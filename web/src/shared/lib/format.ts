@@ -165,3 +165,12 @@ export function shiftMonth(month: string, offset: number): string {
   const shiftedMonth = (index % MONTHS_PER_YEAR) + 1
   return `${shiftedYear}-${String(shiftedMonth).padStart(2, "0")}`
 }
+
+/** First and last ISO calendar dates ("YYYY-MM-DD") for a "YYYY-MM" month; undefined for invalid input. */
+export function monthDateRange(month: string): { start: string; end: string } | undefined {
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return undefined
+  const [year, num] = month.split("-").map(Number)
+  const start = new Date(year, num - 1, 1)
+  const end = new Date(year, num, 0)
+  return { start: isoDate(start), end: isoDate(end) }
+}

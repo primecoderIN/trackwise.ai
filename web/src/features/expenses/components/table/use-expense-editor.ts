@@ -1,7 +1,5 @@
-// A hook of the expenses feature: the expenses table's inline editing. Which row is open for editing, saving an
-// edit (through useUpdateExpense, with its toasts), and which row's save is running. Used by expenses-table.tsx,
-// which draws the open row as an EditRow and gives `start` to the columns' Edit buttons. Its toast's text comes
-// from the feature's i18n namespace.
+// A hook of the expenses feature: manages which expense is open in the EditExpenseSheet, saving an edit (through
+// useUpdateExpense, with its toasts), and tracking which saves are in flight. Used by expenses-table.tsx.
 
 import { useTranslations } from "next-intl"
 import { useState } from "react"

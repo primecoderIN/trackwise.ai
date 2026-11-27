@@ -1,5 +1,6 @@
-// A component of the assistant feature: one message bubble in the conversation, with the assistant's tool chips
-// and A2UI cards. Used by ChatTranscript (chat-transcript.tsx), once per message.
+// A component of the assistant feature: one message in the conversation. User turns appear as crisp right-aligned
+// bubbles; assistant turns use full-width editorial layout so A2UI charts, confirmation cards, and Markdown replies
+// breathe comfortably inside the side panel. Used by ChatTranscript.
 
 import { useTranslations } from "next-intl"
 import { memo } from "react"
@@ -10,20 +11,12 @@ import { A2uiSurfaceView } from "../a2ui/a2ui-surface"
 import type { A2uiRenderContext } from "../a2ui/protocol"
 import { MESSAGE_ROLES, MESSAGE_STATUSES, type ChatMessage, type MessageStatus } from "../model/chat-types"
 import { AttachedFile } from "./attached-file"
+import { MarkdownText } from "./markdown-text"
 import { ToolChip } from "./tool-chip"
 
-// How a bubble looks: the person's, the assistant's, and an assistant reply that failed or was stopped.
-const USER_BUBBLE = "bg-primary text-primary-foreground"
-const ASSISTANT_BUBBLE = "bg-muted"
-const ENDED_BUBBLES: Readonly<Record<MessageStatus, string>> = {
-  failed: "border border-destructive/40 bg-destructive/10 text-destructive",
-  stopped: "border text-muted-foreground",
-}
-
-/** The bubble's colours for a message: by who wrote it, and how an assistant reply ended. */
-function bubbleStyle(message: ChatMessage): string {
-  if (message.role === MESSAGE_ROLES.user) return USER_BUBBLE
-  return message.status ? ENDED_BUBBLES[message.status] : ASSISTANT_BUBBLE
+const ENDED_STYLES: Readonly<Record<MessageStatus, string>> = {
+  failed: "rounded-xl border border-destructive/35 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive",
+  stopped: "rounded-xl border bg-muted/40 px-3.5 py-2 text-sm text-muted-foreground",
 }
 
 interface ChatMessageBubbleProps {
@@ -35,12 +28,8 @@ interface ChatMessageBubbleProps {
 }
 
 /**
- * One bubble: yours on the right (with the receipt you attached, if any), the assistant's on the left. The
- * assistant's tool chips come first, then its cards or forms (they arrive with a tool's result), then its text,
- * because the tools run before it answers. A message with no text (a receipt sent alone) shows no text box.
- *
- * Memoised: while a reply streams, only its own bubble draws again, not every earlier bubble and card (charts
- * included). That needs stable `onFormChange` and `onFormSubmit` functions, which useChat provides.
+ * One message turn: user messages sit right-aligned in a primary pill; assistant messages span the panel width
+ * with tool chips, full-width A2UI cards/charts, and safe Markdown prose.
  */
 export const ChatMessageBubble = memo(function ChatMessageBubble({
   message,
@@ -52,13 +41,23 @@ export const ChatMessageBubble = memo(function ChatMessageBubble({
   const isUser = message.role === MESSAGE_ROLES.user
   const displayText = message.text || (message.status === MESSAGE_STATUSES.failed ? t("stream.connectionLost") : "")
 
-  // The chips' row is a polite live region, so screen readers announce them as they change ("Expense saved").
-  // An assistant reply can be chips only for a moment, before its text arrives, so the text box waits for text.
-  // whitespace-pre-wrap keeps the line breaks in the assistant's text.
+  if (isUser) {
+    return (
+      <div className="flex flex-col items-end gap-1.5">
+        {message.attachment && <AttachedFile name={message.attachment} />}
+        {displayText && (
+          <div className="max-w-[85%] rounded-2xl rounded-br-sm bg-primary px-3.5 py-2.5 text-sm leading-relaxed text-primary-foreground shadow-2xs wrap-break-word whitespace-pre-wrap">
+            {displayText}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
-    <div className={cn("flex flex-col gap-1.5", isUser ? "items-end" : "items-start")}>
+    <div className="flex w-full flex-col items-start gap-2.5">
       {message.tools && message.tools.length > 0 && (
-        <div className="flex max-w-[85%] flex-wrap gap-1" aria-live="polite">
+        <div className="flex w-full flex-wrap gap-1.5" aria-live="polite">
           {message.tools.map((tool) => (
             <ToolChip key={tool.id} tool={tool} />
           ))}
@@ -66,7 +65,7 @@ export const ChatMessageBubble = memo(function ChatMessageBubble({
       )}
 
       {message.surfaces && message.surfaces.length > 0 && (
-        <div className="flex w-full max-w-[85%] flex-col gap-2">
+        <div className="flex w-full flex-col gap-2.5">
           {message.surfaces.map((surface) => (
             <A2uiSurfaceView
               key={surface.id}
@@ -79,18 +78,16 @@ export const ChatMessageBubble = memo(function ChatMessageBubble({
         </div>
       )}
 
-      {message.attachment && <AttachedFile name={message.attachment} />}
-
-      {displayText && (
-        <div
-          className={cn(
-            "max-w-[85%] rounded-lg px-3 py-2 text-sm wrap-break-word whitespace-pre-wrap",
-            bubbleStyle(message),
-          )}
-        >
-          {displayText}
-        </div>
-      )}
+      {displayText &&
+        (message.status ? (
+          <div className={cn("w-full wrap-break-word whitespace-pre-wrap", ENDED_STYLES[message.status])}>
+            {displayText}
+          </div>
+        ) : (
+          <div className="w-full text-foreground">
+            <MarkdownText text={displayText} />
+          </div>
+        ))}
     </div>
   )
 })

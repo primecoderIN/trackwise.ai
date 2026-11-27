@@ -10,6 +10,8 @@ const hi: Translation<typeof en> = {
   signIn: {
     title: "{app} में साइन इन करें",
     description: "चुनें कि आप कैसे साइन इन करना चाहते हैं।",
+    privacyNote: "बिना पासवर्ड सुरक्षित साइन इन · प्रत्येक खाते का डेटा पूरी तरह निजी",
+    linksLabel: "सार्वजनिक साइट और कानूनी लिंक",
     continueWith: "{provider} से जारी रखें",
     signIn: "साइन इन करें",
     loadingOptions: "साइन इन के तरीके लोड हो रहे हैं…",
@@ -38,6 +40,7 @@ const hi: Translation<typeof en> = {
     label: "{name} के लिए खाता मेन्यू",
     you: "आपका खाता",
     signedInAs: "इस रूप में साइन इन",
+    settings: "सेटिंग्स",
     signOut: "साइन आउट करें",
   },
 }

@@ -1,8 +1,7 @@
-// The sign-in page (/sign-in): why the last sign-in failed, if it did, and the ways to sign in. Part of the auth
-// feature (components/), the feature's page; its route file is app/(client)/sign-in/page.tsx. The provider's own login
-// page does the signing in (Google, GitHub); this page only sends people there.
+// The sign-in page (/sign-in): crisp brand card, failure alerts, provider login links, calm privacy reassurance, and
+// localized public/legal links positioned cleanly below the card. Part of the auth feature (components/).
 
-import { Wallet } from "lucide-react"
+import { ShieldCheck, Wallet } from "lucide-react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
@@ -24,10 +23,8 @@ import { SessionChecking } from "./session-screens"
 import { SignInOptions } from "./sign-in-options"
 
 /**
- * The page. The address may say why the last sign-in failed (?error=, the server's code: a text from "failures") and
- * which page to come back to (?return_to=, passed on to the backend). Someone already signed in (or who signs in
- * in another tab) goes on to that page, or the start page.
- * If the ways to sign in can't be loaded, that takes the card's place, with Try again.
+ * The sign-in page. Redirects already-signed-in users to `return_to` or Dashboard; otherwise displays the provider
+ * options inside a calm, uncluttered card.
  */
 export function SignInPage() {
   const t = useTranslations("auth")
@@ -36,7 +33,6 @@ export function SignInPage() {
   const params = useSearchParams()
   const router = useRouter()
   const user = useSignedInUser()
-  // Another tab signing in moves this page on too (and this page, drawn after a sign-out, tells the other tabs).
   useSessionSync(user.data !== undefined)
   const options = useLoginOptions(user.data === null)
   const returnTo = params.get(AUTH.params.returnTo)
@@ -51,11 +47,12 @@ export function SignInPage() {
   }
 
   return (
-    <main className="relative flex min-h-svh items-center justify-center overflow-hidden bg-gradient-to-b from-primary/5 via-background to-background p-4">
+    <main className="relative flex min-h-svh flex-col items-center justify-center overflow-hidden bg-[radial-gradient(ellipse_at_top,color-mix(in_oklch,var(--primary)_11%,transparent),transparent_60%)] px-4 pt-16 pb-8 sm:py-12">
       <div className="absolute top-4 right-4 flex items-center gap-1">
         <LanguageMenu />
         <ModeToggle />
       </div>
+
       {options.isError ? (
         <div className="w-full max-w-sm">
           <SectionError
@@ -66,49 +63,59 @@ export function SignInPage() {
           />
         </div>
       ) : (
-        <Card className="w-full max-w-md shadow-sm">
-          <CardHeader className="items-center text-center">
-            <span className="mb-1 flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs">
-              <Wallet aria-hidden className="size-5" />
-            </span>
-            <h1 className="text-xl font-semibold tracking-tight">{t("signIn.title", { app: APP_NAME })}</h1>
-            <CardDescription>{t("signIn.description")}</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4">
-            {failure && (
-              <p role="alert" className="rounded-md border border-destructive/40 px-3 py-2 text-sm text-destructive">
-                {t(`failures.${failure}`, { app: APP_NAME })}
+        <div className="flex w-full max-w-md flex-col items-center gap-6">
+          <Card className="w-full shadow-md">
+            <CardHeader className="items-center pb-2 text-center">
+              <span className="mb-2 flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white shadow-sm">
+                <Wallet aria-hidden className="size-5" />
+              </span>
+              <h1 className="text-2xl font-semibold tracking-tight">{t("signIn.title", { app: APP_NAME })}</h1>
+              <CardDescription>{t("signIn.description")}</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+              {failure && (
+                <p
+                  role="alert"
+                  className="rounded-xl border border-destructive/35 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive"
+                >
+                  {t(`failures.${failure}`, { app: APP_NAME })}
+                </p>
+              )}
+              <SignInOptions options={options.data} returnTo={returnTo} />
+              <p className="inline-flex items-center justify-center gap-1.5 pt-1 text-center text-xs text-muted-foreground">
+                <ShieldCheck className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
+                <span>{t("signIn.privacyNote")}</span>
               </p>
-            )}
-            <SignInOptions options={options.data} returnTo={returnTo} />
-            <nav
-              aria-label="Public site and legal links"
-              className="flex flex-wrap justify-center gap-x-3 gap-y-1.5 border-t pt-3 text-xs text-muted-foreground"
-            >
-              <Link href={localizedPath(ROUTES.landing, language)} className="hover:text-foreground">
-                {t("signIn.home")}
-              </Link>
-              <Link href={localizedPath(ROUTES.howItWorks, language)} className="hover:text-foreground">
-                {t("signIn.howItWorks")}
-              </Link>
-              <Link href={localizedPath(ROUTES.features, language)} className="hover:text-foreground">
-                {t("signIn.features")}
-              </Link>
-              <Link href={localizedPath(ROUTES.faq, language)} className="hover:text-foreground">
-                {t("signIn.faq")}
-              </Link>
-              <Link href={localizedPath(ROUTES.contact, language)} className="hover:text-foreground">
-                {t("signIn.contact")}
-              </Link>
-              <Link href={localizedPath(ROUTES.privacy, language)} className="hover:text-foreground">
-                {t("signIn.privacy")}
-              </Link>
-              <Link href={localizedPath(ROUTES.terms, language)} className="hover:text-foreground">
-                {t("signIn.terms")}
-              </Link>
-            </nav>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          <nav
+            aria-label={t("signIn.linksLabel")}
+            className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground"
+          >
+            <Link href={localizedPath(ROUTES.landing, language)} className="transition-colors hover:text-foreground">
+              {t("signIn.home")}
+            </Link>
+            <Link href={localizedPath(ROUTES.howItWorks, language)} className="transition-colors hover:text-foreground">
+              {t("signIn.howItWorks")}
+            </Link>
+            <Link href={localizedPath(ROUTES.features, language)} className="transition-colors hover:text-foreground">
+              {t("signIn.features")}
+            </Link>
+            <Link href={localizedPath(ROUTES.faq, language)} className="transition-colors hover:text-foreground">
+              {t("signIn.faq")}
+            </Link>
+            <Link href={localizedPath(ROUTES.contact, language)} className="transition-colors hover:text-foreground">
+              {t("signIn.contact")}
+            </Link>
+            <Link href={localizedPath(ROUTES.privacy, language)} className="transition-colors hover:text-foreground">
+              {t("signIn.privacy")}
+            </Link>
+            <Link href={localizedPath(ROUTES.terms, language)} className="transition-colors hover:text-foreground">
+              {t("signIn.terms")}
+            </Link>
+          </nav>
+        </div>
       )}
     </main>
   )

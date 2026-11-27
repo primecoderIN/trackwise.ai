@@ -1,23 +1,18 @@
 // A component of the budgets feature: the Budgets page, the feature's main export (its route file,
-// app/(client)/(app)/budgets/page.tsx, draws it through the lazy BudgetsPage in index.ts). It loads a month's status
-// and lays out the overall card and the categories; the arrows step through the months (the limits stay the same,
-// the spending is that month's).
+// app/(client)/(app)/budgets/page.tsx, draws it through the lazy BudgetsPage in index.ts). Uses the shared MonthPicker.
 
-import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { DEFAULT_CURRENCY } from "@/shared/api/contracts.gen"
+import { MonthPicker } from "@/shared/components/month-picker"
 import { PageHeader } from "@/shared/components/page-header"
 import { RefreshNotice } from "@/shared/components/refresh-notice"
 import { SectionError } from "@/shared/components/section-error"
 import { currentMonth } from "@/shared/lib/format"
-import { useFormatters } from "@/shared/lib/use-formatters"
 import { useMessageOf } from "@/shared/lib/use-message-of"
-import { Button } from "@/shared/ui/button"
 import { Skeleton } from "@/shared/ui/skeleton"
 
-import { MAX_MONTH, MIN_MONTH, shiftMonth } from "../month"
 import { useBudgetStatus } from "../queries"
 import { CategoryBudgets } from "./category-budgets"
 import { OverallCard } from "./overall-card"
@@ -29,42 +24,16 @@ import { OverallCard } from "./overall-card"
 export function BudgetsPage() {
   const t = useTranslations("budgets")
   const messageOf = useMessageOf()
-  const { formatMonth } = useFormatters()
   const [month, setMonth] = useState(currentMonth)
   const status = useBudgetStatus(month)
   const retry = () => void status.refetch()
-  const step = (offset: number) => () => setMonth((current) => shiftMonth(current, offset))
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <PageHeader
         title={t("page.title")}
         description={t("page.description", { currency: status.data?.currency ?? DEFAULT_CURRENCY })}
-        actions={
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={t("page.previousMonth")}
-              onClick={step(-1)}
-              disabled={month <= MIN_MONTH}
-            >
-              <ChevronLeft />
-            </Button>
-            <span aria-live="polite" className="min-w-32 text-center text-sm font-medium">
-              {formatMonth(month)}
-            </span>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={t("page.nextMonth")}
-              onClick={step(1)}
-              disabled={month >= MAX_MONTH}
-            >
-              <ChevronRight />
-            </Button>
-          </div>
-        }
+        actions={<MonthPicker month={month} onChange={setMonth} />}
       />
       {status.data ? (
         <>
@@ -83,8 +52,8 @@ export function BudgetsPage() {
         />
       ) : (
         <div className="grid gap-4">
-          <Skeleton className="h-36" />
-          <Skeleton className="h-64" />
+          <Skeleton className="h-36 rounded-2xl" />
+          <Skeleton className="h-72 rounded-2xl" />
         </div>
       )}
     </div>

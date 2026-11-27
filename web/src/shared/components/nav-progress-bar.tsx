@@ -1,15 +1,15 @@
 "use client"
 
-// Horizontal animated progress bar attached flush beneath a top navbar whenever a new route is requested.
-// Continuously sweeps smoothly from left to right while navigating across Next.js routes.
+// Horizontal animated progress bar attached flush beneath a top navbar when a route transition takes longer than
+// a brief grace delay. Instant cached transitions never flash the bar.
 
 import { usePathname } from "next/navigation"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import { NAV_START_EVENT } from "@/shared/lib/navigation-progress"
 
-const MIN_VISIBLE_MS = 550
-const FADE_OUT_MS = 200
+const SHOW_DELAY_MS = 140
+const FADE_OUT_MS = 180
 const SAFETY_TIMEOUT_MS = 8000
 
 type LoaderStatus = "idle" | "loading" | "finishing"
@@ -39,30 +39,30 @@ function isNavigatingAnchor(event: MouseEvent): boolean {
   }
 }
 
-/** Sleek left-to-right animated horizontal progress loader rendered flush beneath a navbar. */
+/** Subtle left-to-right progress indicator shown beneath the navbar only when navigation takes noticeable time. */
 export function NavProgressBar() {
   const pathname = usePathname()
   const [status, setStatus] = useState<LoaderStatus>("idle")
   const lastPathnameRef = useRef(pathname)
-  const startedAtRef = useRef<number>(0)
-  const finishTimerRef = useRef<number | null>(null)
+  const delayTimerRef = useRef<number | null>(null)
   const hideTimerRef = useRef<number | null>(null)
   const safetyTimerRef = useRef<number | null>(null)
 
   const clearTimers = useCallback(() => {
-    for (const timer of [finishTimerRef.current, hideTimerRef.current, safetyTimerRef.current]) {
+    for (const timer of [delayTimerRef.current, hideTimerRef.current, safetyTimerRef.current]) {
       if (timer !== null) window.clearTimeout(timer)
     }
-    finishTimerRef.current = null
+    delayTimerRef.current = null
     hideTimerRef.current = null
     safetyTimerRef.current = null
   }, [])
 
   const startLoading = useCallback(() => {
     clearTimers()
-    startedAtRef.current = Date.now()
-    setStatus("loading")
-    safetyTimerRef.current = window.setTimeout(() => setStatus("idle"), SAFETY_TIMEOUT_MS)
+    delayTimerRef.current = window.setTimeout(() => {
+      setStatus("loading")
+      safetyTimerRef.current = window.setTimeout(() => setStatus("idle"), SAFETY_TIMEOUT_MS)
+    }, SHOW_DELAY_MS)
   }, [clearTimers])
 
   useEffect(() => {
@@ -84,15 +84,11 @@ export function NavProgressBar() {
     if (lastPathnameRef.current === pathname) return
     lastPathnameRef.current = pathname
     clearTimers()
-    const remainingMs =
-      startedAtRef.current > 0 ? Math.max(0, MIN_VISIBLE_MS - (Date.now() - startedAtRef.current)) : 120
-    finishTimerRef.current = window.setTimeout(() => {
-      setStatus("finishing")
-      hideTimerRef.current = window.setTimeout(() => {
-        startedAtRef.current = 0
-        setStatus("idle")
-      }, FADE_OUT_MS)
-    }, remainingMs)
+    setStatus((current) => {
+      if (current === "idle") return "idle"
+      hideTimerRef.current = window.setTimeout(() => setStatus("idle"), FADE_OUT_MS)
+      return "finishing"
+    })
   }, [pathname, clearTimers])
 
   if (status === "idle") return null
@@ -100,11 +96,11 @@ export function NavProgressBar() {
   return (
     <div
       aria-hidden="true"
-      className={`pointer-events-none absolute inset-x-0 bottom-0 z-50 h-[3px] overflow-hidden bg-primary/15 transition-opacity duration-200 ${
+      className={`pointer-events-none absolute inset-x-0 bottom-0 z-50 h-0.5 overflow-hidden bg-primary/15 transition-opacity duration-200 ${
         status === "finishing" ? "opacity-0" : "opacity-100"
       }`}
     >
-      <div className="nav-loader-bar absolute inset-y-0 left-0 w-2/5 rounded-r-full bg-gradient-to-r from-primary/65 via-primary to-sky-400 shadow-[0_0_8px_oklch(0.47_0.19_262_/_0.65)]" />
+      <div className="nav-loader-bar absolute inset-y-0 left-0 w-2/5 rounded-r-full bg-gradient-to-r from-primary/65 via-primary to-sky-400" />
       <div className="nav-loader-bar-trail absolute inset-y-0 left-0 w-1/3 rounded-r-full bg-gradient-to-r from-transparent via-primary to-sky-400" />
     </div>
   )
