@@ -26,6 +26,17 @@ export const ROUTES = {
   signIn: AUTH.signInPage,
 } as const
 
+/** Signed-in unprefixed workspace route prefixes (shared by Next.js proxy.ts and robots.ts). */
+export const WORKSPACE_ROUTES = [
+  ROUTES.dashboard,
+  ROUTES.expenses,
+  ROUTES.budgets,
+  ROUTES.splits,
+  ROUTES.categories,
+  ROUTES.reports,
+  ROUTES.settings,
+] as const
+
 /** Formats a public route path for `language` (omitting prefix for DEFAULT_LANGUAGE, matching `localePrefix: "as-needed"`). */
 export function localizedPath(path: string, language: Language): string {
   if (language === DEFAULT_LANGUAGE) return path

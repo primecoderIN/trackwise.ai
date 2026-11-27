@@ -5,7 +5,7 @@
 import type { MetadataRoute } from "next"
 
 import { API_PREFIX } from "@/shared/api/contracts.gen"
-import { ROUTES } from "@/shared/config/routes"
+import { WORKSPACE_ROUTES } from "@/shared/config/routes"
 
 import { siteUrl } from "./_seo/seo"
 
@@ -24,16 +24,7 @@ export default function robots(): MetadataRoute.Robots {
         "/favicon.svg",
         "/manifest.webmanifest",
       ],
-      disallow: [
-        ROUTES.dashboard,
-        ROUTES.expenses,
-        ROUTES.budgets,
-        ROUTES.categories,
-        ROUTES.reports,
-        ROUTES.settings,
-        `${API_PREFIX}/`,
-        "/mcp/",
-      ],
+      disallow: [...WORKSPACE_ROUTES, `${API_PREFIX}/`, "/mcp/"],
     },
     sitemap: new URL("/sitemap.xml", siteUrl()).toString(),
   }

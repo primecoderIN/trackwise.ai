@@ -42,6 +42,7 @@ src/
     expenses/           Expenses page: table, edit row, add & delete dialogs, filters
     categories/         categories API + queries, CategorySelect, category names
     budgets/            Budgets page: monthly overall and category limits, alerts
+    splits/             Splits page (`/splits`, `/splits/join/[token]`): Personal/Shared groups, invites, settlements, INR UPI QR
     reports/            Reports page: monthly/category breakdowns and CSV/JSON exports
     dashboard/          Dashboard page: stat cards, charts, recent list
     assistant/          chat panel, conversation model, AG-UI stream, A2UI renderer
@@ -242,8 +243,10 @@ How it works end to end: [assistant_architecture.md](assistant_architecture.md).
    })
    ```
 2. Re-export it from `app/_views/client-pages.ts` (the client boundary the route files draw pages through).
-3. Add its address to `shared/config/routes.ts`, and its route file, `app/(client)/(app)/budgets/page.tsx`: a server
-   component that exports `generateMetadata` (`privatePage(t("pages.budgets"))` from `app/_seo/seo.ts`) and renders
+3. Add its address to `ROUTES` (and `WORKSPACE_ROUTES` for signed-in pages, so `proxy.ts` leaves it unprefixed and
+   `robots.ts` disallows crawling it) in `shared/config/routes.ts`, and create its route file,
+   `app/(client)/(app)/budgets/page.tsx`: a server component that exports `generateMetadata`
+   (`privatePage(t("pages.budgets"))` from `app/_seo/seo.ts`) and renders
    `<MessageScope namespaces={["budgets", "categories"]}><BudgetsPage /></MessageScope>`. Being in `(app)/`, it's
    behind the session check. A public page goes under `app/[lang]/(public)/` instead, exports `generateMetadata` with
    `publicPage(title, path, { lang })`, uses `app/_public/texts/`, and joins `PUBLIC_PATHS` in `app/_seo/seo.ts`.
