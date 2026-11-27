@@ -8436,7 +8436,7 @@
             "maxLength": 32,
             "minLength": 1,
             "title": "Terms Version",
-            "default": "2026-11"
+            "default": "2026-11-27"
           },
           "preferred_language": {
             "$ref": "#/components/schemas/Language",

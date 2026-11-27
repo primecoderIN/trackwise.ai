@@ -4,7 +4,12 @@
 import { Bot, FileCheck2, Search, ShieldAlert } from "lucide-react"
 
 import type { FeaturesPageTexts, FeatureShowcaseSection } from "../texts"
-import { BudgetsFeaturePreview, ReportsFeaturePreview, WorkspaceFeaturePreview } from "./feature-preview-cards"
+import {
+  BudgetsFeaturePreview,
+  ReportsFeaturePreview,
+  SplitsFeaturePreview,
+  WorkspaceFeaturePreview,
+} from "./feature-preview-cards"
 
 type PreviewData = FeaturesPageTexts["previewData"]
 
@@ -90,6 +95,8 @@ export function FeaturePreview({ kind, data }: { kind: FeatureShowcaseSection["p
       return <ReceiptsFeaturePreview data={data} />
     case "expenses":
       return <ExpensesFeaturePreview data={data} />
+    case "splits":
+      return <SplitsFeaturePreview data={data} />
     case "budgets":
       return <BudgetsFeaturePreview data={data} />
     case "reports":

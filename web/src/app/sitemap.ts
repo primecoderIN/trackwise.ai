@@ -8,7 +8,7 @@ import { LANGUAGE_CODES } from "@/shared/i18n/languages"
 
 import { alternateLanguagesFor, LOCALIZED_PUBLIC_ROUTES, siteUrl } from "./_seo/seo"
 
-const LAST_MODIFIED = new Date("2026-11-22T00:00:00.000Z")
+const LAST_MODIFIED = new Date("2026-11-27T00:00:00.000Z")
 
 function crawlSignals(basePath: string): {
   changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"]

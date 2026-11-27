@@ -7,4 +7,4 @@ export const APP_NAME = "trackwise.ai"
 
 /** What the app is, in one sentence: the pages' description for search engines and link previews. */
 export const APP_DESCRIPTION =
-  "Track your spending, scan receipts, plan monthly budgets, and log expenses simply by chatting with an AI assistant."
+  "Track your spending, split bills in Personal or Shared groups, scan receipts, plan monthly budgets, and log expenses by chatting with an AI assistant."

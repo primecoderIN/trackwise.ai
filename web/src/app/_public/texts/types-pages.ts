@@ -44,7 +44,7 @@ export interface FeatureShowcaseSection {
   title: string
   summary: string
   highlights: readonly string[]
-  previewKind: "assistant" | "receipts" | "expenses" | "budgets" | "reports" | "workspace"
+  previewKind: "assistant" | "receipts" | "expenses" | "splits" | "budgets" | "reports" | "workspace"
 }
 
 /** One row in the surface comparison matrix on `/features`. */
@@ -86,6 +86,12 @@ export interface FeaturesPageTexts {
     expensesPrimaryAmount: string
     expensesPrimaryNote: string
     expensesSecondaryNote: string
+    splitsGroupBadge: string
+    splitsTitle: string
+    splitsShareSummary: string
+    splitsTransferLabel: string
+    splitsPrivateNote: string
+    splitsUpiNote: string
     budgetOverallLabel: string
     budgetOverallValue: string
     budgetPaceNote: string

@@ -223,7 +223,7 @@ export const ACCOUNT = {
     365
   ],
   "defaultTokenLifetimeDays": 90,
-  "currentTermsVersion": "2026-11"
+  "currentTermsVersion": "2026-11-27"
 } as const
 
 export const AGUI = {

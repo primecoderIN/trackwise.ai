@@ -7,19 +7,21 @@ import type { FeaturesPageTexts } from "./types"
 
 /** English texts for `/features`. */
 export const EN_FEATURES_TEXTS: FeaturesPageTexts = {
-  title: "Features — AI Assistant, Receipt Scanning, Budgets & Reports",
-  metaDescription: `Explore ${APP_NAME} capabilities: AI expense chat with interactive forms and delete confirmations, receipt scanning, global currency logging, budget pace meters, and CSV/Markdown exports.`,
+  title: "Features — AI Assistant, Bill Splitting, Receipt Scanning, Budgets & Reports",
+  metaDescription: `Explore ${APP_NAME} capabilities: AI expense chat with interactive forms and delete confirmations, Personal & Shared bill-splitting groups with invite links and INR UPI QR, receipt scanning, global currency logging, budget pace meters, and CSV/Markdown exports.`,
   keywords: [
     "AI expense assistant",
+    "bill splitting groups",
+    "UPI QR bill split",
     "receipt scanner features",
     "monthly budget pace tracker",
     "expense CSV export",
     APP_NAME,
   ],
   heroBadge: "Product Features",
-  heroTitle: "Every tool to record, understand, and control your spending.",
+  heroTitle: "Every tool to record, split, understand, and control your spending.",
   heroSubtitle:
-    "Type expenses in plain words, drop receipt photos, filter clean ledgers, or track monthly caps—with clear previews and confirmations at every step.",
+    "Type expenses in plain words, split shared group bills cleanly, drop receipt photos, filter ledgers, or track monthly caps—with clear previews and confirmations at every step.",
   getStarted: "Get started",
   openDashboard: "Open Dashboard",
   readFaq: "Read the FAQ",
@@ -66,6 +68,20 @@ export const EN_FEATURES_TEXTS: FeaturesPageTexts = {
       previewKind: "expenses",
     },
     {
+      id: "splits",
+      badge: "Splits & Shared Groups",
+      title: "Split Bills in Personal or Shared Groups—Keep Personal Expenses Private",
+      summary:
+        "Track 1-on-1 splits, solo Personal groups, or collaborative Shared groups with zero-email invite links, isolated per-group balances, auditable settlements, and opt-in INR UPI QR shortcuts.",
+      highlights: [
+        "Split equally (exact minor-unit allocation) or by custom exact amounts across currencies without netting unrelated groups",
+        "Start tracking with friends right away using placeholder guest seats—invited members claim their seat later and inherit full split history",
+        "Record strictly your own share into your personal Expenses ledger (with live budget alerts) while keeping linked expenses invisible to co-members",
+        "Soft-void settlements for an auditable history, lock settled splits against silent edits, and share your UPI ID in groups only when opted in",
+      ],
+      previewKind: "splits",
+    },
+    {
       id: "budgets",
       badge: "Budgets & Categories",
       title: "Monthly Budgets, Pace Tracking & Category Breakdown",
@@ -102,7 +118,7 @@ export const EN_FEATURES_TEXTS: FeaturesPageTexts = {
       highlights: [
         "Press Ctrl/⌘ + K anywhere in the app to jump to any page, start a new expense, or open chat",
         "Full English and Hindi interface across pages, budget alerts, assistant replies, and exports",
-        "Organized Settings for Profile, Preferences (language and light/dark theme), and active browser sessions",
+        "Organized Settings for Profile, Preferences (language, default currency, timezone, and light/dark theme), and active browser sessions",
         "View active devices and sign out other browsers remotely anytime—plus optional app tokens",
       ],
       previewKind: "workspace",
@@ -127,6 +143,12 @@ export const EN_FEATURES_TEXTS: FeaturesPageTexts = {
     expensesPrimaryAmount: "€24.00 EUR",
     expensesPrimaryNote: "Original currency preserved",
     expensesSecondaryNote: "Tag purchases in USD, EUR, GBP, and more alongside clean search & date filters",
+    splitsGroupBadge: "Shared Group · INR",
+    splitsTitle: "Goa Trip · 3 members",
+    splitsShareSummary: "Dinner Split · Equal (₹2,000 each)",
+    splitsTransferLabel: "Ravi owes you ₹2,000.00",
+    splitsPrivateNote: "Your linked personal expense stays private",
+    splitsUpiNote: "Opt-in UPI QR",
     budgetOverallLabel: "Food Budget · November",
     budgetOverallValue: "$425 / $500",
     budgetPaceNote: "85% used · Near the limit",
@@ -168,6 +190,12 @@ export const EN_FEATURES_TEXTS: FeaturesPageTexts = {
       webApp: "Pace bars, elapsed-time markers & edit dialogs",
       assistant: "Budget status cards & threshold warnings",
       receipts: "Triggers 80% / 100% notices once confirmed",
+    },
+    {
+      capability: "Split shared bills & settle up",
+      webApp: "Personal & Shared groups, equal/exact splits, invites & UPI QR",
+      assistant: "Works alongside Splits; your logged shares flow into chat insights",
+      receipts: "Use receipt totals cleanly when adding a split or recording your share",
     },
     {
       capability: "Monthly reports & exports",

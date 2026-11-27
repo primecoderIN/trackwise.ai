@@ -7,10 +7,11 @@ import type { HowItWorksPageTexts } from "./types"
 
 /** English texts for `/how-it-works`. */
 export const EN_HOW_IT_WORKS_TEXTS: HowItWorksPageTexts = {
-  title: "How It Works — Simple Daily Expense Tracking from Capture to Reports",
-  metaDescription: `See how ${APP_NAME} works in four simple steps: passwordless sign-in, natural chat or receipt scanning, human review before saving or deleting, and monthly budget reports.`,
+  title: "How It Works — Simple Daily Expense Tracking, Splits & Monthly Reports",
+  metaDescription: `See how ${APP_NAME} works in four simple steps: passwordless sign-in, natural chat, receipt scanning or bill splitting, human review before saving or deleting, and monthly budget reports.`,
   keywords: [
     "how expense tracker works",
+    "how bill splitting works",
     "AI receipt scanning workflow",
     "monthly budget tracking steps",
     "expense approval workflow",
@@ -28,17 +29,17 @@ export const EN_HOW_IT_WORKS_TEXTS: HowItWorksPageTexts = {
   steps: [
     {
       step: "01",
-      title: "Sign in safely & choose your language",
+      title: "Sign in safely & set your preferences",
       description:
-        "Use your existing Google or supported sign-in account—no extra passwords to remember. Pick English or Hindi and optionally set a monthly spending goal during first-time setup.",
+        "Use your existing Google or supported sign-in account—no extra passwords to remember. Choose English or Hindi, your default currency, and your timezone, and optionally set a monthly spending goal during first-time setup.",
       detail: "Ready in under a minute across desktop and mobile browsers.",
     },
     {
       step: "02",
-      title: "Capture expenses by chat, receipt photo, or quick entry",
+      title: "Capture expenses, scan receipts, or split shared bills",
       description:
-        "Type a quick message like “$14.50 for coffee by card”, upload a receipt image or PDF, or add an entry directly inside the sortable Expenses table.",
-      detail: "If any field is missing from a message, you get a clean pre-filled form instead of guesswork.",
+        "Type a quick message like “$14.50 for coffee by card”, upload a receipt image or PDF, edit your Expenses table, or add a split in a Personal or Shared group and privately log strictly your own share.",
+      detail: "If any field is missing from a chat message, you get a clean pre-filled form instead of guesswork.",
     },
     {
       step: "03",
@@ -64,9 +65,9 @@ export const EN_HOW_IT_WORKS_TEXTS: HowItWorksPageTexts = {
         "Receipts open a review form first, and delete commands require an explicit click on Confirm before an expense is ever removed.",
     },
     {
-      title: "Private, isolated personal records",
+      title: "Private, isolated personal records—even in shared groups",
       description:
-        "Your expenses, receipts, budgets, and chat history stay separated inside your own account and are never mixed with other users.",
+        "Your personal expenses, private contacts, receipts, budgets, and chat history stay strictly inside your account. Collaborating in a Shared split group never exposes your personal ledger.",
     },
     {
       title: "Switch languages smoothly",

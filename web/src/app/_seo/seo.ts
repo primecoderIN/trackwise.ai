@@ -52,6 +52,8 @@ export function siteUrl(): URL {
 const DEFAULT_KEYWORDS: Record<Language, readonly string[]> = {
   en: [
     "AI expense tracker",
+    "bill splitter app",
+    "shared group expenses",
     "receipt scanner app",
     "personal expense manager",
     "monthly budget tracker",
@@ -59,7 +61,16 @@ const DEFAULT_KEYWORDS: Record<Language, readonly string[]> = {
     "bilingual budget app",
     APP_NAME,
   ],
-  hi: ["AI खर्च ट्रैकर", "रसीद स्कैनर ऐप", "मासिक बजट प्लानर", "दैनिक खर्च हिसाब", "व्यक्तिगत वित्त ट्रैकर", APP_NAME],
+  hi: [
+    "AI खर्च ट्रैकर",
+    "बिल स्प्लिट ऐप",
+    "ग्रुप खर्च हिसाब",
+    "रसीद स्कैनर ऐप",
+    "मासिक बजट प्लानर",
+    "दैनिक खर्च हिसाब",
+    "व्यक्तिगत वित्त ट्रैकर",
+    APP_NAME,
+  ],
 }
 
 const INDEXABLE_ROBOTS: Metadata["robots"] = {

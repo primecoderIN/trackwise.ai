@@ -8,9 +8,11 @@ import type { FaqPageTexts } from "./types"
 /** English texts for `/faq`. */
 export const EN_FAQ_TEXTS: FaqPageTexts = {
   title: "Frequently Asked Questions",
-  metaDescription: `Clear answers about ${APP_NAME}: passwordless sign-in, AI expense logging, receipt scanning, global currency tracking, monthly budgets, reports, and data privacy.`,
+  metaDescription: `Clear answers about ${APP_NAME}: passwordless sign-in, AI expense logging, Personal & Shared bill splitting with UPI QR codes, receipt scanning, global currencies, monthly budgets, reports, and data privacy.`,
   keywords: [
     "expense tracker FAQ",
+    "bill splitting FAQ",
+    "UPI QR split expenses",
     "receipt scanner questions",
     "AI expense tracker privacy",
     "monthly budget app help",
@@ -19,7 +21,7 @@ export const EN_FAQ_TEXTS: FaqPageTexts = {
   heroBadge: "Help & Answers",
   heroTitle: `Frequently asked questions about ${APP_NAME}`,
   heroSubtitle:
-    "Plain-language answers on getting started, daily chat tracking, receipt uploads, budgets, exports, and how your personal data stays protected.",
+    "Plain-language answers on getting started, daily chat tracking, bill splitting & shared groups, receipt uploads, budgets, exports, and how your personal data stays protected.",
   categories: [
     {
       id: "getting-started",
@@ -33,7 +35,7 @@ export const EN_FAQ_TEXTS: FaqPageTexts = {
         {
           question: "What happens during the first-time welcome setup?",
           answer:
-            "On your first sign-in, a quick skippable welcome dialog lets you choose English or Hindi, optionally enter an overall monthly budget, pick a starter message for the assistant, and confirm the service terms.",
+            "On your first sign-in (or when legal terms are updated), a quick welcome dialog lets you choose English or Hindi, select your default currency and timezone, optionally set an overall monthly budget or try a starter assistant prompt, and confirm the current terms.",
         },
         {
           question: "How can I check or sign out other devices logged into my account?",
@@ -60,7 +62,7 @@ export const EN_FAQ_TEXTS: FaqPageTexts = {
         {
           question: "Does my chat conversation stay open as I move between pages?",
           answer:
-            "Yes. The assistant stays docked inside the workspace as you navigate between Dashboard, Expenses, Budgets, Categories, and Reports until you start a new conversation or sign out.",
+            "Yes. The assistant stays docked inside the workspace as you navigate between Dashboard, Expenses, Splits, Budgets, Categories, and Reports until you start a new conversation or sign out.",
         },
       ],
     },
@@ -107,6 +109,39 @@ export const EN_FAQ_TEXTS: FaqPageTexts = {
       ],
     },
     {
+      id: "splits-groups",
+      title: "Splits, Shared Groups & UPI Links",
+      description:
+        "Personal vs. Shared groups, invite links, per-group balances, settlements, and INR UPI QR shortcuts.",
+      items: [
+        {
+          question: "What is the difference between direct splits, Personal groups, and Shared groups?",
+          answer:
+            "Direct splits track 1-on-1 IOUs with your private contacts. Personal groups let you organize a trip or household by yourself with private contacts or placeholder guests. Shared groups let invited members sign in and collaborate on the same group ledger—and you can upgrade a Personal group to a Shared group anytime.",
+        },
+        {
+          question: "How do invite links and guest seats work without sharing email addresses?",
+          answer:
+            "A Shared group owner can create a time-limited, revocable invite link—either an open link or one assigned to a specific guest seat you already used in past splits. When your friend signs in and opens the link, they claim that seat and inherit all historical splits automatically, with zero email lookup required.",
+        },
+        {
+          question: "Why are balances kept separate for each group and currency?",
+          answer:
+            "If Ravi owes you ₹2,000 in Goa Trip and you owe Ravi ₹1,500 in Office Lunch, those are separate obligations that are usually settled independently. Keeping every group and every currency isolated prevents misleading cross-group netting, while your Splits overview shows clear per-currency directional totals.",
+        },
+        {
+          question: "When I join a Shared group, can other members see my personal expenses or private contacts?",
+          answer:
+            "Never. Personal expenses, private contacts, budgets, receipts, and chats remain strictly private to your account. When you click Record my share on a split, only your own share is added to your personal Expenses ledger, and the link stays completely invisible to other group members.",
+        },
+        {
+          question: "How do settlements, editing locks, and INR UPI QR codes work?",
+          answer:
+            "Recording a settlement reduces balances cleanly and locks earlier splits in that currency from silent financial edits (you can still edit notes, or soft-void a mistaken settlement with an audit trail). For INR balances, you can optionally save your UPI ID and choose whether to share it with Shared groups; UPI QR codes are payment shortcuts only—always verify recipient details in your UPI app and record the settlement afterward.",
+        },
+      ],
+    },
+    {
       id: "budgets-reports",
       title: "Budgets & Monthly Reports",
       description: "Spending limits, pace bars, warning alerts, and clean downloads.",
@@ -136,7 +171,7 @@ export const EN_FAQ_TEXTS: FaqPageTexts = {
         {
           question: `How does ${APP_NAME} keep my personal financial data separate and secure?`,
           answer:
-            "Every expense, budget, receipt upload, and conversation belongs strictly to your authenticated account on the server, ensuring other users can never access or view your records. All traffic runs with strict protective headers and request safeguards.",
+            "Every personal expense, budget, private contact, receipt upload, and conversation belongs strictly to your authenticated account on the server. Even when you collaborate inside a Shared split group, only active members see that group's shared splits and settlements—never your personal ledger.",
         },
         {
           question: `Does ${APP_NAME} store sensitive credentials or expense records in my browser?`,

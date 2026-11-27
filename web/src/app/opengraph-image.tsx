@@ -60,14 +60,14 @@ export default function Image() {
         <span>{APP_NAME}</span>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "20px", maxWidth: "960px" }}>
-        <div style={{ fontSize: "62px", fontWeight: 700, lineHeight: 1.15 }}>
-          AI Expense Tracker, Receipt Scanner & Monthly Budgets
+        <div style={{ fontSize: "58px", fontWeight: 700, lineHeight: 1.15 }}>
+          AI Expense Tracker, Bill Splitting & Monthly Budgets
         </div>
-        <div style={{ fontSize: "28px", color: "#cbd5e1", lineHeight: 1.4 }}>{APP_DESCRIPTION}</div>
+        <div style={{ fontSize: "26px", color: "#cbd5e1", lineHeight: 1.4 }}>{APP_DESCRIPTION}</div>
       </div>
       <div style={{ display: "flex", gap: "24px", fontSize: "22px", color: "#e2e8f0" }}>
-        <span>• Conversational AI Assistant</span>
-        <span>• Receipt Scanning</span>
+        <span>• AI Assistant & Receipts</span>
+        <span>• Personal & Shared Splits</span>
         <span>• Monthly Budgets</span>
         <span>• English & Hindi</span>
       </div>

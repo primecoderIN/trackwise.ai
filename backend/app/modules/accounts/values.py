@@ -82,9 +82,9 @@ CALLBACK_PATH = f"{AUTH_PATH}/callback"
 # generated contract, so its router uses the same paths.
 SIGN_IN_PAGE = "/sign-in"
 DASHBOARD_PAGE = "/dashboard"
-# The current version of SpendWise's Terms of Service and Privacy Policy (Phase 29), recorded when a person finishes
-# the first-run welcome flow.
-CURRENT_TERMS_VERSION = "2026-11"
+# The current version of trackwise.ai's Terms of Service and Privacy Policy (Phase 29, updated for Splits D226),
+# recorded when a person finishes the welcome flow or accepts updated terms.
+CURRENT_TERMS_VERSION = "2026-11-27"
 MAX_TERMS_VERSION_LENGTH = 32
 
 
