@@ -1,6 +1,8 @@
 // The summary KPI cards and visual breakdown cards on the Reports page: spending by category (with category icons &
 // colours), spending by payment method (with proportional bars), and ranked biggest expenses. Part of reports.
 
+import { Card, StatusBadge, Tag } from "@primecoderin/fast-ui-react"
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/card-parts"
 import { ArrowDownRight, ArrowUpRight, CalendarClock, Minus, TrendingUp, Wallet } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useMemo } from "react"
@@ -9,8 +11,6 @@ import { categoryVisual, useCategories } from "@/features/categories"
 import { PAYMENT_METHOD_LABELS } from "@/shared/api/contracts.gen"
 import { useLanguage } from "@/shared/i18n"
 import { useFormatters } from "@/shared/lib/use-formatters"
-import { Badge } from "@/shared/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 
 import type { MonthlyReport } from "../api"
 
@@ -30,7 +30,7 @@ export function ReportStatCards({ report }: { report: MonthlyReport }) {
           ? t("stats.changeDown", { percent: changePercent, amount: prevFormatted })
           : t("stats.changeSame", { amount: prevFormatted })
 
-  const deltaTone = changeNum === null || changeNum === 0 ? "secondary" : changeNum > 0 ? "warning" : "positive"
+  const deltaTone = changeNum === null || changeNum === 0 ? "neutral" : changeNum > 0 ? "warning" : "success"
 
   const DeltaIcon = changeNum === null || changeNum === 0 ? Minus : changeNum > 0 ? ArrowUpRight : ArrowDownRight
 
@@ -64,9 +64,9 @@ export function ReportStatCards({ report }: { report: MonthlyReport }) {
             <CardTitle className="flex flex-wrap items-center gap-2 text-2xl font-bold tracking-tight tabular-nums sm:text-3xl">
               <span>{changeNum === null ? "—" : `${changeNum > 0 ? "+" : ""}${report.change_percent}%`}</span>
               {changeNum !== null && (
-                <Badge variant={deltaTone} className="gap-0.5">
+                <StatusBadge tone={deltaTone} className="gap-0.5">
                   <DeltaIcon className="size-3" aria-hidden="true" />
-                </Badge>
+                </StatusBadge>
               )}
             </CardTitle>
           </div>
@@ -174,9 +174,9 @@ export function ReportBreakdowns({ report }: { report: MonthlyReport }) {
                   <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1 text-sm">
                     <div className="flex min-w-0 items-center gap-2">
                       <span className="truncate font-medium">{labels[row.payment_method]}</span>
-                      <Badge variant="secondary" className="h-4.5 shrink-0 px-1.5 text-[10px]">
+                      <Tag className="h-4.5 shrink-0 px-1.5 text-[10px]">
                         {t("byPayment.count", { count: row.count })}
-                      </Badge>
+                      </Tag>
                     </div>
                     <div className="ml-auto flex shrink-0 items-baseline gap-2 text-right tabular-nums">
                       <span className="font-semibold">{formatMoney(row.total, report.currency)}</span>

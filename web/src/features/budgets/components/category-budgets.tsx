@@ -1,12 +1,13 @@
 // A component of the budgets feature: the "By category" card: budgeted categories shown prominently with icons and
 // pace meters, followed by unbudgeted categories in a calmer section below. Used by the Budgets page.
 
+import { Card } from "@primecoderin/fast-ui-react"
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/card-parts"
 import { PiggyBank } from "lucide-react"
 import { useTranslations } from "next-intl"
 
 import { categoryVisual, useCategoryLookup } from "@/features/categories"
 import { EmptyState } from "@/shared/components/empty-state"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 
 import type { BudgetStatus, CategoryBudgetLine } from "../api"
 import { BudgetDialog } from "./budget-dialog"

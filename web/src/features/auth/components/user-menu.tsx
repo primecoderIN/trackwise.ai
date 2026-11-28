@@ -2,21 +2,14 @@
 // (components/); the sidebar (app/_frame/app-sidebar.tsx) draws it. Signing out is a navigation to the server's logout
 // link, which ends the session there and at the provider (D186), so the page unloads cleanly.
 
+import { Button, Menu, MenuItem, MenuLinkItem, MenuSeparator } from "@primecoderin/fast-ui-react"
 import { ChevronsUpDown, LogOut, Settings } from "lucide-react"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 
 import { ROUTES } from "@/shared/config/routes"
 import { reportUnexpected } from "@/shared/lib/errors"
-import { Button } from "@/shared/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/shared/ui/dropdown-menu"
+import { cn } from "@/shared/lib/utils"
 
 import { useSignedInUser } from "../queries"
 import { ownSitePath } from "../sign-in-urls"
@@ -38,48 +31,48 @@ function signOut(logoutUrl: string): void {
   }
 }
 
-/** The person's picture and name; opened, their email, Settings link, and Sign out. Nothing while signed out. */
-export function UserMenu() {
+/**
+ * The person's picture and name; opened, their email, Settings link, and Sign out. Nothing while signed out.
+ * `compact` shows only the picture, for the sidebar's narrow icon rail.
+ */
+export function UserMenu({ compact = false }: { compact?: boolean }) {
   const t = useTranslations("auth")
   const user = useSignedInUser().data
   if (!user) return null
   const name = user.name ?? user.email ?? t("userMenu.you")
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+    <Menu
+      align="start"
+      trigger={
         <Button
-          variant="ghost"
-          size="sm"
+          variant="subtle"
+          size="small"
           aria-label={t("userMenu.label", { name })}
-          className="h-9 min-w-0 flex-1 justify-start gap-2 px-1.5 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+          className={cn("h-9 min-w-0 justify-start gap-2 px-1.5", compact ? "size-9 justify-center px-0" : "flex-1")}
         >
           <UserAvatar name={name} picture={user.avatar_url} />
-          <span className="min-w-0 flex-1 truncate text-left text-xs font-medium group-data-[collapsible=icon]:hidden">
-            {name}
-          </span>
-          <ChevronsUpDown
-            className="size-3.5 shrink-0 text-muted-foreground group-data-[collapsible=icon]:hidden"
-            aria-hidden="true"
-          />
+          {!compact && (
+            <>
+              <span className="min-w-0 flex-1 truncate text-start text-xs font-medium">{name}</span>
+              <ChevronsUpDown className="size-3.5 shrink-0 text-fg-secondary" aria-hidden="true" />
+            </>
+          )}
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent side="top" align="start" className="w-56">
-        <DropdownMenuLabel className="font-normal">
-          <p className="text-xs text-muted-foreground">{t("userMenu.signedInAs")}</p>
-          <p className="truncate font-medium text-foreground">{name}</p>
-          {user.email && user.email !== name && <p className="truncate text-xs text-muted-foreground">{user.email}</p>}
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href={ROUTES.settings}>
-            <Settings /> {t("userMenu.settings")}
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => signOut(user.logout_url)} variant="destructive">
-          <LogOut /> {t("userMenu.signOut")}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      }
+    >
+      <div className="min-w-48 px-3 py-2">
+        <p className="text-xs text-fg-secondary">{t("userMenu.signedInAs")}</p>
+        <p className="truncate text-sm font-medium text-fg">{name}</p>
+        {user.email && user.email !== name && <p className="truncate text-xs text-fg-secondary">{user.email}</p>}
+      </div>
+      <MenuSeparator />
+      <MenuLinkItem icon={<Settings />} render={<Link href={ROUTES.settings} />}>
+        {t("userMenu.settings")}
+      </MenuLinkItem>
+      <MenuItem icon={<LogOut />} tone="danger" onClick={() => signOut(user.logout_url)}>
+        {t("userMenu.signOut")}
+      </MenuItem>
+    </Menu>
   )
 }

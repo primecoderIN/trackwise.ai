@@ -1,11 +1,10 @@
 // The sign-in page's buttons: one per way of signing in the server offers ("Continue with Google"), or a single "Sign
 // in" button. Each button is a full-width navigation link to the backend's login route. Used by sign-in-page.tsx.
 
+import { SkeletonItem } from "@primecoderin/fast-ui-react"
+import { linkButtonClass } from "@/shared/components/link-button"
 import { ArrowRight } from "lucide-react"
 import { useTranslations } from "next-intl"
-
-import { Button } from "@/shared/ui/button"
-import { Skeleton } from "@/shared/ui/skeleton"
 
 import type { LoginOption } from "../api"
 import { loginUrl } from "../sign-in-urls"
@@ -27,39 +26,40 @@ export function SignInOptions({ options, returnTo }: SignInOptionsProps) {
       <output className="grid gap-3">
         <span className="sr-only">{t("signIn.loadingOptions")}</span>
         {Array.from({ length: PLACEHOLDER_BUTTONS }, (_, index) => (
-          <Skeleton key={index} className="h-11 w-full rounded-xl" />
+          <SkeletonItem key={index} className="h-11 w-full rounded-xl" />
         ))}
       </output>
     )
   }
   if (options.length === 0) {
     return (
-      <Button asChild size="lg" className="h-11 w-full rounded-xl">
-        <a href={loginUrl(undefined, returnTo)}>
-          <span>{t("signIn.signIn")}</span>
-          <ArrowRight className="size-4" aria-hidden="true" />
-        </a>
-      </Button>
+      <a
+        className={linkButtonClass({ variant: "primary", size: "large", className: "h-11 w-full rounded-xl" })}
+        href={loginUrl(undefined, returnTo)}
+      >
+        <span>{t("signIn.signIn")}</span>
+        <ArrowRight className="size-4" aria-hidden="true" />
+      </a>
     )
   }
   return (
     <div className="grid gap-2.5">
       {options.map((option) => (
-        <Button
+        <a
           key={option.key}
-          asChild
-          size="lg"
-          variant="outline"
-          className="group h-11 w-full justify-between rounded-xl px-4"
+          className={linkButtonClass({
+            variant: "secondary",
+            size: "large",
+            className: "group h-11 w-full justify-between rounded-xl px-4",
+          })}
+          href={loginUrl(option.key, returnTo)}
         >
-          <a href={loginUrl(option.key, returnTo)}>
-            <span className="font-medium">{t("signIn.continueWith", { provider: option.label })}</span>
-            <ArrowRight
-              className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground"
-              aria-hidden="true"
-            />
-          </a>
-        </Button>
+          <span className="font-medium">{t("signIn.continueWith", { provider: option.label })}</span>
+          <ArrowRight
+            className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground"
+            aria-hidden="true"
+          />
+        </a>
       ))}
     </div>
   )

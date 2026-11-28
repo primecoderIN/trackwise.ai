@@ -1,10 +1,12 @@
 // The Reports page (/reports): pick a month with the shared MonthPicker, inspect KPI cards with semantic MoM deltas,
 // review colour-coded category and payment breakdowns, and export CSV/Markdown via a clean dropdown. Part of reports.
 
+import { Button, Card, Menu, MenuItem, SkeletonItem } from "@primecoderin/fast-ui-react"
+import { CardContent } from "@/shared/components/card-parts"
+import { toast } from "@/shared/lib/toast"
 import { ChevronDown, Download, FileBarChart, FileSpreadsheet, FileText } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
-import { toast } from "sonner"
 
 import { DEFAULT_CURRENCY, REPORT_FORMATS } from "@/shared/api/contracts.gen"
 import { EmptyState } from "@/shared/components/empty-state"
@@ -17,10 +19,6 @@ import { currentMonth } from "@/shared/lib/format"
 import { saveFile } from "@/shared/lib/save-file"
 import { useFormatters } from "@/shared/lib/use-formatters"
 import { useMessageOf } from "@/shared/lib/use-message-of"
-import { Button } from "@/shared/ui/button"
-import { Card, CardContent } from "@/shared/ui/card"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared/ui/dropdown-menu"
-import { Skeleton } from "@/shared/ui/skeleton"
 
 import { fetchMonthlyReportFile, type ReportFormat } from "../api"
 import { useMonthlyReport } from "../queries"
@@ -54,27 +52,31 @@ export function ReportsPage() {
   const actions = (
     <div className="flex flex-wrap items-center gap-2">
       <MonthPicker month={month} onChange={setMonth} />
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" disabled={!canExport} className="gap-1.5">
-            <Download className="size-4" aria-hidden="true" />
+      <Menu
+        align="end"
+        trigger={
+          <Button variant="secondary" disabled={!canExport} icon={<Download />} iconPosition="before">
             <span>{downloading ? t("downloads.downloading") : t("downloads.export")}</span>
-            <ChevronDown className="size-3.5 text-muted-foreground" aria-hidden="true" />
+            <ChevronDown className="size-3.5 text-fg-secondary" aria-hidden="true" />
           </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          {REPORT_FORMATS.map((format) => (
-            <DropdownMenuItem key={format} onSelect={() => void handleDownload(format)}>
-              {format === "csv" ? (
-                <FileSpreadsheet className="size-4 text-positive" aria-hidden="true" />
+        }
+      >
+        {REPORT_FORMATS.map((format) => (
+          <MenuItem
+            key={format}
+            icon={
+              format === "csv" ? (
+                <FileSpreadsheet className="text-positive" aria-hidden="true" />
               ) : (
-                <FileText className="size-4 text-primary" aria-hidden="true" />
-              )}
-              <span>{t(`downloads.${format}`)}</span>
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+                <FileText className="text-primary-text" aria-hidden="true" />
+              )
+            }
+            onClick={() => void handleDownload(format)}
+          >
+            {t(`downloads.${format}`)}
+          </MenuItem>
+        ))}
+      </Menu>
     </div>
   )
 
@@ -116,11 +118,11 @@ export function ReportsPage() {
       ) : (
         <div className="grid gap-5">
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            <Skeleton className="h-32 rounded-2xl" />
-            <Skeleton className="h-32 rounded-2xl" />
-            <Skeleton className="h-32 rounded-2xl sm:col-span-2 xl:col-span-1" />
+            <SkeletonItem className="h-32 rounded-2xl" />
+            <SkeletonItem className="h-32 rounded-2xl" />
+            <SkeletonItem className="h-32 rounded-2xl sm:col-span-2 xl:col-span-1" />
           </div>
-          <Skeleton className="h-72 rounded-2xl" />
+          <SkeletonItem className="h-72 rounded-2xl" />
         </div>
       )}
     </div>

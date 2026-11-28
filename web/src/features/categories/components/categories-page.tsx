@@ -1,6 +1,9 @@
 // The Categories page (/categories): colour-coded category cards with monthly spend, share progress bar, sort toggle,
 // shared MonthPicker, and working deep-links to Expenses filtered by that category and month. Part of categories.
 
+import { Button, Card, SkeletonItem } from "@primecoderin/fast-ui-react"
+import { linkButtonClass } from "@/shared/components/link-button"
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/card-parts"
 import { ArrowUpRight, Info, Tags } from "lucide-react"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
@@ -17,9 +20,6 @@ import { currentMonth, monthDateRange } from "@/shared/lib/format"
 import { queryGroupStatus } from "@/shared/lib/query-status"
 import { useFormatters } from "@/shared/lib/use-formatters"
 import { useMessageOf } from "@/shared/lib/use-message-of"
-import { Button } from "@/shared/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
-import { Skeleton } from "@/shared/ui/skeleton"
 
 import { categoryVisual } from "../category-icons"
 import { useCategories, useCategoryMonthlySummary } from "../queries"
@@ -75,8 +75,8 @@ export function CategoriesPage() {
       <div className="inline-flex rounded-lg border border-border/80 bg-card p-0.5 shadow-2xs">
         <Button
           type="button"
-          size="xs"
-          variant={sortBy === "spend" ? "secondary" : "ghost"}
+          size="small"
+          variant={sortBy === "spend" ? "secondary" : "subtle"}
           aria-pressed={sortBy === "spend"}
           onClick={() => setSortBy("spend")}
         >
@@ -84,8 +84,8 @@ export function CategoriesPage() {
         </Button>
         <Button
           type="button"
-          size="xs"
-          variant={sortBy === "name" ? "secondary" : "ghost"}
+          size="small"
+          variant={sortBy === "name" ? "secondary" : "subtle"}
           aria-pressed={sortBy === "name"}
           onClick={() => setSortBy("name")}
         >
@@ -111,7 +111,7 @@ export function CategoriesPage() {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {[0, 1, 2, 3, 4, 5].map((index) => (
-              <Skeleton key={index} className="h-40 rounded-2xl" />
+              <SkeletonItem key={index} className="h-40 rounded-2xl" />
             ))}
           </div>
         )}
@@ -165,17 +165,18 @@ export function CategoriesPage() {
                         {t("card.share", { percent: sharePercent })}
                       </p>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="xs"
-                      asChild
-                      className="gap-1 text-muted-foreground hover:text-primary"
+
+                    <Link
+                      className={linkButtonClass({
+                        variant: "subtle",
+                        size: "small",
+                        className: "gap-1 text-muted-foreground hover:text-primary",
+                      })}
+                      href={filteredExpensesHref(category.id, month)}
                     >
-                      <Link href={filteredExpensesHref(category.id, month)}>
-                        <span>{t("card.viewExpenses")}</span>
-                        <ArrowUpRight className="size-3.5" aria-hidden="true" />
-                      </Link>
-                    </Button>
+                      <span>{t("card.viewExpenses")}</span>
+                      <ArrowUpRight className="size-3.5" aria-hidden="true" />
+                    </Link>
                   </div>
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                     <div

@@ -2,14 +2,14 @@
 // error card with Try again if it can't be loaded, and a "couldn't refresh" notice (the list stays) if a reload
 // fails. Part of the account feature (components/). Used by the sessions and tokens cards, so both behave alike.
 
+import { Card, SkeletonItem } from "@primecoderin/fast-ui-react"
+import { CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/card-parts"
 import type { UseQueryResult } from "@tanstack/react-query"
 import type { ReactNode } from "react"
 
 import { RefreshNotice } from "@/shared/components/refresh-notice"
 import { SectionError } from "@/shared/components/section-error"
 import { useMessageOf } from "@/shared/lib/use-message-of"
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
-import { Skeleton } from "@/shared/ui/skeleton"
 
 // How many placeholder rows show while a list loads (most people have one or two sessions or tokens).
 const PLACEHOLDER_ROWS = 2
@@ -49,7 +49,7 @@ export function SectionCard<T>({ title, description, query, loadFailed, action, 
           <RefreshNotice message={messageOf(query.error)} onRetry={retry} retrying={query.isFetching} />
         )}
         {query.data === undefined
-          ? Array.from({ length: PLACEHOLDER_ROWS }, (_, index) => <Skeleton key={index} className="h-12 w-full" />)
+          ? Array.from({ length: PLACEHOLDER_ROWS }, (_, index) => <SkeletonItem key={index} className="h-12 w-full" />)
           : children(query.data)}
       </CardContent>
     </Card>

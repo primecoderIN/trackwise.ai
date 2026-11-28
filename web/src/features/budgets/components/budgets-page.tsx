@@ -1,6 +1,7 @@
 // A component of the budgets feature: the Budgets page, the feature's main export (its route file,
 // app/(client)/(app)/budgets/page.tsx, draws it through the lazy BudgetsPage in index.ts). Uses the shared MonthPicker.
 
+import { SkeletonItem } from "@primecoderin/fast-ui-react"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
 
@@ -11,7 +12,6 @@ import { RefreshNotice } from "@/shared/components/refresh-notice"
 import { SectionError } from "@/shared/components/section-error"
 import { currentMonth } from "@/shared/lib/format"
 import { useMessageOf } from "@/shared/lib/use-message-of"
-import { Skeleton } from "@/shared/ui/skeleton"
 
 import { useBudgetStatus } from "../queries"
 import { CategoryBudgets } from "./category-budgets"
@@ -52,8 +52,8 @@ export function BudgetsPage() {
         />
       ) : (
         <div className="grid gap-4">
-          <Skeleton className="h-36 rounded-2xl" />
-          <Skeleton className="h-72 rounded-2xl" />
+          <SkeletonItem className="h-36 rounded-2xl" />
+          <SkeletonItem className="h-72 rounded-2xl" />
         </div>
       )}
     </div>

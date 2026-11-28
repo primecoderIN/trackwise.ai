@@ -1,6 +1,8 @@
 // The sign-in page (/sign-in): crisp brand card, failure alerts, provider login links, calm privacy reassurance, and
 // localized public/legal links positioned cleanly below the card. Part of the auth feature (components/).
 
+import { Card } from "@primecoderin/fast-ui-react"
+import { CardContent, CardDescription, CardHeader } from "@/shared/components/card-parts"
 import { ShieldCheck, Wallet } from "lucide-react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -14,7 +16,6 @@ import { localizedPath, ROUTES } from "@/shared/config/routes"
 import { LanguageMenu, useLanguage } from "@/shared/i18n"
 import { useMessageOf } from "@/shared/lib/use-message-of"
 import { ModeToggle } from "@/shared/theme"
-import { Card, CardContent, CardDescription, CardHeader } from "@/shared/ui/card"
 
 import { useLoginOptions, useSignedInUser } from "../queries"
 import { afterSignIn, failureText } from "../sign-in-urls"

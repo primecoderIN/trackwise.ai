@@ -1,9 +1,9 @@
 // The state behind a budget's limit dialog: whether it's open, the limit being typed, and saving or removing it.
 // Part of the budgets feature; used by BudgetDialog (components/budget-dialog.tsx).
 
+import { toast } from "@/shared/lib/toast"
 import { useTranslations } from "next-intl"
 import { useState, type FormEvent } from "react"
-import { toast } from "sonner"
 
 import { useMessageOf } from "@/shared/lib/use-message-of"
 

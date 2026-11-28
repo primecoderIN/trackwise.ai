@@ -1,15 +1,14 @@
 // One row of "Access tokens": token icon tile, name, monospace hint badge, compact lifecycle timestamps, and Revoke.
 // Part of the account feature (components/tokens/). Used by tokens-card.tsx.
 
+import { Button, StatusBadge, Tag } from "@primecoderin/fast-ui-react"
+import { toast } from "@/shared/lib/toast"
 import { KeyRound } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
-import { toast } from "sonner"
 
 import { useFormatters } from "@/shared/lib/use-formatters"
 import { useMessageOf } from "@/shared/lib/use-message-of"
-import { Badge } from "@/shared/ui/badge"
-import { Button } from "@/shared/ui/button"
 
 import type { AccessToken } from "../../api"
 import { useRevokeAccessToken } from "../../queries"
@@ -45,10 +44,8 @@ export function TokenRow({ token }: { token: AccessToken }) {
       <div className="min-w-0 flex-1 space-y-1 text-xs text-muted-foreground">
         <div className="flex flex-wrap items-center gap-2">
           <span className="truncate text-sm font-semibold text-foreground">{token.name}</span>
-          <Badge variant="secondary" className="font-mono text-[11px]">
-            {t("tokens.endsWith", { hint: token.hint })}
-          </Badge>
-          {token.expired && <Badge variant="destructive">{t("tokens.expired")}</Badge>}
+          <Tag className="font-mono text-[11px]">{t("tokens.endsWith", { hint: token.hint })}</Tag>
+          {token.expired && <StatusBadge tone="error">{t("tokens.expired")}</StatusBadge>}
         </div>
         <p>{t("tokens.dates", dates)}</p>
         <p>
@@ -58,8 +55,8 @@ export function TokenRow({ token }: { token: AccessToken }) {
         </p>
       </div>
       <Button
-        variant="outline"
-        size="sm"
+        variant="secondary"
+        size="small"
         disabled={revoke.isPending}
         aria-label={t("tokens.revokeLabel", { name: token.name })}
         onClick={() => setConfirming(true)}

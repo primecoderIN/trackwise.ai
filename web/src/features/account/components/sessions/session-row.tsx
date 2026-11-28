@@ -1,14 +1,13 @@
 // One row of "Where you're signed in": device-aware icon (phone vs desktop), browser & OS, timestamps, and Sign out.
 // Part of the account feature (components/sessions/). Used by sessions-card.tsx.
 
+import { Button, StatusBadge } from "@primecoderin/fast-ui-react"
+import { toast } from "@/shared/lib/toast"
 import { Monitor, Smartphone } from "lucide-react"
 import { useTranslations } from "next-intl"
-import { toast } from "sonner"
 
 import { useFormatters } from "@/shared/lib/use-formatters"
 import { useMessageOf } from "@/shared/lib/use-message-of"
-import { Badge } from "@/shared/ui/badge"
-import { Button } from "@/shared/ui/button"
 
 import type { Session } from "../../api"
 import { deviceOf } from "../../device-name"
@@ -48,7 +47,7 @@ export function SessionRow({ session }: { session: Session }) {
       <div className="min-w-0 flex-1">
         <p className="flex flex-wrap items-center gap-2 font-medium text-foreground">
           <span>{device}</span>
-          {session.current && <Badge variant="positive">{t("sessions.thisBrowser")}</Badge>}
+          {session.current && <StatusBadge tone="success">{t("sessions.thisBrowser")}</StatusBadge>}
         </p>
         <p className="mt-0.5 text-xs text-muted-foreground">
           {t("sessions.times", { signedIn, lastActive: formatDateTime(session.last_active_at) })}
@@ -56,8 +55,8 @@ export function SessionRow({ session }: { session: Session }) {
       </div>
       {!session.current && (
         <Button
-          variant="outline"
-          size="sm"
+          variant="secondary"
+          size="small"
           disabled={signOut.isPending}
           aria-label={t("sessions.signOutLabel", { device, signedIn })}
           onClick={handleSignOut}

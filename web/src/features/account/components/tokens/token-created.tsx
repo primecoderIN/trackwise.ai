@@ -2,24 +2,18 @@
 // account feature (components/tokens/). Used by create-token-dialog.tsx, which forgets the token when the dialog
 // closes. The token is never written to browser storage or a log: it lives in this dialog's memory only.
 
+import { Button } from "@primecoderin/fast-ui-react"
+import { toast } from "@/shared/lib/toast"
 import { Copy } from "lucide-react"
 import { useTranslations } from "next-intl"
-import { toast } from "sonner"
-
-import { LabeledField } from "@/shared/components/labeled-field"
-import { Button } from "@/shared/ui/button"
-import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
-import { Input } from "@/shared/ui/input"
 
 interface TokenCreatedProps {
   /** The new token, as the server sent it. */
   token: string
-  /** Done was pressed: close the dialog. */
-  onDone: () => void
 }
 
-/** The token in a read-only box (focusing it selects it all), a Copy button, and Done. */
-export function TokenCreated({ token, onDone }: TokenCreatedProps) {
+/** The token in a read-only box (focusing it selects it all) with a Copy button. */
+export function TokenCreated({ token }: TokenCreatedProps) {
   const t = useTranslations("account")
 
   // The clipboard can refuse (an insecure page, a denied permission): then the person copies it by hand.
@@ -33,32 +27,24 @@ export function TokenCreated({ token, onDone }: TokenCreatedProps) {
   }
 
   return (
-    <div className="grid gap-4">
-      <DialogHeader>
-        <DialogTitle>{t("newToken.createdTitle")}</DialogTitle>
-        <DialogDescription>{t("newToken.createdDescription")}</DialogDescription>
-      </DialogHeader>
-      <LabeledField id="token-value" label={t("newToken.token")}>
-        <div className="flex gap-2">
-          <Input
-            id="token-value"
-            readOnly
-            autoComplete="off"
-            spellCheck={false}
-            className="font-mono"
-            value={token}
-            onFocus={(event) => event.target.select()}
-          />
-          <Button type="button" variant="outline" onClick={() => void copy()}>
-            <Copy /> {t("newToken.copy")}
-          </Button>
-        </div>
-      </LabeledField>
-      <DialogFooter>
-        <Button type="button" onClick={onDone}>
-          {t("newToken.done")}
+    <div className="grid gap-1.5">
+      <label htmlFor="token-value" className="text-xs font-semibold text-fg">
+        {t("newToken.token")}
+      </label>
+      <div className="flex gap-2">
+        <input
+          id="token-value"
+          readOnly
+          autoComplete="off"
+          spellCheck={false}
+          className="h-10 min-w-0 flex-1 rounded-md border border-line bg-subtle px-3 font-mono text-sm text-fg outline-none focus-visible:border-primary-active focus-visible:ring-2 focus-visible:ring-focus"
+          value={token}
+          onFocus={(event) => event.target.select()}
+        />
+        <Button variant="secondary" icon={<Copy />} onClick={() => void copy()}>
+          {t("newToken.copy")}
         </Button>
-      </DialogFooter>
+      </div>
     </div>
   )
 }

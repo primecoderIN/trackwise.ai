@@ -1,12 +1,12 @@
 // The Settings page's "Where you're signed in" card: every browser signed in to the account, and "Sign out everywhere
 // else". Part of the account feature (components/sessions/). Used by settings-page.tsx.
 
+import { Button } from "@primecoderin/fast-ui-react"
+import { toast } from "@/shared/lib/toast"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
-import { toast } from "sonner"
 
 import { useMessageOf } from "@/shared/lib/use-message-of"
-import { Button } from "@/shared/ui/button"
 
 import { useSessions, useSignOutOtherSessions } from "../../queries"
 import { ConfirmDialog } from "../confirm-dialog"
@@ -56,8 +56,8 @@ function SignOutOthers({ disabled }: { disabled: boolean }) {
   return (
     <div>
       <Button
-        variant="outline"
-        size="sm"
+        variant="secondary"
+        size="small"
         disabled={disabled || signOutOthers.isPending}
         onClick={() => setConfirming(true)}
       >

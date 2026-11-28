@@ -1,18 +1,8 @@
 // "Are you sure?" before something that ends access: revoking a token, signing every other browser out. Part of the
 // account feature (components/). Used by the token row and the sessions card.
 
+import { Button, Dialog } from "@primecoderin/fast-ui-react"
 import { useTranslations } from "next-intl"
-
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/shared/ui/alert-dialog"
 
 interface ConfirmDialogProps {
   open: boolean
@@ -32,19 +22,30 @@ interface ConfirmDialogProps {
 export function ConfirmDialog({ open, onClose, title, description, confirmLabel, onConfirm }: ConfirmDialogProps) {
   const t = useTranslations("account")
   return (
-    <AlertDialog open={open} onOpenChange={(next) => !next && onClose()}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>{t("actions.cancel")}</AlertDialogCancel>
-          <AlertDialogAction variant="destructive" onClick={onConfirm}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => !next && onClose()}
+      modalType="alert"
+      size="narrow"
+      title={title}
+      actions={
+        <>
+          <Button variant="secondary" onClick={onClose}>
+            {t("actions.cancel")}
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              onConfirm()
+              onClose()
+            }}
+          >
             {confirmLabel}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </Button>
+        </>
+      }
+    >
+      <p className="text-sm text-fg-secondary">{description}</p>
+    </Dialog>
   )
 }

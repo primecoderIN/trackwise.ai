@@ -1,20 +1,21 @@
 // The "New token" button and its dialog: first the form, then, once the token is made, the token itself, shown this
 // once. Part of the account feature (components/tokens/). Used by tokens-card.tsx.
 
+import { Button, Dialog } from "@primecoderin/fast-ui-react"
+import { toast } from "@/shared/lib/toast"
 import { Plus } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useState, type FormEvent } from "react"
-import { toast } from "sonner"
 
 import { useMessageOf } from "@/shared/lib/use-message-of"
-import { Button } from "@/shared/ui/button"
-import { Dialog, DialogContent, DialogTrigger } from "@/shared/ui/dialog"
 
 import type { NewAccessToken } from "../../api"
 import { useCreateAccessToken } from "../../queries"
-import { BLANK_TOKEN } from "../../token-form"
+import { BLANK_TOKEN, isComplete } from "../../token-form"
 import { TokenCreated } from "./token-created"
 import { TokenFields } from "./token-fields"
+
+const FORM_ID = "create-token-form"
 
 /**
  * Makes a token. The token is kept only in this dialog's state while it's open: closing the dialog forgets it (and
@@ -23,6 +24,7 @@ import { TokenFields } from "./token-fields"
  */
 export function CreateTokenDialog() {
   const t = useTranslations("account")
+  const tCommon = useTranslations("common")
   const messageOf = useMessageOf()
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState<NewAccessToken>(BLANK_TOKEN)
@@ -55,25 +57,49 @@ export function CreateTokenDialog() {
     )
   }
 
-  return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button size="sm">
-          <Plus /> {t("tokens.create")}
+  const actions =
+    token !== null ? (
+      <Button variant="primary" onClick={close}>
+        {t("newToken.done")}
+      </Button>
+    ) : (
+      <>
+        <Button variant="secondary" onClick={close} disabled={create.isPending}>
+          {t("actions.cancel")}
         </Button>
-      </DialogTrigger>
-      <DialogContent
-        className="sm:max-w-md"
-        showCloseButton={!token && !create.isPending}
-        onInteractOutside={(event) => (token !== null || create.isPending) && event.preventDefault()}
-        onEscapeKeyDown={(event) => (token !== null || create.isPending) && event.preventDefault()}
+        <Button
+          variant="primary"
+          type="submit"
+          form={FORM_ID}
+          disabled={!isComplete(draft)}
+          isLoading={create.isPending}
+        >
+          {create.isPending ? t("newToken.creating") : t("newToken.create")}
+        </Button>
+      </>
+    )
+
+  return (
+    <>
+      <Button variant="primary" size="small" icon={<Plus />} onClick={() => setOpen(true)}>
+        {t("tokens.create")}
+      </Button>
+      <Dialog
+        open={open}
+        onOpenChange={handleOpenChange}
+        modalType={token !== null || create.isPending ? "alert" : "modal"}
+        size="narrow"
+        title={token !== null ? t("newToken.createdTitle") : t("newToken.title")}
+        description={token !== null ? t("newToken.createdDescription") : t("newToken.description")}
+        closeLabel={token === null && !create.isPending ? tCommon("ui.close") : undefined}
+        actions={actions}
       >
-        {token ? (
-          <TokenCreated token={token} onDone={close} />
+        {token !== null ? (
+          <TokenCreated token={token} />
         ) : (
-          <TokenFields draft={draft} onChange={setDraft} onSubmit={handleSubmit} creating={create.isPending} />
+          <TokenFields formId={FORM_ID} draft={draft} onChange={setDraft} onSubmit={handleSubmit} />
         )}
-      </DialogContent>
-    </Dialog>
+      </Dialog>
+    </>
   )
 }

@@ -1,10 +1,11 @@
 // A component of the budgets feature: the overall budget's card at the top of the Budgets page: the month's total
 // against the overall limit, with today's pace mark and legend on the bar. Used by the Budgets page.
 
+import { Card } from "@primecoderin/fast-ui-react"
+import { CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/card-parts"
 import { useTranslations } from "next-intl"
 
 import { useFormatters } from "@/shared/lib/use-formatters"
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 
 import type { BudgetStatus } from "../api"
 import { BudgetDialog } from "./budget-dialog"

@@ -1,10 +1,12 @@
 // The Settings page's Preferences section: account-synced language, default currency, and timezone, plus
 // browser-local theme selection. Part of the account feature (components/). Used by settings-page.tsx.
 
+import { Button, Card } from "@primecoderin/fast-ui-react"
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/card-parts"
+import { toast } from "@/shared/lib/toast"
 import { Monitor, Moon, Sun, type LucideIcon } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useMemo } from "react"
-import { toast } from "sonner"
 
 import { useSignedInUser } from "@/features/auth"
 import { BASE_CURRENCY, DEFAULT_TIMEZONE, DEFAULT_USER_CURRENCY } from "@/shared/api/contracts.gen"
@@ -15,9 +17,6 @@ import { isSupportedCurrency, type SupportedCurrency } from "@/shared/lib/curren
 import { detectBrowserTimezone } from "@/shared/lib/timezones"
 import { useMessageOf } from "@/shared/lib/use-message-of"
 import { useTheme, type Theme } from "@/shared/theme"
-import { Button } from "@/shared/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
-import { Label } from "@/shared/ui/label"
 
 import { useUpdatePreferences } from "../queries"
 
@@ -46,9 +45,9 @@ function CurrencyAndTimezoneFields({
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <div className="flex min-w-0 flex-col gap-2">
-        <Label htmlFor="pref-currency" className="text-sm font-medium">
+        <label htmlFor="pref-currency" className="text-sm font-medium text-fg">
           {t("preferences.currencyTitle")}
-        </Label>
+        </label>
         <p className="text-xs text-muted-foreground">
           {t("preferences.currencyDescription", { baseCurrency: BASE_CURRENCY })}
         </p>
@@ -64,9 +63,9 @@ function CurrencyAndTimezoneFields({
       </div>
 
       <div className="flex min-w-0 flex-col gap-2">
-        <Label htmlFor="pref-timezone" className="text-sm font-medium">
+        <label htmlFor="pref-timezone" className="text-sm font-medium text-fg">
           {t("preferences.timezoneTitle")}
-        </Label>
+        </label>
         <p className="text-xs text-muted-foreground">{t("preferences.timezoneDescription")}</p>
         <div className="flex flex-col items-start gap-1.5 pt-1">
           <TimezonePicker
@@ -79,8 +78,8 @@ function CurrencyAndTimezoneFields({
           {browserZone !== timezone && (
             <Button
               type="button"
-              variant="link"
-              size="sm"
+              variant="tertiary"
+              size="small"
               className="h-auto p-0 text-xs"
               disabled={disabled}
               onClick={() => onTimezoneChange(browserZone)}
@@ -139,8 +138,8 @@ export function PreferencesCard() {
             {LANGUAGE_CODES.map((code) => (
               <Button
                 key={code}
-                variant={language === code ? "default" : "outline"}
-                size="sm"
+                variant={language === code ? "primary" : "secondary"}
+                size="small"
                 lang={code}
                 aria-pressed={language === code}
                 disabled={busy}
@@ -168,8 +167,8 @@ export function PreferencesCard() {
             {THEME_CHOICES.map(({ theme: choice, icon: Icon }) => (
               <Button
                 key={choice}
-                variant={theme === choice ? "default" : "outline"}
-                size="sm"
+                variant={theme === choice ? "primary" : "secondary"}
+                size="small"
                 aria-pressed={theme === choice}
                 onClick={() => setTheme(choice)}
               >

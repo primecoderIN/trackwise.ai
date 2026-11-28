@@ -1,13 +1,13 @@
 // The Settings page's profile card: who is signed in (elevated avatar, name, email, and terms acceptance badge).
 // Part of the account feature (components/).
 
+import { Card, StatusBadge } from "@primecoderin/fast-ui-react"
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/card-parts"
 import { CheckCircle2 } from "lucide-react"
 import { useTranslations } from "next-intl"
 
 import { UserAvatar, useSignedInUser } from "@/features/auth"
 import { useFormatters } from "@/shared/lib/use-formatters"
-import { Badge } from "@/shared/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 
 /** The signed-in person's picture, name, email, and terms acceptance badge. Nothing while nobody is signed in. */
 export function ProfileCard() {
@@ -35,7 +35,7 @@ export function ProfileCard() {
         </div>
         {user.terms_version && user.terms_accepted_at && (
           <div>
-            <Badge variant="positive" className="h-auto gap-1.5 py-1 whitespace-normal">
+            <StatusBadge tone="success" className="h-auto gap-1.5 py-1 whitespace-normal">
               <CheckCircle2 className="size-3.5 shrink-0" aria-hidden="true" />
               <span>
                 {t("profile.termsAccepted", {
@@ -43,7 +43,7 @@ export function ProfileCard() {
                   date: formatDate(user.terms_accepted_at),
                 })}
               </span>
-            </Badge>
+            </StatusBadge>
           </div>
         )}
       </CardContent>
