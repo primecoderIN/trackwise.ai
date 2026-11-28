@@ -1,8 +1,9 @@
 # Frontend Onboarding
 
-A working guide to the web app (`web/`): Next.js 16 (App Router), React 19, TypeScript 7, Tailwind 4 and shadcn/ui,
-organised as **feature slices**, with server data through **TanStack Query** and a client **generated from the
-backend**. Next.js 16 differs from older versions: its docs ship in `node_modules/next/dist/docs/`.
+A working guide to the web app (`web/`): Next.js 16 (App Router), React 19, TypeScript 7, Tailwind 4 and
+`@primecoderin/fast-ui-react`, organised as **feature slices**, with server data through **TanStack Query** and a
+client **generated from the backend**. Next.js 16 differs from older versions: its docs ship in
+`node_modules/next/dist/docs/`.
 
 ## Running it
 
@@ -50,8 +51,7 @@ src/
     account/            the Settings page: profile, preferences, sessions, access tokens
   shared/               used by any feature; knows none of them
     api/                typed HTTP client (http.ts) + generated contract (*.gen.ts)
-    ui/                 shadcn/ui components (generated source; edit freely)
-    components/         error boundary, section error, refresh notice, empty state, placeholder page, labeled field, month picker, date picker, page skeleton
+    components/         error boundary, section error, refresh notice, empty state, placeholder page, labeled field, card parts, link button styles, toast bridge, month picker, date picker, currency select, timezone picker, page skeleton
     config/             app name, routes, data scopes
     i18n/               languages and locales, NEXT_LOCALE helpers, `useLanguage`, language menu, `common` texts
     hooks/, lib/        use-mobile, use-debounced-value; `useFormatters`, `useMessageOf`, format, guards, errors, ids
@@ -199,10 +199,15 @@ Never edit them. After a backend change: run `backend\scripts\export_contracts.p
 
 ## UI
 
-- **shadcn/ui** components live in `shared/ui/` as source (`components.json` points the shadcn CLI there:
-  `npx shadcn@latest add <name>`). They're the only files the lint rules don't hold to app standards.
-- **Tailwind 4** with CSS variables (`app/index.css`); dark mode is a `dark` class on `<html>`, set before the first
-  paint by a script generated from `shared/theme/theme-constants.ts`.
+- **`@primecoderin/fast-ui-react`** provides the design system tokens (`--fast-*`, Inter font, dark mode, RTL) and
+  accessible Base UI components (`Button`, `Card`, `Dialog`, `Drawer`, `Menu`, `SelectField`, `TextField`, `Combobox`,
+  `DateTimePicker`, `CommandPalette`, `ResizablePanels`, `SideNav`, `StatusBadge`, `Tag`, `useAppToast`, and
+  `@primecoderin/fast-ui-react/charts`). `DesignSystemProvider` is mounted once in `app/_shell/providers.tsx`. For
+  AI-assisted coding, `@primecoderin/fast-ui-react-mcp` is installed as a devDependency and configured in
+  `.vscode/mcp.json` and `.mcp.json` (and `web/node_modules/@primecoderin/fast-ui-react/llms.txt` ships locally).
+- **Tailwind 4** with CSS variables mapped onto `--fast-*` (`app/_styles/index.css`); dark mode is `data-theme="dark"`
+  on `<html>`, set before the first paint by a script generated from `shared/theme/theme-constants.ts` and managed at
+  runtime by `DesignSystemProvider`.
 - **Formatting** goes through `useFormatters()` (binding the active `next-intl` locale's BCP 47 tag into
   `shared/lib/format.ts`): `formatMoney("1250.5", "USD")` → `$1,250.50` (the currency's CLDR format, matching the
   backend's cards), `formatDate`, `formatMonth`.
@@ -212,7 +217,9 @@ Never edit them. After a backend change: run `backend\scripts\export_contracts.p
 - **Every call carries `apiHeaders()`** (`shared/api/http.ts`): the language and `X-CSRF: 1`, without which the API
   answers 403 (D186). `api` adds them itself; a direct `fetch` (the assistant's stream) spreads them in. The session
   is a cookie the browser sends by itself (same origin, D184): the app never sees or stores a token.
-- **Charts:** shadcn charts (Recharts 3). A chart config's keys become CSS variables; keep configs fixed.
+- **Charts:** `@primecoderin/fast-ui-react/charts` (Recharts 3) for trend and assistant insight charts (with built-in
+  screen-reader data tables and theme tokens), plus a custom Recharts horizontal bar chart for click-to-filter category
+  drill-down on the Dashboard.
 
 ## The assistant feature
 
@@ -282,7 +289,7 @@ namespaces={[...]} />` inside the route's `page.tsx`. If its changes should refr
 
 1. The server first (backend_onboarding.md, "Recipe: add a language"), then regenerate the contract.
 2. One entry in `LANGUAGES` (`shared/i18n/languages.ts`): its code (a BCP 47 tag, like `pt-BR`), its name in itself,
-   its Intl locale, its writing direction, and a loader for its react-day-picker locale. The table is typed against
+   its Intl locale, its writing direction, and a loader for its `date-fns` calendar locale. The table is typed against
    the server's `LANGUAGES`, so a language one side lacks fails `tsc`.
 3. One file per namespace, next to `hi.ts` (`common`, `app`, every feature, plus `app/_public/texts/`), typed
    `Translation<typeof en>`, and its loader in that namespace's `i18n/index.ts`. The compiler lists every namespace
@@ -324,7 +331,7 @@ namespaces={[...]} />` inside the route's `page.tsx`. If its changes should refr
 
 Automated tests aren't part of the repository yet. Until they are, before asking for a review:
 
-1. `npx tsc -b` and `npx oxlint` are clean (warnings only inside `shared/ui`).
+1. `npx tsc -b` and `npx oxlint --deny-warnings` are clean.
 2. `npm run build` passes.
 3. Try it in the browser with the backend running: the happy path, an error (stop the backend), and a narrow window.
 4. If the backend changed: the contract is regenerated and committed.

@@ -557,11 +557,12 @@ web/
       assistant/    chat panel; model/ (useChat, AssistantProvider); api/ (AG-UI stream, StreamError); a2ui/
       auth/         sign-in page, AuthGate (the session check in front of the signed-in pages), user menu
       account/      Settings page: profile, sessions (sign out one or all others), personal access tokens, preferences
-    shared/         knows no feature: ui/ (shadcn kit), api/ (typed HTTP client, generated contract), config/ (app name,
-                    routes, data scopes), i18n/ (languages, NEXT_LOCALE cookie/header helpers, `useLanguage`, language
-                    menu, `Translation<T>`, shared "common" texts), lib/ (formatting, `useFormatters`, guards, errors,
-                    `useMessageOf`, ids), components/ (empty state, error boundary, section error, refresh notice,
-                    placeholder page, labeled field, CurrencySelect, TimezonePicker), hooks/, theme/
+    shared/         knows no feature: api/ (typed HTTP client, generated contract), config/ (app name, routes, data
+                    scopes), i18n/ (languages, NEXT_LOCALE cookie/header helpers, `useLanguage`, language menu,
+                    `Translation<T>`, shared "common" texts), lib/ (formatting, `useFormatters`, guards, errors,
+                    `useMessageOf`, ids, `toast` bridge, `cn`), components/ (empty state, error boundary, section
+                    error, refresh notice, placeholder page, labeled field, card parts, link button styles,
+                    `ToastBridge`, `CurrencySelect`, `DatePicker`, `MonthPicker`, `TimezonePicker`), hooks/, theme/
 ```
 
 ### The rules

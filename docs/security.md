@@ -215,8 +215,8 @@ them as untrusted:
 
 - no HTML or code: only an allow-list of components mapped to the app's own; text is rendered by React (escaped);
 - unknown catalogs and components become a harmless "Can't show …" note;
-- server values are only used as lookup keys (class names, icons, chart colours from a fixed list), never pasted into
-  styles; shadcn's chart writes its config into a `<style>` tag, so that config is fixed;
+- server values are only used as lookup keys (class names, icons, chart tokens from a fixed list), never pasted into
+  styles; insight charts render through `@primecoderin/fast-ui-react/charts` with fixed series keys and theme tokens;
 - data-model paths refuse `__proto__`, `prototype` and `constructor` (no prototype pollution);
 - a card that would draw over 300 components, nest deeper than 12 or contain itself is refused before drawing;
 - every card has its own error boundary: a broken card can't take the app down;

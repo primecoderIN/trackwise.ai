@@ -32,7 +32,7 @@ PYTHON_STEPS = [
 ]
 WEB_STEPS = [
     ("TypeScript: types", [NPX, "tsc", "-b"], WEB),
-    ("oxlint: lint and import rules", [NPX, "oxlint", "--deny-warnings", "--ignore-pattern", "src/shared/ui/**"], WEB),
+    ("oxlint: lint and import rules", [NPX, "oxlint", "--deny-warnings"], WEB),
     ("Prettier: format", [NPX, "prettier", "--check", "src"], WEB),
     ("Next.js: build", [NPX, "next", "build"], WEB),
 ]

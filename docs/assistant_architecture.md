@@ -243,7 +243,8 @@ sequenceDiagram
 - server values are only ever lookup keys (class names, icons), never pasted into styles;
 - data-model paths refuse `__proto__`, `prototype` and `constructor`;
 - a card that would draw more than 300 components, nest deeper than 12, or contain itself is refused before drawing;
-- the chart config is fixed, because shadcn's chart writes config keys into a `<style>` tag;
+- insight charts render through `@primecoderin/fast-ui-react/charts` with fixed series keys and theme tokens (no agent
+  values ever become CSS variables or `<style>` rules);
 - each card sits in its own error boundary.
 
 ## Skills: instructions loaded when needed (Phase 26, D208)

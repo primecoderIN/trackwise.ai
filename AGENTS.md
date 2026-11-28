@@ -275,7 +275,10 @@ files, not new branches in shared code.
   - Sortable headers set `aria-sort`.
   - Live regions announce changes.
   - jsx-a11y rules must pass.
-- **shadcn/ui** components live in `src/shared/ui` (generated; add them with `npx shadcn@latest add <name>`).
+- **UI components and design tokens** come from `@primecoderin/fast-ui-react` (and `@primecoderin/fast-ui-react/charts`).
+  Read `web/node_modules/@primecoderin/fast-ui-react/llms.txt` or query the configured `fast-ui` MCP server
+  (`@primecoderin/fast-ui-react-mcp`, wired in `.vscode/mcp.json` and `.mcp.json`) for exact component props, tokens,
+  and examples before writing UI code.
 
 ## 4. Code rules for both halves
 
