@@ -1,14 +1,13 @@
 // A component of the expenses feature: the upgraded filter bar card above the table (search with inline clear,
 // category dropdown with icons, calendar date pickers, quick date presets, and Clear filters). Used by ExpensesPage.
 
+import { Button, TextField } from "@primecoderin/fast-ui-react"
 import { Search, X } from "lucide-react"
 import { useTranslations } from "next-intl"
 
 import { ANY_CATEGORY, CategorySelect } from "@/features/categories"
 import { DatePicker } from "@/shared/components/date-picker"
 import { LabeledField } from "@/shared/components/labeled-field"
-import { Button } from "@/shared/ui/button"
-import { Input } from "@/shared/ui/input"
 
 import type { ExpenseFilters } from "../../api"
 import { datePresetRange, type DatePreset } from "../../filter-params"
@@ -44,42 +43,34 @@ export function FiltersBar({ filters, onChange }: FiltersBarProps) {
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-border/80 bg-card p-4 shadow-xs">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(13rem,1.4fr)_minmax(10rem,1fr)_minmax(9.5rem,1fr)_minmax(9.5rem,1fr)]">
-        <LabeledField id="filter-search" label={t("filters.search")}>
-          <div className="relative">
-            <Search
-              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <Input
-              id="filter-search"
-              maxLength={100}
-              placeholder={t("filters.searchPlaceholder")}
-              className="pr-8 pl-9"
-              value={filters.search ?? ""}
-              onChange={(event) => set({ search: event.target.value || undefined })}
-            />
-            {filters.search && (
+        <TextField
+          label={t("filters.search")}
+          maxLength={100}
+          placeholder={t("filters.searchPlaceholder")}
+          value={filters.search ?? ""}
+          onValueChange={(value) => set({ search: value || undefined })}
+          contentBefore={<Search className="size-4 text-fg-secondary" aria-hidden="true" />}
+          contentAfter={
+            filters.search ? (
               <button
                 type="button"
                 aria-label={t("filters.clearSearch")}
                 onClick={() => set({ search: undefined })}
-                className="absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="rounded p-1 text-fg-secondary hover:bg-subtle hover:text-fg"
               >
                 <X className="size-3.5" aria-hidden="true" />
               </button>
-            )}
-          </div>
-        </LabeledField>
+            ) : undefined
+          }
+          size="small"
+        />
 
-        <LabeledField id="filter-category" label={t("fields.category")}>
-          <CategorySelect
-            id="filter-category"
-            className="w-full"
-            anyLabel={t("filters.allCategories")}
-            value={filters.category_id ? String(filters.category_id) : ANY_CATEGORY}
-            onChange={(value) => set({ category_id: value === ANY_CATEGORY ? undefined : Number(value) })}
-          />
-        </LabeledField>
+        <CategorySelect
+          label={t("fields.category")}
+          anyLabel={t("filters.allCategories")}
+          value={filters.category_id ? String(filters.category_id) : ANY_CATEGORY}
+          onChange={(value) => set({ category_id: value === ANY_CATEGORY ? undefined : Number(value) })}
+        />
 
         <LabeledField id="filter-from" label={t("filters.from")}>
           <DatePicker
@@ -122,8 +113,8 @@ export function FiltersBar({ filters, onChange }: FiltersBarProps) {
               <Button
                 key={key}
                 type="button"
-                size="xs"
-                variant={active ? "default" : "outline"}
+                size="small"
+                variant={active ? "primary" : "secondary"}
                 aria-pressed={active}
                 onClick={() => applyPreset(key)}
               >
@@ -134,7 +125,7 @@ export function FiltersBar({ filters, onChange }: FiltersBarProps) {
         </div>
 
         {hasFilters && (
-          <Button type="button" variant="ghost" size="xs" onClick={() => onChange({})}>
+          <Button type="button" variant="subtle" size="small" onClick={() => onChange({})}>
             <X className="size-3.5" aria-hidden="true" /> {t("filters.clear")}
           </Button>
         )}

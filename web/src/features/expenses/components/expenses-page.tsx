@@ -2,6 +2,8 @@
 // parameters (so Categories and Dashboard drill-downs work directly), handles `?add=1` deep-links, and lays out the
 // filter card, responsive table/cards, Add dialog, and Delete confirmation.
 
+import { Card } from "@primecoderin/fast-ui-react"
+import { CardContent } from "@/shared/components/card-parts"
 import { ReceiptText } from "lucide-react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
@@ -14,7 +16,6 @@ import { RefreshNotice } from "@/shared/components/refresh-notice"
 import { SectionError } from "@/shared/components/section-error"
 import { useDebouncedValue } from "@/shared/hooks/use-debounced-value"
 import { useMessageOf } from "@/shared/lib/use-message-of"
-import { Card, CardContent } from "@/shared/ui/card"
 
 import type { Expense, ExpenseFilters } from "../api"
 import { filtersFromSearchParams, filtersToQueryString } from "../filter-params"

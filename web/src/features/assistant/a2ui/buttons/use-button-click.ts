@@ -2,8 +2,8 @@
 // (a report download, D209). Part of the assistant feature's A2UI renderer; used by A2uiButton
 // (renderers/basic-components.tsx).
 
+import { toast } from "@/shared/lib/toast"
 import { useRef, useState } from "react"
-import { toast } from "sonner"
 
 import { isAbort, reportUnexpected } from "@/shared/lib/errors"
 import { useMessageOf } from "@/shared/lib/use-message-of"

@@ -1,13 +1,13 @@
 // A component of the assistant feature: unified rounded composer with auto-growing textarea, image-thumbnail
 // receipt preview, clipboard paste support, and Send/Stop action. Used by ChatPanel.
 
+import { Button } from "@primecoderin/fast-ui-react"
+import { toast } from "@/shared/lib/toast"
 import { SendHorizontal, Square } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { memo, useEffect, useRef, useState, type ClipboardEvent, type FormEvent, type KeyboardEvent } from "react"
-import { toast } from "sonner"
 
 import { LIMITS } from "@/shared/api/contracts.gen"
-import { Button } from "@/shared/ui/button"
 
 import { attachmentProblem, MAX_RECEIPT_MB } from "../model/attachments"
 import { AttachButton } from "./attach-button"
@@ -114,22 +114,25 @@ export const ChatComposer = memo(function ChatComposer({
           {sending ? (
             <Button
               type="button"
-              size="icon-sm"
-              variant="outline"
+
+              variant="secondary"
               aria-label={t("composer.stop")}
               title={t("composer.stop")}
               onClick={onStop}
               className="shrink-0 rounded-xl"
+              size="small"
             >
               <Square className="size-3.5 fill-current" />
             </Button>
           ) : (
             <Button
+              variant="icon"
               type="submit"
-              size="icon-sm"
+
               aria-label={t("composer.send")}
               disabled={!ready}
               className="shrink-0 rounded-xl"
+              size="small"
             >
               <SendHorizontal className="size-4" />
             </Button>

@@ -1,13 +1,13 @@
 // A component of the dashboard feature: the row of three headline KPI cards at the top of the Dashboard, featuring
 // month-over-month delta badges, average spend per transaction, and colour-coded top category insight.
 
+import { Card, StatusBadge, Tag } from "@primecoderin/fast-ui-react"
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/card-parts"
 import { ArrowDownRight, ArrowUpRight, Minus, ReceiptText, TrendingUp, Wallet } from "lucide-react"
 import { useTranslations } from "next-intl"
 
 import { categoryVisual, useCategoryLookup } from "@/features/categories"
 import { useFormatters } from "@/shared/lib/use-formatters"
-import { Badge } from "@/shared/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 
 import type { MonthlySummary } from "../api"
 
@@ -23,25 +23,25 @@ function DeltaBadge({ currentMinor, previousMinor }: { currentMinor: number; pre
   const pct = Math.round(((currentMinor - previousMinor) / previousMinor) * 100)
   if (pct === 0) {
     return (
-      <Badge variant="secondary" className="gap-1">
+      <Tag className="gap-1">
         <Minus className="size-3" aria-hidden="true" />
         {t("stats.vsLastMonthSame")}
-      </Badge>
+      </Tag>
     )
   }
   if (pct > 0) {
     return (
-      <Badge variant="warning" className="gap-1 tabular-nums">
+      <StatusBadge tone="warning" className="gap-1 tabular-nums">
         <ArrowUpRight className="size-3" aria-hidden="true" />
         {t("stats.vsLastMonthUp", { percent: pct })}
-      </Badge>
+      </StatusBadge>
     )
   }
   return (
-    <Badge variant="positive" className="gap-1 tabular-nums">
+    <StatusBadge tone="success" className="gap-1 tabular-nums">
       <ArrowDownRight className="size-3" aria-hidden="true" />
       {t("stats.vsLastMonthDown", { percent: Math.abs(pct) })}
-    </Badge>
+    </StatusBadge>
   )
 }
 

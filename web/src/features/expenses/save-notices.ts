@@ -1,7 +1,7 @@
 // What the server noticed about a save (a budget pushed near or over its limit, D212), shown to the person. Part of
 // the expenses feature; used by the Add dialog and the table's inline editing after a successful save.
 
-import { toast } from "sonner"
+import { toast } from "@/shared/lib/toast"
 
 /**
  * Shows each notice as a warning toast. The notices are texts the server wrote for people, in the language of the

@@ -4,11 +4,10 @@
 // the server is shown as escaped text or used only as a key into a fixed table (pick()), never pasted into a
 // class name or a style.
 
+import { Button, Card, Separator } from "@primecoderin/fast-ui-react"
+import { CardContent } from "@/shared/components/card-parts"
 import { pick } from "@/shared/lib/guards"
 import { cn } from "@/shared/lib/utils"
-import { Button } from "@/shared/ui/button"
-import { Card, CardContent } from "@/shared/ui/card"
-import { Separator } from "@/shared/ui/separator"
 
 import { Unsupported } from "./a2ui-unsupported"
 import { ALIGN, AXIS, BUTTON_VARIANT, JUSTIFY, TEXT_VARIANT } from "./basic-catalog"
@@ -36,7 +35,7 @@ export function A2uiText({ node, ctx }: A2uiRendererProps) {
 /** Card: a small card around its one child. */
 export function A2uiCard({ node, renderChild }: A2uiRendererProps) {
   return (
-    <Card size="sm" className="w-full">
+    <Card padding="medium" className="w-full">
       <CardContent>{renderChild(node.child)}</CardContent>
     </Card>
   )
@@ -93,7 +92,7 @@ export function A2uiButton({ node, ctx, renderChild }: A2uiRendererProps) {
     <Button
       type="button"
       variant={pick(BUTTON_VARIANT, node.variant) ?? BUTTON_VARIANT.default}
-      size="sm"
+      size="small"
       className="self-start"
       disabled={click === null}
       onClick={click ?? undefined}

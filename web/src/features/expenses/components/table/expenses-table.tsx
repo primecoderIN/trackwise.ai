@@ -1,6 +1,7 @@
 // A component of the expenses feature: the expenses table (TanStack Table) on desktop and stacked card list on
 // mobile, wired to the slide-over EditExpenseSheet, skeleton loading rows, refetch dimming, and top/bottom paging.
 
+import { SkeletonItem } from "@primecoderin/fast-ui-react"
 import { flexRender, useTable, type Row, type RowSelectionState } from "@tanstack/react-table"
 import { useTranslations } from "next-intl"
 import { useCallback, useMemo, useState } from "react"
@@ -8,8 +9,6 @@ import { useCallback, useMemo, useState } from "react"
 import { useCategoryLookup, useCategoryName } from "@/features/categories"
 import { useLanguage } from "@/shared/i18n"
 import { useFormatters } from "@/shared/lib/use-formatters"
-import { Skeleton } from "@/shared/ui/skeleton"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table"
 
 import type { Expense } from "../../api"
 import { useIsDeletingExpenses } from "../../queries"
@@ -150,20 +149,24 @@ export function ExpensesTable({
           fetching && !loading ? "opacity-65" : "opacity-100"
         }`}
       >
-        <Table>
-          <TableHeader className="bg-muted/35">
+        <table className="w-full caption-bottom text-sm">
+          <thead className="bg-muted">
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="hover:bg-transparent">
+              <tr key={headerGroup.id} className="border-b border-line-subtle">
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} aria-sort={ariaSortOf(header.column.getIsSorted())} className="h-11 px-3">
+                  <th
+                    key={header.id}
+                    aria-sort={ariaSortOf(header.column.getIsSorted())}
+                    className="h-11 px-3 text-start align-middle text-xs font-semibold text-fg-secondary"
+                  >
                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
+                  </th>
                 ))}
-              </TableRow>
+              </tr>
             ))}
-          </TableHeader>
+          </thead>
           <ExpenseRows rows={table.getRowModel().rows} columnCount={columns.length} loading={loading} />
-        </Table>
+        </table>
       </div>
 
       {hasPaging && (
@@ -203,36 +206,40 @@ function ExpenseRows({
   const t = useTranslations("expenses")
   if (loading) {
     return (
-      <TableBody>
+      <tbody>
         {[0, 1, 2, 3, 4, 5].map((index) => (
-          <TableRow key={index}>
-            <TableCell colSpan={columnCount} className="px-3 py-3">
-              <Skeleton className="h-7 w-full rounded-md" />
-            </TableCell>
-          </TableRow>
+          <tr key={index} className="border-b border-line-subtle">
+            <td colSpan={columnCount} className="px-3 py-3">
+              <SkeletonItem className="h-7 w-full rounded-md" />
+            </td>
+          </tr>
         ))}
-      </TableBody>
+      </tbody>
     )
   }
   return (
-    <TableBody>
+    <tbody>
       {rows.length === 0 ? (
-        <TableRow>
-          <TableCell colSpan={columnCount} className="h-28 text-center text-muted-foreground">
+        <tr>
+          <td colSpan={columnCount} className="h-28 text-center text-fg-secondary">
             {t("table.noMatches")}
-          </TableCell>
-        </TableRow>
+          </td>
+        </tr>
       ) : (
         rows.map((row) => (
-          <TableRow key={row.id} data-state={row.getIsSelected() ? "selected" : undefined}>
+          <tr
+            key={row.id}
+            data-state={row.getIsSelected() ? "selected" : undefined}
+            className="border-b border-line-subtle transition-colors hover:bg-surface-hover data-[state=selected]:bg-selected"
+          >
             {row.getAllCells().map((cell) => (
-              <TableCell key={cell.id} className="px-3 py-2.5">
+              <td key={cell.id} className="px-3 py-2.5 align-middle">
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </TableCell>
+              </td>
             ))}
-          </TableRow>
+          </tr>
         ))
       )}
-    </TableBody>
+    </tbody>
   )
 }

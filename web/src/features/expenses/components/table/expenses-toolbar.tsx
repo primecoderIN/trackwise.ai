@@ -1,12 +1,12 @@
 // A part of the expenses feature's table: the toolbar above (and pagination strip below) the table showing result
 // counts, visible page subtotal in BASE_CURRENCY, bulk delete controls, and numbered pagination. Used by ExpensesTable.
 
+import { Button } from "@primecoderin/fast-ui-react"
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react"
 import { useTranslations } from "next-intl"
 
 import { BASE_CURRENCY } from "@/shared/api/contracts.gen"
 import { useFormatters } from "@/shared/lib/use-formatters"
-import { Button } from "@/shared/ui/button"
 
 const PART_SEPARATOR = " · "
 
@@ -73,7 +73,7 @@ export function ExpensesToolbar({
       <span className="tabular-nums">{parts.filter((part) => part !== null).join(PART_SEPARATOR)}</span>
       <div className="flex flex-wrap items-center gap-2">
         {selected > 0 && (
-          <Button size="sm" variant="destructive" disabled={deleting} onClick={onDeleteSelected}>
+          <Button size="small" variant="destructive" disabled={deleting} onClick={onDeleteSelected}>
             <Trash2 className="size-3.5" /> {t("toolbar.deleteSelected")}
           </Button>
         )}
@@ -115,15 +115,15 @@ export function ExpensesPagination({
         {t("toolbar.pageOf", { page, pages: totalPages })}
       </span>
       <Button
-        size="icon-xs"
-        variant="outline"
+        variant="secondary"
         aria-label={t("toolbar.previousPage")}
         disabled={!canPrev}
         onClick={onPrev}
+        size="small"
       >
         <ChevronLeft className="size-3.5" />
       </Button>
-      <Button size="icon-xs" variant="outline" aria-label={t("toolbar.nextPage")} disabled={!canNext} onClick={onNext}>
+      <Button variant="secondary" aria-label={t("toolbar.nextPage")} disabled={!canNext} onClick={onNext} size="small">
         <ChevronRight className="size-3.5" />
       </Button>
     </div>

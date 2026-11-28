@@ -1,6 +1,7 @@
 // A part of the expenses feature's table: TanStack Table v9 column definitions with compact 7-column density,
 // colour-coded category pills, truncated inline notes under merchant, and clean right-aligned amounts & actions.
 
+import { Button, CheckboxBox, Tag } from "@primecoderin/fast-ui-react"
 import {
   createColumnHelper,
   createSortedRowModel,
@@ -18,9 +19,6 @@ import type { useTranslations } from "next-intl"
 import { categoryVisual } from "@/features/categories"
 import { ExpenseMoney } from "@/shared/components/money"
 import type { Language } from "@/shared/i18n"
-import { Badge } from "@/shared/ui/badge"
-import { Button } from "@/shared/ui/button"
-import { Checkbox } from "@/shared/ui/checkbox"
 
 import type { Expense } from "../../api"
 import { paymentMethodLabel } from "../../payment-methods"
@@ -72,17 +70,18 @@ function selectColumn(t: ExpensesT) {
   return columnHelper.display({
     id: "select",
     header: ({ table }) => (
-      <Checkbox
+      <CheckboxBox
         aria-label={t("table.selectAll")}
-        checked={table.getIsAllRowsSelected() || (table.getIsSomeRowsSelected() && "indeterminate")}
-        onCheckedChange={(value) => table.toggleAllRowsSelected(value === true)}
+        checked={table.getIsAllRowsSelected()}
+        indeterminate={table.getIsSomeRowsSelected() && !table.getIsAllRowsSelected()}
+        onCheckedChange={(value) => table.toggleAllRowsSelected(value)}
       />
     ),
     cell: ({ row }) => (
-      <Checkbox
+      <CheckboxBox
         aria-label={t("table.selectRow", { id: row.original.id })}
         checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(value === true)}
+        onCheckedChange={(value) => row.toggleSelected(value)}
       />
     ),
     enableSorting: false,
@@ -141,7 +140,7 @@ function dataColumns({
     }),
     columnHelper.accessor("payment_method", {
       header: t("fields.paidWith"),
-      cell: ({ getValue }) => <Badge variant="secondary">{paymentMethodLabel(getValue(), language)}</Badge>,
+      cell: ({ getValue }) => <Tag>{paymentMethodLabel(getValue(), language)}</Tag>,
       enableSorting: false,
     }),
     columnHelper.accessor((expense) => expense.base_amount_minor ?? expense.amount_minor, {
@@ -170,19 +169,19 @@ function actionsColumn({ t, deleting, onEdit, onDelete }: ExpenseColumnOptions) 
     cell: ({ row }) => (
       <div className="flex justify-end gap-1">
         <Button
-          size="icon-sm"
-          variant="ghost"
+          variant="icon"
           aria-label={t("table.editRow", { id: row.original.id })}
           onClick={() => onEdit(row.original.id)}
+          size="small"
         >
           <Pencil className="size-3.5" />
         </Button>
         <Button
-          size="icon-sm"
-          variant="ghost"
+          variant="icon"
           aria-label={t("table.deleteRow", { id: row.original.id })}
           disabled={deleting}
           onClick={() => onDelete([row.original])}
+          size="small"
         >
           <Trash2 className="size-3.5 text-destructive" />
         </Button>

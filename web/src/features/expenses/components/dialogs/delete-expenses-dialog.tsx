@@ -2,22 +2,13 @@
 // runs the delete and reports what happened. Used by the Expenses page, which opens it from the table's buttons.
 // Its texts (and the toasts' counts, in each language's plural forms) come from the feature's i18n namespace.
 
+import { Button, Dialog } from "@primecoderin/fast-ui-react"
+import { toast } from "@/shared/lib/toast"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
-import { toast } from "sonner"
 
 import { useFormatters } from "@/shared/lib/use-formatters"
 import { useMessageOf } from "@/shared/lib/use-message-of"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/shared/ui/alert-dialog"
 
 import type { Expense } from "../../api"
 import { useDeleteExpenses } from "../../queries"
@@ -25,7 +16,7 @@ import { useDeleteExpenses } from "../../queries"
 interface DeleteExpensesDialogProps {
   /** The expenses to delete; null while the dialog is closed. */
   expenses: Expense[] | null
-  /** Closes the dialog (Cancel, Escape, a click outside, or Delete, which closes it first). */
+  /** Closes the dialog (Cancel, Escape, or Delete, which closes it first). */
   onClose: () => void
 }
 
@@ -74,21 +65,24 @@ export function DeleteExpensesDialog({ expenses, onClose }: DeleteExpensesDialog
     : t("delete.describeSeveral")
 
   return (
-    <AlertDialog open={expenses !== null} onOpenChange={(open) => !open && onClose()}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>
-            {single ? t("delete.titleOne") : t("delete.titleSeveral", { count: shown.length })}
-          </AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>{t("actions.cancel")}</AlertDialogCancel>
-          <AlertDialogAction variant="destructive" onClick={confirm}>
+    <Dialog
+      open={expenses !== null}
+      onOpenChange={(open) => !open && onClose()}
+      modalType="alert"
+      size="narrow"
+      title={single ? t("delete.titleOne") : t("delete.titleSeveral", { count: shown.length })}
+      actions={
+        <>
+          <Button variant="secondary" onClick={onClose}>
+            {t("actions.cancel")}
+          </Button>
+          <Button variant="destructive" onClick={confirm}>
             {t("actions.delete")}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </Button>
+        </>
+      }
+    >
+      <p className="text-sm text-fg-secondary">{description}</p>
+    </Dialog>
   )
 }

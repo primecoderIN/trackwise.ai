@@ -1,6 +1,9 @@
 // A component of the dashboard feature: the "Recent expenses" card with colour-coded category icons, payment method
 // tags, clean row hover states, and direct link to Expenses. Used by the Dashboard page.
 
+import { Card, Tag } from "@primecoderin/fast-ui-react"
+import { linkButtonClass } from "@/shared/components/link-button"
+import { CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/card-parts"
 import { ArrowUpRight, ReceiptText } from "lucide-react"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
@@ -13,9 +16,6 @@ import { ExpenseMoney } from "@/shared/components/money"
 import { ROUTES } from "@/shared/config/routes"
 import { useLanguage } from "@/shared/i18n"
 import { useFormatters } from "@/shared/lib/use-formatters"
-import { Badge } from "@/shared/ui/badge"
-import { Button } from "@/shared/ui/button"
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 
 /**
  * "Recent expenses": the newest few expenses with category icon tiles, payment method pills, formatted dates and
@@ -35,12 +35,13 @@ export function RecentExpenses({ expenses }: { expenses: Expense[] }) {
         <CardTitle>{t("recent.title")}</CardTitle>
         <CardDescription>{t("recent.latest", { count: expenses.length })}</CardDescription>
         <CardAction>
-          <Button variant="outline" size="sm" asChild className="gap-1">
-            <Link href={ROUTES.expenses}>
-              <span>{t("recent.viewAll")}</span>
-              <ArrowUpRight className="size-3.5" aria-hidden="true" />
-            </Link>
-          </Button>
+          <Link
+            className={linkButtonClass({ variant: "secondary", size: "small", className: "gap-1" })}
+            href={ROUTES.expenses}
+          >
+            <span>{t("recent.viewAll")}</span>
+            <ArrowUpRight className="size-3.5" aria-hidden="true" />
+          </Link>
         </CardAction>
       </CardHeader>
       <CardContent>
@@ -73,9 +74,9 @@ export function RecentExpenses({ expenses }: { expenses: Expense[] }) {
                             date: formatDate(expense.spent_on),
                           })}
                         </span>
-                        <Badge variant="secondary" className="h-4.5 px-1.5 text-[10px] font-medium">
+                        <Tag className="h-4.5 px-1.5 text-[10px] font-medium">
                           {paymentLabels[expense.payment_method]}
-                        </Badge>
+                        </Tag>
                       </div>
                     </div>
                   </div>

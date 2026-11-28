@@ -1,6 +1,7 @@
 // A component of the assistant feature: the conversation's scrolling transcript with smart stick-to-bottom scrolling,
 // a floating "Jump to latest" button when scrolled up, and a welcoming starter-prompt grid when empty.
 
+import { Button } from "@primecoderin/fast-ui-react"
 import { BarChart3, ChevronDown, Loader2, PlusCircle, Sparkles, Utensils } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
@@ -8,7 +9,6 @@ import { useEffect, useRef, useState } from "react"
 import { useSignedInUser } from "@/features/auth"
 import { DEFAULT_CURRENCY } from "@/shared/api/contracts.gen"
 import { useFormatters } from "@/shared/lib/use-formatters"
-import { Button } from "@/shared/ui/button"
 
 import type { A2uiRenderContext } from "../a2ui/protocol"
 import type en from "../i18n/en"
@@ -145,7 +145,7 @@ export function ChatTranscript({ messages, sending, onSuggestion, onFormChange, 
           <Button
             type="button"
             variant="secondary"
-            size="xs"
+            size="small"
             onClick={() => scrollToBottom("smooth")}
             className="pointer-events-auto gap-1 rounded-full border shadow-sm"
           >

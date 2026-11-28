@@ -2,11 +2,10 @@
 // component, and expense-columns.tsx (which places it, through sortableHeader) exports only plain functions. Its
 // label comes from the feature's i18n namespace.
 
+import { Button } from "@primecoderin/fast-ui-react"
 import type { SortDirection } from "@tanstack/react-table"
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react"
 import { useTranslations } from "next-intl"
-
-import { Button } from "@/shared/ui/button"
 
 interface SortButtonProps {
   /** The column's title, already translated: shown on the button and in its label ("Sort by Date"). */
@@ -23,8 +22,8 @@ export function SortButton({ title, sorted, onClick }: SortButtonProps) {
   const Icon = sorted === "asc" ? ArrowUp : sorted === "desc" ? ArrowDown : ArrowUpDown
   return (
     <Button
-      variant="ghost"
-      size="sm"
+      variant="subtle"
+      size="small"
       className="-mx-2.5"
       onClick={onClick}
       aria-label={t("table.sortBy", { column: title })}

@@ -1,12 +1,11 @@
 // A component of the assistant feature: the chat panel with header, transcript, composer, and full-panel
 // drag-and-drop receipt upload support. Loaded lazily through lazy-chat-panel.tsx.
 
+import { Button } from "@primecoderin/fast-ui-react"
+import { toast } from "@/shared/lib/toast"
 import { Sparkles, SquarePen, Upload, X } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useCallback, useState, type DragEvent } from "react"
-import { toast } from "sonner"
-
-import { Button } from "@/shared/ui/button"
 
 import { useAssistant } from "../model/assistant-context"
 import { attachmentProblem, MAX_RECEIPT_MB } from "../model/attachments"
@@ -72,16 +71,17 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
         </div>
         <div className="ml-auto flex gap-1">
           <Button
-            variant="ghost"
-            size="icon-sm"
+            variant="icon"
+
             aria-label={t("panel.newConversation")}
             title={t("panel.newConversation")}
             onClick={chat.reset}
             disabled={chat.sending || chat.messages.length === 0}
+            size="small"
           >
             <SquarePen className="size-4" />
           </Button>
-          <Button variant="ghost" size="icon-sm" aria-label={t("panel.close")} onClick={onClose}>
+          <Button variant="icon" aria-label={t("panel.close")} onClick={onClose} size="small">
             <X className="size-4" />
           </Button>
         </div>

@@ -2,12 +2,11 @@
 // and refuses at once a file the server would refuse (too large, not a photo or PDF). Used by ChatComposer
 // (chat-composer.tsx).
 
+import { Button } from "@primecoderin/fast-ui-react"
+import { toast } from "@/shared/lib/toast"
 import { Paperclip } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useRef, type ChangeEvent } from "react"
-import { toast } from "sonner"
-
-import { Button } from "@/shared/ui/button"
 
 import { attachmentProblem, MAX_RECEIPT_MB, RECEIPT_ACCEPT } from "../model/attachments"
 
@@ -51,8 +50,8 @@ export function AttachButton({ disabled, onAttach }: AttachButtonProps) {
       />
       <Button
         type="button"
-        size="icon"
-        variant="ghost"
+
+        variant="icon"
         aria-label={t("composer.attach")}
         title={t("composer.attach")}
         disabled={disabled}

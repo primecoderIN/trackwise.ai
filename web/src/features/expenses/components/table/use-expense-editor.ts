@@ -1,9 +1,9 @@
 // A hook of the expenses feature: manages which expense is open in the EditExpenseSheet, saving an edit (through
 // useUpdateExpense, with its toasts), and tracking which saves are in flight. Used by expenses-table.tsx.
 
+import { toast } from "@/shared/lib/toast"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
-import { toast } from "sonner"
 
 import { useMessageOf } from "@/shared/lib/use-message-of"
 

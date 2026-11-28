@@ -1,6 +1,9 @@
 // A component of the dashboard feature: the Budget card: this month's spending against the overall limit, semantic
 // status badge, pace legend, and category health note, with a link to Budgets. Loads on its own via useBudgetStatus.
 
+import { Button, Card, SkeletonItem, StatusBadge } from "@primecoderin/fast-ui-react"
+import { linkButtonClass } from "@/shared/components/link-button"
+import { CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/card-parts"
 import { ArrowUpRight } from "lucide-react"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
@@ -12,10 +15,6 @@ import { ROUTES } from "@/shared/config/routes"
 import { currentMonth } from "@/shared/lib/format"
 import { useFormatters } from "@/shared/lib/use-formatters"
 import { useMessageOf } from "@/shared/lib/use-message-of"
-import { Badge } from "@/shared/ui/badge"
-import { Button } from "@/shared/ui/button"
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
-import { Skeleton } from "@/shared/ui/skeleton"
 
 /** The card: a skeleton while loading, a short note with retry if it failed, otherwise the budget pace summary. */
 export function BudgetCard({ month = currentMonth() }: { month?: string }) {
@@ -35,12 +34,13 @@ export function BudgetCard({ month = currentMonth() }: { month?: string }) {
         </CardTitle>
         <CardDescription>{t("budget.description")}</CardDescription>
         <CardAction>
-          <Button variant="outline" size="sm" asChild className="gap-1">
-            <Link href={ROUTES.budgets}>
-              <span>{t("budget.open")}</span>
-              <ArrowUpRight className="size-3.5" aria-hidden="true" />
-            </Link>
-          </Button>
+          <Link
+            className={linkButtonClass({ variant: "secondary", size: "small", className: "gap-1" })}
+            href={ROUTES.budgets}
+          >
+            <span>{t("budget.open")}</span>
+            <ArrowUpRight className="size-3.5" aria-hidden="true" />
+          </Link>
         </CardAction>
       </CardHeader>
       <CardContent className="grid gap-3 text-sm">
@@ -52,12 +52,12 @@ export function BudgetCard({ month = currentMonth() }: { month?: string }) {
         ) : status.isError ? (
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-muted-foreground">{t("budget.loadFailed")}</p>
-            <Button variant="outline" size="sm" onClick={retry} disabled={status.isFetching}>
+            <Button variant="secondary" size="small" onClick={retry} disabled={status.isFetching}>
               {tCommon(status.isFetching ? "retry.tryingAgain" : "retry.retry")}
             </Button>
           </div>
         ) : (
-          <Skeleton className="h-12 rounded-xl" />
+          <SkeletonItem className="h-12 rounded-xl" />
         )}
       </CardContent>
     </Card>
@@ -100,9 +100,9 @@ function BudgetSummary({ status }: { status: BudgetStatus }) {
                 </span>
               )}
               {budgeted.length > 0 && (
-                <Badge variant={attention > 0 ? "warning" : "positive"}>
+                <StatusBadge tone={attention > 0 ? "warning" : "success"}>
                   {attention > 0 ? t("budget.attention", { count: attention }) : t("budget.allOnTrack")}
-                </Badge>
+                </StatusBadge>
               )}
             </div>
           </div>
@@ -111,9 +111,9 @@ function BudgetSummary({ status }: { status: BudgetStatus }) {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-muted-foreground">{t("budget.noLimit")}</p>
           {budgeted.length > 0 && (
-            <Badge variant={attention > 0 ? "warning" : "positive"}>
+            <StatusBadge tone={attention > 0 ? "warning" : "success"}>
               {attention > 0 ? t("budget.attention", { count: attention }) : t("budget.allOnTrack")}
-            </Badge>
+            </StatusBadge>
           )}
         </div>
       )}

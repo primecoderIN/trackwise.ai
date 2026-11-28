@@ -28,7 +28,7 @@ export const JUSTIFY = {
 /** Row, Column and List's `align` values -> class names. */
 export const ALIGN = { start: "items-start", center: "items-center", end: "items-end", stretch: "items-stretch" }
 /** A2UI's button variants -> our Button's variants. `default` is also what a button without a variant gets. */
-export const BUTTON_VARIANT = { default: "outline", primary: "default", borderless: "ghost" } as const
+export const BUTTON_VARIANT = { default: "secondary", primary: "primary", borderless: "subtle" } as const
 
 // Limits that keep a broken or hostile description from freezing the page: how deep components may
 // nest, and how many one card may draw in total (the insight and list cards draw about 60).

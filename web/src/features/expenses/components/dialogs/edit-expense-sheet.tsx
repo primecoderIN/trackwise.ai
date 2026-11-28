@@ -1,18 +1,15 @@
 // A component of the expenses feature: slide-over drawer for editing a single expense without overflowing the table
 // horizontally (works seamlessly on mobile and alongside an open Assistant panel). Used by expenses-table.tsx.
 
+import { Button, Drawer, TextAreaField, TextField } from "@primecoderin/fast-ui-react"
 import { Trash2 } from "lucide-react"
 import { useTranslations } from "next-intl"
-import { useState, type FormEvent } from "react"
+import { useState, type SubmitEvent } from "react"
 
 import { CategorySelect } from "@/features/categories"
 import { CurrencySelect } from "@/shared/components/currency-select"
 import { DatePicker } from "@/shared/components/date-picker"
 import { LabeledField } from "@/shared/components/labeled-field"
-import { Button } from "@/shared/ui/button"
-import { Input } from "@/shared/ui/input"
-import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/shared/ui/sheet"
-import { Textarea } from "@/shared/ui/textarea"
 
 import type { Expense, ExpenseChanges } from "../../api"
 import { changesBetween, draftOf, isComplete } from "../../expense-form"
@@ -33,30 +30,27 @@ interface EditExpenseSheetProps {
 export function EditExpenseSheet({ expense, saving, deleting, onSave, onDelete, onClose }: EditExpenseSheetProps) {
   const [shown, setShown] = useState<Expense | null>(expense)
   if (expense !== null && expense !== shown) setShown(expense)
+  if (!shown) return null
 
   return (
-    <Sheet open={expense !== null} onOpenChange={(open) => !open && !saving && onClose()}>
-      <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-md">
-        {shown && (
-          <EditExpenseForm
-            key={shown.id}
-            expense={shown}
-            saving={saving}
-            deleting={deleting}
-            onSave={(changes) => onSave(shown.id, changes)}
-            onDelete={() => {
-              onClose()
-              onDelete(shown)
-            }}
-            onClose={onClose}
-          />
-        )}
-      </SheetContent>
-    </Sheet>
+    <EditExpenseDrawer
+      key={shown.id}
+      open={expense !== null}
+      expense={shown}
+      saving={saving}
+      deleting={deleting}
+      onSave={(changes) => onSave(shown.id, changes)}
+      onDelete={() => {
+        onClose()
+        onDelete(shown)
+      }}
+      onClose={onClose}
+    />
   )
 }
 
-function EditExpenseForm({
+function EditExpenseDrawer({
+  open,
   expense: initial,
   saving,
   deleting,
@@ -64,6 +58,7 @@ function EditExpenseForm({
   onDelete,
   onClose,
 }: {
+  open: boolean
   expense: Expense
   saving: boolean
   deleting: boolean
@@ -78,112 +73,103 @@ function EditExpenseForm({
   const changes = changesBetween(snapshot, draft)
   const dirty = Object.keys(changes).length > 0
 
-  function handleSubmit(event: FormEvent) {
+  function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
     if (saving || !complete) return
     onSave(changes)
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex h-full flex-col">
-      <SheetHeader className="border-b px-5 py-4">
-        <SheetTitle>{t("edit.title", { id: snapshot.id })}</SheetTitle>
-        <SheetDescription>{t("edit.description")}</SheetDescription>
-      </SheetHeader>
-
-      <div className="flex-1 overflow-y-auto px-5 py-4">
-        <div className="grid gap-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <LabeledField id="edit-amount" label={t("fields.amount")}>
-              <Input
-                id="edit-amount"
-                inputMode="decimal"
-                className="tabular-nums"
-                value={draft.amount}
-                onChange={(event) => setField("amount", event.target.value)}
-              />
-            </LabeledField>
-            <LabeledField id="edit-currency" label={t("fields.currency")}>
-              <CurrencySelect
-                id="edit-currency"
-                value={draft.currency}
-                onChange={(currency) => setField("currency", currency)}
-                ariaLabel={t("edit.currency", { id: snapshot.id })}
-              />
-            </LabeledField>
+    <Drawer
+      open={open}
+      onOpenChange={(next) => !next && !saving && onClose()}
+      side="end"
+      title={t("edit.title", { id: snapshot.id })}
+      className="w-[min(28rem,100vw)]"
+      onSubmit={handleSubmit}
+      footer={
+        <div className="flex w-full flex-wrap items-center justify-between gap-2">
+          <Button
+            variant="subtle"
+            size="small"
+            icon={<Trash2 />}
+            disabled={saving || deleting}
+            onClick={onDelete}
+            className="text-destructive hover:text-destructive"
+          >
+            {t("actions.delete")}
+          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" size="small" disabled={saving} onClick={onClose}>
+              {t("actions.cancel")}
+            </Button>
+            <Button variant="primary" type="submit" size="small" disabled={!complete || !dirty} isLoading={saving}>
+              {saving ? t("actions.saving") : t("actions.save")}
+            </Button>
           </div>
-
-          <LabeledField id="edit-merchant" label={t("fields.merchant")}>
-            <Input
-              id="edit-merchant"
-              maxLength={100}
-              value={draft.merchant}
-              onChange={(event) => setField("merchant", event.target.value)}
-            />
-          </LabeledField>
-
-          <LabeledField id="edit-date" label={t("fields.date")}>
-            <DatePicker
-              id="edit-date"
-              value={draft.spent_on}
-              ariaLabel={t("edit.date", { id: snapshot.id })}
-              onChange={(value) => setField("spent_on", value)}
-            />
-          </LabeledField>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <LabeledField id="edit-category" label={t("fields.category")}>
-              <CategorySelect
-                id="edit-category"
-                className="w-full"
-                value={draft.category_id}
-                onChange={(value) => setField("category_id", value)}
-              />
-            </LabeledField>
-            <LabeledField id="edit-payment" label={t("fields.paidWith")}>
-              <PaymentMethodSelect
-                id="edit-payment"
-                className="w-full"
-                value={draft.payment_method}
-                onChange={(value) => setField("payment_method", value)}
-              />
-            </LabeledField>
-          </div>
-
-          <LabeledField id="edit-note" label={t("fields.noteOptional")}>
-            <Textarea
-              id="edit-note"
-              rows={3}
-              maxLength={500}
-              className="min-h-0 resize-none"
-              value={draft.note}
-              onChange={(event) => setField("note", event.target.value)}
+        </div>
+      }
+    >
+      <div className="grid gap-4">
+        <p className="text-sm text-fg-secondary">{t("edit.description")}</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <TextField
+            label={t("fields.amount")}
+            inputMode="decimal"
+            value={draft.amount}
+            onValueChange={(value) => setField("amount", value)}
+            size="small"
+          />
+          <LabeledField id="edit-currency" label={t("fields.currency")}>
+            <CurrencySelect
+              id="edit-currency"
+              value={draft.currency}
+              onChange={(currency) => setField("currency", currency)}
+              ariaLabel={t("edit.currency", { id: snapshot.id })}
             />
           </LabeledField>
         </div>
+
+        <TextField
+          label={t("fields.merchant")}
+          maxLength={100}
+          value={draft.merchant}
+          onValueChange={(value) => setField("merchant", value)}
+          size="small"
+        />
+
+        <LabeledField id="edit-date" label={t("fields.date")}>
+          <DatePicker
+            id="edit-date"
+            value={draft.spent_on}
+            ariaLabel={t("edit.date", { id: snapshot.id })}
+            onChange={(value) => setField("spent_on", value)}
+          />
+        </LabeledField>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <CategorySelect
+            label={t("fields.category")}
+            value={draft.category_id}
+            onChange={(value) => setField("category_id", value)}
+          />
+          <PaymentMethodSelect
+            label={t("fields.paidWith")}
+            value={draft.payment_method}
+            onChange={(value) => setField("payment_method", value)}
+          />
+        </div>
+
+        <TextAreaField
+          label={t("fields.noteOptional")}
+          rows={3}
+          maxLength={500}
+          resize="none"
+          value={draft.note}
+          onValueChange={(value) => setField("note", value)}
+          size="small"
+        />
       </div>
-
-      <SheetFooter className="flex-row flex-wrap items-center justify-between gap-2 border-t bg-muted/35 px-5 py-3.5">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          disabled={saving || deleting}
-          onClick={onDelete}
-          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-        >
-          <Trash2 className="size-4" aria-hidden="true" />
-          {t("actions.delete")}
-        </Button>
-        <div className="flex items-center gap-2">
-          <Button type="button" variant="outline" size="sm" disabled={saving} onClick={onClose}>
-            {t("actions.cancel")}
-          </Button>
-          <Button type="submit" size="sm" disabled={!complete || !dirty || saving}>
-            {saving ? t("actions.saving") : t("actions.save")}
-          </Button>
-        </div>
-      </SheetFooter>
-    </form>
+    </Drawer>
   )
 }

@@ -1,6 +1,7 @@
 // A part of the expenses feature's table: responsive card-list layout shown below `lg` breakpoints so narrow phone
 // and tablet-with-sidebar screens never horizontally scroll a multi-column table. Used by expenses-table.tsx.
 
+import { Button, CheckboxBox, SkeletonItem, Tag } from "@primecoderin/fast-ui-react"
 import { Pencil, Trash2 } from "lucide-react"
 import { useTranslations } from "next-intl"
 
@@ -8,10 +9,6 @@ import { categoryVisual, useCategoryLookup, useCategoryName } from "@/features/c
 import { ExpenseMoney } from "@/shared/components/money"
 import { useLanguage } from "@/shared/i18n"
 import { useFormatters } from "@/shared/lib/use-formatters"
-import { Badge } from "@/shared/ui/badge"
-import { Button } from "@/shared/ui/button"
-import { Checkbox } from "@/shared/ui/checkbox"
-import { Skeleton } from "@/shared/ui/skeleton"
 
 import type { Expense } from "../../api"
 import { paymentMethodLabel } from "../../payment-methods"
@@ -46,7 +43,7 @@ export function ExpenseMobileList({
     return (
       <div className="grid gap-2.5 lg:hidden">
         {[0, 1, 2, 3, 4].map((index) => (
-          <Skeleton key={index} className="h-24 w-full rounded-2xl" />
+          <SkeletonItem key={index} className="h-24 w-full rounded-2xl" />
         ))}
       </div>
     )
@@ -75,12 +72,13 @@ export function ExpenseMobileList({
             }`}
           >
             <div className="flex items-start gap-2.5">
-              <Checkbox
-                aria-label={t("table.selectRow", { id: expense.id })}
-                checked={checked}
-                onCheckedChange={(value) => onToggleSelect(key, value === true)}
-                className="mt-1"
-              />
+              <div className="mt-1">
+                <CheckboxBox
+                  aria-label={t("table.selectRow", { id: expense.id })}
+                  checked={checked}
+                  onCheckedChange={(value) => onToggleSelect(key, value)}
+                />
+              </div>
               <span className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${visual.tileClass}`}>
                 <Icon className="size-4" aria-hidden="true" />
               </span>
@@ -107,22 +105,22 @@ export function ExpenseMobileList({
                 </div>
                 {expense.note && <p className="mt-1.5 line-clamp-2 text-xs text-muted-foreground">{expense.note}</p>}
                 <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-border/60 pt-2">
-                  <Badge variant="secondary">{paymentMethodLabel(expense.payment_method, language)}</Badge>
+                  <Tag>{paymentMethodLabel(expense.payment_method, language)}</Tag>
                   <div className="flex items-center gap-1">
                     <Button
-                      size="icon-xs"
-                      variant="ghost"
+                      variant="icon"
                       aria-label={t("table.editRow", { id: expense.id })}
                       onClick={() => onEdit(expense.id)}
+                      size="small"
                     >
                       <Pencil className="size-3.5" />
                     </Button>
                     <Button
-                      size="icon-xs"
-                      variant="ghost"
+                      variant="icon"
                       aria-label={t("table.deleteRow", { id: expense.id })}
                       disabled={deleting}
                       onClick={() => onDelete([expense])}
+                      size="small"
                     >
                       <Trash2 className="size-3.5 text-destructive" />
                     </Button>
