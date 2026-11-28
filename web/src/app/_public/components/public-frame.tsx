@@ -5,11 +5,11 @@ import { Globe, Wallet } from "lucide-react"
 import type { ReactNode } from "react"
 
 import { PublicLink } from "@/i18n/navigation"
+import { linkButtonClass } from "@/shared/components/link-button"
 import { NavProgressBar } from "@/shared/components/nav-progress-bar"
 import { APP_NAME } from "@/shared/config/app"
 import { ROUTES } from "@/shared/config/routes"
 import { LANGUAGE_CODES, LANGUAGES } from "@/shared/i18n/languages"
-import { Button } from "@/shared/ui/button"
 
 import type { PublicRouteKey, PublicSiteTexts } from "../texts"
 import { PUBLIC_CONTAINER } from "./container"
@@ -49,7 +49,7 @@ function PublicHeader({ texts, currentPage }: { texts: PublicSiteTexts; currentP
           href={ROUTES.landing}
           className="flex min-w-0 items-center gap-2 font-semibold tracking-tight sm:gap-2.5"
         >
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-700 text-white shadow-xs">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary text-on-primary shadow-primary">
             <Wallet className="size-4" aria-hidden="true" />
           </span>
           <span className="truncate text-sm sm:text-base">{APP_NAME}</span>
@@ -65,7 +65,7 @@ function PublicHeader({ texts, currentPage }: { texts: PublicSiteTexts; currentP
                 aria-current={active ? "page" : undefined}
                 className={`rounded-lg px-3 py-1.5 text-sm whitespace-nowrap transition-colors ${
                   active
-                    ? "bg-primary/10 font-semibold text-primary"
+                    ? "bg-primary-light font-semibold text-primary-text"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
               >
@@ -77,24 +77,27 @@ function PublicHeader({ texts, currentPage }: { texts: PublicSiteTexts; currentP
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
           {otherLanguages.map((code) => (
-            <Button
+            <PublicLink
               key={code}
-              asChild
-              variant="ghost"
-              size="sm"
-              className="hidden gap-1.5 text-muted-foreground hover:text-foreground sm:inline-flex"
+              href={ROUTE_BY_KEY[currentPage]}
+              locale={code}
+              lang={code}
+              hrefLang={code}
+              className={linkButtonClass({
+                variant: "subtle",
+                size: "small",
+                className: "hidden gap-1.5 sm:inline-flex",
+              })}
             >
-              <PublicLink href={ROUTE_BY_KEY[currentPage]} locale={code} lang={code} hrefLang={code}>
-                <Globe className="size-3.5" aria-hidden="true" />
-                <span>{LANGUAGES[code].name}</span>
-              </PublicLink>
-            </Button>
+              <Globe className="size-3.5" aria-hidden="true" />
+              <span>{LANGUAGES[code].name}</span>
+            </PublicLink>
           ))}
           <PublicThemeToggle />
           <PublicSessionAction
             signedOutLabel={texts.nav.signIn}
             signedInLabel={texts.nav.openApp}
-            size="sm"
+            size="small"
             className="px-2.5 text-xs sm:px-3 sm:text-sm"
           />
           <PublicMobileNav
@@ -145,7 +148,7 @@ function PublicFooter({ texts, currentPage }: { texts: PublicSiteTexts; currentP
       <div className={`${PUBLIC_CONTAINER} grid gap-8 py-10 text-sm sm:grid-cols-2 sm:gap-10 sm:py-12 lg:grid-cols-5`}>
         <div className="flex flex-col gap-3 sm:col-span-2 lg:col-span-1">
           <PublicLink href={ROUTES.landing} className="flex items-center gap-2 font-semibold text-foreground">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-700 text-white">
+            <span className="flex size-7 items-center justify-center rounded-md bg-primary text-on-primary shadow-primary">
               <Wallet className="size-3.5" aria-hidden="true" />
             </span>
             <span>{APP_NAME}</span>

@@ -4,8 +4,8 @@
 import { Mail, ShieldCheck } from "lucide-react"
 
 import { PublicLink } from "@/i18n/navigation"
+import { linkButtonClass } from "@/shared/components/link-button"
 import { localizedPath, ROUTES } from "@/shared/config/routes"
-import { Button } from "@/shared/ui/button"
 
 import type { PublicSiteTexts } from "../texts"
 import { BreadcrumbJsonLd } from "./breadcrumb-json-ld"
@@ -51,12 +51,12 @@ export function PublicLegalPage({ texts, kind }: { texts: PublicSiteTexts; kind:
                 ))}
               </ul>
               <div className="mt-5 flex flex-wrap gap-2 border-t pt-4">
-                <Button asChild variant="outline" size="sm">
-                  <PublicLink href={ROUTES.faq}>{texts.nav.faq}</PublicLink>
-                </Button>
-                <Button asChild variant="outline" size="sm">
-                  <PublicLink href={ROUTES.contact}>{texts.nav.contact}</PublicLink>
-                </Button>
+                <PublicLink href={ROUTES.faq} className={linkButtonClass({ variant: "secondary", size: "small" })}>
+                  {texts.nav.faq}
+                </PublicLink>
+                <PublicLink href={ROUTES.contact} className={linkButtonClass({ variant: "secondary", size: "small" })}>
+                  {texts.nav.contact}
+                </PublicLink>
               </div>
             </div>
           </aside>
@@ -133,12 +133,12 @@ export function PublicContactPage({ texts }: { texts: PublicSiteTexts }) {
           <div className="mt-8 flex flex-col items-start justify-between gap-4 rounded-2xl border bg-muted/30 p-5 sm:flex-row sm:items-center sm:p-6">
             <p className="text-xs leading-relaxed text-muted-foreground">{contactPage.responseNote}</p>
             <div className="flex shrink-0 flex-wrap gap-2">
-              <Button asChild variant="outline" size="sm">
-                <PublicLink href={ROUTES.faq}>{texts.nav.faq}</PublicLink>
-              </Button>
-              <Button asChild variant="outline" size="sm">
-                <PublicLink href={ROUTES.howItWorks}>{texts.nav.howItWorks}</PublicLink>
-              </Button>
+              <PublicLink href={ROUTES.faq} className={linkButtonClass({ variant: "secondary", size: "small" })}>
+                {texts.nav.faq}
+              </PublicLink>
+              <PublicLink href={ROUTES.howItWorks} className={linkButtonClass({ variant: "secondary", size: "small" })}>
+                {texts.nav.howItWorks}
+              </PublicLink>
             </div>
           </div>
         </div>

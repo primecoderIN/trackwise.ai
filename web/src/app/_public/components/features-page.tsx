@@ -4,8 +4,8 @@
 import { ArrowRight, CheckCircle2 } from "lucide-react"
 
 import { PublicLink } from "@/i18n/navigation"
+import { linkButtonClass } from "@/shared/components/link-button"
 import { localizedPath, ROUTES } from "@/shared/config/routes"
-import { Button } from "@/shared/ui/button"
 
 import type { PublicSiteTexts } from "../texts"
 import { BreadcrumbJsonLd } from "./breadcrumb-json-ld"
@@ -31,11 +31,11 @@ function FeaturesHero({ texts }: { texts: PublicSiteTexts }) {
             <PublicSessionAction
               signedOutLabel={featuresPage.getStarted}
               signedInLabel={featuresPage.openDashboard}
-              size="lg"
+              size="large"
             />
-            <Button asChild variant="outline" size="lg">
-              <PublicLink href={ROUTES.faq}>{featuresPage.readFaq}</PublicLink>
-            </Button>
+            <PublicLink href={ROUTES.faq} className={linkButtonClass({ variant: "secondary", size: "large" })}>
+              {featuresPage.readFaq}
+            </PublicLink>
           </div>
         </div>
         <nav aria-label="Feature sections" className="mt-9 flex flex-wrap items-center gap-2">
@@ -155,12 +155,13 @@ export function PublicFeaturesPage({ texts }: { texts: PublicSiteTexts }) {
                 signedOutLabel={featuresPage.getStarted}
                 signedInLabel={featuresPage.openDashboard}
               />
-              <Button asChild variant="outline" className="gap-1.5">
-                <PublicLink href={ROUTES.howItWorks}>
-                  <span>{featuresPage.howItWorksCta}</span>
-                  <ArrowRight className="size-4" aria-hidden="true" />
-                </PublicLink>
-              </Button>
+              <PublicLink
+                href={ROUTES.howItWorks}
+                className={linkButtonClass({ variant: "secondary", size: "medium", className: "gap-1.5" })}
+              >
+                <span>{featuresPage.howItWorksCta}</span>
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </PublicLink>
             </div>
           </div>
         </div>

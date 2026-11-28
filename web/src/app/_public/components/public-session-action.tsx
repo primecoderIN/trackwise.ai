@@ -1,6 +1,6 @@
 "use client"
 
-// Client CTA button for server-rendered public pages (Phase 29): shares one memoized `/api/v1/auth/user` probe across
+// Client CTA button for server-rendered public pages: shares one memoized `/api/v1/auth/user` probe across
 // all instances on the page so signed-in visitors see "Open Dashboard" without firing duplicate network requests.
 
 import Link from "next/link"
@@ -8,10 +8,9 @@ import { useLocale } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { apiHeaders } from "@/shared/api/http"
+import { linkButtonClass, type LinkButtonSize, type LinkButtonVariant } from "@/shared/components/link-button"
 import { localizedPath, ROUTES } from "@/shared/config/routes"
 import { DEFAULT_LANGUAGE, isLanguage } from "@/shared/i18n/languages"
-import { cn } from "@/shared/lib/utils"
-import { Button } from "@/shared/ui/button"
 
 let cachedProbe: Promise<boolean> | null = null
 
@@ -30,8 +29,8 @@ function checkSignedIn(): Promise<boolean> {
 interface PublicSessionActionProps {
   signedOutLabel: string
   signedInLabel: string
-  variant?: "default" | "outline" | "secondary" | "ghost"
-  size?: "default" | "sm" | "lg"
+  variant?: LinkButtonVariant
+  size?: LinkButtonSize
   className?: string
 }
 
@@ -39,8 +38,8 @@ interface PublicSessionActionProps {
 export function PublicSessionAction({
   signedOutLabel,
   signedInLabel,
-  variant = "default",
-  size = "default",
+  variant = "primary",
+  size = "medium",
   className,
 }: PublicSessionActionProps) {
   const [signedIn, setSignedIn] = useState(false)
@@ -58,10 +57,11 @@ export function PublicSessionAction({
   }, [])
 
   return (
-    <Button asChild variant={variant} size={size} className={cn(className)}>
-      <Link href={signedIn ? ROUTES.dashboard : localizedPath(ROUTES.signIn, lang)}>
-        {signedIn ? signedInLabel : signedOutLabel}
-      </Link>
-    </Button>
+    <Link
+      href={signedIn ? ROUTES.dashboard : localizedPath(ROUTES.signIn, lang)}
+      className={linkButtonClass({ variant, size, className })}
+    >
+      {signedIn ? signedInLabel : signedOutLabel}
+    </Link>
   )
 }

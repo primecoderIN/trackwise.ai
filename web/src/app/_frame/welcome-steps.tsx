@@ -3,20 +3,18 @@
 // Step sections for the first-run welcome stepper: language, default currency & timezone, optional budget with
 // currency prefix, assistant starter prompts, and explicit Terms & Privacy consent. Part of app/_frame/.
 
+import { Button, CheckboxBox, TextField } from "@primecoderin/fast-ui-react"
 import { Sparkles } from "lucide-react"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 
 import { ACCOUNT, BASE_CURRENCY } from "@/shared/api/contracts.gen"
 import { CurrencySelect } from "@/shared/components/currency-select"
+import { LabeledField } from "@/shared/components/labeled-field"
 import { TimezonePicker } from "@/shared/components/timezone-picker"
 import { localizedPath, ROUTES } from "@/shared/config/routes"
 import { LANGUAGE_CODES, LANGUAGES, type Language } from "@/shared/i18n"
 import type { SupportedCurrency } from "@/shared/lib/currencies"
-import { Button } from "@/shared/ui/button"
-import { Checkbox } from "@/shared/ui/checkbox"
-import { Input } from "@/shared/ui/input"
-import { Label } from "@/shared/ui/label"
 
 /** Step 1A: pick the app's initial UI and account language. */
 export function WelcomeLanguageStep({
@@ -31,14 +29,13 @@ export function WelcomeLanguageStep({
   const t = useTranslations("app")
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="text-sm font-semibold">{t("welcome.stepLanguage")}</legend>
+      <legend className="text-sm font-semibold text-fg">{t("welcome.stepLanguage")}</legend>
       <div className="flex flex-wrap gap-2">
         {LANGUAGE_CODES.map((code) => (
           <Button
             key={code}
-            type="button"
-            variant={selected === code ? "default" : "outline"}
-            size="sm"
+            variant={selected === code ? "primary" : "secondary"}
+            size="small"
             lang={code}
             aria-pressed={selected === code}
             disabled={disabled}
@@ -69,36 +66,34 @@ export function WelcomeRegionStep({
   const t = useTranslations("app")
   return (
     <fieldset className="flex flex-col gap-2.5">
-      <legend className="text-sm font-semibold">{t("welcome.stepRegion")}</legend>
+      <legend className="text-sm font-semibold text-fg">{t("welcome.stepRegion")}</legend>
       <div className="grid gap-3.5 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="welcome-currency" className="text-xs font-medium">
-            {t("welcome.currencyLabel")}
-          </Label>
-          <CurrencySelect
-            id="welcome-currency"
-            value={currency}
-            onChange={onCurrencyChange}
-            disabled={disabled}
-            ariaLabel={t("welcome.currencyLabel")}
-          />
-          <p className="text-xs leading-relaxed text-muted-foreground">
+          <LabeledField id="welcome-currency" label={t("welcome.currencyLabel")}>
+            <CurrencySelect
+              id="welcome-currency"
+              value={currency}
+              onChange={onCurrencyChange}
+              disabled={disabled}
+              ariaLabel={t("welcome.currencyLabel")}
+            />
+          </LabeledField>
+          <p className="text-xs leading-relaxed text-fg-secondary">
             {t("welcome.currencyHint", { baseCurrency: BASE_CURRENCY })}
           </p>
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="welcome-timezone" className="text-xs font-medium">
-            {t("welcome.timezoneLabel")}
-          </Label>
-          <TimezonePicker
-            id="welcome-timezone"
-            value={timezone}
-            onChange={onTimezoneChange}
-            disabled={disabled}
-            ariaLabel={t("welcome.timezoneLabel")}
-          />
-          <p className="text-xs leading-relaxed text-muted-foreground">{t("welcome.timezoneHint")}</p>
+          <LabeledField id="welcome-timezone" label={t("welcome.timezoneLabel")}>
+            <TimezonePicker
+              id="welcome-timezone"
+              value={timezone}
+              onChange={onTimezoneChange}
+              disabled={disabled}
+              ariaLabel={t("welcome.timezoneLabel")}
+            />
+          </LabeledField>
+          <p className="text-xs leading-relaxed text-fg-secondary">{t("welcome.timezoneHint")}</p>
         </div>
       </div>
     </fieldset>
@@ -122,33 +117,22 @@ export function WelcomeExtrasSteps({
   const t = useTranslations("app")
   return (
     <>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="welcome-budget" className="text-sm font-semibold">
-          {t("welcome.stepBudget", { currency: BASE_CURRENCY })}
-        </Label>
-        <div className="relative">
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-xs font-semibold text-muted-foreground"
-          >
-            {BASE_CURRENCY}
-          </span>
-          <Input
-            id="welcome-budget"
-            inputMode="decimal"
-            placeholder={t("welcome.budgetPlaceholder")}
-            value={budgetLimit}
-            onChange={(event) => onBudgetChange(event.target.value)}
-            className="pl-12 tabular-nums"
-          />
-        </div>
-        <p className="text-xs text-muted-foreground">{t("welcome.budgetHint")}</p>
-      </div>
+      <TextField
+        id="welcome-budget"
+        label={t("welcome.stepBudget", { currency: BASE_CURRENCY })}
+        hint={t("welcome.budgetHint")}
+        inputMode="decimal"
+        placeholder={t("welcome.budgetPlaceholder")}
+        value={budgetLimit}
+        onValueChange={onBudgetChange}
+        contentBefore={<span className="text-xs font-semibold text-fg-secondary">{BASE_CURRENCY}</span>}
+        size="small"
+      />
 
       <div className="flex flex-col gap-2">
         <div>
-          <p className="text-sm font-semibold">{t("welcome.stepAssistant")}</p>
-          <p className="text-xs text-muted-foreground">{t("welcome.assistantHint")}</p>
+          <p className="text-sm font-semibold text-fg">{t("welcome.stepAssistant")}</p>
+          <p className="text-xs text-fg-secondary">{t("welcome.assistantHint")}</p>
         </div>
         <div className="flex flex-col gap-2">
           {prompts.map((prompt, index) => {
@@ -159,12 +143,12 @@ export function WelcomeExtrasSteps({
                 type="button"
                 aria-pressed={active}
                 onClick={() => onSelectPrompt(active ? null : index)}
-                className={`flex items-start gap-2.5 rounded-xl border px-3.5 py-2.5 text-left text-xs transition-colors ${
-                  active ? "border-primary bg-primary/8 font-medium text-foreground" : "hover:bg-muted/60"
+                className={`flex items-start gap-2.5 rounded-lg border px-3.5 py-2.5 text-start text-xs transition-colors ${
+                  active ? "border-primary-active bg-primary-light font-medium text-fg" : "border-line hover:bg-subtle"
                 }`}
               >
                 <Sparkles
-                  className={`mt-0.5 size-3.5 shrink-0 ${active ? "text-primary" : "text-muted-foreground"}`}
+                  className={`mt-0.5 size-3.5 shrink-0 ${active ? "text-primary-text" : "text-fg-secondary"}`}
                   aria-hidden="true"
                 />
                 <span>“{prompt}”</span>
@@ -189,28 +173,19 @@ export function WelcomeTermsConsent({
 }) {
   const t = useTranslations("app")
   return (
-    <div className="flex items-start gap-2.5 rounded-xl border bg-muted/35 p-3.5">
-      <Checkbox
-        id="welcome-terms"
-        checked={accepted}
-        onCheckedChange={(checked) => onChange(checked === true)}
-        className="mt-0.5"
-      />
+    <div className="flex items-start gap-2.5 rounded-lg border border-line bg-subtle p-3.5">
+      <div className="mt-0.5">
+        <CheckboxBox checked={accepted} onCheckedChange={onChange} aria-labelledby="welcome-terms-label" />
+      </div>
       <div className="grid gap-1.5 leading-none">
-        <Label htmlFor="welcome-terms" className="text-xs font-medium leading-snug">
+        <span id="welcome-terms-label" className="text-xs leading-snug font-medium text-fg">
           {t("welcome.termsLabel", { version: ACCOUNT.currentTermsVersion })}
-        </Label>
-        <div className="flex gap-3 text-xs text-muted-foreground">
-          <Link
-            href={localizedPath(ROUTES.terms, language)}
-            className="underline underline-offset-2 hover:text-foreground"
-          >
+        </span>
+        <div className="flex gap-3 text-xs text-fg-secondary">
+          <Link href={localizedPath(ROUTES.terms, language)} className="underline underline-offset-2 hover:text-fg">
             {t("welcome.viewTerms")}
           </Link>
-          <Link
-            href={localizedPath(ROUTES.privacy, language)}
-            className="underline underline-offset-2 hover:text-foreground"
-          >
+          <Link href={localizedPath(ROUTES.privacy, language)} className="underline underline-offset-2 hover:text-fg">
             {t("welcome.viewPrivacy")}
           </Link>
         </div>

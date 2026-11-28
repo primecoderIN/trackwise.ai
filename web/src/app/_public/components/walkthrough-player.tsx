@@ -4,10 +4,9 @@
 // Assistant safety, and Reports). Uses crisp state-highlighted chapters and a custom progress bar without drifting
 // fake mouse coordinates.
 
+import { Button } from "@primecoderin/fast-ui-react"
 import { Pause, Play, RotateCcw } from "lucide-react"
 import { useEffect, useState } from "react"
-
-import { Button } from "@/shared/ui/button"
 
 import type { WalkthroughTexts } from "../texts"
 import { type WalkthroughPhase, WalkthroughStageCanvas } from "./walkthrough-scenes"
@@ -67,27 +66,23 @@ export function WalkthroughPlayer({ walkthrough }: { walkthrough: WalkthroughTex
           <p className="min-w-0 flex-1 truncate text-xs font-medium text-foreground">{scene.actionCaption}</p>
           <div className="flex shrink-0 items-center gap-1.5">
             <Button
-              type="button"
               variant="secondary"
-              size="icon-xs"
+              size="small"
+              icon={playing ? <Pause /> : <Play />}
               aria-label={playing ? walkthrough.pauseLabel : walkthrough.playLabel}
               onClick={() => setPlaying((state) => !state)}
-            >
-              {playing ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
-            </Button>
+            />
             <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
+              variant="icon"
+              size="small"
+              icon={<RotateCcw />}
               aria-label={walkthrough.restartLabel}
               onClick={() => {
                 setElapsedMs(0)
                 setPlaying(true)
               }}
-            >
-              <RotateCcw className="size-3.5" />
-            </Button>
-            <span className="ml-1 font-mono text-[11px] text-muted-foreground tabular-nums">
+            />
+            <span className="ms-1 font-mono text-[11px] text-muted-foreground tabular-nums">
               {formatSeconds(elapsedMs)} / {formatSeconds(totalMs)}
             </span>
           </div>

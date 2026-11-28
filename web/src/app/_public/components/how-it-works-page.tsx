@@ -4,8 +4,8 @@
 import { ArrowRight, CheckCircle2, ShieldCheck } from "lucide-react"
 
 import { PublicLink } from "@/i18n/navigation"
+import { linkButtonClass } from "@/shared/components/link-button"
 import { localizedPath, ROUTES } from "@/shared/config/routes"
-import { Button } from "@/shared/ui/button"
 
 import type { PublicSiteTexts } from "../texts"
 import { BreadcrumbJsonLd } from "./breadcrumb-json-ld"
@@ -66,14 +66,15 @@ export function PublicHowItWorksPage({ texts }: { texts: PublicSiteTexts }) {
               <PublicSessionAction
                 signedOutLabel={howItWorksPage.getStarted}
                 signedInLabel={howItWorksPage.openDashboard}
-                size="lg"
+                size="large"
               />
-              <Button asChild variant="outline" size="lg" className="gap-2">
-                <PublicLink href={ROUTES.features}>
-                  <span>{howItWorksPage.exploreFeatures}</span>
-                  <ArrowRight className="size-4" aria-hidden="true" />
-                </PublicLink>
-              </Button>
+              <PublicLink
+                href={ROUTES.features}
+                className={linkButtonClass({ variant: "secondary", size: "large", className: "gap-2" })}
+              >
+                <span>{howItWorksPage.exploreFeatures}</span>
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </PublicLink>
             </div>
           </div>
         </div>
@@ -140,12 +141,12 @@ export function PublicHowItWorksPage({ texts }: { texts: PublicSiteTexts }) {
               <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{howItWorksPage.ctaSubtitle}</p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Button asChild>
-                <PublicLink href={ROUTES.features}>{howItWorksPage.exploreFeatures}</PublicLink>
-              </Button>
-              <Button asChild variant="outline">
-                <PublicLink href={ROUTES.faq}>{howItWorksPage.readFaq}</PublicLink>
-              </Button>
+              <PublicLink href={ROUTES.features} className={linkButtonClass({ variant: "primary", size: "medium" })}>
+                {howItWorksPage.exploreFeatures}
+              </PublicLink>
+              <PublicLink href={ROUTES.faq} className={linkButtonClass({ variant: "secondary", size: "medium" })}>
+                {howItWorksPage.readFaq}
+              </PublicLink>
             </div>
           </div>
         </div>

@@ -4,8 +4,8 @@
 import { ArrowRight, ChevronDown, HelpCircle } from "lucide-react"
 
 import { PublicLink } from "@/i18n/navigation"
+import { linkButtonClass } from "@/shared/components/link-button"
 import { localizedPath, ROUTES } from "@/shared/config/routes"
-import { Button } from "@/shared/ui/button"
 
 import type { PublicSiteTexts } from "../texts"
 import { BreadcrumbJsonLd } from "./breadcrumb-json-ld"
@@ -91,15 +91,16 @@ export function PublicFaqPage({ texts }: { texts: PublicSiteTexts }) {
                 <h2 className="text-base font-semibold tracking-tight">{faqPage.ctaTitle}</h2>
                 <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{faqPage.ctaSubtitle}</p>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <Button asChild size="sm">
-                    <PublicLink href={ROUTES.contact}>{faqPage.contactCta}</PublicLink>
-                  </Button>
-                  <Button asChild variant="outline" size="sm" className="gap-1">
-                    <PublicLink href={ROUTES.features}>
-                      <span>{faqPage.featuresCta}</span>
-                      <ArrowRight className="size-3.5" aria-hidden="true" />
-                    </PublicLink>
-                  </Button>
+                  <PublicLink href={ROUTES.contact} className={linkButtonClass({ variant: "primary", size: "small" })}>
+                    {faqPage.contactCta}
+                  </PublicLink>
+                  <PublicLink
+                    href={ROUTES.features}
+                    className={linkButtonClass({ variant: "secondary", size: "small", className: "gap-1" })}
+                  >
+                    <span>{faqPage.featuresCta}</span>
+                    <ArrowRight className="size-3.5" aria-hidden="true" />
+                  </PublicLink>
                 </div>
               </div>
             </div>

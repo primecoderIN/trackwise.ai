@@ -5,9 +5,9 @@ import { ArrowRight, CheckCircle2, Sparkles } from "lucide-react"
 
 import { siteUrl } from "@/app/_seo/seo"
 import { PublicLink } from "@/i18n/navigation"
+import { linkButtonClass } from "@/shared/components/link-button"
 import { APP_NAME } from "@/shared/config/app"
 import { localizedPath, ROUTES } from "@/shared/config/routes"
-import { Button } from "@/shared/ui/button"
 
 import type { PublicSiteTexts } from "../texts"
 import { PUBLIC_CONTAINER } from "./container"
@@ -74,14 +74,15 @@ export function PublicLandingPage({ texts }: { texts: PublicSiteTexts }) {
               <PublicSessionAction
                 signedOutLabel={landing.getStarted}
                 signedInLabel={landing.openDashboard}
-                size="lg"
+                size="large"
               />
-              <Button asChild variant="outline" size="lg" className="gap-2 bg-background">
-                <PublicLink href={ROUTES.howItWorks}>
-                  <span>{landing.howItWorksCta}</span>
-                  <ArrowRight className="size-4" aria-hidden="true" />
-                </PublicLink>
-              </Button>
+              <PublicLink
+                href={ROUTES.howItWorks}
+                className={linkButtonClass({ variant: "secondary", size: "large", className: "gap-2" })}
+              >
+                <span>{landing.howItWorksCta}</span>
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </PublicLink>
             </div>
             <ul className="mt-7 grid w-full gap-x-4 gap-y-2 text-xs font-medium text-muted-foreground sm:grid-cols-2">
               {landing.trustStrip.map((item) => (

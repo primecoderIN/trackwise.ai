@@ -3,14 +3,13 @@
 // Slide-out mobile navigation drawer for public marketing pages, keeping the sticky mobile header compact on phones.
 // Part of app/_public/components/; used by public-frame.tsx.
 
+import { Button, Drawer } from "@primecoderin/fast-ui-react"
 import { Globe, Menu, Wallet } from "lucide-react"
 import { useState } from "react"
 
 import { PublicLink } from "@/i18n/navigation"
 import { APP_NAME } from "@/shared/config/app"
 import { LANGUAGE_CODES, LANGUAGES, type Language } from "@/shared/i18n/languages"
-import { Button } from "@/shared/ui/button"
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/shared/ui/sheet"
 
 import type { PublicRouteKey } from "../texts"
 
@@ -34,22 +33,24 @@ export function PublicMobileNav({ lang, currentPage, currentHref, menuLabel, ite
   const otherLanguages = LANGUAGE_CODES.filter((code) => code !== lang)
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button type="button" variant="ghost" size="icon-sm" aria-label={menuLabel} className="lg:hidden">
-          <Menu className="size-4.5" aria-hidden="true" />
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="right" className="w-[min(18rem,calc(100vw-2rem))] gap-0 p-0">
-        <SheetHeader className="border-b px-5 py-4">
-          <SheetTitle className="flex items-center gap-2 text-base">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-700 text-white">
-              <Wallet className="size-3.5" aria-hidden="true" />
-            </span>
-            <span>{APP_NAME}</span>
-          </SheetTitle>
-          <SheetDescription className="sr-only">{menuLabel}</SheetDescription>
-        </SheetHeader>
+    <>
+      <Button
+        variant="icon"
+        size="small"
+        icon={<Menu />}
+        aria-label={menuLabel}
+        onClick={() => setOpen(true)}
+        className="lg:hidden"
+      />
+      <Drawer
+        open={open}
+        onOpenChange={setOpen}
+        title={APP_NAME}
+        icon={<Wallet className="size-4 text-primary-text" aria-hidden="true" />}
+        side="end"
+        padding="none"
+        className="w-[min(18rem,calc(100vw-2rem))]"
+      >
         <nav aria-label={menuLabel} className="flex flex-col gap-1 p-3">
           {items.map((item) => {
             const active = currentPage === item.key
@@ -59,10 +60,10 @@ export function PublicMobileNav({ lang, currentPage, currentHref, menuLabel, ite
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 onClick={() => setOpen(false)}
-                className={`rounded-xl px-3.5 py-2.5 text-sm transition-colors ${
+                className={`rounded-lg px-3.5 py-2.5 text-sm transition-colors ${
                   active
-                    ? "bg-primary/10 font-semibold text-primary"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "bg-primary-light font-semibold text-primary-text"
+                    : "text-fg-secondary hover:bg-subtle hover:text-fg"
                 }`}
               >
                 {item.label}
@@ -70,7 +71,7 @@ export function PublicMobileNav({ lang, currentPage, currentHref, menuLabel, ite
             )
           })}
           {otherLanguages.length > 0 && (
-            <div className="mt-3 border-t pt-3">
+            <div className="mt-3 border-t border-line-subtle pt-3">
               {otherLanguages.map((code) => (
                 <PublicLink
                   key={code}
@@ -79,7 +80,7 @@ export function PublicMobileNav({ lang, currentPage, currentHref, menuLabel, ite
                   lang={code}
                   hrefLang={code}
                   onClick={() => setOpen(false)}
-                  className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  className="flex items-center gap-2 rounded-lg px-3.5 py-2.5 text-sm text-fg-secondary transition-colors hover:bg-subtle hover:text-fg"
                 >
                   <Globe className="size-4" aria-hidden="true" />
                   <span>{LANGUAGES[code].name}</span>
@@ -88,7 +89,7 @@ export function PublicMobileNav({ lang, currentPage, currentHref, menuLabel, ite
             </div>
           )}
         </nav>
-      </SheetContent>
-    </Sheet>
+      </Drawer>
+    </>
   )
 }

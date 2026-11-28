@@ -4,9 +4,9 @@
 import { ArrowRight, Globe } from "lucide-react"
 
 import { PublicLink } from "@/i18n/navigation"
+import { linkButtonClass } from "@/shared/components/link-button"
 import { ROUTES } from "@/shared/config/routes"
 import { LANGUAGE_CODES, LANGUAGES } from "@/shared/i18n/languages"
-import { Button } from "@/shared/ui/button"
 
 import type { PublicSiteTexts } from "../texts"
 import { PUBLIC_CONTAINER } from "./container"
@@ -62,12 +62,13 @@ export function LandingWorkflowAndCta({ texts }: { texts: PublicSiteTexts }) {
                 {landing.workflowSubtitle}
               </p>
             </div>
-            <Button asChild variant="outline" className="shrink-0 gap-2">
-              <PublicLink href={ROUTES.howItWorks}>
-                <span>{landing.workflowCta}</span>
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </PublicLink>
-            </Button>
+            <PublicLink
+              href={ROUTES.howItWorks}
+              className={linkButtonClass({ variant: "secondary", size: "medium", className: "shrink-0 gap-2" })}
+            >
+              <span>{landing.workflowCta}</span>
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </PublicLink>
           </div>
           <div className="mt-8 grid gap-5 sm:mt-10 md:grid-cols-3 md:gap-6">
             {landing.workflowSteps.map((step) => (
@@ -96,12 +97,17 @@ export function LandingWorkflowAndCta({ texts }: { texts: PublicSiteTexts }) {
             </div>
             <div className="flex shrink-0 flex-wrap gap-2">
               {otherLanguages.map((code) => (
-                <Button key={code} asChild variant="outline" className="gap-2">
-                  <PublicLink href={ROUTES.landing} locale={code} lang={code} hrefLang={code}>
-                    <span>{otherLanguages.length === 1 ? landing.bilingualCta : LANGUAGES[code].name}</span>
-                    <ArrowRight className="size-4" aria-hidden="true" />
-                  </PublicLink>
-                </Button>
+                <PublicLink
+                  key={code}
+                  href={ROUTES.landing}
+                  locale={code}
+                  lang={code}
+                  hrefLang={code}
+                  className={linkButtonClass({ variant: "secondary", size: "medium", className: "gap-2" })}
+                >
+                  <span>{otherLanguages.length === 1 ? landing.bilingualCta : LANGUAGES[code].name}</span>
+                  <ArrowRight className="size-4" aria-hidden="true" />
+                </PublicLink>
               ))}
             </div>
           </div>
@@ -110,29 +116,29 @@ export function LandingWorkflowAndCta({ texts }: { texts: PublicSiteTexts }) {
 
       <section className="py-12 sm:py-16">
         <div className={PUBLIC_CONTAINER}>
-          <div className="rounded-3xl bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950 p-6 text-slate-50 shadow-xl sm:p-10 lg:p-12 dark:border dark:border-primary/25 dark:from-card dark:via-primary/10 dark:to-card dark:text-card-foreground">
+          <div className="rounded-xl bg-gradient-to-br from-hero-from via-hero-via to-hero-to p-6 text-white shadow-lg sm:p-10 lg:p-12">
             <div className="flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
               <div className="max-w-3xl">
                 <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">{landing.ctaTitle}</h2>
-                <p className="mt-3 text-sm leading-relaxed text-slate-300 sm:text-base dark:text-muted-foreground">
-                  {landing.ctaSubtitle}
-                </p>
+                <p className="mt-3 text-sm leading-relaxed text-white/80 sm:text-base">{landing.ctaSubtitle}</p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <PublicSessionAction
                   signedOutLabel={landing.getStarted}
                   signedInLabel={landing.openDashboard}
-                  variant="secondary"
-                  size="lg"
+                  variant="primary"
+                  size="large"
                 />
-                <Button
-                  asChild
-                  variant="outline"
-                  size="lg"
-                  className="border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white dark:border-border dark:text-foreground"
+                <PublicLink
+                  href={ROUTES.faq}
+                  className={linkButtonClass({
+                    variant: "secondary",
+                    size: "large",
+                    className: "border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white",
+                  })}
                 >
-                  <PublicLink href={ROUTES.faq}>{landing.faqCta}</PublicLink>
-                </Button>
+                  {landing.faqCta}
+                </PublicLink>
               </div>
             </div>
           </div>

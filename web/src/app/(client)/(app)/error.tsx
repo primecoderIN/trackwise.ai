@@ -1,17 +1,17 @@
 "use client"
 
-// Next.js's route error boundary for signed-in pages (app/(client)/(app)/error.tsx, Phase 28). Drawn in the app's style
+// Next.js's route error boundary for signed-in pages (app/(client)/(app)/error.tsx). Drawn in the app's style
 // with a retry and a link back to the Dashboard. Only user-facing messages are shown (messageOf, D180).
 
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { useEffect } from "react"
 
+import { linkButtonClass } from "@/shared/components/link-button"
 import { SectionError } from "@/shared/components/section-error"
 import { ROUTES } from "@/shared/config/routes"
 import { reportUnexpected } from "@/shared/lib/errors"
 import { useMessageOf } from "@/shared/lib/use-message-of"
-import { Button } from "@/shared/ui/button"
 
 /** Signed-in route segment error UI: shows SectionError with retry and a way back to the Dashboard. */
 export default function SignedInError({ error, retry }: { error: unknown; retry: () => void }) {
@@ -26,9 +26,9 @@ export default function SignedInError({ error, retry }: { error: unknown; retry:
     <div className="flex flex-col gap-3">
       <SectionError title={t("errors.page")} message={messageOf(error)} onRetry={() => retry()} />
       <div>
-        <Button asChild variant="ghost" size="sm">
-          <Link href={ROUTES.dashboard}>{t("errors.backHome")}</Link>
-        </Button>
+        <Link href={ROUTES.dashboard} className={linkButtonClass({ variant: "subtle", size: "small" })}>
+          {t("errors.backHome")}
+        </Link>
       </div>
     </div>
   )

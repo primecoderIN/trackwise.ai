@@ -1,12 +1,12 @@
 "use client"
 
-// The first-run welcome stepper dialog (Phase 29 + UX polish): splits onboarding into two focused steps
+// The first-run welcome stepper dialog: splits onboarding into two focused steps
 // (1: Language & Region, 2: Budget, Assistant & explicit Terms consent) persisted on the server. Part of app/_frame/.
 
+import { Button, Dialog, useAppToast } from "@primecoderin/fast-ui-react"
 import { ArrowLeft, ArrowRight, Wallet } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
-import { toast } from "sonner"
 
 import { useCompleteWelcome } from "@/features/account"
 import { useAssistant } from "@/features/assistant"
@@ -19,8 +19,6 @@ import { isSupportedCurrency, type SupportedCurrency } from "@/shared/lib/curren
 import { detectBrowserTimezone } from "@/shared/lib/timezones"
 import { useFormatters } from "@/shared/lib/use-formatters"
 import { useMessageOf } from "@/shared/lib/use-message-of"
-import { Button } from "@/shared/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
 
 import { WelcomeExtrasSteps, WelcomeLanguageStep, WelcomeRegionStep, WelcomeTermsConsent } from "./welcome-steps"
 
@@ -49,6 +47,7 @@ function WelcomeDialogBody({
 }) {
   const t = useTranslations("app")
   const tCommon = useTranslations("common")
+  const toast = useAppToast()
   const { formatMoney } = useFormatters()
   const messageOf = useMessageOf()
   const { language, setLanguage } = useLanguage()
@@ -104,81 +103,71 @@ function WelcomeDialogBody({
     }
   }
 
+  const actions =
+    step === 1 ? (
+      <Button variant="primary" icon={<ArrowRight />} iconPosition="after" onClick={() => setStep(2)}>
+        {t("welcome.next")}
+      </Button>
+    ) : (
+      <>
+        <Button variant="subtle" icon={<ArrowLeft />} disabled={busy} onClick={() => setStep(1)} className="me-auto">
+          {t("welcome.back")}
+        </Button>
+        <Button variant="secondary" disabled={!termsAccepted || busy} onClick={() => void handleFinish(true)}>
+          {t("welcome.skip")}
+        </Button>
+        <Button
+          variant="primary"
+          disabled={!termsAccepted || busy}
+          isLoading={busy}
+          onClick={() => void handleFinish(false)}
+        >
+          {busy ? t("welcome.saving") : t("welcome.finish")}
+        </Button>
+      </>
+    )
+
   return (
-    <Dialog open>
-      <DialogContent showCloseButton={false} className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <div className="flex items-center justify-between gap-3">
-            <span className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white shadow-xs">
-              <Wallet className="size-4" aria-hidden="true" />
-            </span>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-muted-foreground">
-                {t("welcome.stepOf", { step, total: TOTAL_STEPS })}
-              </span>
-              <div className="flex gap-1" aria-hidden="true">
-                <span className={`h-1.5 w-6 rounded-full ${step >= 1 ? "bg-primary" : "bg-muted"}`} />
-                <span className={`h-1.5 w-6 rounded-full ${step >= 2 ? "bg-primary" : "bg-muted"}`} />
-              </div>
-            </div>
-          </div>
-          <DialogTitle className="pt-1 text-lg">{t("welcome.title", { app: APP_NAME })}</DialogTitle>
-          <DialogDescription>{t("welcome.description")}</DialogDescription>
-        </DialogHeader>
-
-        <div className="flex flex-col gap-5 py-1">
-          {step === 1 ? (
-            <>
-              <WelcomeLanguageStep selected={selectedLanguage} disabled={busy} onSelect={chooseLanguage} />
-              <WelcomeRegionStep
-                currency={selectedCurrency}
-                timezone={selectedTimezone}
-                disabled={busy}
-                onCurrencyChange={setSelectedCurrency}
-                onTimezoneChange={setSelectedTimezone}
-              />
-            </>
-          ) : (
-            <>
-              <WelcomeExtrasSteps
-                budgetLimit={budgetLimit}
-                prompts={prompts}
-                selectedPromptIndex={selectedPromptIndex}
-                onBudgetChange={setBudgetLimit}
-                onSelectPrompt={setSelectedPromptIndex}
-              />
-              <WelcomeTermsConsent language={selectedLanguage} accepted={termsAccepted} onChange={setTermsAccepted} />
-            </>
-          )}
+    <Dialog
+      open
+      onOpenChange={() => {}}
+      modalType="alert"
+      size="narrow"
+      icon={<Wallet />}
+      eyebrow={t("welcome.stepOf", { step, total: TOTAL_STEPS })}
+      title={t("welcome.title", { app: APP_NAME })}
+      description={t("welcome.description")}
+      actions={actions}
+    >
+      <div className="flex flex-col gap-5">
+        <div className="flex gap-1.5" aria-hidden="true">
+          <span className={`h-1.5 w-8 rounded-full ${step >= 1 ? "bg-primary" : "bg-muted"}`} />
+          <span className={`h-1.5 w-8 rounded-full ${step >= 2 ? "bg-primary" : "bg-muted"}`} />
         </div>
-
-        <DialogFooter>
-          {step === 1 ? (
-            <Button type="button" onClick={() => setStep(2)}>
-              {t("welcome.next")}
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </Button>
-          ) : (
-            <>
-              <Button type="button" variant="ghost" disabled={busy} onClick={() => setStep(1)} className="sm:mr-auto">
-                <ArrowLeft className="size-4" aria-hidden="true" />
-                {t("welcome.back")}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={!termsAccepted || busy}
-                onClick={() => void handleFinish(true)}
-              >
-                {t("welcome.skip")}
-              </Button>
-              <Button type="button" disabled={!termsAccepted || busy} onClick={() => void handleFinish(false)}>
-                {busy ? t("welcome.saving") : t("welcome.finish")}
-              </Button>
-            </>
-          )}
-        </DialogFooter>
-      </DialogContent>
+        {step === 1 ? (
+          <>
+            <WelcomeLanguageStep selected={selectedLanguage} disabled={busy} onSelect={chooseLanguage} />
+            <WelcomeRegionStep
+              currency={selectedCurrency}
+              timezone={selectedTimezone}
+              disabled={busy}
+              onCurrencyChange={setSelectedCurrency}
+              onTimezoneChange={setSelectedTimezone}
+            />
+          </>
+        ) : (
+          <>
+            <WelcomeExtrasSteps
+              budgetLimit={budgetLimit}
+              prompts={prompts}
+              selectedPromptIndex={selectedPromptIndex}
+              onBudgetChange={setBudgetLimit}
+              onSelectPrompt={setSelectedPromptIndex}
+            />
+            <WelcomeTermsConsent language={selectedLanguage} accepted={termsAccepted} onChange={setTermsAccepted} />
+          </>
+        )}
+      </div>
     </Dialog>
   )
 }

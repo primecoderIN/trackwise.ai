@@ -1,11 +1,12 @@
 "use client"
 
-// The frame around every signed-in page: grouped sidebar, sleek top bar (contextual breadcrumb, search palette,
-// global Add Expense CTA, and Assistant toggle with Ctrl/⌘+J), progressive full-width page viewport (up to 10rem
-// wide-desktop side padding) with skeleton fallback, command palette (Ctrl/⌘+K), welcome stepper dialog, and
-// responsive Assistant sheet (mobile/tablet) or resizable split panel (desktop).
+// The frame around every signed-in page: collapsible desktop sidebar / mobile drawer, sleek top bar (contextual
+// breadcrumb, search palette, global Add Expense CTA, and Assistant toggle with Ctrl/⌘+J), progressive full-width
+// page viewport with skeleton fallback, command palette (Ctrl/⌘+K), welcome stepper dialog, and responsive Assistant
+// drawer (mobile/tablet) or ResizablePanels split view (desktop).
 
-import { ChevronRight, Plus, Search, Sparkles } from "lucide-react"
+import { Button, Drawer, Kbd, ResizablePanels, Separator } from "@primecoderin/fast-ui-react"
+import { ChevronRight, PanelLeft, Plus, Search, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
@@ -13,17 +14,14 @@ import { Suspense, useEffect, useState, useSyncExternalStore, type ReactNode } f
 
 import { ChatPanel } from "@/features/assistant"
 import { ErrorBoundary } from "@/shared/components/error-boundary"
+import { linkButtonClass } from "@/shared/components/link-button"
 import { NavProgressBar } from "@/shared/components/nav-progress-bar"
 import { PageSkeleton } from "@/shared/components/page-skeleton"
 import { SectionError } from "@/shared/components/section-error"
 import { APP_NAME } from "@/shared/config/app"
 import { ROUTES } from "@/shared/config/routes"
 import { useMessageOf } from "@/shared/lib/use-message-of"
-import { Button } from "@/shared/ui/button"
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/shared/ui/resizable"
-import { Separator } from "@/shared/ui/separator"
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/shared/ui/sheet"
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/shared/ui/sidebar"
+import { cn } from "@/shared/lib/utils"
 
 import { AppSidebar } from "./app-sidebar"
 import { CommandPalette } from "./command-palette"
@@ -33,19 +31,18 @@ import { WelcomeDialog } from "./welcome-dialog"
 
 const NOOP_SUBSCRIBE = () => () => {}
 const COMPACT_CHAT_QUERY = "(max-width: 1023px)"
+const COMPACT_NAV_QUERY = "(max-width: 767px)"
 const WORKSPACE_GUTTER = "px-4 sm:px-6 lg:px-10 xl:px-20 2xl:px-40"
 const SPLIT_CHAT_GUTTER = "px-4 sm:px-6 lg:px-8"
 
-function subscribeCompactChat(onChange: () => void): () => void {
-  const query = window.matchMedia(COMPACT_CHAT_QUERY)
-  query.addEventListener("change", onChange)
-  return () => query.removeEventListener("change", onChange)
-}
-
-function useCompactChatSheet(): boolean {
+function useMediaQuery(query: string): boolean {
   return useSyncExternalStore(
-    subscribeCompactChat,
-    () => window.matchMedia(COMPACT_CHAT_QUERY).matches,
+    (onChange) => {
+      const mql = window.matchMedia(query)
+      mql.addEventListener("change", onChange)
+      return () => mql.removeEventListener("change", onChange)
+    },
+    () => window.matchMedia(query).matches,
     () => false,
   )
 }
@@ -76,13 +73,15 @@ interface TopBarProps {
   chatOpen: boolean
   splitChatOpen: boolean
   isMac: boolean
+  onToggleSidebar: () => void
   onToggleChat: () => void
   onOpenPalette: () => void
 }
 
-function TopBar({ chatOpen, splitChatOpen, isMac, onToggleChat, onOpenPalette }: TopBarProps) {
+function TopBar({ chatOpen, splitChatOpen, isMac, onToggleSidebar, onToggleChat, onOpenPalette }: TopBarProps) {
   const pathname = usePathname()
   const t = useTranslations("app")
+  const tCommon = useTranslations("common")
   const currentPage = currentPageFor(pathname)
   const groupLabel = currentPage ? t(`groups.${currentPage.group}`) : null
   const pageTitle = currentPage ? t(`pages.${currentPage.name}`) : APP_NAME
@@ -91,54 +90,62 @@ function TopBar({ chatOpen, splitChatOpen, isMac, onToggleChat, onOpenPalette }:
 
   return (
     <header
-      className={`relative flex h-14 shrink-0 items-center gap-1.5 border-b border-border/80 bg-background/85 backdrop-blur-md sm:gap-2 ${
-        splitChatOpen ? SPLIT_CHAT_GUTTER : WORKSPACE_GUTTER
-      }`}
+      className={cn(
+        "relative flex h-14 shrink-0 items-center gap-1.5 border-b border-line-subtle bg-surface/90 backdrop-blur-md sm:gap-2",
+        splitChatOpen ? SPLIT_CHAT_GUTTER : WORKSPACE_GUTTER,
+      )}
     >
-      <SidebarTrigger className="-ml-1 shrink-0 text-muted-foreground hover:text-foreground" />
+      <Button
+        variant="icon"
+        size="small"
+        icon={<PanelLeft />}
+        aria-label={tCommon("ui.toggleSidebar")}
+        onClick={onToggleSidebar}
+        className="-ms-1 shrink-0"
+      />
       <Separator orientation="vertical" className="mx-0.5 h-4 sm:mx-1" />
       <div className="flex min-w-0 items-center gap-1.5 text-sm">
         {groupLabel && (
           <>
-            <span className="hidden truncate text-muted-foreground sm:inline">{groupLabel}</span>
-            <ChevronRight className="hidden size-3.5 shrink-0 text-muted-foreground/60 sm:inline" aria-hidden="true" />
+            <span className="hidden truncate text-fg-secondary sm:inline">{groupLabel}</span>
+            <ChevronRight className="hidden size-3.5 shrink-0 text-fg-tertiary sm:inline" aria-hidden="true" />
           </>
         )}
-        <span className="truncate font-medium text-foreground">{pageTitle}</span>
+        <span className="truncate font-semibold text-fg">{pageTitle}</span>
       </div>
 
-      <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
+      <div className="ms-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
         <Button
-          variant="outline"
-          size="sm"
+          variant="secondary"
+          size="small"
           onClick={onOpenPalette}
           aria-label={t("palette.open")}
-          className="h-8 gap-2 bg-card/80 px-2 text-muted-foreground hover:text-foreground sm:px-2.5"
+          icon={<Search />}
+          className="px-2 sm:px-2.5"
         >
-          <Search className="size-3.5" aria-hidden="true" />
           <span className="hidden lg:inline">{t("palette.open")}</span>
-          <kbd className="hidden rounded-md border bg-muted/70 px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground md:inline-block">
-            {paletteShortcut}
-          </kbd>
+          <Kbd className="hidden md:inline-flex">{paletteShortcut}</Kbd>
         </Button>
 
-        <Button asChild size="sm" className="h-8 gap-1.5 px-2 sm:px-2.5">
-          <Link href={`${ROUTES.expenses}?add=1`} aria-label={t("topBar.addExpense")}>
-            <Plus className="size-3.5" aria-hidden="true" />
-            <span className="hidden sm:inline">{t("topBar.addExpense")}</span>
-          </Link>
-        </Button>
+        <Link
+          href={`${ROUTES.expenses}?add=1`}
+          aria-label={t("topBar.addExpense")}
+          className={linkButtonClass({ variant: "primary", size: "small", className: "px-2 sm:px-2.5" })}
+        >
+          <Plus className="size-3.5" aria-hidden="true" />
+          <span className="hidden sm:inline">{t("topBar.addExpense")}</span>
+        </Link>
 
         <Button
-          variant={chatOpen ? "default" : "outline"}
-          size="sm"
+          variant={chatOpen ? "primary" : "secondary"}
+          size="small"
           onClick={onToggleChat}
           aria-pressed={chatOpen}
           aria-label={t("assistant.open")}
           title={t("topBar.assistantShortcut", { shortcut: chatShortcut })}
-          className={chatOpen ? "h-8 gap-1.5 px-2 sm:px-2.5" : "h-8 gap-1.5 bg-card/80 px-2 sm:px-2.5"}
+          icon={<Sparkles />}
+          className="px-2 sm:px-2.5"
         >
-          <Sparkles className="size-3.5" aria-hidden="true" />
           <span className="hidden sm:inline">{t("assistant.open")}</span>
         </Button>
       </div>
@@ -148,29 +155,50 @@ function TopBar({ chatOpen, splitChatOpen, isMac, onToggleChat, onOpenPalette }:
 }
 
 /**
- * The frame around every signed-in page: sidebar on the left, contextual top bar with quick actions, progressive
- * workspace gutters (up to 10rem on wide desktops), welcome dialog, and Assistant sheet or resizable split panel.
+ * The frame around every signed-in page: collapsible desktop sidebar / mobile drawer, contextual top bar with quick
+ * actions, progressive workspace gutters, welcome dialog, and Assistant drawer or ResizablePanels split view.
  */
 export function AppLayout({ children }: { children: ReactNode }) {
   useSyncUserLanguage()
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
-  const compactChat = useCompactChatSheet()
+  const compactChat = useMediaQuery(COMPACT_CHAT_QUERY)
+  const compactNav = useMediaQuery(COMPACT_NAV_QUERY)
   const isMac = useIsApplePlatform()
   const t = useTranslations("app")
+  const tCommon = useTranslations("common")
   const messageOf = useMessageOf()
   const splitChatOpen = chatOpen && !compactChat
 
   useEffect(() => {
-    function handleChatShortcut(event: KeyboardEvent) {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "j") {
+    function handleShortcuts(event: KeyboardEvent) {
+      if (!(event.metaKey || event.ctrlKey)) return
+      const key = event.key.toLowerCase()
+      if (key === "j") {
         event.preventDefault()
         setChatOpen((open) => !open)
+      } else if (key === "b") {
+        event.preventDefault()
+        if (window.matchMedia(COMPACT_NAV_QUERY).matches) {
+          setMobileNavOpen((open) => !open)
+        } else {
+          setSidebarCollapsed((collapsed) => !collapsed)
+        }
       }
     }
-    window.addEventListener("keydown", handleChatShortcut)
-    return () => window.removeEventListener("keydown", handleChatShortcut)
+    window.addEventListener("keydown", handleShortcuts)
+    return () => window.removeEventListener("keydown", handleShortcuts)
   }, [])
+
+  function handleToggleSidebar() {
+    if (compactNav) {
+      setMobileNavOpen((open) => !open)
+    } else {
+      setSidebarCollapsed((collapsed) => !collapsed)
+    }
+  }
 
   const panel = (
     <ErrorBoundary
@@ -182,14 +210,41 @@ export function AppLayout({ children }: { children: ReactNode }) {
     </ErrorBoundary>
   )
 
+  const pageBody = (
+    <div className={cn("h-full overflow-auto py-4 sm:py-6", splitChatOpen ? SPLIT_CHAT_GUTTER : WORKSPACE_GUTTER)}>
+      <Page>{children}</Page>
+    </div>
+  )
+
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset className="h-svh min-w-0 overflow-hidden">
+    <div className="flex h-svh w-full overflow-hidden bg-canvas text-fg">
+      <aside
+        className={cn(
+          "hidden shrink-0 border-e border-line-subtle bg-surface transition-[width] duration-200 md:block",
+          sidebarCollapsed ? "w-16" : "w-64",
+        )}
+      >
+        <AppSidebar collapsed={sidebarCollapsed} />
+      </aside>
+
+      <Drawer
+        open={mobileNavOpen}
+        onOpenChange={setMobileNavOpen}
+        title={tCommon("ui.sidebarTitle")}
+        hideTitle
+        side="start"
+        padding="none"
+        className="w-[min(18rem,85vw)]"
+      >
+        <AppSidebar collapsed={false} onNavigate={() => setMobileNavOpen(false)} />
+      </Drawer>
+
+      <div className="flex h-svh min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar
           chatOpen={chatOpen}
           splitChatOpen={splitChatOpen}
           isMac={isMac}
+          onToggleSidebar={handleToggleSidebar}
           onToggleChat={() => setChatOpen((open) => !open)}
           onOpenPalette={() => setPaletteOpen(true)}
         />
@@ -202,39 +257,33 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
         {compactChat ? (
           <>
-            <div className={`min-h-0 flex-1 overflow-auto py-4 sm:py-5 ${WORKSPACE_GUTTER}`}>
-              <Page>{children}</Page>
-            </div>
-            <Sheet open={chatOpen} onOpenChange={setChatOpen}>
-              <SheetContent side="right" showCloseButton={false} className="w-full gap-0 p-0 sm:max-w-md">
-                <SheetHeader className="sr-only">
-                  <SheetTitle>{t("assistant.title")}</SheetTitle>
-                  <SheetDescription>{t("assistant.description", { app: APP_NAME })}</SheetDescription>
-                </SheetHeader>
-                {panel}
-              </SheetContent>
-            </Sheet>
+            <div className="min-h-0 flex-1 overflow-hidden">{pageBody}</div>
+            <Drawer
+              open={chatOpen}
+              onOpenChange={setChatOpen}
+              title={t("assistant.title")}
+              hideTitle
+              side="end"
+              padding="none"
+              className="w-full sm:w-[min(28rem,92vw)]"
+            >
+              {panel}
+            </Drawer>
           </>
+        ) : chatOpen ? (
+          <ResizablePanels
+            orientation="horizontal"
+            className="min-h-0 flex-1"
+            labels={{ resize: () => tCommon("ui.resizePanels") }}
+            panels={[
+              { id: "page", defaultSize: 66, minSize: 40, content: pageBody },
+              { id: "chat", defaultSize: 34, minSize: 25, content: panel },
+            ]}
+          />
         ) : (
-          <ResizablePanelGroup orientation="horizontal" className="min-h-0 flex-1">
-            <ResizablePanel id="page" minSize="40%">
-              <div
-                className={`h-full overflow-auto py-5 sm:py-6 ${splitChatOpen ? SPLIT_CHAT_GUTTER : WORKSPACE_GUTTER}`}
-              >
-                <Page>{children}</Page>
-              </div>
-            </ResizablePanel>
-            {chatOpen && (
-              <>
-                <ResizableHandle withHandle />
-                <ResizablePanel id="chat" defaultSize="34%" minSize="25%" maxSize="50%">
-                  {panel}
-                </ResizablePanel>
-              </>
-            )}
-          </ResizablePanelGroup>
+          <div className="min-h-0 flex-1 overflow-hidden">{pageBody}</div>
         )}
-      </SidebarInset>
-    </SidebarProvider>
+      </div>
+    </div>
   )
 }
