@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "fast-ui": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${workspaceFolder}/web/node_modules/@primecoderin/fast-ui-react-mcp/dist/server.js"]
+    }
+  }
+}

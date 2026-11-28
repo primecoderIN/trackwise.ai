@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "fast-ui": {
+      "command": "node",
+      "args": ["web/node_modules/@primecoderin/fast-ui-react-mcp/dist/server.js"]
+    }
+  }
+}
