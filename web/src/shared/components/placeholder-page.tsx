@@ -2,9 +2,8 @@
 
 // A shared component: the stand-in for a page that isn't built yet. Part of shared/.
 
+import { Card } from "@primecoderin/fast-ui-react"
 import { useTranslations } from "next-intl"
-
-import { Card, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 
 interface PlaceholderPageProps {
   /** The page's heading. */
@@ -18,12 +17,12 @@ export function PlaceholderPage({ title, description }: PlaceholderPageProps) {
   const t = useTranslations("common")
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold">{title}</h1>
+      <h1 className="text-2xl font-semibold text-fg">{title}</h1>
       <Card>
-        <CardHeader>
-          <CardTitle>{t("placeholder.comingSoon")}</CardTitle>
-          <CardDescription>{description}</CardDescription>
-        </CardHeader>
+        <div className="flex flex-col gap-1">
+          <h2 className="text-base font-semibold text-fg">{t("placeholder.comingSoon")}</h2>
+          <p className="text-sm text-fg-secondary">{description}</p>
+        </div>
       </Card>
     </div>
   )

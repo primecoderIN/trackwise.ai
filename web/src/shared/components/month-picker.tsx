@@ -3,12 +3,12 @@
 // Reusable month stepper pill with Previous / Next controls and a quick "This month" jump button when viewing
 // another month. Part of shared/components; used by Dashboard, Budgets, Categories, and Reports.
 
+import { Button } from "@primecoderin/fast-ui-react"
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react"
 import { useTranslations } from "next-intl"
 
 import { currentMonth, MAX_MONTH, MIN_MONTH, shiftMonth } from "@/shared/lib/format"
 import { useFormatters } from "@/shared/lib/use-formatters"
-import { Button } from "@/shared/ui/button"
 
 /** Props for the shared month stepper control. */
 export interface MonthPickerProps {
@@ -30,36 +30,34 @@ export function MonthPicker({ month, onChange, maxMonth = MAX_MONTH }: MonthPick
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       {!isCurrent && (
-        <Button variant="outline" size="sm" onClick={() => onChange(nowMonth)} className="h-9 text-xs">
+        <Button variant="secondary" size="small" onClick={() => onChange(nowMonth)}>
           {t("monthPicker.current")}
         </Button>
       )}
-      <div className="inline-flex items-center rounded-lg border border-border/80 bg-card p-0.5 shadow-2xs">
+      <div className="inline-flex items-center rounded-lg border border-line bg-surface p-0.5 shadow-sm">
         <Button
-          variant="ghost"
-          size="icon-sm"
+          variant="icon"
+          size="small"
+          icon={<ChevronLeft />}
           aria-label={t("monthPicker.previous")}
           onClick={() => onChange(shiftMonth(month, -1))}
           disabled={month <= MIN_MONTH}
-        >
-          <ChevronLeft className="size-4" />
-        </Button>
+        />
         <span
           aria-live="polite"
           className="inline-flex min-w-28 items-center justify-center gap-1.5 px-1.5 text-xs font-medium tabular-nums sm:min-w-36 sm:px-2 sm:text-sm"
         >
-          <CalendarDays className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <CalendarDays className="size-3.5 shrink-0 text-fg-secondary" aria-hidden="true" />
           <span className="truncate">{formatMonth(month)}</span>
         </span>
         <Button
-          variant="ghost"
-          size="icon-sm"
+          variant="icon"
+          size="small"
+          icon={<ChevronRight />}
           aria-label={t("monthPicker.next")}
           onClick={() => onChange(shiftMonth(month, 1))}
           disabled={month >= maxMonth}
-        >
-          <ChevronRight className="size-4" />
-        </Button>
+        />
       </div>
     </div>
   )

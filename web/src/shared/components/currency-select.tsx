@@ -4,12 +4,13 @@
 // Intl.DisplayNames. Part of shared/components. Used by WelcomeDialog (app/_frame/) and PreferencesCard
 // (features/account/).
 
+import { SelectField, type SelectOption } from "@primecoderin/fast-ui-react"
 import { useTranslations } from "next-intl"
+import { useMemo } from "react"
 
 import { SUPPORTED_CURRENCIES } from "@/shared/api/contracts.gen"
 import { useLanguage } from "@/shared/i18n"
 import { formatCurrencyLabel, isSupportedCurrency, type SupportedCurrency } from "@/shared/lib/currencies"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
 
 /** Props for the supported-currency selector. */
 export interface CurrencySelectProps {
@@ -21,26 +22,29 @@ export interface CurrencySelectProps {
 }
 
 /** Accessible dropdown listing every currency code supported by the backend with its localized name. */
-export function CurrencySelect({ id, value, onChange, disabled, ariaLabel }: CurrencySelectProps) {
+export function CurrencySelect({ value, onChange, disabled, ariaLabel }: CurrencySelectProps) {
   const t = useTranslations("common")
   const { locale } = useLanguage()
+
+  const options = useMemo<SelectOption[]>(
+    () => SUPPORTED_CURRENCIES.map((code) => ({ value: code, label: formatCurrencyLabel(code, locale) })),
+    [locale],
+  )
 
   function handleChange(next: string) {
     if (isSupportedCurrency(next)) onChange(next)
   }
 
   return (
-    <Select value={value} onValueChange={handleChange} disabled={disabled}>
-      <SelectTrigger id={id} className="w-full" aria-label={ariaLabel ?? t("currency.choose")}>
-        <SelectValue placeholder={t("currency.choose")} />
-      </SelectTrigger>
-      <SelectContent>
-        {SUPPORTED_CURRENCIES.map((code) => (
-          <SelectItem key={code} value={code}>
-            {formatCurrencyLabel(code, locale)}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <SelectField
+      label={ariaLabel ?? t("currency.choose")}
+      hideLabel
+      options={options}
+      value={value}
+      onValueChange={handleChange}
+      placeholder={t("currency.choose")}
+      disabled={disabled}
+      size="small"
+    />
   )
 }

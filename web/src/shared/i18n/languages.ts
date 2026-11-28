@@ -1,12 +1,11 @@
 // The languages the app speaks, and what each one needs besides its texts: how it writes numbers and dates, its
-// writing direction, and its date picker locale. Part of shared/i18n. Read by next-intl request/routing setup, the
-// language menu, and useFormatters(), so adding a language is one entry here plus its text file in each namespace.
+// writing direction, and its date-fns calendar locale. Part of shared/i18n. Read by next-intl request/routing setup,
+// the language menu, and useFormatters(), so adding a language is one entry here plus its text file in each namespace.
 
-import type { DayPickerLocale } from "react-day-picker"
+import type { Locale } from "date-fns"
 
 import type { LANGUAGES as SERVER_LANGUAGES } from "@/shared/api/contracts.gen"
 
-// The languages the server writes its texts in (its cards, errors, payment labels), from the generated contract.
 type ServerLanguage = (typeof SERVER_LANGUAGES)[number]
 
 /** What the app needs to know about one language. */
@@ -15,33 +14,31 @@ export interface LanguageInfo {
   name: string
   /** The BCP 47 locale numbers, money and dates are written in (Intl): "en-US" groups digits as 125,000. */
   locale: string
-  /** Which way its text runs: <html dir> follows it. (Right-to-left layouts aren't supported yet.) */
+  /** Which way its text runs: <html dir> follows it. */
   dir: "ltr" | "rtl"
   /**
-   * Loads the date picker's locale: date-fns's month and weekday names, plus react-day-picker's own screen-reader
-   * labels ("Go to the Next Month"). A dynamic import, so only the languages in use are fetched.
+   * Loads the date-fns locale for month/weekday names and first day of week used by DateTimePicker and Calendar.
+   * A dynamic import, so only the languages in use are fetched.
    */
-  loadDatePickerLocale: () => Promise<DayPickerLocale>
+  loadDatePickerLocale: () => Promise<Locale>
 }
 
 /**
  * Every language, by its code (a BCP 47 tag: "en", or "pt-BR" for a regional variant): exactly the server's, so a
- * language the web offers is one the server can write in (a missing or extra one fails the build). English is the
- * language the texts are written in. English uses US conventions for numbers and dates ($125,000.50), while Hindi
- * keeps Indian conventions (₹1,25,000.50).
+ * language the web offers is one the server can write in (a missing or extra one fails the build).
  */
 export const LANGUAGES = {
   en: {
     name: "English",
     locale: "en-US",
     dir: "ltr",
-    loadDatePickerLocale: () => import("react-day-picker/locale/en-US").then((module) => module.enUS),
+    loadDatePickerLocale: () => import("date-fns/locale/en-US").then((module) => module.enUS),
   },
   hi: {
     name: "हिन्दी",
     locale: "hi-IN",
     dir: "ltr",
-    loadDatePickerLocale: () => import("react-day-picker/locale/hi").then((module) => module.hi),
+    loadDatePickerLocale: () => import("date-fns/locale/hi").then((module) => module.hi),
   },
 } as const satisfies Record<ServerLanguage, LanguageInfo>
 
@@ -52,9 +49,8 @@ export type Language = keyof typeof LANGUAGES
 export const LANGUAGE_CODES = Object.keys(LANGUAGES) as Language[]
 
 /**
- * The language every text is written in first, and the fallback for any text a translation lacks (it's loaded with
- * every other language). Also what the app speaks when nothing else is chosen and the browser asks for none of
- * LANGUAGES.
+ * The language every text is written in first, and the fallback for any text a translation lacks.
+ * Also what the app speaks when nothing else is chosen and the browser asks for none of LANGUAGES.
  */
 export const DEFAULT_LANGUAGE = "en" satisfies Language
 
@@ -71,7 +67,6 @@ export function isLanguage(value: unknown): value is Language {
   return typeof value === "string" && Object.hasOwn(LANGUAGES, value)
 }
 
-// Resolves one language tag ("hi-IN" or "en-US") against LANGUAGES: exact match first, then base subtag.
 function matchTag(tag: string): Language | undefined {
   const wanted = tag.trim().toLowerCase()
   if (!wanted || wanted === "*") return undefined

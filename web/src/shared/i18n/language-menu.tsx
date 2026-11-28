@@ -2,18 +2,9 @@
 
 // The language menu in the top bar and sign-in screen: a button opening the list of languages in native script.
 
+import { Button, Menu, MenuRadioGroup, MenuRadioItem, useAppToast } from "@primecoderin/fast-ui-react"
 import { Languages } from "lucide-react"
 import { useTranslations } from "next-intl"
-import { toast } from "sonner"
-
-import { Button } from "@/shared/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from "@/shared/ui/dropdown-menu"
 
 import { isLanguage, LANGUAGE_CODES, LANGUAGES, type Language } from "./languages"
 import { useLanguage } from "./use-language"
@@ -26,6 +17,7 @@ import { useLanguage } from "./use-language"
  */
 export function LanguageMenu({ onSelect }: { onSelect?: (language: Language) => void }) {
   const t = useTranslations("common")
+  const toast = useAppToast()
   const { language, setLanguage } = useLanguage()
 
   const choose = (value: string) => {
@@ -35,23 +27,18 @@ export function LanguageMenu({ onSelect }: { onSelect?: (language: Language) => 
       .catch(() => toast.error(t("language.loadFailed", { language: LANGUAGES[value].name })))
   }
 
-  // Each name carries its own lang attribute, so a screen reader reads "हिन्दी" as Hindi, whatever the page's language.
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label={t("language.change")}>
-          <Languages className="size-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuRadioGroup value={language} onValueChange={choose}>
-          {LANGUAGE_CODES.map((code) => (
-            <DropdownMenuRadioItem key={code} value={code} lang={code}>
-              {LANGUAGES[code].name}
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Menu
+      align="end"
+      trigger={<Button variant="icon" size="small" icon={<Languages />} aria-label={t("language.change")} />}
+    >
+      <MenuRadioGroup aria-label={t("language.change")} value={language} onValueChange={choose}>
+        {LANGUAGE_CODES.map((code) => (
+          <MenuRadioItem key={code} value={code}>
+            <span lang={code}>{LANGUAGES[code].name}</span>
+          </MenuRadioItem>
+        ))}
+      </MenuRadioGroup>
+    </Menu>
   )
 }

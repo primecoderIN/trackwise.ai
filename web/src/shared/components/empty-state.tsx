@@ -1,10 +1,13 @@
+"use client"
+
 // A shared component: the "nothing here yet" filler for a card or page, with an optional icon and action (either a link
 // or a button click). Part of shared/, so it knows no feature (the caller passes the icon, text and action).
 
+import { Button, EmptyState as FastEmptyState } from "@primecoderin/fast-ui-react"
 import type { LucideIcon } from "lucide-react"
 import Link from "next/link"
 
-import { Button } from "@/shared/ui/button"
+import { linkButtonClass } from "./link-button"
 
 /** An action for an empty state: either a navigation link (`to`) or an in-page callback (`onClick`). */
 export type EmptyStateAction =
@@ -23,28 +26,27 @@ interface EmptyStateProps {
 
 /** What a card or page shows when there's nothing to show yet: an optional icon, a short message and a next step. */
 export function EmptyState({ icon: Icon, title, message, action }: EmptyStateProps) {
-  const variant = action?.primary ? "default" : "outline"
+  const variant = action?.primary ? "primary" : "secondary"
+  const actionNode = action ? (
+    "to" in action ? (
+      <Link href={action.to} className={linkButtonClass({ variant, size: "small" })}>
+        {action.label}
+      </Link>
+    ) : (
+      <Button variant={variant} size="small" onClick={action.onClick}>
+        {action.label}
+      </Button>
+    )
+  ) : undefined
+
   return (
-    <div className="flex h-full min-h-44 flex-col items-center justify-center gap-3.5 px-4 py-8 text-center text-sm text-muted-foreground">
-      {Icon && (
-        <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/15">
-          <Icon className="size-5" aria-hidden="true" />
-        </div>
-      )}
-      <div className="flex max-w-sm flex-col gap-1">
-        {title && <p className="text-base font-semibold tracking-tight text-foreground">{title}</p>}
-        <p className="leading-relaxed">{message}</p>
-      </div>
-      {action &&
-        ("to" in action ? (
-          <Button variant={variant} size="sm" asChild className="mt-1">
-            <Link href={action.to}>{action.label}</Link>
-          </Button>
-        ) : (
-          <Button variant={variant} size="sm" onClick={action.onClick} className="mt-1">
-            {action.label}
-          </Button>
-        ))}
-    </div>
+    <FastEmptyState
+      title={title ?? message}
+      description={title ? message : undefined}
+      icon={Icon ? <Icon className="size-5" aria-hidden="true" /> : undefined}
+      tone="info"
+      action={actionNode}
+      className="min-h-44"
+    />
   )
 }

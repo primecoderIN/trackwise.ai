@@ -3,18 +3,18 @@
 // Hook for components needing active locale metadata, the date-picker locale, or imperative language switching.
 // Reads the active locale from next-intl, persists NEXT_LOCALE cookie on changes, and refreshes or navigates.
 
+import type { Locale } from "date-fns"
 import { useParams, usePathname, useRouter } from "next/navigation"
 import { useLocale } from "next-intl"
 import { useCallback, useEffect, useState } from "react"
-import type { DayPickerLocale } from "react-day-picker"
 
 import { localizedPath, ROUTES } from "@/shared/config/routes"
 
 import { DEFAULT_LANGUAGE, isLanguage, LANGUAGES, setLocaleCookie, type Language } from "./languages"
 
-const cachedPickerLocales = new Map<Language, DayPickerLocale>()
+const cachedPickerLocales = new Map<Language, Locale>()
 
-async function ensureDatePickerLocale(language: Language): Promise<DayPickerLocale | undefined> {
+async function ensureDatePickerLocale(language: Language): Promise<Locale | undefined> {
   const cached = cachedPickerLocales.get(language)
   if (cached) return cached
   const loaded = await LANGUAGES[language].loadDatePickerLocale().catch(() => undefined)
@@ -38,8 +38,8 @@ export interface LanguageState {
   locale: string
   /** Writing direction. */
   dir: "ltr" | "rtl"
-  /** Loaded react-day-picker locale object, if available. */
-  datePickerLocale: DayPickerLocale | undefined
+  /** Loaded date-fns locale object, if available. */
+  datePickerLocale: Locale | undefined
   /** Switches active locale, updates NEXT_LOCALE cookie, and refreshes/navigates cleanly. */
   setLanguage: (next: Language) => Promise<void>
 }
@@ -51,9 +51,7 @@ export function useLanguage(): LanguageState {
   const router = useRouter()
   const pathname = usePathname()
   const params = useParams<{ lang?: string | string[] }>()
-  const [datePickerLocale, setDatePickerLocale] = useState<DayPickerLocale | undefined>(() =>
-    cachedPickerLocales.get(language),
-  )
+  const [datePickerLocale, setDatePickerLocale] = useState<Locale | undefined>(() => cachedPickerLocales.get(language))
 
   useEffect(() => {
     let active = true

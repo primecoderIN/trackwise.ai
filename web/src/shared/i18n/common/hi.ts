@@ -35,6 +35,18 @@ const hi: Translation<typeof en> = {
     toggleSidebar: "साइडबार दिखाएँ या छिपाएँ",
     sidebarTitle: "साइडबार",
     sidebarDescription: "मोबाइल साइडबार दिखाता है।",
+    resizePanels: "पैनल का आकार बदलें",
+    loading: "लोड हो रहा है",
+  },
+  toast: {
+    titles: {
+      success: "पूर्ण",
+      error: "त्रुटि",
+      warning: "चेतावनी",
+      info: "सूचना",
+    },
+    dismiss: "सूचना बंद करें",
+    region: "सूचनाएँ",
   },
   money: {
     inBase: "≈ {amount}",
@@ -62,7 +74,22 @@ const hi: Translation<typeof en> = {
   datePicker: {
     placeholder: "तारीख चुनें",
     today: "आज",
+    now: "अभी",
     clear: "साफ़ करें",
+    done: "हो गया",
+    time: "समय",
+    hour: "घंटा",
+    minute: "मिनट",
+    second: "सेकंड",
+    previousMonth: "पिछला महीना",
+    nextMonth: "अगला महीना",
+    previousYear: "पिछला वर्ष",
+    nextYear: "अगला वर्ष",
+    chooseMonth: "महीना और वर्ष चुनें",
+    backToCalendar: "कैलेंडर पर वापस जाएँ",
+    chooseDate: "तारीख चुनें",
+    chooseDateTime: "तारीख और समय चुनें",
+    chooseTime: "समय चुनें",
   },
 }
 

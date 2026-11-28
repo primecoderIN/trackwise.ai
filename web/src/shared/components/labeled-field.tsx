@@ -3,8 +3,6 @@
 
 import type { ReactNode } from "react"
 
-import { Label } from "@/shared/ui/label"
-
 interface LabeledFieldProps {
   /** The control's id: the label points at it (htmlFor), so clicking the label focuses the control. */
   id: string
@@ -21,7 +19,9 @@ interface LabeledFieldProps {
 export function LabeledField({ id, label, children }: LabeledFieldProps) {
   return (
     <div className="grid gap-1.5">
-      <Label htmlFor={id}>{label}</Label>
+      <label htmlFor={id} className="text-xs font-semibold text-fg">
+        {label}
+      </label>
       {children}
     </div>
   )

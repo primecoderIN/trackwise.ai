@@ -1,6 +1,6 @@
 // The "common" namespace's English texts: what shared/ itself shows (the API client's errors, the error and refresh
-// cards, the placeholder page, the theme and language menus). Part of shared/i18n. The source every other language
-// translates (hi.ts); the namespace is defined in index.ts.
+// cards, the placeholder page, the theme and language menus, toasts, and date picker labels). Part of shared/i18n.
+// The source every other language translates (hi.ts); the namespace is defined in index.ts.
 
 /** The shared texts, in English. `{name}` marks an ICU interpolation placeholder. */
 const en = {
@@ -28,14 +28,24 @@ const en = {
     dark: "Dark",
     system: "System",
   },
-  // The UI kit's own words (shared/ui): screen-reader labels on its close buttons and the sidebar.
   ui: {
     close: "Close",
     toggleSidebar: "Toggle Sidebar",
     sidebarTitle: "Sidebar",
     sidebarDescription: "Displays the mobile sidebar.",
+    resizePanels: "Resize panels",
+    loading: "Loading",
   },
-  // An amount in another currency also shows its USD amount, the one totals count (shared/components/money.tsx).
+  toast: {
+    titles: {
+      success: "Done",
+      error: "Error",
+      warning: "Warning",
+      info: "Notice",
+    },
+    dismiss: "Dismiss notification",
+    region: "Notifications",
+  },
   money: {
     inBase: "≈ {amount}",
     inBaseLabel: "{amount} in {currency}, at {rate} on {date}",
@@ -62,7 +72,22 @@ const en = {
   datePicker: {
     placeholder: "Pick a date",
     today: "Today",
+    now: "Now",
     clear: "Clear",
+    done: "Done",
+    time: "Time",
+    hour: "Hour",
+    minute: "Minute",
+    second: "Second",
+    previousMonth: "Previous month",
+    nextMonth: "Next month",
+    previousYear: "Previous year",
+    nextYear: "Next year",
+    chooseMonth: "Choose month and year",
+    backToCalendar: "Back to calendar",
+    chooseDate: "Choose a date",
+    chooseDateTime: "Choose a date and time",
+    chooseTime: "Choose a time",
   },
 }
 
