@@ -1,18 +1,17 @@
 // Chronological activity feed merging split expenses and active/soft-voided settlements with per-user expense links.
 
+import { Button, Card, StatusBadge, Tag } from "@primecoderin/fast-ui-react"
+import { CardContent, CardHeader, CardTitle } from "@/shared/components/card-parts"
+import { toast } from "@/shared/lib/toast"
 import { Ban, ExternalLink, Lock, Pencil, ReceiptText, Trash2, Unlink } from "lucide-react"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
-import { toast } from "sonner"
 
 import { EmptyState } from "@/shared/components/empty-state"
 import { ROUTES } from "@/shared/config/routes"
 import { useFormatters } from "@/shared/lib/use-formatters"
 import { useMessageOf } from "@/shared/lib/use-message-of"
-import { Badge } from "@/shared/ui/badge"
-import { Button } from "@/shared/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
 
 import type { SplitExpense, SplitSettlement } from "../../api"
 import { useDeleteSplitExpense, useUnlinkSplitExpense, useVoidSettlement } from "../../queries"
@@ -119,8 +118,8 @@ export function ActivityList({
                   >
                     <div className="flex min-w-0 flex-col gap-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant="secondary">{t("activity.settlementBadge")}</Badge>
-                        {isVoided && <Badge variant="destructive">{t("activity.voidedBadge")}</Badge>}
+                        <Tag>{t("activity.settlementBadge")}</Tag>
+                        {isVoided && <StatusBadge tone="error">{t("activity.voidedBadge")}</StatusBadge>}
                         <span className={isVoided ? "line-through" : "font-medium"}>
                           {t("activity.settlementLine", { from: fromLabel, to: toLabel })}
                         </span>
@@ -135,7 +134,7 @@ export function ActivityList({
                       </p>
                     </div>
                     {s.can_void && (
-                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setVoiding(s)}>
+                      <Button size="small" variant="subtle" className="text-destructive" onClick={() => setVoiding(s)}>
                         <Ban className="size-3.5" />
                         {t("activity.voidAction")}
                       </Button>
@@ -152,14 +151,14 @@ export function ActivityList({
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-semibold">{sp.description}</span>
                       <span className="font-semibold">{formatMoney(sp.amount, sp.currency)}</span>
-                      <Badge variant="outline" className="text-xs">
+                      <Tag className="text-xs">
                         {sp.split_method === "exact" ? t("activity.methodExact") : t("activity.methodEqual")}
-                      </Badge>
+                      </Tag>
                       {sp.locked_by_settlement && (
-                        <Badge variant="secondary" className="gap-1 text-xs">
+                        <Tag className="gap-1 text-xs">
                           <Lock className="size-3" />
                           {t("activity.lockedHint")}
-                        </Badge>
+                        </Tag>
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground">
@@ -180,8 +179,8 @@ export function ActivityList({
                             {t("activity.linkedExpense", { id: sp.my_linked_expense_id })}
                           </Link>
                           <Button
-                            size="sm"
-                            variant="ghost"
+                            size="small"
+                            variant="subtle"
                             className="h-6 px-1.5 text-xs text-muted-foreground"
                             disabled={unlink.isPending}
                             onClick={() => void handleUnlink(sp.id)}
@@ -194,7 +193,12 @@ export function ActivityList({
                         <span className="text-amber-600 dark:text-amber-400">{t("activity.recordingPending")}</span>
                       ) : (
                         sp.my_share_minor > 0 && (
-                          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onLogMyShare(sp)}>
+                          <Button
+                            size="small"
+                            variant="secondary"
+                            className="h-7 text-xs"
+                            onClick={() => onLogMyShare(sp)}
+                          >
                             <ReceiptText className="size-3" />
                             {t("activity.logMyShare")}
                           </Button>
@@ -205,14 +209,14 @@ export function ActivityList({
 
                   {sp.can_edit && (
                     <div className="flex flex-wrap items-center gap-1">
-                      <Button size="sm" variant="ghost" onClick={() => onEditSplit(sp)}>
+                      <Button size="small" variant="subtle" onClick={() => onEditSplit(sp)}>
                         <Pencil className="size-3.5" />
                         {t("activity.edit")}
                       </Button>
                       {!sp.locked_by_settlement && (
                         <Button
-                          size="sm"
-                          variant="ghost"
+                          size="small"
+                          variant="subtle"
                           className="text-destructive"
                           onClick={() => setDeletingSplit(sp)}
                         >

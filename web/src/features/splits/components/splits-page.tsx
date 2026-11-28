@@ -1,6 +1,7 @@
 // Main Splits page (/splits): top non-netted per-currency summary strip, Groups / People / Activity tabs,
 // single-group detail drilldown, and all Splits dialogs (D226).
 
+import { Button, CheckboxBox, SkeletonItem } from "@primecoderin/fast-ui-react"
 import { HandCoins, Plus, QrCode, ReceiptText, UserRound, Users } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
@@ -10,9 +11,6 @@ import { PageHeader } from "@/shared/components/page-header"
 import { RefreshNotice } from "@/shared/components/refresh-notice"
 import { SectionError } from "@/shared/components/section-error"
 import { useMessageOf } from "@/shared/lib/use-message-of"
-import { Button } from "@/shared/ui/button"
-import { Checkbox } from "@/shared/ui/checkbox"
-import { Skeleton } from "@/shared/ui/skeleton"
 
 import type { GroupMember, SplitContact, SplitExpense } from "../api"
 import { useSplitExpenses, useSplitSettlements, useSplitsOverview } from "../queries"
@@ -119,15 +117,15 @@ export function SplitsPage() {
         description={t("page.description")}
         actions={
           <>
-            <Button variant="outline" size="sm" onClick={() => setMyUpiOpen(true)}>
+            <Button variant="secondary" size="small" onClick={() => setMyUpiOpen(true)}>
               <QrCode className="size-4" />
               {t("page.myUpi")}
             </Button>
-            <Button variant="outline" size="sm" onClick={() => openSettle(null)}>
+            <Button variant="secondary" size="small" onClick={() => openSettle(null)}>
               <HandCoins className="size-4" />
               {t("page.settleUp")}
             </Button>
-            <Button size="sm" onClick={() => openNewSplit(null)}>
+            <Button variant="primary" size="small" onClick={() => openNewSplit(null)}>
               <Plus className="size-4" />
               {t("page.addSplit")}
             </Button>
@@ -156,8 +154,8 @@ export function SplitsPage() {
                   id={`splits-tab-${id}`}
                   aria-selected={tab === id}
                   aria-controls={`splits-panel-${id}`}
-                  variant={tab === id ? "secondary" : "ghost"}
-                  size="sm"
+                  variant={tab === id ? "secondary" : "subtle"}
+                  size="small"
                   onClick={() => {
                     setTab(id)
                     if (id !== "groups") setSelectedGroupId(null)
@@ -169,7 +167,7 @@ export function SplitsPage() {
               ))}
             </div>
             <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
-              <Checkbox checked={includeArchived} onCheckedChange={(c) => setIncludeArchived(c === true)} />
+              <CheckboxBox checked={includeArchived} onCheckedChange={setIncludeArchived} />
               <span>{t("page.showArchived")}</span>
             </label>
           </div>
@@ -284,8 +282,8 @@ export function SplitsPage() {
         />
       ) : (
         <div className="grid gap-4">
-          <Skeleton className="h-28" />
-          <Skeleton className="h-64" />
+          <SkeletonItem className="h-28" />
+          <SkeletonItem className="h-64" />
         </div>
       )}
     </div>

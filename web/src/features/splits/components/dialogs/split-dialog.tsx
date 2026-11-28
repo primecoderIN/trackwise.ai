@@ -1,35 +1,32 @@
 // Dialog for creating or editing a direct or group split expense (Equal + Exact custom amounts + optional
 // "Also record my share as a personal expense" toggle with budget-watch alerts, D225).
 
+import { Button, CheckboxField, Dialog, SelectField, TextField, type SelectOption } from "@primecoderin/fast-ui-react"
 import { useTranslations } from "next-intl"
-import { type FormEvent, useState } from "react"
-import { toast } from "sonner"
+import { type FormEvent, useMemo, useState } from "react"
 
 import { CategorySelect } from "@/features/categories"
 import { DEFAULT_USER_CURRENCY, PAYMENT_METHOD_LABELS, SPLITS } from "@/shared/api/contracts.gen"
 import type { Schemas } from "@/shared/api/http"
 import { paymentMethodValues } from "@/shared/api/schema.gen"
-
-type PaymentMethod = Schemas["PaymentMethod"]
 import { CurrencySelect } from "@/shared/components/currency-select"
+import { DatePicker } from "@/shared/components/date-picker"
 import { LabeledField } from "@/shared/components/labeled-field"
 import { useLanguage } from "@/shared/i18n"
 import { todayIso } from "@/shared/lib/format"
+import { toast } from "@/shared/lib/toast"
 import { useFormatters } from "@/shared/lib/use-formatters"
 import { useMessageOf } from "@/shared/lib/use-message-of"
-import { Button } from "@/shared/ui/button"
-import { Checkbox } from "@/shared/ui/checkbox"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
-import { Input } from "@/shared/ui/input"
-import { Label } from "@/shared/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
 
 import type { GroupMember, SplitContact, SplitExpense } from "../../api"
 import { useCreateSplitExpense, useUpdateSplitExpense } from "../../queries"
 import { formatMinorToMajor, parseMajorToMinor, previewEqualShares } from "../../split-preview"
 import { type ParticipantOption, SplitParticipantsField } from "./split-participants-field"
 
+type PaymentMethod = Schemas["PaymentMethod"]
+
 const SELF_KEY = "self"
+const FORM_ID = "split-expense-form"
 
 /** Props for the Split create/edit dialog. */
 export interface SplitDialogProps {
@@ -55,6 +52,7 @@ export function SplitDialog({
   onOpenChange,
 }: SplitDialogProps) {
   const t = useTranslations("splits")
+  const tCommon = useTranslations("common")
   const { language } = useLanguage()
   const { formatMoney } = useFormatters()
   const messageOf = useMessageOf()
@@ -76,6 +74,8 @@ export function SplitDialog({
         { key: SELF_KEY, label: t("groups.youTag") },
         ...activeContacts.map((c) => ({ key: `c:${c.id}`, label: c.name })),
       ]
+
+  const paidByOptions: SelectOption[] = options.map((opt) => ({ value: opt.key, label: opt.label }))
 
   const initialSelected = editing
     ? editing.shares.map((s) => (isGroup ? `m:${s.member_id}` : s.is_self ? SELF_KEY : `c:${s.contact_id}`))
@@ -117,6 +117,12 @@ export function SplitDialog({
     if (method === "equal") return previewEqualShares(totalMinor, selectedKeys)[selfKey] ?? 0
     return parseMajorToMinor(exactValues[selfKey] ?? "0", currency) ?? 0
   })()
+
+  const methodLabels = PAYMENT_METHOD_LABELS[language]
+  const methodOptions = useMemo<SelectOption[]>(
+    () => paymentMethodValues.map((m) => ({ value: m, label: methodLabels[m] })),
+    [methodLabels],
+  )
 
   function toggleParticipant(key: string) {
     setSelectedKeys((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]))
@@ -235,90 +241,88 @@ export function SplitDialog({
     }
   }
 
-  const methodLabels = PAYMENT_METHOD_LABELS[language]
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{editing ? t("dialogs.split.editTitle") : t("dialogs.split.addTitle")}</DialogTitle>
-          <DialogDescription>
-            {groupName ? `${groupName} · ${t("dialogs.split.description")}` : t("dialogs.split.description")}
-          </DialogDescription>
-        </DialogHeader>
-
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      size="narrow"
+      title={editing ? t("dialogs.split.editTitle") : t("dialogs.split.addTitle")}
+      description={groupName ? `${groupName} · ${t("dialogs.split.description")}` : t("dialogs.split.description")}
+      closeLabel={tCommon("ui.close")}
+      actions={
+        <>
+          <Button variant="secondary" onClick={() => onOpenChange(false)}>
+            {t("dialogs.cancel")}
+          </Button>
+          <Button variant="primary" type="submit" form={FORM_ID} disabled={!description.trim()} isLoading={saving}>
+            {saving ? t("dialogs.saving") : t("dialogs.save")}
+          </Button>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-3.5">
         {locked && (
-          <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
+          <p className="rounded-md border border-warning/30 bg-warning-soft px-3 py-2 text-xs text-warning-foreground">
             {t("dialogs.split.lockedNotice")}
           </p>
         )}
 
-        <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-3.5">
-          <LabeledField id="split-desc" label={t("dialogs.split.titleLabel")}>
-            <Input
-              id="split-desc"
-              required
-              maxLength={SPLITS.limits.descriptionLength}
-              placeholder={t("dialogs.split.titlePlaceholder")}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </LabeledField>
+        <form id={FORM_ID} onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-3.5">
+          <TextField
+            label={t("dialogs.split.titleLabel")}
+            required
+            maxLength={SPLITS.limits.descriptionLength}
+            placeholder={t("dialogs.split.titlePlaceholder")}
+            value={description}
+            onValueChange={setDescription}
+            size="small"
+          />
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <LabeledField id="split-amount" label={t("dialogs.split.amountLabel")}>
-              <Input
-                id="split-amount"
-                type="text"
-                inputMode="decimal"
-                required
-                disabled={locked}
-                placeholder="0.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-              />
-            </LabeledField>
+            <TextField
+              label={t("dialogs.split.amountLabel")}
+              type="text"
+              inputMode="decimal"
+              required
+              disabled={locked}
+              placeholder="0.00"
+              value={amount}
+              onValueChange={setAmount}
+              size="small"
+            />
             <LabeledField id="split-currency" label={t("dialogs.split.currencyLabel")}>
               <CurrencySelect id="split-currency" value={currency} onChange={setCurrency} disabled={locked} />
             </LabeledField>
             <LabeledField id="split-date" label={t("dialogs.split.dateLabel")}>
-              <Input
+              <DatePicker
                 id="split-date"
-                type="date"
-                required
-                disabled={locked}
                 value={spentOn}
-                onChange={(e) => setSpentOn(e.target.value)}
+                disabled={locked}
+                ariaLabel={t("dialogs.split.dateLabel")}
+                onChange={(value) => value && setSpentOn(value)}
               />
             </LabeledField>
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <LabeledField id="split-paid-by" label={t("dialogs.split.paidByLabel")}>
-              <Select value={paidBy} onValueChange={setPaidBy} disabled={locked}>
-                <SelectTrigger id="split-paid-by" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {options.map((opt) => (
-                    <SelectItem key={opt.key} value={opt.key}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </LabeledField>
+            <SelectField
+              label={t("dialogs.split.paidByLabel")}
+              options={paidByOptions}
+              value={paidBy}
+              onValueChange={setPaidBy}
+              disabled={locked}
+              size="small"
+            />
 
             <div className="flex flex-col gap-1.5">
-              <Label>{t("dialogs.split.methodLabel")}</Label>
+              <span className="text-xs font-semibold text-fg">{t("dialogs.split.methodLabel")}</span>
               <div className="grid grid-cols-2 gap-1.5">
                 {(["equal", "exact"] as const).map((option) => (
                   <Button
                     key={option}
-                    type="button"
-                    size="sm"
+                    size="small"
                     disabled={locked}
-                    variant={method === option ? "default" : "outline"}
+                    variant={method === option ? "primary" : "secondary"}
                     onClick={() => setMethod(option)}
                   >
                     {option === "equal" ? t("dialogs.split.equal") : t("dialogs.split.exact")}
@@ -340,61 +344,45 @@ export function SplitDialog({
             onExactChange={(key, value) => setExactValues((prev) => ({ ...prev, [key]: value }))}
           />
 
-          <LabeledField id="split-note" label={t("dialogs.split.noteLabel")}>
-            <Input
-              id="split-note"
-              maxLength={SPLITS.limits.noteLength}
-              placeholder={t("dialogs.split.notePlaceholder")}
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-            />
-          </LabeledField>
+          <TextField
+            label={t("dialogs.split.noteLabel")}
+            maxLength={SPLITS.limits.noteLength}
+            placeholder={t("dialogs.split.notePlaceholder")}
+            value={note}
+            onValueChange={setNote}
+            size="small"
+          />
 
           {!editing && myShareMinor > 0 && (
-            <div className="flex flex-col gap-3 rounded-md border bg-muted/30 p-3">
-              <p className="text-xs font-medium text-muted-foreground">{t("dialogs.split.personalExpenseSection")}</p>
-              <label className="flex cursor-pointer items-center gap-2 text-sm">
-                <Checkbox checked={recordPersonal} onCheckedChange={(c) => setRecordPersonal(c === true)} />
-                <span>
-                  {t("dialogs.split.recordMyShareToggle", {
-                    amount: formatMoney(formatMinorToMajor(myShareMinor, currency), currency),
-                  })}
-                </span>
-              </label>
+            <div className="flex flex-col gap-3 rounded-md border border-line bg-subtle p-3">
+              <p className="text-xs font-medium text-fg-secondary">{t("dialogs.split.personalExpenseSection")}</p>
+              <CheckboxField
+                label={t("dialogs.split.recordMyShareToggle", {
+                  amount: formatMoney(formatMinorToMajor(myShareMinor, currency), currency),
+                })}
+                checked={recordPersonal}
+                onCheckedChange={setRecordPersonal}
+              />
               {recordPersonal && (
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <LabeledField id="split-category" label={t("dialogs.split.categoryLabel")}>
-                    <CategorySelect id="split-category" value={categoryId} onChange={setCategoryId} />
-                  </LabeledField>
-                  <LabeledField id="split-pay-method" label={t("dialogs.split.paymentMethodLabel")}>
-                    <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
-                      <SelectTrigger id="split-pay-method" className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {paymentMethodValues.map((m) => (
-                          <SelectItem key={m} value={m}>
-                            {methodLabels[m]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </LabeledField>
+                  <CategorySelect
+                    label={t("dialogs.split.categoryLabel")}
+                    value={categoryId}
+                    onChange={setCategoryId}
+                  />
+                  <SelectField
+                    label={t("dialogs.split.paymentMethodLabel")}
+                    options={methodOptions}
+                    value={paymentMethod}
+                    onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}
+                    size="small"
+                  />
                 </div>
               )}
             </div>
           )}
-
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-              {t("dialogs.cancel")}
-            </Button>
-            <Button type="submit" disabled={saving || !description.trim()}>
-              {saving ? t("dialogs.saving") : t("dialogs.save")}
-            </Button>
-          </DialogFooter>
         </form>
-      </DialogContent>
+      </div>
     </Dialog>
   )
 }

@@ -1,5 +1,8 @@
 // Full detail view of one Personal or Shared group: members, net balances, simplified settlements, invites, and ledger.
 
+import { Button, Card, SkeletonItem, Tag } from "@primecoderin/fast-ui-react"
+import { CardContent, CardHeader, CardTitle } from "@/shared/components/card-parts"
+import { toast } from "@/shared/lib/toast"
 import {
   Archive,
   ArchiveRestore,
@@ -15,15 +18,10 @@ import {
 } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
-import { toast } from "sonner"
 
 import { SectionError } from "@/shared/components/section-error"
 import { useFormatters } from "@/shared/lib/use-formatters"
 import { useMessageOf } from "@/shared/lib/use-message-of"
-import { Badge } from "@/shared/ui/badge"
-import { Button } from "@/shared/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
-import { Skeleton } from "@/shared/ui/skeleton"
 
 import type { SimplifiedTransfer, SplitContact, SplitExpense } from "../../api"
 import { useDeleteGroup, useGroupDetail, useLeaveGroup, useUpdateGroup } from "../../queries"
@@ -76,7 +74,7 @@ export function GroupDetailView({
   if (query.isError && !query.data) {
     return (
       <div className="flex flex-col gap-3">
-        <Button variant="ghost" size="sm" className="w-fit" onClick={onBack}>
+        <Button variant="subtle" size="small" className="w-fit" onClick={onBack}>
           <ArrowLeft className="size-4" />
           {t("groups.back")}
         </Button>
@@ -93,9 +91,9 @@ export function GroupDetailView({
   if (!query.data) {
     return (
       <div className="flex flex-col gap-3">
-        <Skeleton className="h-10 w-40" />
-        <Skeleton className="h-44" />
-        <Skeleton className="h-64" />
+        <SkeletonItem className="h-10 w-40" />
+        <SkeletonItem className="h-44" />
+        <SkeletonItem className="h-64" />
       </div>
     )
   }
@@ -161,22 +159,23 @@ export function GroupDetailView({
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={onBack}>
+          <Button variant="subtle" size="small" onClick={onBack}>
             <ArrowLeft className="size-4" />
             {t("groups.back")}
           </Button>
           <h2 className="text-xl font-semibold">{group.name}</h2>
-          <Badge variant={isShared ? "default" : "secondary"} className="gap-1">
+          <Tag tone={isShared ? "brand" : "neutral"} className="gap-1">
             {isShared ? <Users className="size-3" /> : <User className="size-3" />}
             {isShared ? t("groups.shared") : t("groups.personal")}
-          </Badge>
-          {archived && <Badge variant="outline">{t("groups.archivedBadge")}</Badge>}
+          </Tag>
+          {archived && <Tag>{t("groups.archivedBadge")}</Tag>}
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           {!archived && (
             <Button
-              size="sm"
+              variant="primary"
+              size="small"
               onClick={() => onAddSplit(group.id, group.name, detail.members, group.default_currency ?? undefined)}
             >
               <Plus className="size-4" />
@@ -184,27 +183,27 @@ export function GroupDetailView({
             </Button>
           )}
           {isOwner && !archived && (
-            <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
+            <Button size="small" variant="secondary" onClick={() => setEditOpen(true)}>
               <Pencil className="size-3.5" />
               {t("groups.editGroup")}
             </Button>
           )}
           {isOwner && !isShared && !archived && (
-            <Button size="sm" variant="outline" onClick={() => setConfirmKind("upgrade")}>
+            <Button size="small" variant="secondary" onClick={() => setConfirmKind("upgrade")}>
               <Share2 className="size-3.5" />
               {t("groups.upgradeToShared")}
             </Button>
           )}
           {isOwner && isShared && !archived && (
-            <Button size="sm" variant="outline" onClick={() => setTransferOpen(true)}>
+            <Button size="small" variant="secondary" onClick={() => setTransferOpen(true)}>
               <ArrowRightLeft className="size-3.5" />
               {t("groups.transferOwnership")}
             </Button>
           )}
           {isOwner && (
             <Button
-              size="sm"
-              variant="ghost"
+              size="small"
+              variant="subtle"
               disabled={updateGroup.isPending}
               onClick={() => void handleToggleArchive()}
             >
@@ -213,13 +212,13 @@ export function GroupDetailView({
             </Button>
           )}
           {isOwner && detail.splits.length === 0 && detail.settlements.length === 0 && (
-            <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setConfirmKind("delete")}>
+            <Button size="small" variant="subtle" className="text-destructive" onClick={() => setConfirmKind("delete")}>
               <Trash2 className="size-3.5" />
               {t("groups.deleteGroup")}
             </Button>
           )}
           {!isOwner && isShared && (
-            <Button size="sm" variant="outline" onClick={() => setConfirmKind("leave")}>
+            <Button size="small" variant="secondary" onClick={() => setConfirmKind("leave")}>
               <LogOut className="size-3.5" />
               {t("groups.leaveGroup")}
             </Button>
@@ -266,10 +265,10 @@ export function GroupDetailView({
                   <li key={member.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span className="font-medium">{member.display_name}</span>
-                      {member.is_self && <Badge variant="secondary">{t("groups.youTag")}</Badge>}
-                      {member.role === "owner" && <Badge variant="outline">{t("groups.ownerTag")}</Badge>}
-                      {!member.is_registered && <Badge variant="outline">{t("groups.guestTag")}</Badge>}
-                      {!member.is_active && <Badge variant="secondary">{t("groups.formerTag")}</Badge>}
+                      {member.is_self && <Tag>{t("groups.youTag")}</Tag>}
+                      {member.role === "owner" && <Tag>{t("groups.ownerTag")}</Tag>}
+                      {!member.is_registered && <Tag>{t("groups.guestTag")}</Tag>}
+                      {!member.is_active && <Tag>{t("groups.formerTag")}</Tag>}
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       {balances.length === 0 ? (
@@ -290,8 +289,8 @@ export function GroupDetailView({
                       )}
                       {isOwner && !archived && member.is_active && member.role !== "owner" && balances.length === 0 && (
                         <Button
-                          size="sm"
-                          variant="ghost"
+                          size="small"
+                          variant="subtle"
                           className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive"
                           onClick={() => void handleRemoveMember(member.id)}
                         >

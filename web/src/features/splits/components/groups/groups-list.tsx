@@ -1,13 +1,12 @@
 // Groups list view showing clear Personal vs. Shared visual badges and per-currency group balances (D225).
 
+import { Button, Card, Tag } from "@primecoderin/fast-ui-react"
+import { CardContent } from "@/shared/components/card-parts"
 import { ChevronRight, Plus, User, Users } from "lucide-react"
 import { useTranslations } from "next-intl"
 
 import { EmptyState } from "@/shared/components/empty-state"
 import { useFormatters } from "@/shared/lib/use-formatters"
-import { Badge } from "@/shared/ui/badge"
-import { Button } from "@/shared/ui/button"
-import { Card, CardContent } from "@/shared/ui/card"
 
 import type { GroupSummary } from "../../api"
 
@@ -27,7 +26,7 @@ export function GroupsList({ groups, onSelectGroup, onNewGroup }: GroupsListProp
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-semibold">{t("groups.title")}</h2>
-        <Button size="sm" onClick={onNewGroup}>
+        <Button variant="primary" size="small" onClick={onNewGroup}>
           <Plus className="size-4" />
           {t("groups.newGroup")}
         </Button>
@@ -53,11 +52,11 @@ export function GroupsList({ groups, onSelectGroup, onNewGroup }: GroupsListProp
                   <div className="flex min-w-0 flex-col gap-1.5">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="truncate font-semibold">{group.name}</span>
-                      <Badge variant={group.kind === "shared" ? "default" : "secondary"} className="gap-1 text-xs">
+                      <Tag tone={group.kind === "shared" ? "brand" : "neutral"} className="gap-1 text-xs">
                         {group.kind === "shared" ? <Users className="size-3" /> : <User className="size-3" />}
                         {group.kind === "shared" ? t("groups.shared") : t("groups.personal")}
-                      </Badge>
-                      {group.archived_at && <Badge variant="outline">{t("groups.archivedBadge")}</Badge>}
+                      </Tag>
+                      {group.archived_at && <Tag>{t("groups.archivedBadge")}</Tag>}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {t("groups.memberCount", { count: group.member_count })}

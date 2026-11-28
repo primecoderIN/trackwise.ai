@@ -1,11 +1,12 @@
 // Top balance summary strip for the Splits page: displays per-currency directional obligations ("You are owed" vs.
 // "You owe") separately using semantic positive/warning tokens — never mixing currencies or netting across groups.
 
+import { Card } from "@primecoderin/fast-ui-react"
+import { CardContent, CardHeader, CardTitle } from "@/shared/components/card-parts"
 import { ArrowDownLeft, ArrowUpRight } from "lucide-react"
 import { useTranslations } from "next-intl"
 
 import { useFormatters } from "@/shared/lib/use-formatters"
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
 
 import type { OverviewCurrencyTotal } from "../../api"
 

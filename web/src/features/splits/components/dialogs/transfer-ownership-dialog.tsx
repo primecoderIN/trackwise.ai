@@ -1,17 +1,16 @@
 // Dialog for transferring ownership of a Shared group to another active registered member (D225).
 
+import { Button, Dialog, SelectField, type SelectOption } from "@primecoderin/fast-ui-react"
 import { useTranslations } from "next-intl"
-import { type FormEvent, useState } from "react"
-import { toast } from "sonner"
+import { type FormEvent, useMemo, useState } from "react"
 
-import { LabeledField } from "@/shared/components/labeled-field"
+import { toast } from "@/shared/lib/toast"
 import { useMessageOf } from "@/shared/lib/use-message-of"
-import { Button } from "@/shared/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
 
 import type { GroupDetail } from "../../api"
 import { useTransferOwnership } from "../../queries"
+
+const FORM_ID = "transfer-ownership-form"
 
 /** Props for the Shared group ownership transfer dialog. */
 export interface TransferOwnershipDialogProps {
@@ -23,10 +22,16 @@ export interface TransferOwnershipDialogProps {
 /** Lets a Shared group's owner pick another active registered member to become the new owner. */
 export function TransferOwnershipDialog({ open, detail, onOpenChange }: TransferOwnershipDialogProps) {
   const t = useTranslations("splits")
+  const tCommon = useTranslations("common")
   const messageOf = useMessageOf()
   const transfer = useTransferOwnership()
   const eligible = detail.members.filter((m) => m.is_active && m.is_registered && !m.is_self)
   const [targetId, setTargetId] = useState(eligible[0] ? String(eligible[0].id) : "")
+
+  const memberOptions = useMemo<SelectOption[]>(
+    () => eligible.map((member) => ({ value: String(member.id), label: member.display_name })),
+    [eligible],
+  )
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -41,41 +46,43 @@ export function TransferOwnershipDialog({ open, detail, onOpenChange }: Transfer
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t("dialogs.transfer.title")}</DialogTitle>
-          <DialogDescription>{t("dialogs.transfer.description", { name: detail.group.name })}</DialogDescription>
-        </DialogHeader>
-        {eligible.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("dialogs.transfer.noEligible")}</p>
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      size="narrow"
+      title={t("dialogs.transfer.title")}
+      description={t("dialogs.transfer.description", { name: detail.group.name })}
+      closeLabel={tCommon("ui.close")}
+      actions={
+        eligible.length > 0 ? (
+          <>
+            <Button variant="secondary" onClick={() => onOpenChange(false)}>
+              {t("dialogs.cancel")}
+            </Button>
+            <Button variant="primary" type="submit" form={FORM_ID} disabled={!targetId} isLoading={transfer.isPending}>
+              {transfer.isPending ? t("dialogs.saving") : t("dialogs.transfer.submit")}
+            </Button>
+          </>
         ) : (
-          <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-4">
-            <LabeledField id="transfer-target" label={t("dialogs.transfer.memberLabel")}>
-              <Select value={targetId} onValueChange={setTargetId}>
-                <SelectTrigger id="transfer-target" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {eligible.map((member) => (
-                    <SelectItem key={member.id} value={String(member.id)}>
-                      {member.display_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </LabeledField>
-            <DialogFooter>
-              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-                {t("dialogs.cancel")}
-              </Button>
-              <Button type="submit" disabled={transfer.isPending || !targetId}>
-                {transfer.isPending ? t("dialogs.saving") : t("dialogs.transfer.submit")}
-              </Button>
-            </DialogFooter>
-          </form>
-        )}
-      </DialogContent>
+          <Button variant="secondary" onClick={() => onOpenChange(false)}>
+            {t("dialogs.close")}
+          </Button>
+        )
+      }
+    >
+      {eligible.length === 0 ? (
+        <p className="text-sm text-fg-secondary">{t("dialogs.transfer.noEligible")}</p>
+      ) : (
+        <form id={FORM_ID} onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-4">
+          <SelectField
+            label={t("dialogs.transfer.memberLabel")}
+            options={memberOptions}
+            value={targetId}
+            onValueChange={setTargetId}
+            size="small"
+          />
+        </form>
+      )}
     </Dialog>
   )
 }

@@ -1,11 +1,9 @@
 // Equal vs. Exact participant share picker sub-component used inside SplitDialog (keeps SplitDialog concise).
 
+import { CheckboxBox, TextField } from "@primecoderin/fast-ui-react"
 import { useTranslations } from "next-intl"
 
 import { useFormatters } from "@/shared/lib/use-formatters"
-import { Checkbox } from "@/shared/ui/checkbox"
-import { Input } from "@/shared/ui/input"
-import { Label } from "@/shared/ui/label"
 
 import { formatMinorToMajor, parseMajorToMinor, previewEqualShares } from "../../split-preview"
 
@@ -62,12 +60,10 @@ export function SplitParticipantsField({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <Label>{t("dialogs.split.participantsLabel")}</Label>
+        <span className="text-xs font-semibold text-fg">{t("dialogs.split.participantsLabel")}</span>
         {method === "exact" && diffMinor !== null && (
           <span
-            className={`text-xs font-medium ${
-              diffMinor === 0 ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"
-            }`}
+            className={`text-xs font-medium ${diffMinor === 0 ? "text-positive-foreground" : "text-warning-foreground"}`}
           >
             {diffMinor === 0
               ? t("dialogs.split.exactMatched")
@@ -81,32 +77,35 @@ export function SplitParticipantsField({
           </span>
         )}
       </div>
-      <div className="flex max-h-44 flex-col gap-2 overflow-y-auto rounded-md border p-2.5">
+      <div className="flex max-h-44 flex-col gap-2 overflow-y-auto rounded-md border border-line p-2.5">
         {options.map((opt) => {
           const checked = selectedKeys.includes(opt.key)
           const equalMinor = equalMap[opt.key]
           return (
             <div key={opt.key} className="flex items-center justify-between gap-2">
               <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-sm">
-                <Checkbox checked={checked} disabled={disabled} onCheckedChange={() => onToggle(opt.key)} />
+                <CheckboxBox checked={checked} disabled={disabled} onCheckedChange={() => onToggle(opt.key)} />
                 <span className="truncate">{opt.label}</span>
               </label>
               {checked && method === "equal" && equalMinor !== undefined && (
-                <span className="text-xs font-medium text-muted-foreground">
+                <span className="text-xs font-medium text-fg-secondary tabular-nums">
                   {formatMoney(formatMinorToMajor(equalMinor, currency), currency)}
                 </span>
               )}
               {checked && method === "exact" && (
-                <Input
-                  type="text"
-                  inputMode="decimal"
-                  aria-label={`${opt.label} ${t("dialogs.split.exact")}`}
-                  disabled={disabled}
-                  className="h-8 w-28 text-right text-sm"
-                  placeholder="0.00"
-                  value={exactValues[opt.key] ?? ""}
-                  onChange={(e) => onExactChange(opt.key, e.target.value)}
-                />
+                <div className="w-28 shrink-0">
+                  <TextField
+                    label={`${opt.label} ${t("dialogs.split.exact")}`}
+                    hideLabel
+                    type="text"
+                    inputMode="decimal"
+                    disabled={disabled}
+                    placeholder="0.00"
+                    value={exactValues[opt.key] ?? ""}
+                    onValueChange={(value) => onExactChange(opt.key, value)}
+                    size="small"
+                  />
+                </div>
               )}
             </div>
           )

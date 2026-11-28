@@ -1,11 +1,11 @@
 // Suggested minimum-transfer settlements inside one group with one-click Settle Up and Remind/UPI QR buttons.
 
+import { Button, Card } from "@primecoderin/fast-ui-react"
+import { CardContent, CardHeader, CardTitle } from "@/shared/components/card-parts"
 import { ArrowRight, HandCoins, QrCode } from "lucide-react"
 import { useTranslations } from "next-intl"
 
 import { useFormatters } from "@/shared/lib/use-formatters"
-import { Button } from "@/shared/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
 
 import type { SimplifiedTransfer } from "../../api"
 
@@ -47,12 +47,12 @@ export function SimplifiedTransfers({ transfers, archived, onSettle, onRemind }:
                     <span className="font-semibold tabular-nums">{formatMoney(tr.amount, tr.currency)}</span>
                   </div>
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <Button size="sm" variant="outline" onClick={() => onRemind(tr)}>
+                    <Button size="small" variant="secondary" onClick={() => onRemind(tr)}>
                       <QrCode className="size-3.5" />
                       {t("people.remindOrPay")}
                     </Button>
                     {!archived && (
-                      <Button size="sm" onClick={() => onSettle(tr)}>
+                      <Button variant="primary" size="small" onClick={() => onSettle(tr)}>
                         <HandCoins className="size-3.5" />
                         {t("page.settleUp")}
                       </Button>

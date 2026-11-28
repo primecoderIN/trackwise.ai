@@ -2,14 +2,14 @@
 // Always encodes the actual outstanding settlement amount, never assumes payment completion, and works globally via
 // one-click Copy Reminder for all currencies.
 
+import { Button, Dialog } from "@primecoderin/fast-ui-react"
 import { Check, Copy, ExternalLink, QrCode } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
-import { toast } from "sonner"
 
+import { linkButtonClass } from "@/shared/components/link-button"
+import { toast } from "@/shared/lib/toast"
 import { useFormatters } from "@/shared/lib/use-formatters"
-import { Button } from "@/shared/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
 
 import { buildUpiPayUri } from "../../upi"
 import { UpiQrSvg } from "./upi-qr-svg"
@@ -35,6 +35,7 @@ export interface PaymentQrDialogProps {
 /** Displays a copyable reminder for any currency plus a scannable INR UPI QR & deep link when a valid VPA exists. */
 export function PaymentQrDialog({ target, onClose, onRecordSettlement }: PaymentQrDialogProps) {
   const t = useTranslations("splits")
+  const tCommon = useTranslations("common")
   const { formatMoney } = useFormatters()
   const [copiedReminder, setCopiedReminder] = useState(false)
   const [copiedUpi, setCopiedUpi] = useState(false)
@@ -81,74 +82,22 @@ export function PaymentQrDialog({ target, onClose, onRecordSettlement }: Payment
   }
 
   return (
-    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <QrCode className="size-4" />
-            {t("dialogs.paymentQr.title")}
-          </DialogTitle>
-          <DialogDescription>{t("dialogs.paymentQr.description")}</DialogDescription>
-        </DialogHeader>
-
-        <div className="flex flex-col gap-4">
-          <div className="rounded-md border bg-muted/40 p-3 text-sm">
-            <p className="font-medium">
-              {t("dialogs.paymentQr.summaryLine", {
-                from: target.fromName,
-                to: target.toName,
-                amount: formattedAmount,
-              })}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {t("dialogs.paymentQr.contextLine", { context: target.contextLabel })}
-            </p>
-          </div>
-
-          {upiUri && target.toUpiId ? (
-            <div className="flex flex-col items-center gap-3 rounded-md border p-4">
-              <UpiQrSvg
-                uri={upiUri}
-                label={t("dialogs.paymentQr.qrLabel", { name: target.toName, amount: formattedAmount })}
-              />
-              <p className="font-mono text-xs text-muted-foreground">{target.toUpiId}</p>
-              <div className="flex flex-wrap justify-center gap-2">
-                <Button asChild size="sm" variant="default">
-                  <a href={upiUri}>
-                    <ExternalLink className="size-3.5" />
-                    {t("dialogs.paymentQr.openUpiApp")}
-                  </a>
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => void copyText(target.toUpiId!, "upi")}>
-                  {copiedUpi ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-                  {t("dialogs.paymentQr.copyUpiId")}
-                </Button>
-              </div>
-              <p className="text-center text-xs text-muted-foreground">{t("dialogs.paymentQr.upiDisclaimer")}</p>
-            </div>
-          ) : (
-            target.currency === "INR" && (
-              <p className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
-                {t("dialogs.paymentQr.noUpiNotice", { name: target.toName })}
-              </p>
-            )
-          )}
-
-          <div className="flex flex-col gap-2">
-            <p className="rounded-md border bg-muted/30 p-2.5 text-xs">{reminderText}</p>
-            <Button variant="outline" size="sm" onClick={() => void copyText(reminderText, "reminder")}>
-              {copiedReminder ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-              {t("dialogs.paymentQr.copyReminder")}
-            </Button>
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>
+    <Dialog
+      open
+      onOpenChange={(open) => !open && onClose()}
+      size="narrow"
+      icon={<QrCode />}
+      title={t("dialogs.paymentQr.title")}
+      description={t("dialogs.paymentQr.description")}
+      closeLabel={tCommon("ui.close")}
+      actions={
+        <>
+          <Button variant="secondary" onClick={onClose}>
             {t("dialogs.close")}
           </Button>
           {onRecordSettlement && (
             <Button
+              variant="primary"
               onClick={() => {
                 onClose()
                 onRecordSettlement()
@@ -157,8 +106,66 @@ export function PaymentQrDialog({ target, onClose, onRecordSettlement }: Payment
               {t("dialogs.paymentQr.recordNow")}
             </Button>
           )}
-        </DialogFooter>
-      </DialogContent>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-4">
+        <div className="rounded-md border border-line bg-subtle p-3 text-sm">
+          <p className="font-medium text-fg">
+            {t("dialogs.paymentQr.summaryLine", {
+              from: target.fromName,
+              to: target.toName,
+              amount: formattedAmount,
+            })}
+          </p>
+          <p className="text-xs text-fg-secondary">
+            {t("dialogs.paymentQr.contextLine", { context: target.contextLabel })}
+          </p>
+        </div>
+
+        {upiUri && target.toUpiId ? (
+          <div className="flex flex-col items-center gap-3 rounded-md border border-line p-4">
+            <UpiQrSvg
+              uri={upiUri}
+              label={t("dialogs.paymentQr.qrLabel", { name: target.toName, amount: formattedAmount })}
+            />
+            <p className="font-mono text-xs text-fg-secondary">{target.toUpiId}</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              <a className={linkButtonClass({ variant: "primary", size: "small" })} href={upiUri}>
+                <ExternalLink className="size-3.5" aria-hidden="true" />
+                {t("dialogs.paymentQr.openUpiApp")}
+              </a>
+              <Button
+                size="small"
+                variant="secondary"
+                icon={copiedUpi ? <Check /> : <Copy />}
+                onClick={() => void copyText(target.toUpiId!, "upi")}
+              >
+                {t("dialogs.paymentQr.copyUpiId")}
+              </Button>
+            </div>
+            <p className="text-center text-xs text-fg-secondary">{t("dialogs.paymentQr.upiDisclaimer")}</p>
+          </div>
+        ) : (
+          target.currency === "INR" && (
+            <p className="rounded-md border border-dashed border-line p-3 text-xs text-fg-secondary">
+              {t("dialogs.paymentQr.noUpiNotice", { name: target.toName })}
+            </p>
+          )
+        )}
+
+        <div className="flex flex-col gap-2">
+          <p className="rounded-md border border-line bg-subtle p-2.5 text-xs text-fg">{reminderText}</p>
+          <Button
+            variant="secondary"
+            size="small"
+            icon={copiedReminder ? <Check /> : <Copy />}
+            onClick={() => void copyText(reminderText, "reminder")}
+          >
+            {t("dialogs.paymentQr.copyReminder")}
+          </Button>
+        </div>
+      </div>
     </Dialog>
   )
 }

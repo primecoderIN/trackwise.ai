@@ -1,23 +1,22 @@
 // Owner-only invite link manager for Shared groups: create general or guest-targeted links, copy once, revoke.
 
+import { Button, Card, SelectField, StatusBadge, Tag, type SelectOption } from "@primecoderin/fast-ui-react"
 import { Check, Copy, Link2, Trash2 } from "lucide-react"
 import { useTranslations } from "next-intl"
-import { useState } from "react"
-import { toast } from "sonner"
+import { useMemo, useState } from "react"
 
 import { SPLITS } from "@/shared/api/contracts.gen"
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/card-parts"
 import { ROUTES } from "@/shared/config/routes"
+import { toast } from "@/shared/lib/toast"
 import { useFormatters } from "@/shared/lib/use-formatters"
 import { useMessageOf } from "@/shared/lib/use-message-of"
-import { Badge } from "@/shared/ui/badge"
-import { Button } from "@/shared/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
 
 import type { CreatedGroupInvite, GroupInvite, GroupMember } from "../../api"
 import { useCreateGroupInvite, useRevokeGroupInvite } from "../../queries"
 
 const ANY_TARGET = "any"
+const MAX_USE_OPTIONS: SelectOption[] = ["1", "5", "10", "20"].map((count) => ({ value: count, label: count }))
 
 /** Props for the Shared group invite management panel. */
 export interface InvitesPanelProps {
@@ -41,6 +40,22 @@ export function InvitesPanel({ groupId, members, invites, archived }: InvitesPan
   const [maxUses, setMaxUses] = useState("5")
   const [fresh, setFresh] = useState<CreatedGroupInvite | null>(null)
   const [copied, setCopied] = useState(false)
+
+  const targetOptions = useMemo<SelectOption[]>(
+    () => [
+      { value: ANY_TARGET, label: t("invites.anyMember") },
+      ...unclaimedGuests.map((guest) => ({
+        value: String(guest.id),
+        label: t("invites.claimGuestOption", { name: guest.display_name }),
+      })),
+    ],
+    [t, unclaimedGuests],
+  )
+
+  const lifetimeOptions = useMemo<SelectOption[]>(
+    () => SPLITS.inviteLifetimeDays.map((d) => ({ value: String(d), label: t("invites.daysOption", { days: d }) })),
+    [t],
+  )
 
   const inviteUrl =
     fresh && typeof window !== "undefined" ? `${window.location.origin}${ROUTES.splitsJoin}/${fresh.token}` : ""
@@ -97,66 +112,57 @@ export function InvitesPanel({ groupId, members, invites, archived }: InvitesPan
         {!archived && (
           <div className="flex flex-wrap items-end gap-2">
             <div className="min-w-0 flex-1 basis-44">
-              <p className="mb-1 text-xs font-medium text-muted-foreground">{t("invites.targetLabel")}</p>
-              <Select value={target} onValueChange={setTarget}>
-                <SelectTrigger aria-label={t("invites.targetLabel")} className="h-9 w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ANY_TARGET}>{t("invites.anyMember")}</SelectItem>
-                  {unclaimedGuests.map((guest) => (
-                    <SelectItem key={guest.id} value={String(guest.id)}>
-                      {t("invites.claimGuestOption", { name: guest.display_name })}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SelectField
+                label={t("invites.targetLabel")}
+                options={targetOptions}
+                value={target}
+                onValueChange={setTarget}
+                size="small"
+              />
             </div>
             <div className="w-full sm:w-28">
-              <p className="mb-1 text-xs font-medium text-muted-foreground">{t("invites.lifetimeLabel")}</p>
-              <Select value={days} onValueChange={setDays}>
-                <SelectTrigger aria-label={t("invites.lifetimeLabel")} className="h-9 w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {SPLITS.inviteLifetimeDays.map((d) => (
-                    <SelectItem key={d} value={String(d)}>
-                      {t("invites.daysOption", { days: d })}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SelectField
+                label={t("invites.lifetimeLabel")}
+                options={lifetimeOptions}
+                value={days}
+                onValueChange={setDays}
+                size="small"
+              />
             </div>
             {target === ANY_TARGET && (
               <div className="w-full sm:w-24">
-                <p className="mb-1 text-xs font-medium text-muted-foreground">{t("invites.maxUsesLabel")}</p>
-                <Select value={maxUses} onValueChange={setMaxUses}>
-                  <SelectTrigger aria-label={t("invites.maxUsesLabel")} className="h-9 w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {["1", "5", "10", "20"].map((count) => (
-                      <SelectItem key={count} value={count}>
-                        {count}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SelectField
+                  label={t("invites.maxUsesLabel")}
+                  options={MAX_USE_OPTIONS}
+                  value={maxUses}
+                  onValueChange={setMaxUses}
+                  size="small"
+                />
               </div>
             )}
-            <Button size="sm" disabled={createInvite.isPending} onClick={() => void handleGenerate()}>
+            <Button
+              variant="primary"
+              size="small"
+              isLoading={createInvite.isPending}
+              onClick={() => void handleGenerate()}
+            >
               {createInvite.isPending ? t("invites.generating") : t("invites.generate")}
             </Button>
           </div>
         )}
 
         {fresh && inviteUrl && (
-          <div className="flex flex-col gap-2 rounded-md border border-primary/40 bg-primary/5 p-3">
-            <p className="text-xs font-medium">{t("invites.oneTimeNotice")}</p>
+          <div className="flex flex-col gap-2 rounded-md border border-primary-active/40 bg-primary-light p-3">
+            <p className="text-xs font-medium text-fg">{t("invites.oneTimeNotice")}</p>
             <div className="flex flex-wrap items-center gap-2">
-              <code className="min-w-0 flex-1 truncate rounded bg-background px-2 py-1 text-xs">{inviteUrl}</code>
-              <Button size="sm" variant="default" className="shrink-0" onClick={() => void handleCopy()}>
-                {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+              <code className="min-w-0 flex-1 truncate rounded bg-surface px-2 py-1 text-xs">{inviteUrl}</code>
+              <Button
+                size="small"
+                variant="primary"
+                icon={copied ? <Check /> : <Copy />}
+                className="shrink-0"
+                onClick={() => void handleCopy()}
+              >
                 {t("invites.copyLink")}
               </Button>
             </div>
@@ -164,20 +170,18 @@ export function InvitesPanel({ groupId, members, invites, archived }: InvitesPan
         )}
 
         {invites.length === 0 ? (
-          <p className="text-xs text-muted-foreground">{t("invites.empty")}</p>
+          <p className="text-xs text-fg-secondary">{t("invites.empty")}</p>
         ) : (
-          <ul className="divide-y rounded-md border">
+          <ul className="divide-y divide-line-subtle rounded-md border border-line">
             {invites.map((inv) => (
               <li key={inv.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-xs">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant={inv.active ? "default" : "secondary"}>
+                  <StatusBadge tone={inv.active ? "success" : "neutral"}>
                     {inv.active ? t("invites.activeBadge") : t("invites.inactiveBadge")}
-                  </Badge>
-                  <code className="text-muted-foreground">…{inv.hint}</code>
-                  {inv.target_member_name && (
-                    <Badge variant="outline">{t("invites.targetBadge", { name: inv.target_member_name })}</Badge>
-                  )}
-                  <span className="text-muted-foreground">
+                  </StatusBadge>
+                  <code className="text-fg-secondary">…{inv.hint}</code>
+                  {inv.target_member_name && <Tag>{t("invites.targetBadge", { name: inv.target_member_name })}</Tag>}
+                  <span className="text-fg-secondary">
                     {t("invites.usesSummary", {
                       used: inv.use_count,
                       max: inv.max_uses,
@@ -187,13 +191,13 @@ export function InvitesPanel({ groupId, members, invites, archived }: InvitesPan
                 </div>
                 {inv.active && (
                   <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 text-destructive"
+                    size="small"
+                    variant="subtle"
+                    icon={<Trash2 />}
+                    className="text-destructive hover:text-destructive"
                     disabled={revokeInvite.isPending}
                     onClick={() => void handleRevoke(inv.id)}
                   >
-                    <Trash2 className="size-3.5" />
                     {t("invites.revoke")}
                   </Button>
                 )}

@@ -1,21 +1,18 @@
 // Dialog for editing the signed-in user's own optional INR UPI ID and opt-in shared-group visibility (D225).
 
+import { Button, CheckboxField, Dialog, TextField } from "@primecoderin/fast-ui-react"
 import { useTranslations } from "next-intl"
 import { type FormEvent, useState } from "react"
-import { toast } from "sonner"
 
 import { SPLITS } from "@/shared/api/contracts.gen"
-import { LabeledField } from "@/shared/components/labeled-field"
+import { toast } from "@/shared/lib/toast"
 import { useMessageOf } from "@/shared/lib/use-message-of"
-import { Button } from "@/shared/ui/button"
-import { Checkbox } from "@/shared/ui/checkbox"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
-import { Input } from "@/shared/ui/input"
-import { Label } from "@/shared/ui/label"
 
 import type { SplitProfile } from "../../api"
 import { useUpdateSplitProfile } from "../../queries"
 import { isValidUpiId } from "../../upi"
+
+const FORM_ID = "my-upi-form"
 
 /** Props for the user's own UPI receive-profile dialog. */
 export interface MyUpiDialogProps {
@@ -27,16 +24,17 @@ export interface MyUpiDialogProps {
 /** Lets the signed-in user configure their optional INR UPI ID and toggle sharing with Shared groups. */
 export function MyUpiDialog({ open, profile, onOpenChange }: MyUpiDialogProps) {
   const t = useTranslations("splits")
+  const tCommon = useTranslations("common")
   const messageOf = useMessageOf()
   const update = useUpdateSplitProfile()
   const [upiId, setUpiId] = useState(profile.upi_id ?? "")
-  const [share, setShare] = useState(profile.share_upi_with_groups)
+  const [share, setShare] = useState(Boolean(profile.share_upi_with_groups))
   const [error, setError] = useState<string | null>(null)
 
   function handleOpenChange(next: boolean) {
     if (next) {
       setUpiId(profile.upi_id ?? "")
-      setShare(profile.share_upi_with_groups)
+      setShare(Boolean(profile.share_upi_with_groups))
       setError(null)
     }
     onOpenChange(next)
@@ -60,53 +58,49 @@ export function MyUpiDialog({ open, profile, onOpenChange }: MyUpiDialogProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t("dialogs.myUpi.title")}</DialogTitle>
-          <DialogDescription>{t("dialogs.myUpi.description")}</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-4">
-          <LabeledField id="my-upi-id" label={t("dialogs.myUpi.upiLabel")}>
-            <Input
-              id="my-upi-id"
-              value={upiId}
-              maxLength={SPLITS.limits.upiIdLength}
-              placeholder={t("dialogs.myUpi.upiPlaceholder")}
-              onChange={(e) => {
-                setUpiId(e.target.value)
-                setError(null)
-              }}
-            />
-            <p className="text-xs text-muted-foreground">{t("dialogs.contact.upiHint")}</p>
-            {error && <p className="text-xs text-destructive">{error}</p>}
-          </LabeledField>
+    <Dialog
+      open={open}
+      onOpenChange={handleOpenChange}
+      size="narrow"
+      title={t("dialogs.myUpi.title")}
+      description={t("dialogs.myUpi.description")}
+      closeLabel={tCommon("ui.close")}
+      actions={
+        <>
+          <Button variant="secondary" onClick={() => onOpenChange(false)}>
+            {t("dialogs.cancel")}
+          </Button>
+          <Button variant="primary" type="submit" form={FORM_ID} isLoading={update.isPending}>
+            {update.isPending ? t("dialogs.saving") : t("dialogs.save")}
+          </Button>
+        </>
+      }
+    >
+      <form id={FORM_ID} onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-4">
+        <TextField
+          label={t("dialogs.myUpi.upiLabel")}
+          value={upiId}
+          maxLength={SPLITS.limits.upiIdLength}
+          placeholder={t("dialogs.myUpi.upiPlaceholder")}
+          hint={t("dialogs.contact.upiHint")}
+          errorMessage={error ?? undefined}
+          onValueChange={(next) => {
+            setUpiId(next)
+            setError(null)
+          }}
+          size="small"
+        />
 
-          <div className="flex items-start gap-2.5 rounded-md border p-3">
-            <Checkbox
-              id="share-upi-groups"
-              checked={share}
-              onCheckedChange={(checked) => setShare(checked === true)}
-              disabled={!upiId.trim()}
-            />
-            <div className="flex flex-col gap-0.5">
-              <Label htmlFor="share-upi-groups" className="cursor-pointer text-sm">
-                {t("dialogs.myUpi.shareLabel")}
-              </Label>
-              <p className="text-xs text-muted-foreground">{t("dialogs.myUpi.shareHint")}</p>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-              {t("dialogs.cancel")}
-            </Button>
-            <Button type="submit" disabled={update.isPending}>
-              {update.isPending ? t("dialogs.saving") : t("dialogs.save")}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
+        <div className="rounded-md border border-line p-3">
+          <CheckboxField
+            label={t("dialogs.myUpi.shareLabel")}
+            hint={t("dialogs.myUpi.shareHint")}
+            checked={share}
+            onCheckedChange={setShare}
+            disabled={!upiId.trim()}
+          />
+        </div>
+      </form>
     </Dialog>
   )
 }

@@ -1,19 +1,18 @@
 // Shared-group invite acceptance page (/splits/join/[token]): previews safe group metadata, offers clear
 // guest-seat claiming ("Existing guest · Has previous split history") or joining as a new member / rejoining (D225).
 
+import { Button, Card, SkeletonItem, Tag } from "@primecoderin/fast-ui-react"
+import { linkButtonClass } from "@/shared/components/link-button"
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/card-parts"
+import { toast } from "@/shared/lib/toast"
 import { CheckCircle2, RotateCcw, UserCheck, UserPlus, Users } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { toast } from "sonner"
 
 import { SectionError } from "@/shared/components/section-error"
 import { ROUTES } from "@/shared/config/routes"
 import { useMessageOf } from "@/shared/lib/use-message-of"
-import { Badge } from "@/shared/ui/badge"
-import { Button } from "@/shared/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
-import { Skeleton } from "@/shared/ui/skeleton"
 
 import { useAcceptGroupInvite, useInvitePreview } from "../../queries"
 
@@ -50,9 +49,13 @@ export function SplitJoinPage({ token }: SplitJoinPageProps) {
           onRetry={() => void preview.refetch()}
           retrying={preview.isFetching}
         />
-        <Button asChild variant="outline" className="w-fit">
-          <Link href={ROUTES.splits}>{t("join.backToSplits")}</Link>
-        </Button>
+
+        <Link
+          className={linkButtonClass({ variant: "secondary", size: "medium", className: "w-fit" })}
+          href={ROUTES.splits}
+        >
+          {t("join.backToSplits")}
+        </Link>
       </div>
     )
   }
@@ -60,7 +63,7 @@ export function SplitJoinPage({ token }: SplitJoinPageProps) {
   if (!preview.data) {
     return (
       <div className="mx-auto flex max-w-lg flex-col gap-4 py-6">
-        <Skeleton className="h-48" />
+        <SkeletonItem className="h-48" />
       </div>
     )
   }
@@ -72,10 +75,10 @@ export function SplitJoinPage({ token }: SplitJoinPageProps) {
       <Card>
         <CardHeader>
           <div className="flex flex-wrap items-center gap-2">
-            <Badge className="gap-1">
+            <Tag tone="brand" className="gap-1">
               <Users className="size-3" />
               {t("groups.shared")}
-            </Badge>
+            </Tag>
             <span className="text-xs text-muted-foreground">{t("join.memberCount", { count: info.member_count })}</span>
           </div>
           <CardTitle className="text-xl">{t("join.title", { name: info.group_name })}</CardTitle>
@@ -89,14 +92,14 @@ export function SplitJoinPage({ token }: SplitJoinPageProps) {
                 <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400" />
                 {t("join.alreadyMember")}
               </p>
-              <Button disabled={accept.isPending} onClick={() => void handleAccept()}>
+              <Button variant="primary" disabled={accept.isPending} onClick={() => void handleAccept()}>
                 {t("join.openGroup")}
               </Button>
             </div>
           ) : info.is_rejoin ? (
             <div className="flex flex-col gap-3 rounded-md border bg-muted/30 p-4">
               <p className="text-sm">{t("join.rejoinNotice")}</p>
-              <Button disabled={accept.isPending} onClick={() => void handleAccept()}>
+              <Button variant="primary" disabled={accept.isPending} onClick={() => void handleAccept()}>
                 <RotateCcw className="size-4" />
                 {accept.isPending ? t("join.joining") : t("join.rejoinAction")}
               </Button>
@@ -109,7 +112,11 @@ export function SplitJoinPage({ token }: SplitJoinPageProps) {
               <p className="text-xs text-muted-foreground">
                 {info.target_guest.has_history ? t("join.guestHasHistory") : t("join.guestNoHistory")}
               </p>
-              <Button disabled={accept.isPending} onClick={() => void handleAccept(info.target_guest!.member_id)}>
+              <Button
+                variant="primary"
+                disabled={accept.isPending}
+                onClick={() => void handleAccept(info.target_guest!.member_id)}
+              >
                 <UserCheck className="size-4" />
                 {accept.isPending ? t("join.joining") : t("join.claimSeat")}
               </Button>
@@ -130,7 +137,12 @@ export function SplitJoinPage({ token }: SplitJoinPageProps) {
                           {guest.has_history ? t("join.guestHasHistory") : t("join.guestNoHistory")}
                         </span>
                       </div>
-                      <Button size="sm" disabled={accept.isPending} onClick={() => void handleAccept(guest.member_id)}>
+                      <Button
+                        variant="primary"
+                        size="small"
+                        disabled={accept.isPending}
+                        onClick={() => void handleAccept(guest.member_id)}
+                      >
                         <UserCheck className="size-3.5" />
                         {t("join.claimSeat")}
                       </Button>
@@ -145,8 +157,8 @@ export function SplitJoinPage({ token }: SplitJoinPageProps) {
                   <span className="text-xs text-muted-foreground">{t("join.joinAsNewHint")}</span>
                 </div>
                 <Button
-                  variant={info.claimable_guests.length > 0 ? "outline" : "default"}
-                  size="sm"
+                  variant={info.claimable_guests.length > 0 ? "secondary" : "primary"}
+                  size="small"
                   disabled={accept.isPending}
                   onClick={() => void handleAccept()}
                 >
@@ -157,9 +169,12 @@ export function SplitJoinPage({ token }: SplitJoinPageProps) {
             </div>
           )}
 
-          <Button asChild variant="ghost" size="sm" className="w-fit">
-            <Link href={ROUTES.splits}>{t("join.backToSplits")}</Link>
-          </Button>
+          <Link
+            className={linkButtonClass({ variant: "subtle", size: "small", className: "w-fit" })}
+            href={ROUTES.splits}
+          >
+            {t("join.backToSplits")}
+          </Link>
         </CardContent>
       </Card>
     </div>

@@ -1,23 +1,20 @@
 // Dialog for creating or editing a Personal or Shared group, including inline quick-add contact and guest inputs.
 
+import { Button, CheckboxBox, Dialog, Tag, TextField } from "@primecoderin/fast-ui-react"
 import { Plus, UserPlus, Users, X } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { type FormEvent, useState } from "react"
-import { toast } from "sonner"
 
 import { SPLITS } from "@/shared/api/contracts.gen"
 import { CurrencySelect } from "@/shared/components/currency-select"
 import { LabeledField } from "@/shared/components/labeled-field"
+import { toast } from "@/shared/lib/toast"
 import { useMessageOf } from "@/shared/lib/use-message-of"
-import { Badge } from "@/shared/ui/badge"
-import { Button } from "@/shared/ui/button"
-import { Checkbox } from "@/shared/ui/checkbox"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
-import { Input } from "@/shared/ui/input"
-import { Label } from "@/shared/ui/label"
 
 import type { GroupDetail, SplitContact } from "../../api"
 import { useCreateContact, useCreateGroup, useUpdateGroup } from "../../queries"
+
+const FORM_ID = "split-group-form"
 
 /** Props for the Group create/edit dialog. */
 export interface GroupDialogProps {
@@ -31,6 +28,7 @@ export interface GroupDialogProps {
 /** Creates a Personal or Shared group (with inline quick-add contacts & guests) or edits an existing group. */
 export function GroupDialog({ open, contacts, editing, onOpenChange, onCreated }: GroupDialogProps) {
   const t = useTranslations("splits")
+  const tCommon = useTranslations("common")
   const messageOf = useMessageOf()
   const createGroup = useCreateGroup()
   const updateGroup = useUpdateGroup()
@@ -118,154 +116,163 @@ export function GroupDialog({ open, contacts, editing, onOpenChange, onCreated }
   }
 
   return (
-    <Dialog open={open} onOpenChange={reset}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{editing ? t("dialogs.group.editTitle") : t("dialogs.group.addTitle")}</DialogTitle>
-          <DialogDescription>{t("dialogs.group.description")}</DialogDescription>
-        </DialogHeader>
+    <Dialog
+      open={open}
+      onOpenChange={reset}
+      size="narrow"
+      title={editing ? t("dialogs.group.editTitle") : t("dialogs.group.addTitle")}
+      description={t("dialogs.group.description")}
+      closeLabel={tCommon("ui.close")}
+      actions={
+        <>
+          <Button variant="secondary" onClick={() => onOpenChange(false)}>
+            {t("dialogs.cancel")}
+          </Button>
+          <Button variant="primary" type="submit" form={FORM_ID} disabled={!name.trim()} isLoading={saving}>
+            {saving ? t("dialogs.saving") : t("dialogs.save")}
+          </Button>
+        </>
+      }
+    >
+      <form id={FORM_ID} onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-4">
+        <TextField
+          label={t("dialogs.group.nameLabel")}
+          required
+          maxLength={SPLITS.limits.nameLength}
+          placeholder={t("dialogs.group.namePlaceholder")}
+          value={name}
+          onValueChange={setName}
+          size="small"
+        />
 
-        <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-4">
-          <LabeledField id="group-name" label={t("dialogs.group.nameLabel")}>
-            <Input
-              id="group-name"
-              required
-              maxLength={SPLITS.limits.nameLength}
-              placeholder={t("dialogs.group.namePlaceholder")}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </LabeledField>
+        {!editing && (
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-semibold text-fg">{t("dialogs.group.kindLabel")}</span>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {(["personal", "shared"] as const).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  aria-pressed={kind === option}
+                  onClick={() => setKind(option)}
+                  className={`flex flex-col items-start gap-1 rounded-md border p-3 text-start text-sm transition-colors ${
+                    kind === option ? "border-primary-active bg-primary-light" : "border-line hover:bg-subtle"
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5 font-medium text-fg">
+                    {option === "personal" ? <UserPlus className="size-4" /> : <Users className="size-4" />}
+                    {option === "personal" ? t("dialogs.group.personalTitle") : t("dialogs.group.sharedTitle")}
+                  </span>
+                  <span className="text-xs text-fg-secondary">
+                    {option === "personal" ? t("dialogs.group.personalHint") : t("dialogs.group.sharedHint")}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
-          {!editing && (
-            <div className="flex flex-col gap-2">
-              <Label>{t("dialogs.group.kindLabel")}</Label>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {(["personal", "shared"] as const).map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    aria-pressed={kind === option}
-                    onClick={() => setKind(option)}
-                    className={`flex flex-col items-start gap-1 rounded-md border p-3 text-left text-sm transition-colors ${
-                      kind === option ? "border-primary bg-primary/5" : "hover:bg-accent/40"
-                    }`}
-                  >
-                    <span className="flex items-center gap-1.5 font-medium">
-                      {option === "personal" ? <UserPlus className="size-4" /> : <Users className="size-4" />}
-                      {option === "personal" ? t("dialogs.group.personalTitle") : t("dialogs.group.sharedTitle")}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {option === "personal" ? t("dialogs.group.personalHint") : t("dialogs.group.sharedHint")}
-                    </span>
-                  </button>
-                ))}
-              </div>
+        <LabeledField id="group-currency" label={t("dialogs.group.currencyLabel")}>
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <CurrencySelect id="group-currency" value={currency} onChange={(next) => setCurrency(next)} />
+            </div>
+            {currency && (
+              <Button
+                variant="icon"
+                size="small"
+                icon={<X />}
+                aria-label={tCommon("datePicker.clear")}
+                onClick={() => setCurrency("")}
+              />
+            )}
+          </div>
+        </LabeledField>
+
+        <div className="flex flex-col gap-2">
+          <span className="text-xs font-semibold text-fg">{t("dialogs.group.contactsLabel")}</span>
+          {activeContacts.length === 0 ? (
+            <p className="text-xs text-fg-secondary">{t("dialogs.group.noContactsYet")}</p>
+          ) : (
+            <div className="grid max-h-36 grid-cols-1 gap-1.5 overflow-y-auto rounded-md border border-line p-2.5 sm:grid-cols-2">
+              {activeContacts.map((contact) => (
+                <label key={contact.id} className="flex cursor-pointer items-center gap-2 text-sm">
+                  <CheckboxBox
+                    checked={selectedContactIds.includes(contact.id)}
+                    onCheckedChange={() => toggleContact(contact.id)}
+                  />
+                  <span className="truncate">{contact.name}</span>
+                </label>
+              ))}
             </div>
           )}
-
-          <LabeledField id="group-currency" label={t("dialogs.group.currencyLabel")}>
-            <div className="flex items-center gap-2">
-              <div className="flex-1">
-                <CurrencySelect id="group-currency" value={currency} onChange={(next) => setCurrency(next)} />
-              </div>
-              {currency && (
-                <Button type="button" variant="ghost" size="sm" onClick={() => setCurrency("")}>
-                  <X className="size-4" />
-                </Button>
-              )}
-            </div>
-          </LabeledField>
-
-          <div className="flex flex-col gap-2">
-            <Label>{t("dialogs.group.contactsLabel")}</Label>
-            {activeContacts.length === 0 ? (
-              <p className="text-xs text-muted-foreground">{t("dialogs.group.noContactsYet")}</p>
-            ) : (
-              <div className="grid max-h-36 grid-cols-1 gap-1.5 overflow-y-auto rounded-md border p-2.5 sm:grid-cols-2">
-                {activeContacts.map((contact) => (
-                  <label key={contact.id} className="flex cursor-pointer items-center gap-2 text-sm">
-                    <Checkbox
-                      checked={selectedContactIds.includes(contact.id)}
-                      onCheckedChange={() => toggleContact(contact.id)}
-                    />
-                    <span className="truncate">{contact.name}</span>
-                  </label>
-                ))}
-              </div>
-            )}
-            <div className="flex gap-2">
-              <Input
-                aria-label={t("dialogs.group.quickAddLabel")}
+          <div className="flex items-end gap-2">
+            <div className="min-w-0 flex-1">
+              <TextField
+                label={t("dialogs.group.quickAddLabel")}
+                hideLabel
                 placeholder={t("dialogs.group.quickAddPlaceholder")}
                 maxLength={SPLITS.limits.nameLength}
                 value={quickName}
-                onChange={(e) => setQuickName(e.target.value)}
+                onValueChange={setQuickName}
+                size="small"
               />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={createContact.isPending || !quickName.trim()}
-                onClick={() => void handleQuickAddContact()}
-              >
-                <Plus className="size-4" />
-                {t("dialogs.group.quickAddButton")}
-              </Button>
             </div>
+            <Button
+              variant="secondary"
+              size="small"
+              icon={<Plus />}
+              disabled={!quickName.trim()}
+              isLoading={createContact.isPending}
+              onClick={() => void handleQuickAddContact()}
+            >
+              {t("dialogs.group.quickAddButton")}
+            </Button>
           </div>
+        </div>
 
-          {kind === "shared" && (
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="group-guest-input">{t("dialogs.group.guestsLabel")}</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="group-guest-input"
+        {kind === "shared" && (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-end gap-2">
+              <div className="min-w-0 flex-1">
+                <TextField
+                  label={t("dialogs.group.guestsLabel")}
                   placeholder={t("dialogs.group.guestPlaceholder")}
                   maxLength={SPLITS.limits.nameLength}
                   value={guestDraft}
-                  onChange={(e) => setGuestDraft(e.target.value)}
+                  onValueChange={setGuestDraft}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault()
                       addGuest()
                     }
                   }}
+                  size="small"
                 />
-                <Button type="button" variant="outline" size="sm" disabled={!guestDraft.trim()} onClick={addGuest}>
-                  <Plus className="size-4" />
-                  {t("dialogs.group.quickAddButton")}
-                </Button>
               </div>
-              {guestNames.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {guestNames.map((guest, index) => (
-                    <Badge key={`${guest}-${index}`} variant="secondary" className="gap-1">
-                      {guest}
-                      <button
-                        type="button"
-                        aria-label={t("dialogs.group.removeMember")}
-                        onClick={() => setGuestNames((prev) => prev.filter((_, idx) => idx !== index))}
-                      >
-                        <X className="size-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
+              <Button variant="secondary" size="small" icon={<Plus />} disabled={!guestDraft.trim()} onClick={addGuest}>
+                {t("dialogs.group.quickAddButton")}
+              </Button>
             </div>
-          )}
-
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-              {t("dialogs.cancel")}
-            </Button>
-            <Button type="submit" disabled={saving || !name.trim()}>
-              {saving ? t("dialogs.saving") : t("dialogs.save")}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
+            {guestNames.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {guestNames.map((guest, index) => (
+                  <Tag key={`${guest}-${index}`} className="gap-1">
+                    {guest}
+                    <button
+                      type="button"
+                      aria-label={t("dialogs.group.removeMember")}
+                      onClick={() => setGuestNames((prev) => prev.filter((_, idx) => idx !== index))}
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </Tag>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </form>
     </Dialog>
   )
 }

@@ -1,17 +1,16 @@
 // People & Contacts view: displays every obligation WITH its explicit context (Direct vs. each Group), never netting
 // balances across separate groups (D225).
 
+import { Button, Card, Tag } from "@primecoderin/fast-ui-react"
+import { CardContent } from "@/shared/components/card-parts"
+import { toast } from "@/shared/lib/toast"
 import { Archive, ArchiveRestore, HandCoins, Pencil, Plus, QrCode, Trash2, Users } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
-import { toast } from "sonner"
 
 import { EmptyState } from "@/shared/components/empty-state"
 import { useFormatters } from "@/shared/lib/use-formatters"
 import { useMessageOf } from "@/shared/lib/use-message-of"
-import { Badge } from "@/shared/ui/badge"
-import { Button } from "@/shared/ui/button"
-import { Card, CardContent } from "@/shared/ui/card"
 
 import type { ContextObligation, PersonBalance, SplitContact } from "../../api"
 import { useDeleteContact, useUpdateContact } from "../../queries"
@@ -100,7 +99,7 @@ export function PeopleList({
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-semibold">{t("people.title")}</h2>
-        <Button size="sm" onClick={onAddContact}>
+        <Button variant="primary" size="small" onClick={onAddContact}>
           <Plus className="size-4" />
           {t("people.addContact")}
         </Button>
@@ -123,17 +122,17 @@ export function PeopleList({
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-semibold">{person.display_name}</span>
-                      {person.upi_id && <Badge variant="outline">{t("people.upiBadge")}</Badge>}
-                      {!person.is_contact && <Badge variant="secondary">{t("people.sharedOnlyBadge")}</Badge>}
-                      {person.archived && <Badge variant="outline">{t("people.archivedBadge")}</Badge>}
+                      {person.upi_id && <Tag>{t("people.upiBadge")}</Tag>}
+                      {!person.is_contact && <Tag>{t("people.sharedOnlyBadge")}</Tag>}
+                      {person.archived && <Tag>{t("people.archivedBadge")}</Tag>}
                     </div>
                     {contact && (
                       <div className="flex flex-wrap items-center gap-1">
-                        <Button size="sm" variant="ghost" onClick={() => onEditContact(contact)}>
+                        <Button size="small" variant="subtle" onClick={() => onEditContact(contact)}>
                           <Pencil className="size-3.5" />
                           {t("people.edit")}
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => void toggleArchive(contact)}>
+                        <Button size="small" variant="subtle" onClick={() => void toggleArchive(contact)}>
                           {contact.archived_at ? (
                             <ArchiveRestore className="size-3.5" />
                           ) : (
@@ -142,8 +141,8 @@ export function PeopleList({
                           {contact.archived_at ? t("people.unarchive") : t("people.archive")}
                         </Button>
                         <Button
-                          size="sm"
-                          variant="ghost"
+                          size="small"
+                          variant="subtle"
                           className="text-destructive"
                           onClick={() => setDeleting(contact)}
                         >
@@ -189,8 +188,8 @@ export function PeopleList({
                           </div>
                           <div className="flex flex-wrap items-center gap-1.5">
                             <Button
-                              size="sm"
-                              variant="outline"
+                              size="small"
+                              variant="secondary"
                               onClick={() =>
                                 onRemindDirect(
                                   reminderFor(person, ob),
@@ -204,13 +203,17 @@ export function PeopleList({
                               {t("people.remindOrPay")}
                             </Button>
                             {ob.context_kind === "direct" && person.contact_id ? (
-                              <Button size="sm" onClick={() => onSettleDirect(directPreset(person, ob))}>
+                              <Button
+                                variant="primary"
+                                size="small"
+                                onClick={() => onSettleDirect(directPreset(person, ob))}
+                              >
                                 <HandCoins className="size-3.5" />
                                 {t("page.settleUp")}
                               </Button>
                             ) : (
                               ob.group_id && (
-                                <Button size="sm" variant="secondary" onClick={() => onOpenGroup(ob.group_id!)}>
+                                <Button size="small" variant="secondary" onClick={() => onOpenGroup(ob.group_id!)}>
                                   {t("join.openGroup")}
                                 </Button>
                               )
